@@ -18,8 +18,7 @@ find_package(Boost 1.34.0 REQUIRED date_time thread regex)
 find_library(Xerces_LIB_FOUND xerces-c)
 find_file(Xerces_H_FOUND xercesc/sax2/SAX2XMLReader.hpp)
 
-file(GLOB INCLUDE_DIRS acomms/lib* util/lib*)
+file(GLOB INCLUDE_DIRS src/acomms/lib* src/util/lib*)
 include_directories(${INCLUDE_DIRS})
 
-add_subdirectory(acomms)
-add_subdirectory(util)
+add_subdirectory(src)
