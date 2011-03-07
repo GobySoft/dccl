@@ -63,7 +63,7 @@ void algsum(acomms::DCCLMessageVal& mv, const std::vector<acomms::DCCLMessageVal
 
 int main()
 {
-    std::cout << "loading xml file: test.xml" << std::endl;
+    std::cout << "loading xml file: " << DCCL_EXAMPLES_DIR "/test/test.xml" << std::endl;
 
     // instantiate the parser with a single xml file
     goby::acomms::DCCLCodec dccl(&std::cerr);    

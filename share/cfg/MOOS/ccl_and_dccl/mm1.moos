@@ -1,44 +1,41 @@
 // t. schneider tes@mit.edu 3.2.11
 
 // bare bones acoustic communications
-// stack for auv
+// stack for topside receiver
 
 ServerHost = localhost
-ServerPort = 9102
-Community  = mm2
+ServerPort = 9101
+Community  = mm1
 
 LatOrigin =  42.35
 LongOrigin = -70.95
 
-modem_id_lookup_path = modemidlookup.txt
-modem_id = 2
-
 NoNetwork = true
+modem_id_lookup_path = modemidlookup.txt
+
     
 ProcessConfig = ANTLER
 {
     MSBetweenLaunches = 10
-
     Run = MOOSDB		@ NewConsole = false
-
+    
     Run = pREMUSCodec           @ NewConsole = true, XConfig=1
     Run = pAcommsHandler        @ NewConsole = true, XConfig=2
     Run = iModemSim             @ NewConsole = true, XConfig=3
 
-    1 = -geometry,80x15-0+0
-    2 = -geometry,80x100-0+230
-    3 = -geometry,80x15-0+570
+    1 = -geometry,80x15+0+0
+    2 = -geometry,80x100+0+230
+    3 = -geometry,80x15+0+570
 }
 
 ProcessConfig = pREMUSCodec
 {
-  create_status: true
-  
   mdat_state_var: "IN_REMUS_STATUS"
   mdat_state_out: "OUT_REMUS_STATUS"
-  modem_id_lookup_path: "modemidlookup.txt"
+  create_status: false
 }
-    
+
+
 ProcessConfig = pAcommsHandler
 {
     common
@@ -46,24 +43,23 @@ ProcessConfig = pAcommsHandler
       verbosity: VERBOSITY_GUI
         initializer { type: INI_DOUBLE  global_cfg_var: "LatOrigin"  moos_var: "LAT_ORIGIN" }
         initializer { type: INI_DOUBLE  global_cfg_var: "LongOrigin" moos_var: "LONG_ORIGIN" }
-        initializer { type: INI_STRING  moos_var: "VEHICLE_TYPE"  sval: "auv" }
-        initializer { type: INI_STRING  moos_var: "VEHICLE_NAME"  sval: "mm2" }
-        initializer { type: INI_DOUBLE  moos_var: "NAV_X"  dval: 123 }
-        initializer { type: INI_DOUBLE  moos_var: "NAV_Y"  dval: 321 }
-        initializer { type: INI_DOUBLE  moos_var: "NAV_HEADING" dval: 45 }
-        initializer { type: INI_DOUBLE  moos_var: "NAV_SPEED" dval: 1.2 }
-        initializer { type: INI_DOUBLE  moos_var: "NAV_DEPTH" dval: 111 }
+        initializer { type: INI_STRING  moos_var: "VEHICLE_TYPE" sval: "topside" }
+        initializer { type: INI_STRING  moos_var: "VEHICLE_NAME" sval: "mm1" }
+        initializer { type: INI_DOUBLE  moos_var: "NAV_X"  dval: 100 }
+        initializer { type: INI_DOUBLE  moos_var: "NAV_Y"  dval: 300 }
+        initializer { type: INI_DOUBLE  moos_var: "NAV_HEADING" dval: 150 }
+        initializer { type: INI_DOUBLE  moos_var: "NAV_SPEED" dval: 0 }
+        initializer { type: INI_DOUBLE  moos_var: "NAV_DEPTH" dval: 0 }
     }
 
-    modem_id: 2
-    modem_id_lookup_path: "modemidlookup.txt"
+    modem_id: 1
 
     driver_type: DRIVER_WHOI_MICROMODEM
     driver_cfg
     { 
-        serial_port: "/tmp/ttyLOOPB2"
-    # doesn't work with iModemSim, set to true for real ops
-        [MicroModemConfig.reset_nvram]: false
+      serial_port: "/tmp/ttyLOOPA2"
+# doesn't work with iModemSim, set to true for real ops
+      [MicroModemConfig.reset_nvram]: false
     }
 
     mac_cfg
@@ -77,7 +73,10 @@ ProcessConfig = pAcommsHandler
     {
         queue
         {
-            key { type: QUEUE_CCL id: 14 }
+            key {
+                type: QUEUE_CCL
+                id: 14 # decimal CCL id (first byte)
+            }
             in_pubsub_var: "IN_REMUS_STATUS"
             out_pubsub_var: "OUT_REMUS_STATUS"
             name: "Remus_State"
@@ -86,8 +85,7 @@ ProcessConfig = pAcommsHandler
 
     dccl_cfg
     {
-        message_file { path: "/home/toby/goby/xml/simple_status.xml"
-                       manipulator: NO_ENCODE }        
+        message_file { path: "/home/toby/goby/share/xml/simple_status.xml" }          
     }
 }
 
@@ -99,7 +97,7 @@ ProcessConfig = iModemSim
 	AppTick   = 4
 	CommsTick = 4
 
-	Port = /tmp/ttyLOOPB1
+	Port = /tmp/ttyLOOPA1
 	Speed = 19200
 	
 	IPPort = 49234
@@ -110,3 +108,4 @@ ProcessConfig = iModemSim
         ConstantPosY = 0
         ConstantDepth = 0
 }
+
