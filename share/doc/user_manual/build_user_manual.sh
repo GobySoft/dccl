@@ -10,6 +10,7 @@ set -e
 if [[ "$1" == "quick" ]]; then
     xelatex -halt-on-error user_manual.tex
 else
+    rm -f user_manual.aux
     xelatex user_manual.tex -halt-on-error -no-pdf
     bibtex user_manual
     makeglossaries user_manual

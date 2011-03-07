@@ -16,8 +16,8 @@
   <ul>
   <li> Home page: <http://gobysoft.com>
   <li> Code, bug tracking, and answers: <https://launchpad.net/goby>.</li>
-  <li> User Manual: <a href=http://gobysoft.com/goby-bzr/doc/user_manual/user_manual.pdf>(pdf)</a>.</li>
-  <li> Developers' Manual: <a href=http://gobysoft.com>(html)</a> <a href=http://gobysoft.com/goby-bzr/doc/goby-dev.pdf>(pdf)</a>.</li>
+  <li> User Manual: <a href=http://gobysoft.com/goby-bzr/share/doc/user_manual/user_manual.pdf>(pdf)</a>.</li>
+  <li> Developers' Manual: <a href=http://gobysoft.com>(html)</a> <a href=http://gobysoft.com/goby-bzr/share/doc/goby-dev.pdf>(pdf)</a>.</li>
   </ul>
 
   \section main_manual Developer manual
@@ -92,6 +92,21 @@ write to Launchpad or access private data.  See "bzr help launchpad-login". </tt
   <ul>
   <li> pAcommsHandler is a MOOS acoustic communications process that is based on the goby-acomms libraries. pAcommsHandler is now maintained in the goby repository in goby/src/moos. For documentation and more information on pAcommsHandler, please contact Toby <https://launchpad.net/~tes>. To learn about the MOOS and MOOS-IvP projects, visit <http://www.robots.ox.ac.uk/~mobile/MOOS/wiki/pmwiki.php> and <http://www.moos-ivp.org/> </li>
   </ul>
+
+\section build_example Building Examples
+
+Goby provides a number of examples that are stored in either 
+\verbatim
+goby/share/examples (build locally)
+/usr/share/goby/examples (package or "make install")
+\endverbatim
+
+To build these examples you will need Goby (obviously) and CMake. Go into the examples directory and type
+\verbatim
+cmake .
+make 
+\endverbatim
+to compile the examples.
 
 \section authors Authors
 
