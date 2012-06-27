@@ -2,6 +2,16 @@ import "goby/common/protobuf/option_extensions.proto";
 
 package goby.acomms.protobuf;
 
+// known drivers - should make this somehow extensible
+enum DriverType {
+  DRIVER_NONE = 1;
+  DRIVER_WHOI_MICROMODEM = 2;
+  DRIVER_ABC_EXAMPLE_MODEM = 3;
+  DRIVER_UFIELD_SIM_DRIVER = 4;
+  DRIVER_PB_STORE_SERVER = 5;
+  DRIVER_UDP = 6;
+}
+
 message DriverConfig
 {
   optional int32 modem_id = 1 [(goby.field).description="Unique number 1-31 to identify this node", (goby.field).example="1"];
@@ -30,5 +40,7 @@ message DriverConfig
   // extensions 1000-1100 used by acomms_mm_driver.proto
   // extensions 1201-1202 used by acomms_abc_driver.proto (example driver)
   // extensions 1300-1320 used by ufield_sim_driver.proto
+  // extensions 1321-1340 used by pb_modem_driver.proto
+  // extensions 1341-1360 used by udp_driver.proto  
 }
 

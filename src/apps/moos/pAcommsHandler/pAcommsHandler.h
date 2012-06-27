@@ -26,7 +26,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/descriptor.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -47,10 +46,10 @@
 #include "goby/util/dynamic_protobuf_manager.h"
 #include "goby/moos/goby_moos_app.h"
 #include "goby/moos/moos_translator.h"
+#include "goby/common/zeromq_service.h"
 
 #include "goby/moos/protobuf/pAcommsHandler_config.pb.h"
 
-extern std::vector<void *> dl_handles;
 
 namespace goby {
     namespace acomms {
@@ -106,22 +105,6 @@ class CpAcommsHandler : public GobyMOOSApp
 
     
   private:
-    google::protobuf::compiler::DiskSourceTree disk_source_tree_;
-    google::protobuf::compiler::SourceTreeDescriptorDatabase source_database_;
-
-    class TranslatorErrorCollector: public google::protobuf::compiler::MultiFileErrorCollector
-    {
-        void AddError(const std::string & filename, int line, int column, const std::string & message)
-        {
-            goby::glog.is(goby::common::logger::DIE) &&
-                goby::glog << "File: " << filename
-                           << " has error (line: " << line << ", column: " << column << "): "
-                           << message << std::endl;
-        }       
-    };
-                
-    TranslatorErrorCollector error_collector_;
-
     goby::moos::MOOSTranslator translator_;
     
 #ifdef ENABLE_GOBY_V1_TRANSITIONAL_SUPPORT
@@ -144,6 +127,13 @@ class CpAcommsHandler : public GobyMOOSApp
     boost::asio::io_service timer_io_service_;
     boost::asio::io_service::work work_;
 
+    goby::acomms::RouteManager* router_;
+    
+    // for PBDriver
+    boost::shared_ptr<goby::common::ZeroMQService> zeromq_service_;
+
+    // for UDPDriver
+    boost::shared_ptr<boost::asio::io_service> asio_service_;
     
     std::vector<boost::shared_ptr<Timer> > timers_;
     

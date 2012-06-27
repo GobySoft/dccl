@@ -56,7 +56,6 @@ namespace goby
             
             
             protobuf::DriverConfig driver_cfg_; // configuration given to you at launch
-            std::ostream* log_; // place to log all human readable debugging messages
             // rest is up to you!
         };
     }

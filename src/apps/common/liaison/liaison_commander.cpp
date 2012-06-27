@@ -22,7 +22,6 @@
 
 #include <cfloat>
 #include <cmath>
-
 #include <Wt/Dbo/Exception>
 #include <Wt/WIntValidator>
 #include <Wt/WDoubleValidator>
@@ -281,8 +280,7 @@ goby::common::LiaisonCommander::ControlsContainer::ControlsContainer(
     for(int i = 0, n = pb_commander_config.load_protobuf_name_size(); i < n; ++i)
     {
         const google::protobuf::Descriptor* desc =
-            goby::util::DynamicProtobufManager::descriptor_pool().FindMessageTypeByName(
-                pb_commander_config.load_protobuf_name(i));
+            goby::util::DynamicProtobufManager::find_descriptor(pb_commander_config.load_protobuf_name(i));
 
         
         if(!desc)
@@ -298,13 +296,16 @@ goby::common::LiaisonCommander::ControlsContainer::ControlsContainer(
     command_selection_->model()->sort(0);
     
     if(last_command)
-    {                
-        command_selection_->setCurrentIndex(
-            command_selection_->findText(last_command->protobuf_name));
-        switch_command(command_selection_->currentIndex());
+    {
+        int last_command_index = command_selection_->findText(last_command->protobuf_name);
+        if(last_command_index >= 0)
+        {
+            command_selection_->setCurrentIndex(last_command_index);
+            switch_command(command_selection_->currentIndex());
+        }
     }
 }
-
+ 
 void goby::common::LiaisonCommander::ControlsContainer::switch_command(int selection_index)
 {
     if(selection_index == 0)
@@ -368,13 +369,15 @@ void goby::common::LiaisonCommander::ControlsContainer::send_message()
     comment_line->setText(comment_line_->text());
     
     WGroupBox* message_box = new WGroupBox("Message to send", dialog.contents());
-    new WText("<pre>" + current_command->message_->DebugString() + "</pre>", message_box);
+    WContainerWidget* message_div = new WContainerWidget(message_box);
+
+    new WText("<pre>" + current_command->message_->DebugString() + "</pre>", message_div);
 
      
-    message_box->setMaximumSize(pb_commander_config_.modal_dimensions().width(),
+    message_div->setMaximumSize(pb_commander_config_.modal_dimensions().width(),
                                 pb_commander_config_.modal_dimensions().height());
-    message_box->setOverflow(WContainerWidget::OverflowAuto);
-
+    message_div->setOverflow(WContainerWidget::OverflowAuto);
+    
 //    dialog.setResizable(true);
     
     WPushButton ok("Send", dialog.contents());
@@ -521,12 +524,15 @@ void goby::common::LiaisonCommander::ControlsContainer::CommandContainer::handle
      new WText(entry->comment, comment_box);
      
      WGroupBox* message_box = new WGroupBox("Message posted", database_dialog_->contents());
-     new WText("<pre>" + message->DebugString() + "</pre>", message_box);
-     
-     message_box->setMaximumSize(pb_commander_config_.modal_dimensions().width(),
-                                 pb_commander_config_.modal_dimensions().height());
 
-     message_box->setOverflow(WContainerWidget::OverflowAuto);
+     WContainerWidget* message_div = new WContainerWidget(message_box);
+     
+     new WText("<pre>" + message->DebugString() + "</pre>", message_div);
+
+     
+     message_div->setMaximumSize(pb_commander_config_.modal_dimensions().width(),
+                                 pb_commander_config_.modal_dimensions().height());
+     message_div->setOverflow(WContainerWidget::OverflowAuto);
 
 
      WPushButton* edit = new WPushButton("Edit (replace)", database_dialog_->contents());
@@ -606,7 +612,8 @@ void goby::common::LiaisonCommander::ControlsContainer::CommandContainer::genera
         generate_tree_row(parent, message, desc->field(i));
     
     std::vector<const google::protobuf::FieldDescriptor*> extensions;
-    goby::util::DynamicProtobufManager::descriptor_pool().FindAllExtensions(desc, &extensions);
+    goby::util::DynamicProtobufManager::user_descriptor_pool().FindAllExtensions(desc, &extensions);
+    google::protobuf::DescriptorPool::generated_pool()->FindAllExtensions(desc, &extensions);
     for(int i = 0, n = extensions.size(); i < n; ++i)
         generate_tree_row(parent, message, extensions[i]);
 
@@ -623,7 +630,11 @@ void goby::common::LiaisonCommander::ControlsContainer::CommandContainer::genera
         return;
 
     int index = parent->childNodes().size();
-    WTreeTableNode* node = new WTreeTableNode(field_desc->name(), 0, parent);
+
+    
+    WTreeTableNode* node = new WTreeTableNode(field_desc->is_extension() ?
+                                              "[" + field_desc->full_name() + "]: ":
+                                              field_desc->name() + ": ", 0, parent);
 
     if((parent->styleClass() == STRIPE_ODD_CLASS && index % 2) || (parent->styleClass() == STRIPE_EVEN_CLASS && !(index % 2)))
         node->setStyleClass(STRIPE_ODD_CLASS);
@@ -1365,7 +1376,7 @@ void goby::common::LiaisonCommander::ControlsContainer::CommandContainer::handle
         parent->expand();
         node->expand();
     }
-
+    
     // remove nodes
     while(desired_size < static_cast<int>(parent->childNodes().size()))
     {

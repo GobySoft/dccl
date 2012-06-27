@@ -19,48 +19,33 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
+#include "goby/util/linebasedcomms.h"
+#include "goby/util/binary.h"
 
-#include "goby/common/zeromq_application_base.h"
-#include "goby_store_server_config.pb.h"
-
-namespace goby
+int main()
 {
-    namespace util
     {
-        class GobyStoreServer : public goby::common::ZeroMQApplicationBase
-        {
-        public:
-            GobyStoreServer();
-            ~GobyStoreServer() { }
-            
-
-        private:
-            void loop();
-
-        private:
-            static goby::common::ZeroMQService zeromq_service_;
-            static protobuf::GobyStoreServerConfig cfg_;
-   
-        };
+        goby::util::NMEASentence nmea;
+        nmea.push_back("$FOOBA");
+        nmea.push_back(1);
+        nmea.push_back(2);
+        nmea.push_back(3);
+        nmea.push_back("");
+        std::cout << nmea.message() << std::endl;
+        assert(nmea.message() == "$FOOBA,1,2,3,*75");
     }
-}
-
-goby::common::ZeroMQService goby::util::GobyStoreServer::zeromq_service_;
-goby::util::protobuf::GobyStoreServerConfig goby::util::GobyStoreServer::cfg_;
-
-
-int main(int argc, char* argv[])
-{
-    goby::run<goby::util::GobyStoreServer>(argc, argv);
-}
-
-goby::util::GobyStoreServer::GobyStoreServer()
-    : ZeroMQApplicationBase(&zeromq_service_, &cfg_)
-{
-
-
-}
-
-void goby::util::GobyStoreServer::loop()
-{
+    
+    {
+        goby::util::NMEASentence nmea;
+        nmea.push_back("$CCTXD");
+        nmea.push_back(2);
+        nmea.push_back("1,1");
+        nmea.push_back(goby::util::hex_encode(""));
+        std::cout << nmea.message() << std::endl;
+        assert(nmea.message() == "$CCTXD,2,1,1,*7A");
+    }
+    
+    std::cout << "all tests passed" << std::endl;
+    
+    return 0;
 }

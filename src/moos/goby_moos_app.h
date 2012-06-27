@@ -31,7 +31,6 @@
 #include <boost/function.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/signal.hpp>
 
 #include "dynamic_moos_vars.h"
@@ -64,7 +63,7 @@ class GobyMOOSApp : public CMOOSApp
   
     void publish(CMOOSMsg& msg)
     {
-        if(connected_)
+        if(connected_ && started_up_)
             m_Comms.Post(msg);
         else
             msg_buffer_.push_back(msg);

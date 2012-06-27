@@ -1,17 +1,3 @@
-// copyright 2009 t. schneider tes@mit.edu
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This software is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
 // usage: connect two modems and then run
 // > chat /dev/tty_modem_A 1 2 log_file_A
@@ -28,7 +14,7 @@
 #include "goby/acomms/amac.h"
 #include "goby/acomms/bind.h"
 #include "goby/util/as.h"
-#include "goby/util/time.h"
+#include "goby/common/time.h"
 #include "chat.pb.h"
 
 #include <boost/lexical_cast.hpp>
@@ -36,7 +22,7 @@
 #include "chat_curses.h"
 
 using goby::util::as;
-using goby::util::goby_time;
+using goby::common::goby_time;
 
 int startup_failure();
 void received_data(const google::protobuf::Message&);
@@ -86,7 +72,7 @@ int main(int argc, char* argv[])
     //
     //  Initialize logging
     //
-    goby::glog.add_stream(goby::util::logger::DEBUG1, &fout_);
+    goby::glog.add_stream(goby::common::logger::DEBUG1, &fout_);
     goby::glog.set_name(argv[0]);
 
     
@@ -127,14 +113,14 @@ int main(int argc, char* argv[])
     my_slot.set_src(my_id_);
     my_slot.set_dest(buddy_id_);
     my_slot.set_rate(0);
-    my_slot.SetExtension(goby::acomms::protobuf::slot_seconds, 12);
+    my_slot.set_slot_seconds(12);
     my_slot.set_type(goby::acomms::protobuf::ModemTransmission::DATA);
     
     goby::acomms::protobuf::ModemTransmission buddy_slot;
     buddy_slot.set_src(buddy_id_);
     buddy_slot.set_dest(my_id_);
     buddy_slot.set_rate(0);
-    buddy_slot.SetExtension(goby::acomms::protobuf::slot_seconds, 12);
+    buddy_slot.set_slot_seconds(12);
     buddy_slot.set_type(goby::acomms::protobuf::ModemTransmission::DATA);
 
     if(my_id_ < buddy_id_)

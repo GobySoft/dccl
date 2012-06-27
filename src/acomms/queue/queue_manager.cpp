@@ -137,7 +137,10 @@ void goby::acomms::QueueManager::push_message(const google::protobuf::Message& d
     codec_->run_hooks(dccl_msg);
     glog.is(DEBUG3) && glog << group(glog_push_group_) << "Message post hooks: " << latest_meta_ << std::endl;
 
+    signal_out_route(&latest_meta_, dccl_msg, cfg_.modem_id());
+    
     glog.is(DEBUG1) && glog << group(glog_push_group_) << msg_string(desc) << ": attempting to push message (destination: " << latest_meta_.dest() << ")" << std::endl;
+
     
     
     // loopback if set
@@ -365,8 +368,15 @@ void goby::acomms::QueueManager::handle_modem_data_request(protobuf::ModemTransm
             }
         
             // finally actually encode the message
-            *data = codec_->encode_repeated<boost::shared_ptr<google::protobuf::Message> >(dccl_msgs);
-            
+            try
+            {
+                *data = codec_->encode_repeated<boost::shared_ptr<google::protobuf::Message> >(dccl_msgs);
+            }
+            catch(DCCLException& e)
+            {
+                *data = "";
+                glog.is(DEBUG1) && glog << group(glog_out_group_) << warn << "Failed to encode, discarding message." << std::endl;
+            }
         }
     }
     // only discipline the ACK value at the end, after all chances of making packet_ack_ = true are done
@@ -376,11 +386,14 @@ void goby::acomms::QueueManager::handle_modem_data_request(protobuf::ModemTransm
 
 void goby::acomms::QueueManager::clear_packet()
 {
-    typedef std::pair<unsigned, Queue*> P;
-    BOOST_FOREACH(const P& p, waiting_for_ack_)
-        p.second->clear_ack_queue();
-    
-    waiting_for_ack_.clear();
+    for (std::multimap<unsigned, Queue*>::iterator it = waiting_for_ack_.begin(),
+             end = waiting_for_ack_.end(); it != end;)
+    {
+        if (it->second->clear_ack_queue())
+            waiting_for_ack_.erase(it++);
+        else
+            ++it;  
+    }
     
     packet_ack_ = false;
     packet_dest_ = BROADCAST_ID;
@@ -498,9 +511,9 @@ void goby::acomms::QueueManager::process_modem_ack(const protobuf::ModemTransmis
                 }
 
                 glog.is(DEBUG2) && glog<< group(glog_in_group_) << ack_msg << std::endl;
-            
+                
                 waiting_for_ack_.erase(it);
-            
+                
                 it = waiting_for_ack_.find(frame_number);
             }
         }
@@ -531,18 +544,31 @@ void goby::acomms::QueueManager::handle_modem_receive(const protobuf::ModemTrans
                 glog.is(DEBUG1) && glog << group(glog_in_group_)
                                        << "Received DATA message from "
                                         << modem_message.src() << std::endl;
+                
+                std::list<boost::shared_ptr<google::protobuf::Message> > dccl_msgs;
 
-                std::list<boost::shared_ptr<google::protobuf::Message> > dccl_msgs =
-                    codec_->decode_repeated<boost::shared_ptr<google::protobuf::Message> >(
-                        modem_message.frame(frame_number));
+                try
+                {
+                    dccl_msgs = codec_->decode_repeated<boost::shared_ptr<google::protobuf::Message> >(modem_message.frame(frame_number));
+                }
+                catch(DCCLException& e)
+                {
+                    glog.is(DEBUG1) && glog << group(glog_out_group_) << warn
+                                            << "Failed to decode, discarding message." << std::endl;
+                }
+                
 
                 BOOST_FOREACH(boost::shared_ptr<google::protobuf::Message> decoded_message, dccl_msgs)
                 {
                     latest_meta_.Clear();
                     codec_->run_hooks(*decoded_message);
-        
-                    int32 dest = latest_meta_.dest();
 
+                    // messages addressed to us on the link
+                    if(modem_message.dest() == modem_id_)
+                        signal_in_route(latest_meta_, *decoded_message, modem_id_);
+                    
+                    int32 dest = latest_meta_.dest();
+                    
                     const google::protobuf::Descriptor* desc = decoded_message->GetDescriptor();
                     
                     if(dest != BROADCAST_ID &&
@@ -600,7 +626,7 @@ void goby::acomms::QueueManager::process_cfg()
         for(int j = 0, m = cfg_.manipulator_entry(i).manipulator_size(); j < m; ++j)
         {
             const google::protobuf::Descriptor* desc =
-                goby::util::DynamicProtobufManager::descriptor_pool().FindMessageTypeByName(cfg_.manipulator_entry(i).protobuf_name());
+                goby::util::DynamicProtobufManager::find_descriptor(cfg_.manipulator_entry(i).protobuf_name());
             
             if(desc)
                 manip_manager_.add(codec_->id(desc), cfg_.manipulator_entry(i).manipulator(j));

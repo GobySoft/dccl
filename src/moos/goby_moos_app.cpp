@@ -26,6 +26,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
 
 #include "goby/util/as.h"
 
@@ -52,7 +53,7 @@ bool GobyMOOSApp::Iterate()
         cout_cleared_ = true;
     }
 
-    while(connected_ && !msg_buffer_.empty())
+    while(!msg_buffer_.empty() && (connected_ && started_up_))
     {
         glog << "writing from buffer: " << msg_buffer_.front().GetKey() << ": " << msg_buffer_.front().GetAsString() << std::endl;
         m_Comms.Post(msg_buffer_.front());
@@ -66,8 +67,12 @@ bool GobyMOOSApp::Iterate()
 
 bool GobyMOOSApp::OnNewMail(MOOSMSG_LIST &NewMail)
 {
-    BOOST_FOREACH(const CMOOSMsg& msg, NewMail)
+    for(MOOSMSG_LIST::const_iterator it = NewMail.begin(),
+        end = NewMail.end(); it != end; ++it)
     {
+        const CMOOSMsg& msg = *it;
+        goby::glog.is(DEBUG3) && goby::glog << "Received mail: " << msg.GetKey() << ", time: " << std::setprecision(15) << msg.GetTime() << std::endl;        
+        
         // update dynamic moos variables - do this inside the loop so the newest is
         // also the one referenced in the call to inbox()
         dynamic_vars().update_moos_vars(msg);   

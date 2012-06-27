@@ -1,21 +1,7 @@
-// copyright 2009 t. schneider tes@mit.edu
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This software is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "goby/acomms/amac.h"
 #include "goby/acomms/connect.h"
-#include "goby/util/logger.h"
+#include "goby/common/logger.h"
 
 #include <iostream>
 
@@ -26,7 +12,7 @@ void init_transmission(const goby::acomms::protobuf::ModemTransmission& msg);
 int main(int argc, char* argv[])
 {
     goby::glog.set_name(argv[0]);
-    goby::glog.add_stream(goby::util::logger::DEBUG1, &std::clog);
+    goby::glog.add_stream(goby::common::logger::DEBUG1, &std::clog);
 
     //
     // 1. Create a MACManager
@@ -43,7 +29,7 @@ int main(int argc, char* argv[])
     slot->set_src(1);
     slot->set_rate(0);
     slot->set_type(goby::acomms::protobuf::ModemTransmission::DATA);
-    slot->SetExtension(goby::acomms::protobuf::slot_seconds, 5);
+    slot->set_slot_seconds(5);
     
     
     //
@@ -72,7 +58,7 @@ int main(int argc, char* argv[])
     new_slot.set_src(2);
     new_slot.set_rate(0);
     new_slot.set_type(goby::acomms::protobuf::ModemTransmission::DATA);
-    new_slot.SetExtension(goby::acomms::protobuf::slot_seconds, 5);
+    new_slot.set_slot_seconds(5);
     
     mac.push_back(new_slot);
 
@@ -83,7 +69,9 @@ int main(int argc, char* argv[])
 
     mac.resize(mac.size()+1);
     mac.back().CopyFrom(mac.front());
-    mac.back().set_type(goby::acomms::protobuf::ModemTransmission::MICROMODEM_REMUS_LBL_RANGING);
+    mac.back().set_type(goby::acomms::protobuf::ModemTransmission::DRIVER_SPECIFIC);
+    mac.back().SetExtension(micromodem::protobuf::type,
+                            micromodem::protobuf::MICROMODEM_REMUS_LBL_RANGING);
 
     // must call update after manipulating MACManager before calling do_work again.
     mac.update();

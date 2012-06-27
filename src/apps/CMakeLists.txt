@@ -1,7 +1,3 @@
-if(build_pb)
-  add_subdirectory(pb)
-endif()
-
 if(build_common)
   add_subdirectory(common)
 endif()
@@ -16,4 +12,8 @@ endif()
 
 if(build_moos)
   add_subdirectory(moos)
+endif()
+
+if(build_pb)
+  add_subdirectory(pb)
 endif()

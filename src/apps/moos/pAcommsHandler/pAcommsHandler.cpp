@@ -35,6 +35,9 @@
 #include "goby/moos/moos_protobuf_helpers.h"
 #include "goby/moos/moos_ufield_sim_driver.h"
 #include "goby/moos/protobuf/ufield_sim_driver.pb.h"
+#include "goby/pb/pb_modem_driver.h"
+#include "goby/acomms/modemdriver/udp_driver.h"
+
 
 using namespace goby::common::tcolor;
 using namespace goby::common::logger;
@@ -64,20 +67,16 @@ void CpAcommsHandler::delete_instance()
 
 CpAcommsHandler::CpAcommsHandler()
     : GobyMOOSApp(&cfg_),
-      source_database_(&disk_source_tree_),
       translator_(goby::moos::protobuf::TranslatorEntry(),
                   cfg_.common().lat_origin(),
                   cfg_.common().lon_origin(),
                   cfg_.modem_id_lookup_path()),
       dccl_(goby::acomms::DCCLCodec::get()),
-      work_(timer_io_service_)
+      driver_(0),
+      work_(timer_io_service_),
+      router_(0)
 {
     goby::common::goby_time_function = boost::bind(&CpAcommsHandler::microsec_moos_time, this);
-
-    
-    source_database_.RecordErrorsTo(&error_collector_);
-    disk_source_tree_.MapPath("/", "/");
-    goby::util::DynamicProtobufManager::add_database(&source_database_);
 
 #ifdef ENABLE_GOBY_V1_TRANSITIONAL_SUPPORT
     transitional_dccl_.convert_to_v2_representation(&cfg_);
@@ -85,11 +84,9 @@ CpAcommsHandler::CpAcommsHandler()
 #else
     if(cfg_.has_transitional_cfg())
         glog.is(WARN) && glog << "transitional_cfg is set but pAcommsHandler was not compiled with the CMake flag 'enable_goby_v1_transitional_support' set to ON" << std::endl;
-#endif
+#endif    
     
-    
-    translator_.add_entry(cfg_.translator_entry());
-    
+    translator_.add_entry(cfg_.translator_entry());    
     
     goby::acomms::connect(&queue_manager_.signal_receive,
                           this, &CpAcommsHandler::handle_queue_receive);
@@ -152,12 +149,17 @@ CpAcommsHandler::CpAcommsHandler()
                                           _1, cfg_.moos_var().driver_raw_out()));
         
         
-    }    
+    }
+    
+    if(router_)
+    {
+        bind(queue_manager_, *router_);    
+    }
     
     // update comms cycle
-    subscribe(cfg_.moos_var().mac_cycle_update(), &CpAcommsHandler::handle_mac_cycle_update, this);    
+    subscribe(cfg_.moos_var().prefix() + cfg_.moos_var().mac_cycle_update(), &CpAcommsHandler::handle_mac_cycle_update, this);    
     
-    subscribe(cfg_.moos_var().queue_flush(), &CpAcommsHandler::handle_flush_queue, this);    
+    subscribe(cfg_.moos_var().prefix() + cfg_.moos_var().queue_flush(), &CpAcommsHandler::handle_flush_queue, this);    
 }
 
 CpAcommsHandler::~CpAcommsHandler()
@@ -291,20 +293,20 @@ void CpAcommsHandler::handle_goby_signal(const google::protobuf::Message& msg1,
     {
         std::string serialized1;
         serialize_for_moos(&serialized1, msg1);
-        publish(moos_var1, serialized1);
+        publish(cfg_.moos_var().prefix() + moos_var1, serialized1);
     }
     
     if(!moos_var2.empty())
     {
         std::string serialized2;
         serialize_for_moos(&serialized2, msg2);
-        publish(moos_var2, serialized2);
+        publish(cfg_.moos_var().prefix() + moos_var2, serialized2);
     }
 }
 
 void CpAcommsHandler::handle_raw(const goby::acomms::protobuf::ModemRaw& msg, const std::string& moos_var)
 {
-    publish(moos_var, msg.raw());
+    publish(cfg_.moos_var().prefix() + moos_var, msg.raw());
 }
 
 
@@ -320,25 +322,40 @@ void CpAcommsHandler::process_configuration()
     // create driver object
     switch(cfg_.driver_type())
     {
-        case pAcommsHandlerConfig::DRIVER_WHOI_MICROMODEM:
+        case goby::acomms::protobuf::DRIVER_WHOI_MICROMODEM:
             driver_ = new goby::acomms::MMDriver;
             break;
 
-        case pAcommsHandlerConfig::DRIVER_ABC_EXAMPLE_MODEM:
+        case goby::acomms::protobuf::DRIVER_ABC_EXAMPLE_MODEM:
             driver_ = new goby::acomms::ABCDriver;
             break;
 
-        case pAcommsHandlerConfig::DRIVER_UFIELD_SIM_DRIVER:
+        case goby::acomms::protobuf::DRIVER_UFIELD_SIM_DRIVER:
             driver_ = new goby::moos::UFldDriver;
             cfg_.mutable_driver_cfg()->SetExtension(
                 goby::moos::protobuf::Config::modem_id_lookup_path,
                 cfg_.modem_id_lookup_path());
             break;
 
+        case goby::acomms::protobuf::DRIVER_PB_STORE_SERVER:
+            zeromq_service_.reset(new goby::common::ZeroMQService);
+            driver_ = new goby::pb::PBDriver(zeromq_service_.get());
+            break;
+
+        case goby::acomms::protobuf::DRIVER_UDP:
+            asio_service_.reset(new boost::asio::io_service);
+            driver_ = new goby::acomms::UDPDriver(asio_service_.get());
+            break;
+
             
-        case pAcommsHandlerConfig::DRIVER_NONE: break;
+        case goby::acomms::protobuf::DRIVER_NONE: break;
     }    
 
+    if(cfg_.has_route_cfg())
+    {
+        router_ = new goby::acomms::RouteManager;
+    }
+    
     // check and propagate modem id
     if(cfg_.modem_id() == goby::acomms::BROADCAST_ID)
         glog.is(DIE) && glog << "modem_id = " << goby::acomms::BROADCAST_ID << " is reserved for broadcast messages. You must specify a modem_id != " << goby::acomms::BROADCAST_ID << " for this vehicle." << std::endl;
@@ -350,49 +367,41 @@ void CpAcommsHandler::process_configuration()
     cfg_.mutable_mac_cfg()->set_modem_id(cfg_.modem_id());
     cfg_.mutable_transitional_cfg()->set_modem_id(cfg_.modem_id());
     cfg_.mutable_driver_cfg()->set_modem_id(cfg_.modem_id());
-    
 
     // start goby-acomms classes
     if(driver_) driver_->startup(cfg_.driver_cfg());
     mac_.startup(cfg_.mac_cfg());
     queue_manager_.set_cfg(cfg_.queue_cfg());
     dccl_->set_cfg(cfg_.dccl_cfg());
-
+    if(router_) router_->set_cfg(cfg_.route_cfg());
+    
     // load all shared libraries
     for(int i = 0, n = cfg_.load_shared_library_size(); i < n; ++i)
     {
         glog.is(VERBOSE) &&
             glog << group("pAcommsHandler") << "Loading shared library: " << cfg_.load_shared_library(i) << std::endl;
         
-        void* handle = dlopen(cfg_.load_shared_library(i).c_str(), RTLD_LAZY);
+        void* handle = goby::util::DynamicProtobufManager::load_from_shared_lib(cfg_.load_shared_library(i));
+        
         if(!handle)
         {
             glog.is(DIE) && glog << "Failed ... check path provided or add to /etc/ld.so.conf "
                          << "or LD_LIBRARY_PATH" << std::endl;
         }
-        dl_handles.push_back(handle);
 
-        // load any shared library codecs
-        void (*dccl_load_ptr)(goby::acomms::DCCLCodec*);
-        dccl_load_ptr = (void (*)(goby::acomms::DCCLCodec*)) dlsym(handle, "goby_dccl_load");
-        if(dccl_load_ptr)
-        {
-            glog << group("pAcommsHandler") << "Loading shared library dccl codecs." << std::endl;
-            (*dccl_load_ptr)(dccl_);
-        }
+        glog << group("pAcommsHandler") << "Loading shared library dccl codecs." << std::endl;
         
+        dccl_->load_shared_library_codecs(handle);
     }
     
-    
     // load all .proto files
+    goby::util::DynamicProtobufManager::enable_compilation();
     for(int i = 0, n = cfg_.load_proto_file_size(); i < n; ++i)
     {
         glog.is(VERBOSE) &&
             glog << group("pAcommsHandler") << "Loading protobuf file: " << cfg_.load_proto_file(i) << std::endl;
-
         
-        if(!goby::util::DynamicProtobufManager::descriptor_pool().FindFileByName(
-               cfg_.load_proto_file(i)))
+        if(!goby::util::DynamicProtobufManager::load_from_proto_file(cfg_.load_proto_file(i)))
             glog.is(DIE) && glog << "Failed to load file." << std::endl;
     }
 
@@ -494,7 +503,7 @@ void CpAcommsHandler::create_on_multiplex_publish(const CMOOSMsg& moos_msg)
     boost::shared_ptr<google::protobuf::Message> msg =
         dynamic_parse_for_moos(moos_msg.GetString());
 
-    if(&*msg == 0)
+    if(!msg)
     {
         glog.is(WARN) &&
              glog << group("pAcommsHandler") << "Multiplex receive failed: Unknown Protobuf type for " << moos_msg.GetString() << "; be sure it is compiled in or directly loaded into the goby::util::DynamicProtobufManager." << std::endl;

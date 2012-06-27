@@ -15,7 +15,7 @@ endmacro()
 ## find external packages, libraries, and headers for the entire goby project
 # mandatory
 ## boost
-goby_find_required_package(Boost 1.36.0 COMPONENTS system date_time thread program_options filesystem signals regex)
+goby_find_required_package(Boost 1.40.0 COMPONENTS system date_time thread program_options filesystem signals regex)
 include_directories(${Boost_INCLUDE_DIRS})
 
 goby_find_required_package(ProtobufGoby)
@@ -72,8 +72,20 @@ endif()
 
 if(enable_zeromq)
   goby_find_required_package(ZeroMQ)
-  include_directories(${ZEROMQ_INCLUDE_DIRS})
+  include_directories(${ZeroMQ_INCLUDE_DIRS})
 endif()
+
+## Sqlite3
+find_package(Sqlite3 QUIET)
+set(SQLITE_DOC_STRING "Enable SQLite3 database components (requires libsqlite3-dev: http://www.sqlite.org)")
+# find resources directory
+if(SQLITE3_FOUND)
+  option(enable_sqlite ${SQLITE_DOC_STRING} ON)
+else()
+  option(enable_sqlite ${SQLITE_DOC_STRING} OFF)
+  message(">> setting enable_sqlite to OFF ... if you need this functionality: 1) install libsqlite3-dev; 2) run cmake -Denable_sqlite=ON")
+endif()
+
 
 ## Wt
 find_package(WtGoby QUIET)
@@ -91,8 +103,8 @@ if(enable_wt)
   goby_find_required_package(WtGoby)    
   include_directories(${Wt_INCLUDE_DIR})
   set(Wt_RESOURCES_DIR "${Wt_RESOURCES_DIR_BASE}/share/Wt/resources")
-  add_custom_target(wt_link ALL DEPENDS WtResourcesLink)
   add_custom_command(OUTPUT WtResourcesLink COMMAND ${CMAKE_COMMAND} -E create_symlink ${Wt_RESOURCES_DIR} ${goby_SHARE_DIR}/liaison/resources)
+  add_custom_target(wt_link ALL DEPENDS WtResourcesLink)
 endif()  
 
 # Xerces
@@ -121,6 +133,7 @@ endif()
 
 ## set flags
 option(build_common "Build the Goby Common library" ON)  
+option(build_dccllite "Build a minimal (lite) DCCL library." OFF)  
 
 # module dependencies
 # you can optionally build up to any point in this chain
@@ -133,37 +146,79 @@ if(build_common)
   if(build_util)
     add_subdirectory(util)
 
-    if(enable_zeromq)
-      option(build_pb "Build the Goby implementation in Protobuf/C++ (PB) (requires goby-util)" ON)
-      if(build_pb)
-        add_subdirectory(pb)
-      endif(build_pb)
-    endif()
-
     option(build_acomms "Build the Goby Acoustic Communications library and applications (requires goby-util)" ON)
     if(build_acomms)
       add_subdirectory(acomms)
 
-  
-        find_package(MOOS QUIET)
-        set(MOOS_DOC_STRING "Build the Acoustic Communications MOOS apps (pAcommsHandler, etc.)")
-        if(MOOS_FOUND)
-          include_directories(${MOOS_INCLUDE_DIRS})
-          add_definitions(-DHAS_MOOS)
-          option(build_moos ${MOOS_DOC_STRING} ON)
-        else()
-          option(build_moos ${MOOS_DOC_STRING} OFF)
-          message(">> setting build_moos to OFF ... if you need this functionality: 1) install MOOS; 2) run cmake -Dbuild_moos=ON")
-        endif()
 
-        if(build_moos)
-          add_subdirectory(moos)
-        endif(build_moos)
+      if(enable_zeromq)
+        option(build_pb "Build the Goby implementation in Protobuf/C++ (PB) (requires goby-util)" ON)
+        if(build_pb)
+          add_subdirectory(pb)
+        endif(build_pb)
+      endif()
+
+
+  
+      find_package(MOOS QUIET)
+      set(MOOS_DOC_STRING "Build the Acoustic Communications MOOS apps (pAcommsHandler, etc.)")
+      if(MOOS_FOUND)
+        include_directories(${MOOS_INCLUDE_DIRS})
+        add_definitions(-DHAS_MOOS)
+        option(build_moos ${MOOS_DOC_STRING} ON)
+      else()
+        option(build_moos ${MOOS_DOC_STRING} OFF)
+        message(">> setting build_moos to OFF ... if you need this functionality: 1) install MOOS; 2) run cmake -Dbuild_moos=ON")
+      endif()
+
+      if(build_moos)
+        add_subdirectory(moos)
+      endif(build_moos)
     endif(build_acomms)
   endif(build_util)
 endif(build_common)
 
+if(build_dccllite)
+  # NCurses and Crypto both ifdef-in capabilities.  It is unlikely that most
+  # people interested in DCCLLite want ncurses.  Crypto could go either way,
+  # so we respect the developer's choice on that.
+  if (enable_ncurses)
+    message(WARNING "DCCLLite ignoring request to build with ncurses support!")
+    remove_definitions(-DHAS_NCURSES)
+  endif(enable_ncurses)
+  set(PROTOS common/protobuf/logger.proto
+             common/protobuf/option_extensions.proto
+             common/protobuf/acomms_option_extensions.proto
+             acomms/protobuf/dccl.proto
+             acomms/protobuf/ccl.proto
+             acomms/protobuf/modem_message.proto)
 
+  protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
+
+  add_library(goby_dccllite 
+    acomms/dccl/dccl.cpp
+    acomms/dccl/dccl_field_codec.cpp
+    acomms/dccl/dccl_field_codec_helpers.cpp
+    acomms/dccl/dccl_field_codec_default.cpp
+    acomms/dccl/dccl_field_codec_default_message.cpp
+    acomms/dccl/dccl_field_codec_manager.cpp
+    acomms/dccl/dccl_type_helper.cpp
+    acomms/dccl/dccl_bitset.cpp
+    acomms/dccl/dccl_ccl_compatibility.cpp
+    acomms/dccl/WhoiUtil.cpp
+    # COMMON
+    common/time.cpp
+    common/logger/logger_manipulators.cpp
+    common/logger/term_color.cpp
+    common/logger/flex_ostream.cpp
+    common/logger/flex_ostreambuf.cpp
+
+    ${PROTO_SRCS} ${PROTO_HDRS}
+  )
+
+  target_link_libraries(goby_dccllite ${Cryptopp_LIBRARIES})
+  set_target_properties(goby_dccllite PROPERTIES VERSION "${GOBY_VERSION}" SOVERSION "${GOBY_SOVERSION}")
+endif(build_dccllite)
 
 
 # latex, for documentation
