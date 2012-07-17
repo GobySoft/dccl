@@ -75,15 +75,41 @@ void goby::pb::PBDriver::shutdown()
 void goby::pb::PBDriver::handle_initiate_transmission(const acomms::protobuf::ModemTransmission& orig_msg)
 {
     // buffer the message
-    acomms::protobuf::ModemTransmission* msg = request_.add_outbox();
-    msg->CopyFrom(orig_msg);
-    signal_modify_transmission(msg);
+    acomms::protobuf::ModemTransmission msg = orig_msg;
+    signal_modify_transmission(&msg);
 
-    msg->set_max_frame_bytes(driver_cfg_.GetExtension(PBDriverConfig::max_frame_size));
-    signal_data_request(msg);
+    if(driver_cfg_.modem_id() == msg.src())
+    {        
+        // this is our transmission        
+        if(msg.rate() < driver_cfg_.ExtensionSize(PBDriverConfig::rate_to_bytes))
+            msg.set_max_frame_bytes(driver_cfg_.GetExtension(PBDriverConfig::rate_to_bytes, msg.rate()));
+        else
+            msg.set_max_frame_bytes(driver_cfg_.GetExtension(PBDriverConfig::max_frame_size));
+        
+        // no data given to us, let's ask for some
+        if(msg.frame_size() == 0)
+            ModemDriverBase::signal_data_request(&msg);
+        
+        // don't send an empty message
+        if(msg.frame_size() && msg.frame(0).size())
+        {
+            request_.add_outbox()->CopyFrom(msg);
+        }
+    }
+    else
+    {
+        // send thirdparty "poll"
+        msg.SetExtension(PBDriverTransmission::poll_src, msg.src());        
+        msg.SetExtension(PBDriverTransmission::poll_dest, msg.dest());
 
-    if(msg->frame_size() == 0 || msg->frame(0).empty())
-        request_.mutable_outbox()->RemoveLast();
+        msg.set_dest(msg.src());
+        msg.set_src(driver_cfg_.modem_id());
+        
+        msg.set_type(goby::acomms::protobuf::ModemTransmission::DRIVER_SPECIFIC);
+        msg.SetExtension(PBDriverTransmission::type, PBDriverTransmission::PB_DRIVER_POLL);
+
+        request_.add_outbox()->CopyFrom(msg);
+    }
 }
 
 
@@ -91,13 +117,14 @@ void goby::pb::PBDriver::do_work()
 {
     while(zeromq_service_->poll(0))
     { }
-
+    
     // call in with our outbox
     if(!waiting_for_reply_ &&
        request_.IsInitialized() &&
-       goby_time<uint64>() > last_send_time_ + 1e6*query_interval_seconds_)
+       goby_time<uint64>() > last_send_time_ + 1000000*static_cast<uint64>(query_interval_seconds_))
     {
-
+        static int request_id = 0;
+        request_.set_request_id(request_id++);
         glog.is(DEBUG1) && glog << group(glog_out_group()) << "Sending to server." << std::endl;
         glog.is(DEBUG2) && glog << group(glog_out_group()) << "Outbox: " << request_.DebugString() << std::flush;
         send(request_, request_socket_id_);
@@ -124,22 +151,42 @@ void goby::pb::PBDriver::handle_response(const acomms::protobuf::StoreServerResp
 
     for(int i = 0, n = response.inbox_size(); i < n; ++i)
     {
-        // ack any packets
         const acomms::protobuf::ModemTransmission& msg = response.inbox(i);
-        if(msg.dest() == driver_cfg_.modem_id() &&
-           msg.type() == acomms::protobuf::ModemTransmission::DATA &&
-           msg.ack_requested())
+
+        // poll for us
+        if(msg.type() == goby::acomms::protobuf::ModemTransmission::DRIVER_SPECIFIC &&
+           msg.GetExtension(PBDriverTransmission::type) == PBDriverTransmission::PB_DRIVER_POLL &&
+           msg.GetExtension(PBDriverTransmission::poll_src) == driver_cfg_.modem_id())
         {
-            acomms::protobuf::ModemTransmission& ack = *request_.add_outbox();
-            ack.set_type(goby::acomms::protobuf::ModemTransmission::ACK);
-            ack.set_src(msg.dest());
-            ack.set_dest(msg.src());
-            for(int i = 0, n = msg.frame_size(); i < n; ++i)
-                ack.add_acked_frame(i);
+            goby::acomms::protobuf::ModemTransmission data_msg = msg;
+            data_msg.set_type(goby::acomms::protobuf::ModemTransmission::DATA);
+            data_msg.set_src(msg.GetExtension(PBDriverTransmission::poll_src));
+            data_msg.set_dest(msg.GetExtension(PBDriverTransmission::poll_dest));
+
+            data_msg.ClearExtension(PBDriverTransmission::type);
+            data_msg.ClearExtension(PBDriverTransmission::poll_dest);
+            data_msg.ClearExtension(PBDriverTransmission::poll_src);        
             
+            handle_initiate_transmission(data_msg);
         }
+        else
+        {
+            // ack any packets
+            if(msg.dest() == driver_cfg_.modem_id() &&
+               msg.type() == acomms::protobuf::ModemTransmission::DATA &&
+               msg.ack_requested())
+            {
+                acomms::protobuf::ModemTransmission& ack = *request_.add_outbox();
+                ack.set_type(goby::acomms::protobuf::ModemTransmission::ACK);
+                ack.set_src(msg.dest());
+                ack.set_dest(msg.src());
+                for(int i = 0, n = msg.frame_size(); i < n; ++i)
+                    ack.add_acked_frame(i);
+            
+            }
         
-        signal_receive(msg);
+            signal_receive(msg);
+        }   
     }
 
     waiting_for_reply_ = false;
