@@ -1,16 +1,6 @@
-## boost
 
-if (enable_ncurses)
-  message(WARNING "DCCL ignoring request to build with ncurses support!")
-  remove_definitions(-DHAS_NCURSES)
-endif(enable_ncurses)
-
-goby_find_required_package(Boost 1.40.0 COMPONENTS filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
-
-set(PROTOS ../common/protobuf/logger.proto
-  ../common/protobuf/option_extensions.proto
-  ../common/protobuf/acomms_option_extensions.proto
+set(PROTOS protobuf/logger.proto
+  protobuf/option_extensions.proto
   protobuf/dccl.proto
   protobuf/ccl.proto)
 
@@ -29,13 +19,13 @@ add_library(dccl
   dccl_ccl_compatibility.cpp
   WhoiUtil.cpp
   # COMMON
-  ../common/time.cpp
-  ../common/logger/logger_manipulators.cpp
-  ../common/logger/term_color.cpp
-  ../common/logger/flex_ostream.cpp
-  ../common/logger/flex_ostreambuf.cpp
+  junk/common/time.cpp
+  junk/common/logger/logger_manipulators.cpp
+  junk/common/logger/term_color.cpp
+  junk/common/logger/flex_ostream.cpp
+  junk/common/logger/flex_ostreambuf.cpp
 
-  ../util/dynamic_protobuf_manager.cpp
+  junk/util/dynamic_protobuf_manager.cpp
   
   ${PROTO_SRCS} ${PROTO_HDRS}
   )

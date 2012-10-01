@@ -47,7 +47,6 @@
 #include "dccl_ccl_compatibility.h"
 #include "dccl/dccl_field_codec_arithmetic.h"
 #include "goby/util/as.h"
-#include "goby/common/protobuf/acomms_option_extensions.pb.h"
 //#include "goby/common/header.pb.h"
 
 using goby::common::goby_time;

@@ -70,7 +70,7 @@ void run_test(goby::acomms::protobuf::ArithmeticModel& model,
 }
 
 
-// usage: goby_test_dccl10 [boolean: verbose]
+// usage: dccl_test10 [boolean: verbose]
 int main(int argc, char* argv[])
 {
     if(argc > 1 && goby::util::as<bool>(argv[1]) == 1)

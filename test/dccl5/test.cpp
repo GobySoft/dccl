@@ -27,7 +27,7 @@
 #include "dccl/dccl_field_codec_default.h"
 #include "dccl/dccl_field_codec.h"
 #include "test.pb.h"
-#include "goby/common/protobuf/acomms_option_extensions.pb.h"
+#include "dccl/protobuf/option_extensions.pb.h"
 #include "goby/util/as.h"
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
@@ -49,11 +49,9 @@ void process_queue_field(const boost::any& field_value,
     
     const google::protobuf::Message* options_msg = boost::any_cast<const google::protobuf::Message*>(extension_value);
 
-    goby::GobyFieldOptions goby_field_options;
-    goby_field_options.CopyFrom(*options_msg);
+    QueueFieldOptions field_options;
+    field_options.CopyFrom(*options_msg);
 
-    const QueueFieldOptions& field_options = goby_field_options.queue();
-    
     if(field_options.is_dest())
     {
         std::cout << "dest: type: `" << wire_value.type().name() << "`, wire_value: " << boost::any_cast<int32>(wire_value) << std::endl;
@@ -81,7 +79,7 @@ int main(int argc, char* argv[])
     goby::glog.set_name(argv[0]);
 
 
-    goby::acomms::DCCLFieldCodecBase::register_wire_value_hook(goby::field.number(), &process_queue_field);
+    goby::acomms::DCCLFieldCodecBase::register_wire_value_hook(queue_field.number(), &process_queue_field);
     
     goby::acomms::DCCLModemIdConverterCodec::add("unicorn", 3);
     goby::acomms::DCCLModemIdConverterCodec::add("topside", 1);
