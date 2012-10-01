@@ -3,17 +3,6 @@ file(GLOB PROTOS protobuf/*.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 set(SRC
-  dccl/dccl.cpp
-  dccl/dccl_field_codec.cpp
-  dccl/dccl_field_codec_helpers.cpp
-  dccl/dccl_field_codec_default.cpp
-  dccl/dccl_field_codec_default_message.cpp
-  dccl/dccl_field_codec_arithmetic.cpp
-  dccl/dccl_field_codec_manager.cpp
-  dccl/dccl_type_helper.cpp
-  dccl/dccl_bitset.cpp
-  dccl/dccl_ccl_compatibility.cpp
-  dccl/WhoiUtil.cpp
   queue/queue.cpp
   queue/queue_manager.cpp
   amac/mac_manager.cpp

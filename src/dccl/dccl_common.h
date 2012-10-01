@@ -21,29 +21,40 @@
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#ifndef AcommsHelpers20110208H
-#define AcommsHelpers20110208H
+#ifndef DCCLConstants20091211H
+#define DCCLConstants20091211H
 
 #include <string>
-#include <limits>
 #include <bitset>
+#include <limits>
+#include <vector>
 
-#include <google/protobuf/descriptor.h>
+#include <google/protobuf/dynamic_message.h>
+#include <boost/dynamic_bitset.hpp>
+
+#include "goby/util/primitive_types.h"
+#include "dccl/dccl_bitset.h"
+#include "goby/acomms/acomms_constants.h"
+#include "goby/common/logger.h"
 
 namespace goby
 {
 
     namespace acomms
-    {            
-        // provides stream output operator for Google Protocol Buffers Message 
-        inline std::ostream& operator<<(std::ostream& out, const google::protobuf::Message& msg)
+    {        
+        // more efficient way to do ceil(total_bits / 8)
+        // to get the number of bytes rounded up.
+        enum { BYTE_MASK = 7 }; // 00000111
+        inline unsigned floor_bits2bytes(unsigned bits)
+        { return bits >> 3; }
+        inline unsigned ceil_bits2bytes(unsigned bits)
         {
-            return (out << "[[" << msg.GetDescriptor()->name() <<"]] " << msg.DebugString());
+            return (bits& BYTE_MASK) ?
+                floor_bits2bytes(bits) + 1 :
+                floor_bits2bytes(bits);
         }
         
-
         
     }
 }
-
 #endif
