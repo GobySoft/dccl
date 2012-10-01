@@ -21,15 +21,15 @@ endif()
 
 set(GOBY_VERSION_MAJOR "2")
 set(GOBY_VERSION_MINOR "0")
-set(GOBY_VERSION_PATCH "1~rc1+DSOP20120625+1")
+set(GOBY_VERSION_PATCH "1~rc3")
 set(GOBY_VERSION "${GOBY_VERSION_MAJOR}.${GOBY_VERSION_MINOR}.${GOBY_VERSION_PATCH}")
-set(GOBY_VERSION_DATE "2012.06.25")
+set(GOBY_VERSION_DATE "2012.08.24")
 
 include(today)
 today(GOBY_COMPILE_DATE)
 
-# give Goby 2 series a few more soversions
-set(GOBY_SOVERSION "21")
+# give Goby 1 series a few more soversions
+set(GOBY_SOVERSION "22")
 
 # fetch all the local directories for generated code
 get_filename_component(goby_LIB_DIR lib ABSOLUTE)
@@ -81,6 +81,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${goby_LIB_DIR} CACHE PATH
   "Output directory for the static libraries (archives)" )
 
 ## set instructions for `make install`
+file(MAKE_DIRECTORY ${goby_BIN_DIR})
 install(DIRECTORY ${goby_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin 
   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 

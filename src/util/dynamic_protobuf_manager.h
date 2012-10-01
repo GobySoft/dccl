@@ -29,6 +29,7 @@
 #include <dlfcn.h>
 
 #include <set>
+#include <stdexcept>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -37,7 +38,7 @@
 #include <google/protobuf/compiler/importer.h>
 
 
-#include <boost/signals.hpp>
+#include <boost/signals2.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace goby
@@ -97,6 +98,16 @@ namespace goby
 #if PROTO_RUNTIME_COMPILE
             static const google::protobuf::FileDescriptor*
                 load_from_proto_file(const std::string& proto_file);
+
+
+            static void add_include_path(const std::string& path)
+            {
+                if(!get_instance()->disk_source_tree_)
+                    throw(std::runtime_error("Must called enable_compilation() before loading proto files directly"));
+
+                get_instance()->disk_source_tree_->MapPath("", path);
+            }
+            
 #endif
             
             static void* load_from_shared_lib(const std::string& shared_lib_path)
@@ -116,7 +127,7 @@ namespace goby
             static const google::protobuf::FileDescriptor* add_protobuf_file(
                 const google::protobuf::FileDescriptorProto& proto);
             
-            static boost::signal<void (const google::protobuf::FileDescriptor*) > new_descriptor_hooks;
+            static boost::signals2::signal<void (const google::protobuf::FileDescriptor*) > new_descriptor_hooks;
 
             static google::protobuf::DynamicMessageFactory& msg_factory()
             { return *get_instance()->msg_factory_; }

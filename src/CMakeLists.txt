@@ -14,9 +14,6 @@ endmacro()
 
 ## find external packages, libraries, and headers for the entire goby project
 # mandatory
-## boost
-goby_find_required_package(Boost 1.40.0 COMPONENTS system date_time thread program_options filesystem signals regex)
-include_directories(${Boost_INCLUDE_DIRS})
 
 goby_find_required_package(ProtobufGoby)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
@@ -140,6 +137,11 @@ option(build_dccllite "Build a minimal (lite) DCCL library." OFF)
 # common -> util -> acomms -> moos
 
 if(build_common)
+
+   ## boost
+   goby_find_required_package(Boost 1.40.0 COMPONENTS system date_time thread program_options filesystem regex)
+   include_directories(${Boost_INCLUDE_DIRS})
+
   add_subdirectory(common)
 
   option(build_util "Build the Goby Utility library and applications (requires goby-common)" ON)
@@ -182,6 +184,11 @@ if(build_dccllite)
   # NCurses and Crypto both ifdef-in capabilities.  It is unlikely that most
   # people interested in DCCLLite want ncurses.  Crypto could go either way,
   # so we respect the developer's choice on that.
+
+  ## boost
+  goby_find_required_package(Boost 1.40.0 REQUIRED)
+  include_directories(${Boost_INCLUDE_DIRS})
+
   if (enable_ncurses)
     message(WARNING "DCCLLite ignoring request to build with ncurses support!")
     remove_definitions(-DHAS_NCURSES)
@@ -202,6 +209,7 @@ if(build_dccllite)
     acomms/dccl/dccl_field_codec_default.cpp
     acomms/dccl/dccl_field_codec_default_message.cpp
     acomms/dccl/dccl_field_codec_manager.cpp
+    acomms/dccl/dccl_field_codec_arithmetic.cpp
     acomms/dccl/dccl_type_helper.cpp
     acomms/dccl/dccl_bitset.cpp
     acomms/dccl/dccl_ccl_compatibility.cpp
@@ -216,7 +224,7 @@ if(build_dccllite)
     ${PROTO_SRCS} ${PROTO_HDRS}
   )
 
-  target_link_libraries(goby_dccllite ${Cryptopp_LIBRARIES})
+  target_link_libraries(goby_dccllite ${Cryptopp_LIBRARIES} ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS})
   set_target_properties(goby_dccllite PROPERTIES VERSION "${GOBY_VERSION}" SOVERSION "${GOBY_SOVERSION}")
 endif(build_dccllite)
 

@@ -32,7 +32,7 @@
 
 boost::shared_ptr<goby::util::DynamicProtobufManager> goby::util::DynamicProtobufManager::inst_;
 
-boost::signal<void (const google::protobuf::FileDescriptor*)> goby::util::DynamicProtobufManager::new_descriptor_hooks;
+boost::signals2::signal<void (const google::protobuf::FileDescriptor*)> goby::util::DynamicProtobufManager::new_descriptor_hooks;
 
 const google::protobuf::FileDescriptor* goby::util::DynamicProtobufManager::add_protobuf_file(const google::protobuf::FileDescriptorProto& proto)
 {
@@ -54,6 +54,7 @@ void goby::util::DynamicProtobufManager::enable_disk_source_database()
     
     source_database_->RecordErrorsTo(error_collector_);
     disk_source_tree_->MapPath("/", "/");
+    disk_source_tree_->MapPath("", "");
     add_database(source_database_);
 }
 
