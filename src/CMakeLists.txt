@@ -31,7 +31,7 @@ add_library(dccl
   )
 
 target_link_libraries(dccl ${Cryptopp_LIBRARIES} ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES})
-set_target_properties(dccl PROPERTIES VERSION "${GOBY_VERSION}" SOVERSION "${GOBY_SOVERSION}")
+set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
 if(enable_testing)
   add_subdirectory(test)
