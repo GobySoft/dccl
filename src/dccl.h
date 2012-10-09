@@ -37,6 +37,7 @@
 
 #include "goby/common/time.h"
 #include "goby/common/logger.h"
+#include "logger.h"
 #include "dccl/protobuf/dccl.pb.h"
 #include "goby/acomms/acomms_helpers.h"
 #include "goby/util/binary.h"
@@ -49,6 +50,8 @@
 #include "dccl_field_codec_default.h"
 #include "dccl_type_helper.h"
 #include "dccl_field_codec_manager.h"
+
+using namespace dccl;
 
 /// The global namespace for the Goby project.
 namespace goby
@@ -161,11 +164,6 @@ namespace goby
             /// \param msg Google Protobuf message with DCCL extensions for which the encoded size is requested
             /// \return Encoded (using DCCL) size in bytes
             unsigned size(const google::protobuf::Message& msg);
-
-            /// \brief The group name for goby::glog that all encoding related messages are written.
-            static const std::string& glog_encode_group() { return glog_encode_group_; }
-            /// \brief The group name for goby::glog that all decoding related messages are written.
-            static const std::string& glog_decode_group() { return glog_decode_group_; }
             
             //@}
        
@@ -317,7 +315,7 @@ namespace goby
                         {
                             out.push_back(decode<GoogleProtobufMessagePointer>(bytes));
                             unsigned last_size = size(*out.back());
-                            glog.is(common::logger::DEBUG1) && glog  << "last message size was: " << last_size << std::endl;
+                            dlog.is(dccl::logger::DEBUG1) && dlog  << "last message size was: " << last_size << std::endl;
                             bytes.erase(0, last_size);
                         }
                         catch(DCCLException& e)
@@ -326,7 +324,7 @@ namespace goby
                                 throw(e);
                             else
                             {
-                                glog.is(common::logger::WARN) && glog << "failed to decode " << goby::util::hex_encode(bytes) << " but returning parts already decoded"  << std::endl;
+                                dlog.is(dccl::logger::WARN) && dlog << "failed to decode " << goby::util::hex_encode(bytes) << " but returning parts already decoded"  << std::endl;
                                 return out;
                             }
                         }        
@@ -436,9 +434,6 @@ namespace goby
             
           private:
             static boost::shared_ptr<DCCLCodec> inst_;
-
-            static std::string glog_encode_group_;
-            static std::string glog_decode_group_;
             
             protobuf::DCCLConfig cfg_;
             // SHA256 hash of the crypto passphrase

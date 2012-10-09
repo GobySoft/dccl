@@ -7,6 +7,7 @@ set(PROTOS protobuf/logger.proto
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 add_library(dccl 
+  logger.cpp
   dccl.cpp
   dccl_field_codec.cpp
   dccl_field_codec_helpers.cpp

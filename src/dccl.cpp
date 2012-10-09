@@ -53,8 +53,9 @@ using goby::common::goby_time;
 using goby::util::as;
 using goby::util::hex_encode;
 using goby::util::hex_decode;
-using goby::glog;
-using namespace goby::common::logger;
+
+using namespace dccl;
+using namespace dccl::logger;
 
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Descriptor;
@@ -63,23 +64,13 @@ using google::protobuf::Reflection;
 boost::shared_ptr<goby::acomms::DCCLCodec> goby::acomms::DCCLCodec::inst_;
 
 const std::string goby::acomms::DCCLCodec::DEFAULT_CODEC_NAME = "";
-std::string goby::acomms::DCCLCodec::glog_encode_group_;
-std::string goby::acomms::DCCLCodec::glog_decode_group_;
 
 //
 // DCCLCodec
 //
 
 goby::acomms::DCCLCodec::DCCLCodec()
-    : current_id_codec_(DEFAULT_CODEC_NAME)
-{
-
-    glog_encode_group_ = "goby::acomms::dccl::encode";
-    glog_decode_group_ = "goby::acomms::dccl::decode";
-    
-    glog.add_group(glog_encode_group_, common::Colors::lt_magenta);
-    glog.add_group(glog_decode_group_, common::Colors::lt_blue);
-
+    : current_id_codec_(DEFAULT_CODEC_NAME) {
     set_default_codecs();
     process_cfg();
 }
@@ -121,7 +112,7 @@ void goby::acomms::DCCLCodec::encode(std::string* bytes, const google::protobuf:
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Began encoding message of type: " << desc->full_name() << std::endl;    
+    dlog.is(DEBUG1) && dlog << "Began encoding message of type: " << desc->full_name() << std::endl;    
 
     try
     {
@@ -160,21 +151,21 @@ void goby::acomms::DCCLCodec::encode(std::string* bytes, const google::protobuf:
 
         std::string head_bytes = head_bits.to_byte_string();
         std::string body_bytes = body_bits.to_byte_string();
-        
-        glog.is(DEBUG2) && glog << group(glog_encode_group_) << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size()
+
+        dlog.is(dccl::logger::DEBUG2) && dlog << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size()
                                 << "), body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
-        glog.is(DEBUG3) && glog << group(glog_encode_group_) << "Unencrypted Head (bin): " << head_bits << std::endl;
-        glog.is(DEBUG3) && glog << group(glog_encode_group_) << "Unencrypted Body (bin): " << body_bits << std::endl;
-        glog.is(DEBUG3) && glog << group(glog_encode_group_) << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
-        glog.is(DEBUG3) && glog << group(glog_encode_group_) << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
+        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
+        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
+        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
         
         if(!crypto_key_.empty())
             encrypt(&body_bytes, head_bytes);
 
-        glog.is(DEBUG3) && glog << group(glog_encode_group_) << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+        dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
 
 
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Successfully encoded message of type: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
 
         *bytes =  head_bytes + body_bytes;
     }
@@ -184,7 +175,7 @@ void goby::acomms::DCCLCodec::encode(std::string* bytes, const google::protobuf:
         
         ss << "Message " << desc->full_name() << " failed to encode. Reason: " << e.what();
 
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << warn << ss.str() << std::endl;  
+        dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
         throw(DCCLException(ss.str()));
     }
 }
@@ -213,14 +204,14 @@ void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf:
     {
         unsigned id = id_from_encoded(bytes);
 
-        glog.is(DEBUG1) && glog << group(glog_decode_group_) << "Began decoding message of id: " << id << std::endl;
+        dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << id << std::endl;
         
         if(!id2desc_.count(id))
             throw(DCCLException("Message id " + as<std::string>(id) + " has not been validated. Call validate() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
-        glog.is(DEBUG1) && glog << group(glog_decode_group_) << "Type name: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog << "Type name: " << desc->full_name() << std::endl;
         
         boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
         boost::shared_ptr<FromProtoCppTypeBase> helper = DCCLTypeHelper::find(desc);
@@ -234,34 +225,34 @@ void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf:
         unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
         unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
     
-        glog.is(DEBUG2) && glog << group(glog_decode_group_) << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
+        dlog.is(DEBUG2) && dlog << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
                                 << "), max body bytes (bits): " << body_size_bytes << "(" << body_size_bits << ")" <<  std::endl;
 
         std::string head_bytes = bytes.substr(0, head_size_bytes);
         std::string body_bytes = bytes.substr(head_size_bytes);
 
 
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+        dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
 
 
         if(!crypto_key_.empty())
             decrypt(&body_bytes, head_bytes);
 
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+        dlog.is(DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
+        dlog.is(DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
 
         
         Bitset head_bits, body_bits;
         head_bits.from_byte_string(head_bytes);
         body_bits.from_byte_string(body_bytes);
     
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Unencrypted Head (bin): " << head_bits << std::endl;
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Unencrypted Body (bin): " << body_bits << std::endl;
+        dlog.is(DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
+        dlog.is(DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
 
         // shift off ID bits
         head_bits >>= id_codec_[current_id_codec_]->size(id);
 
-        glog.is(DEBUG3) && glog << group(glog_decode_group_) << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
+        dlog.is(DEBUG3) && dlog << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
         
         if(codec)
         {
@@ -269,16 +260,16 @@ void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf:
             msg_handler.push(msg->GetDescriptor());
             
             codec->base_decode(&head_bits, msg, MessageHandler::HEAD);
-            glog.is(DEBUG2) && glog << group(glog_decode_group_) << "after header decode, message is: " << *msg << std::endl;
+            dlog.is(DEBUG2) && dlog << "after header decode, message is: " << *msg << std::endl;
             codec->base_decode(&body_bits, msg, MessageHandler::BODY);
-            glog.is(DEBUG2) && glog << group(glog_decode_group_) << "after header & body decode, message is: " << *msg << std::endl;
+            dlog.is(DEBUG2) && dlog << "after header & body decode, message is: " << *msg << std::endl;
         }
         else
         {
             throw(DCCLException("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(goby::msg).dccl().codec() + "`"));
         }
 
-        glog.is(DEBUG1) && glog << group(glog_decode_group_) << "Successfully decoded message of type: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog << "Successfully decoded message of type: " << desc->full_name() << std::endl;
     }
     catch(std::exception& e)
     {
@@ -286,7 +277,7 @@ void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf:
         
         ss << "Message " << hex_encode(bytes) <<  " failed to decode. Reason: " << e.what() << std::endl;
 
-        glog.is(DEBUG1) && glog << group(glog_decode_group_) << warn << ss.str() << std::endl;  
+        dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
         throw(DCCLException(ss.str()));
     }    
 
@@ -324,19 +315,19 @@ void goby::acomms::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
         else
             id2desc_.insert(std::make_pair(id(desc), desc));
 
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Successfully validated message of type: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name() << std::endl;
 
     }
     catch(DCCLException& e)
     {
         try
         {
-            info(desc, &glog);
+            info(desc, &dlog);
         }
         catch(DCCLException& e)
         { }
         
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Message " << desc->full_name() << ": " << desc << " failed validation. Reason: "
+        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": " << desc << " failed validation. Reason: "
                                 << e.what() <<  "\n"
                                 << "If possible, information about the Message are printed above. " << std::endl;
 
@@ -415,7 +406,7 @@ void goby::acomms::DCCLCodec::info(const google::protobuf::Descriptor* desc, std
     }
     catch(DCCLException& e)
     {
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << warn << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
+        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
     }
         
 }
@@ -514,14 +505,14 @@ void goby::acomms::DCCLCodec::process_cfg()
         SHA256 hash;
         StringSource unused(cfg_.crypto_passphrase(), true, new HashFilter(hash, new StringSink(crypto_key_)));
         
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Cryptography enabled with given passphrase" << std::endl;
+        dlog.is(DEBUG1) && dlog << "Cryptography enabled with given passphrase" << std::endl;
 #else
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << warn << "Cryptography disabled because Goby was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
+        dlog.is(DEBUG1) && dlog << "Cryptography disabled because Goby was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
 #endif
     }
     else
     {
-        glog.is(DEBUG1) && glog << group(glog_encode_group_) << "Cryptography disabled, set crypto_passphrase to enable." << std::endl;
+        dlog.is(DEBUG1) && dlog << "Cryptography disabled, set crypto_passphrase to enable." << std::endl;
     }
 
     switch(cfg_.id_codec())
