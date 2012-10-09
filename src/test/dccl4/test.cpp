@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);
 
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
+    goby::acomms::DCCLCodec codec;
 
     GobyMessage1 msg_in1;
     GobyMessage2 msg_in2;
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     descs.push_back(msg_in3.GetDescriptor());    
     descs.push_back(msg_in4.GetDescriptor());
     
-    codec->info_repeated(descs, &std::cout);    
+    codec.info_repeated(descs, &std::cout);    
 
     BOOST_FOREACH(const google::protobuf::Message* p, msgs)
     {
@@ -69,14 +69,14 @@ int main(int argc, char* argv[])
         std::cout << "Message " << ++i << " in:\n" << p->DebugString() << std::endl;
     }
     
-    codec->validate_repeated(descs);
+    codec.validate_repeated(descs);
     
     std::cout << "Try encode..." << std::endl;
-    std::string bytes1 = codec->encode_repeated(msgs) + std::string(4, '\0');
+    std::string bytes1 = codec.encode_repeated(msgs) + std::string(4, '\0');
     std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
     
-    std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out = codec->decode_repeated<boost::shared_ptr<google::protobuf::Message> >(bytes1);
+    std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out = codec.decode_repeated<boost::shared_ptr<google::protobuf::Message> >(bytes1);
 
     std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
 

@@ -95,16 +95,9 @@ namespace goby
         class DCCLCodec
         {
           public:
-            /// \brief DCCLCodec is a singleton class; use this to get a pointer to the class.
-            static DCCLCodec* get() 
-            {
-                // set these now so that the user has a chance of setting the logger
-                if(!inst_)
-                    inst_.reset(new DCCLCodec);
+            DCCLCodec();
+            virtual ~DCCLCodec() { }
 
-                return inst_.get();
-            }
-            
             static const std::string DEFAULT_CODEC_NAME;
 
             /// \name Initialization Methods.
@@ -432,8 +425,6 @@ namespace goby
             template<typename T>
                 friend void boost::checked_delete(T*);
             
-            DCCLCodec();
-            ~DCCLCodec() { }
             DCCLCodec(const DCCLCodec&);
             DCCLCodec& operator= (const DCCLCodec&);
             

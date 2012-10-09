@@ -80,70 +80,70 @@ int main(int argc, char* argv[])
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);    
     
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
+    goby::acomms::DCCLCodec codec;
     goby::acomms::protobuf::DCCLConfig cfg;
     cfg.set_crypto_passphrase("309ldskjfla39");
-    codec->set_cfg(cfg);
+    codec.set_cfg(cfg);
 
     
-    codec->add_id_codec<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
-    codec->set_id_codec("mini_id_codec");    
+    codec.add_id_codec<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
+    codec.set_id_codec("mini_id_codec");    
 
-    codec->validate<MiniUser>();
-    codec->info<MiniUser>(&goby::glog);    
+    codec.validate<MiniUser>();
+    codec.info<MiniUser>(&goby::glog);    
 
     MiniUser mini_user_msg_in, mini_user_msg_out;
     mini_user_msg_in.set_user(876);
     std::string encoded;
-    codec->encode(&encoded, mini_user_msg_in);
-    codec->decode(encoded, &mini_user_msg_out);
+    codec.encode(&encoded, mini_user_msg_in);
+    codec.decode(encoded, &mini_user_msg_out);
     assert(mini_user_msg_out.SerializeAsString() == mini_user_msg_in.SerializeAsString());
 
-    codec->validate<MiniOWTT>();
-    codec->info<MiniOWTT>(&goby::glog);
+    codec.validate<MiniOWTT>();
+    codec.info<MiniOWTT>(&goby::glog);
 
     MiniOWTT mini_owtt_in, mini_owtt_out; 
     mini_owtt_in.set_clock_mode(3);
     mini_owtt_in.set_tod(12);
     mini_owtt_in.set_user(13);
 
-    codec->encode(&encoded, mini_owtt_in);
+    codec.encode(&encoded, mini_owtt_in);
     std::cout << "OWTT as hex: " << goby::util::hex_encode(encoded) << std::endl;
     
-    codec->decode(encoded, &mini_owtt_out);
+    codec.decode(encoded, &mini_owtt_out);
     assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());
     
-    codec->validate<MiniAbort>();
-    codec->info<MiniAbort>(&goby::glog);
+    codec.validate<MiniAbort>();
+    codec.info<MiniAbort>(&goby::glog);
 
     MiniAbort mini_abort_in, mini_abort_out; 
     mini_abort_in.set_user(130);
-    codec->encode(&encoded, mini_abort_in);
-    codec->decode(encoded, &mini_abort_out);
+    codec.encode(&encoded, mini_abort_in);
+    codec.decode(encoded, &mini_abort_out);
     assert(mini_abort_out.SerializeAsString() == mini_abort_in.SerializeAsString());
 
     cfg.set_id_codec(goby::acomms::protobuf::DCCLConfig::LEGACY_CCL);
     cfg.clear_crypto_passphrase();
-    codec->set_cfg(cfg);
+    codec.set_cfg(cfg);
 
-    codec->validate<NormalDCCL>();
-    codec->info<NormalDCCL>(&goby::glog);
+    codec.validate<NormalDCCL>();
+    codec.info<NormalDCCL>(&goby::glog);
     NormalDCCL normal_msg, normal_msg_out;
     normal_msg.set_a(123);
     normal_msg.set_b(321);
 
-    codec->encode(&encoded, normal_msg);
+    codec.encode(&encoded, normal_msg);
     std::cout << goby::util::hex_encode(encoded) << std::endl;
     assert(goby::util::hex_encode(encoded).substr(0, 2) == "20");
-    codec->decode(encoded, &normal_msg_out);
+    codec.decode(encoded, &normal_msg_out);
     
     assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
 
-    codec->info<goby::acomms::protobuf::CCLMDATState>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATState>(&goby::glog);
 
     goby::acomms::protobuf::CCLMDATState state_in, state_out;
     std::string test_state_encoded = "0e86fa11ad20c9011b4432bf47d10000002401042f0e7d87fa111620c95a200a";
-    codec->decode(goby::util::hex_decode(test_state_encoded), &state_out);
+    codec.decode(goby::util::hex_decode(test_state_encoded), &state_out);
     state_in.set_latitude(25.282416667);
     state_in.set_longitude(-77.164266667);
     state_in.set_fix_age(4);
@@ -181,10 +181,10 @@ int main(int argc, char* argv[])
     assert(state_in.mission_mode() == state_out.mission_mode());
 
     std::string state_encoded;
-    codec->encode(&state_encoded, state_in);
+    codec.encode(&state_encoded, state_in);
 
     goby::acomms::protobuf::CCLMDATState state_out_2;
-    codec->decode(state_encoded, &state_out_2);
+    codec.decode(state_encoded, &state_out_2);
 
     std::cout << "in:" << state_in << std::endl;
     std::cout << test_state_encoded << std::endl;
@@ -200,11 +200,11 @@ int main(int argc, char* argv[])
     std::cout << goby::util::hex_encode(state_out.faults_2()) << std::endl;
 
 
-    codec->info<goby::acomms::protobuf::CCLMDATRedirect>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATRedirect>(&goby::glog);
 
     goby::acomms::protobuf::CCLMDATRedirect redirect_in, redirect_out;
     std::string test_redirect_encoded = "07522cf9113d20c99964003d6464003d640be60014142035f911ef21c9000000";
-    codec->decode(goby::util::hex_decode(test_redirect_encoded), &redirect_out);
+    codec.decode(goby::util::hex_decode(test_redirect_encoded), &redirect_out);
     redirect_in.set_message_number(82);
     redirect_in.set_latitude(25.274995002149939);
     redirect_in.set_longitude(-77.166669030984522);
@@ -233,10 +233,10 @@ int main(int argc, char* argv[])
     redirect_in.set_spare(std::string(3, '\0'));
     
     std::string redirect_encoded;
-    codec->encode(&redirect_encoded, redirect_in);
+    codec.encode(&redirect_encoded, redirect_in);
 
     goby::acomms::protobuf::CCLMDATRedirect redirect_out_2;
-    codec->decode(redirect_encoded, &redirect_out_2);
+    codec.decode(redirect_encoded, &redirect_out_2);
 
     std::cout << "in:" << redirect_in << std::endl;
     std::cout << test_redirect_encoded << std::endl;
@@ -248,11 +248,11 @@ int main(int argc, char* argv[])
     assert(test_redirect_encoded == goby::util::hex_encode(redirect_encoded));
     
 
-    codec->info<goby::acomms::protobuf::CCLMDATEmpty>(&goby::glog);
-    codec->info<goby::acomms::protobuf::CCLMDATBathy>(&goby::glog);
-    codec->info<goby::acomms::protobuf::CCLMDATCTD>(&goby::glog);
-    codec->info<goby::acomms::protobuf::CCLMDATError>(&goby::glog);
-    codec->info<goby::acomms::protobuf::CCLMDATCommand>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATEmpty>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATBathy>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATCTD>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATError>(&goby::glog);
+    codec.info<goby::acomms::protobuf::CCLMDATCommand>(&goby::glog);
     
     
     std::cout << "all tests passed" << std::endl;
