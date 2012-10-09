@@ -205,7 +205,7 @@ void goby::acomms::DCCLDefaultMessageCodec::RunHooks::repeated(
     const std::vector<boost::any>& field_values,
     const google::protobuf::FieldDescriptor* field_desc)
 {
-    goby::glog.is(common::logger::DEBUG2) && glog << group(DCCLCodec::glog_encode_group()) << common::logger::warn << "Hooks not run on repeated message: " << field_desc->DebugString() << std::flush;
+    goby::glog.is(common::logger::DEBUG2) && glog << common::logger::warn << "Hooks not run on repeated message: " << field_desc->DebugString() << std::flush;
 }
 
 void goby::acomms::DCCLDefaultMessageCodec::RunHooks::single(

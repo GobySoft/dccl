@@ -39,7 +39,7 @@ void run_test(goby::acomms::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in,
               bool set_model = true)
 {
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
+    goby::acomms::DCCLCodec codec;
 
     if(set_model)
     {
@@ -47,22 +47,22 @@ void run_test(goby::acomms::protobuf::ArithmeticModel& model,
         goby::acomms::ModelManager::set_model(model);
     }
     
-    codec->info(msg_in.GetDescriptor(), &std::cout);
+    codec.info(msg_in.GetDescriptor(), &std::cout);
 
-    codec->validate(msg_in.GetDescriptor());
+    codec.validate(msg_in.GetDescriptor());
     
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     
     std::cout << "Try encode..." << std::endl;
     std::string bytes;
-    codec->encode(&bytes, msg_in);
+    codec.encode(&bytes, msg_in);
     std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
 
     boost::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
-    codec->decode(bytes, msg_out.get());
+    codec.decode(bytes, msg_out.get());
     
     std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
     
@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
     goby::glog.set_name(argv[0]);
     
     goby::acomms::protobuf::DCCLConfig cfg;
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
-    codec->set_cfg(cfg);
+    goby::acomms::DCCLCodec codec;
+    codec.set_cfg(cfg);
 
     
     // test case from Practical Implementations of Arithmetic Coding by Paul G. Howard and Je rey Scott Vitter

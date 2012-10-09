@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
     goby::glog.set_name(argv[0]);
     
     goby::acomms::protobuf::DCCLConfig cfg;
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
-    codec->set_cfg(cfg);
+    goby::acomms::DCCLCodec codec;
+    codec.set_cfg(cfg);
 
     TestMsg msg_in;
     int i = 0;
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
         em_msg->mutable_msg()->set_val(++i);
     }
     
-    codec->info(msg_in.GetDescriptor(), &std::cout);    
+    codec.info(msg_in.GetDescriptor(), &std::cout);    
 
     std::ofstream fout("/tmp/testmessage.pb");
     msg_in.SerializeToOstream(&fout);
@@ -130,17 +130,17 @@ int main(int argc, char* argv[])
     
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
      
-    codec->validate(msg_in.GetDescriptor());
+    codec.validate(msg_in.GetDescriptor());
 
     std::cout << "Try encode..." << std::endl;
     std::string bytes;
-    codec->encode(&bytes, msg_in);
+    codec.encode(&bytes, msg_in);
     std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
 
     TestMsg msg_out;
-    codec->decode(bytes, &msg_out);
+    codec.decode(bytes, &msg_out);
     
     std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 

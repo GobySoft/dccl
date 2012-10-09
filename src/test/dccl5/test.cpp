@@ -85,9 +85,9 @@ int main(int argc, char* argv[])
     goby::acomms::DCCLModemIdConverterCodec::add("topside", 1);
     
     
-    goby::acomms::DCCLCodec* codec = goby::acomms::DCCLCodec::get();
+    goby::acomms::DCCLCodec codec;
     goby::acomms::protobuf::DCCLConfig cfg;
-    codec->set_cfg(cfg);
+    codec.set_cfg(cfg);
 
     GobyMessage msg_in1, msg_out1;
 
@@ -98,23 +98,23 @@ int main(int argc, char* argv[])
     msg_in1.mutable_header()->set_dest_platform("unicorn");
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
 
-    codec->run_hooks(msg_in1);
+    codec.run_hooks(msg_in1);
     assert(found_dest);
     assert(found_source);
     assert(found_time);
     
-    codec->info(msg_in1.GetDescriptor(), &std::cout);    
+    codec.info(msg_in1.GetDescriptor(), &std::cout);    
     std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
-    codec->validate(msg_in1.GetDescriptor());
+    codec.validate(msg_in1.GetDescriptor());
 
     // try callbacks
     
     std::cout << "Try encode..." << std::endl;
     std::string bytes1;
-    codec->encode(&bytes1, msg_in1);
+    codec.encode(&bytes1, msg_in1);
     std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
-    codec->decode(bytes1, &msg_out1);
+    codec.decode(bytes1, &msg_out1);
     std::cout << "... got Message out:\n" << msg_out1.DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1.SerializeAsString());
 
