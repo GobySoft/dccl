@@ -29,8 +29,8 @@
 namespace dccl {
  namespace logger {
   enum Verbosity {
-      WARN = 0x01, INFO = 0x02, DEBUG1 = 0x04, DEBUG2 = 0x08, DEBUG3 = 0x10,
-      ALL = WARN | INFO | DEBUG1 | DEBUG2 | DEBUG3
+      WARN = 1<<1, INFO = 1<<2, DEBUG1 = 1<<3, DEBUG2 = 1<<4, DEBUG3 = 1<<5,
+      ALL = DEBUG3 | DEBUG3-1,
   };
  }
 
@@ -60,6 +60,16 @@ namespace dccl {
          if(verbosity_mask & logger::DEBUG1) debug1_signal.connect(slot);
          if(verbosity_mask & logger::DEBUG2) debug2_signal.connect(slot);
          if(verbosity_mask & logger::DEBUG3) debug3_signal.connect(slot);
+     }
+
+
+     void disconnect(int verbosity_mask) {
+         enabled_verbosities_ &= ~verbosity_mask;
+         if(verbosity_mask & logger::WARN) warn_signal.disconnect_all_slots();
+         if(verbosity_mask & logger::INFO) info_signal.disconnect_all_slots();
+         if(verbosity_mask & logger::DEBUG1) debug1_signal.disconnect_all_slots();
+         if(verbosity_mask & logger::DEBUG2) debug2_signal.disconnect_all_slots();
+         if(verbosity_mask & logger::DEBUG3) debug3_signal.disconnect_all_slots();
      }
  
      /// sets the verbosity level until the next sync()
@@ -105,6 +115,11 @@ namespace dccl {
          }
      }
 
+     /// returns verbosity mask for given verbosity that includes all higher verbosity levels as well
+     int verbosity_plus_higher(logger::Verbosity verbosity)
+     { return verbosity | verbosity - 1; }
+     
+     
      /// connect a signal to a slot (function pointer or similar)
      template<typename Slot>
      void connect(int verbosity_mask, Slot slot) {
@@ -115,7 +130,13 @@ namespace dccl {
      template<typename Obj, typename A1, typename A2> 
      void connect(int verbosity_mask, Obj* obj, void(Obj::*mem_func)(A1, A2)) {
          connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2));
-     }     
+     }
+
+     void disconnect(int verbosity_mask)
+     {
+         buf_.disconnect(verbosity_mask);
+     }
+     
  };
  
  extern Logger dlog;
