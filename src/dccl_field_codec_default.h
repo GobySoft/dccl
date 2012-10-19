@@ -31,9 +31,11 @@
 #include <boost/static_assert.hpp>
 #include <boost/bimap.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 
 #include <google/protobuf/descriptor.h>
 
+#include "dccl/protobuf/option_extensions.pb.h"
 #include "goby/util/as.h"
 #include "goby/util/sci.h"
 #include "goby/common/time.h"
@@ -97,6 +99,13 @@ namespace goby
                       "missing (goby.field).dccl.min");
               DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_max(),
                       "missing (goby.field).dccl.max");
+
+
+              // ensure given max and min fit within WireType ranges
+              DCCLFieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
+                                          "(goby.field).dccl.min must be >= minimum of this field type.");
+              DCCLFieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
+                                          "(goby.field).dccl.max must be <= maximum of this field type.");
           }
 
           Bitset encode()

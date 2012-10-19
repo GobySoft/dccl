@@ -1,12 +1,32 @@
 import "google/protobuf/descriptor.proto";
 
-package goby;
+
+// Email from liujisi@google.com on 10.02.2012: Feel free to use 1012 for all types of options.
+//--------------------------------
+//Project:  Dynamic Compact Control Language
+//Contact:  Toby Schneider <tes@mit.edu>
+//Web site: https://launchpad.net/dccl
+//Extensions: 1012 (all types)
+//--------------------------------
+package dccl;
+
+
+extend .google.protobuf.FieldOptions
+{
+  optional DCCLFieldOptions field = 1012;
+}
+
+extend .google.protobuf.MessageOptions
+{
+  optional DCCLMessageOptions msg = 1012;
+}
+
 
 message DCCLFieldOptions
 {
   // what encoder / decoder should we use?
   optional string codec = 1 ;//[default = "_default"];
-  // leave this field out of DCCL tranmissions (has_field() will be false on receipt)
+  // leave this field out of DCCL transmissions (has_field() will be false on receipt)
   optional bool omit = 2 [default = false];
   // set true for fields in the header (will *not* be encrypte)d
   optional bool in_head = 3 [default = false];
@@ -27,23 +47,13 @@ message DCCLFieldOptions
   // any `repeated` field
   optional uint32 max_repeat = 10 [default = 1];
 
-
-  message LegacyCCLFieldOptions
-  {
-    optional uint32 thrust_mode_tag = 1;
-    optional uint32 bit_size = 2;
-  }
-  optional LegacyCCLFieldOptions ccl = 100;
-
-  message ArithmeticOptions
-  {
-    required string model = 1;
-    optional bool debug_assert = 2 [default = false];
-  }
-  optional ArithmeticOptions arithmetic = 200;
+  optional string description = 20;
   
-
+  // ccl = 1000
+  // arithmetic = 1001
+  extensions 1000 to max;
 }
+
 
 message DCCLMessageOptions
 {
@@ -53,51 +63,3 @@ message DCCLMessageOptions
   optional string codec = 3; // [default = "_default"];
 }
 
-
-
-extend .google.protobuf.FieldOptions
-{
-  // Email from liujisi@google.com on 7.22.2011: Please use 1009 for all types of options.
-  // --------------------------------
-  // Project:  Goby Underwater Autonomy Project
-  // Contact:  Toby Schneider <tes@mit.edu>
-  // Web site: https://launchpad.net/goby
-  // Extensions: 1009 (all types)
-  // --------------------------------
-  optional GobyFieldOptions field = 1009; 
-}
-
-extend .google.protobuf.MessageOptions
-{  
-  optional GobyMessageOptions msg = 1009;
-}
-
-
-message GobyFieldOptions
-{
-  optional DCCLFieldOptions dccl = 1;
-  
-  optional string description = 100;
-  optional string example = 101;
-  
-  // used in goby_moos_app.proto
-  optional string moos_global = 102;
-
-  message ConfigurationOptions
-  {
-    optional string cli_short = 1;
-    enum ConfigAction
-    {
-      ALWAYS = 1;
-      NEVER = 2;
-      ADVANCED = 3;
-    }
-    optional ConfigAction action = 2 [default = ALWAYS];
-  }
-  optional ConfigurationOptions cfg = 200;
-}
-
-message GobyMessageOptions
-{
-  optional DCCLMessageOptions dccl = 1;
-}

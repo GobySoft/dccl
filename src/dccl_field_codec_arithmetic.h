@@ -31,8 +31,10 @@
 
 #include <boost/bimap.hpp>
 
+
 #include "dccl/dccl_field_codec_typed.h"
 #include "dccl/protobuf/dccl.pb.h"
+#include "dccl/protobuf/arithmetic_extensions.pb.h"
 #include "goby/util/sci.h"
 
 namespace goby
@@ -358,7 +360,7 @@ namespace goby
                       bit_plus_follow(&bits, &bits_to_follow, (low < FIRST_QTR) ? 0 : 1);
                   }
                   
-                  if(DCCLFieldCodecBase::dccl_field_options().arithmetic().debug_assert())
+                  if(DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
                   {
                       // bit of a hack so I can get at the exact bit field sizes
                       Model::last_bits_map[DCCLFieldCodecBase::this_descriptor()->full_name()][DCCLFieldCodecBase::this_field()->name()] = bits;
@@ -468,7 +470,7 @@ namespace goby
                   }
 
                   // for debugging / testing
-                  if(DCCLFieldCodecBase::dccl_field_options().arithmetic().debug_assert())
+                  if(DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
                   {
                       // must consume same bits as encoded makes
                       Bitset in = Model::last_bits_map[DCCLFieldCodecBase::this_descriptor()->full_name()][DCCLFieldCodecBase::this_field()->name()];
@@ -558,10 +560,10 @@ namespace goby
           
               void validate()
               {
-                  DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_arithmetic(),
+                  DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().HasExtension(arithmetic),
                                               "missing (goby.field).dccl.arithmetic");
 
-                  std::string model_name = DCCLFieldCodecBase::dccl_field_options().arithmetic().model();
+                  std::string model_name = DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
                   try
                   {
                       ModelManager::find(model_name);
@@ -633,7 +635,7 @@ namespace goby
 
               Model& current_model()
               {
-                  std::string name = DCCLFieldCodecBase::dccl_field_options().arithmetic().model();
+                  std::string name = DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
                   return ModelManager::find(name);
               }
               
