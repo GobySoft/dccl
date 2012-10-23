@@ -236,42 +236,79 @@ namespace dccl
         class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
     {
       public:
-            
-        goby::int32 pre_encode(const TimeType& field_value)
-        {
-            return goby::util::as<boost::posix_time::ptime>(field_value).time_of_day().total_seconds();
+        int32 pre_encode(const TimeType& field_value) {
+            throw Exception("Not Implemented - Use Specialization");
         }
 
-
-        TimeType post_decode(const int32& wire_value)
-        {
-            using namespace boost::posix_time;
-            using namespace boost::gregorian;
-        
-            ptime now = goby::common::goby_time();
-            date day_sent;
-            // if message is from part of the day removed from us by 12 hours, we assume it
-            // was sent yesterday
-            if(abs(now.time_of_day().total_seconds() - double(wire_value)) > hours(12).total_seconds())
-                day_sent = now.date() - days(1);
-            else // otherwise figure it was sent today
-                day_sent = now.date();
-                
-            // this logic will break if there is a separation between message sending and
-            // message receipt of greater than 1/2 day (twelve hours)               
-            return goby::util::as<TimeType>(ptime(day_sent,seconds(wire_value)));
+        TimeType post_decode(const int32& wire_value) {
+            throw Exception("Not Implemented - Use Specialization");
         }
  
       private:
         void validate() { }
 
-        double max() { return HOURS_IN_DAY*SECONDS_IN_HOUR; }
+        double max() { return SECONDS_IN_DAY; }
         double min() { return 0; }
-        enum { HOURS_IN_DAY = 24 };
-        enum { SECONDS_IN_HOUR = 3600 };
-
+        enum { SECONDS_IN_DAY = 86400 };
     };
-        
+    
+    template<uint64>
+        class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
+    {
+      public:
+        int32 pre_encode(const uint64& time_of_day_microseconds) {
+            return (time_of_day_microseconds / 1e6) % SECONDS_IN_DAY;
+        }
+
+        uint64 post_decode(const int32& wire_value) {
+            timeval t;
+            gettimeofday(&t, 0);
+            uint64 now = t.tv_sec;
+            uint64 daystart = now - (now % SECONDS_IN_DAY);
+
+            if ((timeofday - wire_value) > (SECONDS_IN_DAY/2)) {
+                daystart -= SECONDS_IN_DAY;
+            }
+
+            return 1e6 * (daystart + wire_value);
+        }
+ 
+      private:
+        void validate() { }
+
+        double max() { return SECONDS_IN_DAY; }
+        double min() { return 0; }
+        enum { SECONDS_IN_DAY = 86400 };
+    };
+
+    template<double>
+        class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
+    {
+      public:
+        int32 pre_encode(const double& time_of_day) {
+            return time_of_day % SECONDS_IN_DAY;
+        }
+
+        double post_decode(const int32& wire_value) {
+            timeval t;
+            gettimeofday(&t, 0);
+            uint64 now = t.tv_sec;
+            uint64 daystart = now - (now % SECONDS_IN_DAY);
+
+            if ((timeofday - wire_value) > (SECONDS_IN_DAY/2)) {
+                daystart -= SECONDS_IN_DAY;
+            }
+
+            return daystart + wire_value;
+        }
+ 
+      private:
+        void validate() { }
+
+        double max() { return SECONDS_IN_DAY; }
+        double min() { return 0; }
+        enum { SECONDS_IN_DAY = 86400 };
+    };
         
     /// \brief Placeholder codec that takes no space on the wire (0 bits).
     template<typename T>
