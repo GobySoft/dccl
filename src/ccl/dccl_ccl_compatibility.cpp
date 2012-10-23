@@ -116,6 +116,7 @@ goby::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
     Decode_time_date(decoded.as_time_date,
                      &mon, &day, &hour, &min, &sec);
 
+    // \todo chrismurf FIX ME! with timegm
     // assume current year
     boost::posix_time::ptime time_date(
         boost::gregorian::date(boost::gregorian::day_clock::universal_day().year(),

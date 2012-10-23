@@ -26,7 +26,7 @@
 #include "dccl/dccl.h"
 #include "dccl/dccl_field_codec_default.h"
 #include "test.pb.h"
-#include "goby/util/as.h"
+
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     msg_in1.set_telegram("hello!");
     msg_in1.mutable_header()->set_time(
-        goby::util::as<std::string>(boost::posix_time::second_clock::universal_time()));
+        boost::lexical_cast<std::string>(boost::posix_time::second_clock::universal_time()));
     msg_in1.mutable_header()->set_source_platform("topside");
     msg_in1.mutable_header()->set_dest_platform("unicorn");
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);

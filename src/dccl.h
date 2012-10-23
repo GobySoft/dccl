@@ -226,7 +226,7 @@ namespace dccl
             unsigned this_id = id(bytes);   
 
             if(!id2desc_.count(this_id))
-                throw(Exception("Message id " + goby::util::as<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
+                throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
                     
             GoogleProtobufMessagePointer msg =
                 goby::util::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(id2desc_.find(this_id)->second);

@@ -91,7 +91,7 @@ unsigned dccl::DCCLDefaultIdentifierCodec::size(const uint32& id)
 unsigned dccl::DCCLDefaultIdentifierCodec::this_size(const uint32& id)
 {
     if(id < 0 || id > TWO_BYTE_MAX_ID)
-        throw(Exception("dccl.id provided (" + goby::util::as<std::string>(id) + ") is less than 0 or exceeds maximum: " + goby::util::as<std::string>(int(TWO_BYTE_MAX_ID))));
+        throw(Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") is less than 0 or exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
     
     return (id <= ONE_BYTE_MAX_ID) ?
         SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
@@ -255,7 +255,7 @@ void dccl::DCCLDefaultStringCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (goby.field).dccl.max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
-            "(goby.field).dccl.max_length must be <= " + goby::util::as<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
+            "(goby.field).dccl.max_length must be <= " + boost::lexical_cast<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
 }
 
 //

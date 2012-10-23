@@ -34,13 +34,14 @@
 #include <boost/bimap.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <google/protobuf/descriptor.h>
 
 #include "dccl/protobuf/option_extensions.pb.h"
-#include "goby/util/as.h"
+
 #include "goby/util/sci.h"
-#include "goby/acomms/acomms_constants.h"
 
 #include "dccl_field_codec_default_message.h"
 #include "dccl_field_codec_fixed.h"
@@ -130,7 +131,7 @@ namespace dccl
               wire_value += 1;
 
           wire_value = goby::util::unbiased_round(wire_value, 0);
-          return Bitset(size(), goby::util::as<unsigned long>(wire_value));
+          return Bitset(size(), boost::numeric_cast<unsigned long>(wire_value));
       }
           
       virtual WireType decode(Bitset* bits)
@@ -332,7 +333,7 @@ namespace dccl
         T decode(Bitset* bits)
         {
             std::string t = DCCLFieldCodecBase::dccl_field_options().static_value();
-            return goby::util::as<T>(t);
+            return boost::lexical_cast<T>(t);
         }
             
         unsigned size()

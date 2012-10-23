@@ -8,7 +8,7 @@ message Header
   // time
   //
 
-  // result of goby::util::as<std::string>(goby_time())
+  // result of boost::lexical_cast<std::string>(goby_time())
   // e.g. "2002-01-20 23:59:59.000"
   required string time = 10 [(dccl.field).codec="_time",
                              (dccl.field).in_head=true];

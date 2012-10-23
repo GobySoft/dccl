@@ -44,12 +44,11 @@
 
 #include "dccl/dccl.h"
 #include "dccl_field_codec_default.h"
-#include "goby/util/as.h"
+
 #include "dccl/protobuf/option_extensions.pb.h"
 
 //#include "goby/common/header.pb.h"
 
-using goby::util::as;
 using goby::util::hex_encode;
 using goby::util::hex_decode;
 
@@ -113,7 +112,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         
         if(!id2desc_.count(id(desc)))
             throw(Exception("Message id " +
-                                as<std::string>(id(desc))+
+                                boost::lexical_cast<std::string>(id(desc))+
                                 " has not been loaded. Call load() before encoding this type."));
     
         
@@ -212,7 +211,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << this_id << std::endl;
         
         if(!id2desc_.count(this_id))
-            throw(Exception("Message id " + as<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
@@ -322,7 +321,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
         codec->base_validate(desc, MessageHandler::BODY);
 
         if(id2desc_.count(dccl_id) && desc != id2desc_.find(dccl_id)->second)
-            throw(Exception("`dccl.id` " + as<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + as<std::string>(id2desc_.find(dccl_id)->second)));
+            throw(Exception("`dccl.id` " + boost::lexical_cast<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + boost::lexical_cast<std::string>(id2desc_.find(dccl_id)->second)));
         else
             id2desc_.insert(std::make_pair(id(desc), desc));
 

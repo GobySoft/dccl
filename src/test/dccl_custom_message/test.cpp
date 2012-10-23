@@ -26,7 +26,7 @@
 
 #include "dccl/dccl.h"
 #include "test.pb.h"
-#include "goby/util/as.h"
+
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
@@ -159,7 +159,7 @@ private:
         {
             DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_min(), "missing (dccl.field).min");
             DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_max(), "missing (dccl.field).max");
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE, "(dccl.field).max_repeat must be less than " + goby::util::as<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
+            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE, "(dccl.field).max_repeat must be less than " + boost::lexical_cast<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
         }
 
     

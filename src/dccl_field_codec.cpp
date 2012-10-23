@@ -330,13 +330,13 @@ void dccl::DCCLFieldCodecBase::field_info(std::ostream* os,
         field_min_size(&min_sz, field);
         if(max_sz != min_sz)
         {
-            s += ":: min size = " + goby::util::as<std::string>(min_sz) + " bit(s)\n"
-                + ":: max size = " + goby::util::as<std::string>(max_sz) + " bit(s)";
+            s += ":: min size = " + boost::lexical_cast<std::string>(min_sz) + " bit(s)\n"
+                + ":: max size = " + boost::lexical_cast<std::string>(max_sz) + " bit(s)";
         }
         else
         {
             if(!max_sz) is_zero_size = true;
-            s += ":: size = " + goby::util::as<std::string>(max_sz) + " bit(s)";
+            s += ":: size = " + boost::lexical_cast<std::string>(max_sz) + " bit(s)";
         }
     }
     else
@@ -344,7 +344,7 @@ void dccl::DCCLFieldCodecBase::field_info(std::ostream* os,
         unsigned sz = 0;
         field_max_size(&sz, field);
         if(!sz) is_zero_size = true;
-        s += ":: size = " + goby::util::as<std::string>(sz) + " bit(s)";
+        s += ":: size = " + boost::lexical_cast<std::string>(sz) + " bit(s)";
     }
 
     boost::replace_all(s, "\n", "\n" + indent);    

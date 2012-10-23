@@ -159,7 +159,7 @@ namespace dccl
                 throw(Exception("Invalid model: " +
                                     model->user_model_.DebugString() +
                                     "Sum of all frequencies must be less than " +
-                                    goby::util::as<std::string>(Model::MAX_FREQUENCY) +
+                                    boost::lexical_cast<std::string>(Model::MAX_FREQUENCY) +
                                     " in order to use 64 bit arithmetic"));
             }
 

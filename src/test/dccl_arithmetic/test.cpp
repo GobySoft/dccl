@@ -29,7 +29,7 @@
 #include "dccl/arithmetic/dccl_field_codec_arithmetic.h"
 
 #include "test.pb.h"
-#include "goby/util/as.h"
+
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
