@@ -32,9 +32,6 @@ dccl::MessageHandler::MessagePart dccl::DCCLFieldCodecBase::part_ =
 
 const google::protobuf::Message* dccl::DCCLFieldCodecBase::root_message_ = 0;
 
-boost::ptr_map<int, boost::signals2::signal<void (const boost::any& field_value, const boost::any& wire_value, const boost::any& extension_value)> >   dccl::DCCLFieldCodecBase::wire_value_hooks_;
-
-
 using dccl::dlog;
 using namespace dccl::logger;
 
@@ -111,24 +108,6 @@ void dccl::DCCLFieldCodecBase::field_size(unsigned* bit_size,
 
     *bit_size += any_size(wire_value);
 }
-
-void dccl::DCCLFieldCodecBase::base_run_hooks(const google::protobuf::Message& msg,
-                                                      MessageHandler::MessagePart part)
-{
-    part_ = part;
-    root_message_ = &msg;
-    bool b = false;
-    field_run_hooks(&b, &msg, 0);
-}
-
-void dccl::DCCLFieldCodecBase::field_run_hooks(bool* b,
-                                                      const boost::any& field_value,
-                                                      const google::protobuf::FieldDescriptor* field)
-{
-    MessageHandler msg_handler(field);
-    any_run_hooks(field_value);
-}
-
 
 void dccl::DCCLFieldCodecBase::field_size_repeated(unsigned* bit_size,
                                                   const std::vector<boost::any>& field_values,
@@ -430,51 +409,6 @@ unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::an
     }    
     return out;
 }
-
-void dccl::DCCLFieldCodecBase::any_run_hooks(const boost::any& field_value)   
-{
-    if(this_field())
-        dlog.is(DEBUG2) && dlog << "Running hooks for " << this_field()->DebugString() << std::flush;
-    else
-        dlog.is(DEBUG2) && dlog << "running hooks for base message" << std::endl;
-
-    
-    typedef boost::ptr_map<int, boost::signals2::signal<void (const boost::any& field_value,
-                                                              const boost::any& wire_value,
-                                                              const boost::any& extension_value)> > hook_map;
-
-    for(hook_map::const_iterator i = wire_value_hooks_.begin(), e = wire_value_hooks_.end();
-        i != e;
-        ++i )
-    {
-        
-        const google::protobuf::FieldDescriptor * extension_desc = this_field()->options().GetReflection()->FindKnownExtensionByNumber(i->first);
-        
-        boost::shared_ptr<FromProtoCppTypeBase> helper =
-            DCCLTypeHelper::find(extension_desc);
-
-        boost::any extension_value = helper->get_value(extension_desc, this_field()->options());
-        
-        if(!(extension_value.empty() || field_value.empty()))
-        {
-            try
-            {
-                boost::any wire_value;
-                field_pre_encode(&wire_value, field_value);
-                
-                i->second->operator()(field_value, wire_value, extension_value);   
-                dlog.is(DEBUG2) && dlog  <<"Found : " << i->first << ": " << extension_desc->DebugString() << std::endl;
-            }
-            
-            catch(std::exception& e)
-            {
-                dlog.is(DEBUG1) && dlog << "failed to run hook for " << i->first << ", exception: " << e.what() << std::endl;
-            }
-        }
-    }
-}            
-
-
 
 unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
 {    

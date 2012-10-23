@@ -41,7 +41,6 @@ namespace dccl
         unsigned max_size();
         unsigned min_size();
         unsigned any_size(const boost::any& wire_value);
-        void any_run_hooks(const boost::any& field_value);
 
             
         void validate();
@@ -86,21 +85,6 @@ namespace dccl
                     codec->field_encode(return_value, field_value, field_desc);
                 }
         };
-
-            
-        struct RunHooks
-        {
-            static void repeated(boost::shared_ptr<DCCLFieldCodecBase> codec,
-                                 bool* return_value,
-                                 const std::vector<boost::any>& field_values,
-                                 const google::protobuf::FieldDescriptor* field_desc);
-                
-            static void single(boost::shared_ptr<DCCLFieldCodecBase> codec,
-                               bool* return_value,
-                               const boost::any& field_value,
-                               const google::protobuf::FieldDescriptor* field_desc);
-        };
-
 
         struct MaxSize
         {

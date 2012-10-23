@@ -49,12 +49,6 @@ unsigned dccl::DCCLDefaultMessageCodec::any_size(const boost::any& wire_value)
         return traverse_const_message<Size, unsigned>(wire_value);
 }
 
-void dccl::DCCLDefaultMessageCodec::any_run_hooks(const boost::any& field_value)
-{
-    if(!field_value.empty())
-        traverse_const_message<RunHooks, bool>(field_value);
-}
-
 
 void dccl::DCCLDefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
 {
@@ -191,30 +185,6 @@ bool dccl::DCCLDefaultMessageCodec::check_field(const google::protobuf::FieldDes
         else
             return true;
     }    
-}
-
-
-
-//
-// RunHooks
-//
-
-void dccl::DCCLDefaultMessageCodec::RunHooks::repeated(
-    boost::shared_ptr<DCCLFieldCodecBase> codec,
-    bool* return_value,
-    const std::vector<boost::any>& field_values,
-    const google::protobuf::FieldDescriptor* field_desc)
-{
-    dccl::dlog.is(dccl::logger::DEBUG2) && dlog << "Hooks not run on repeated message: " << field_desc->DebugString() << std::flush;
-}
-
-void dccl::DCCLDefaultMessageCodec::RunHooks::single(
-    boost::shared_ptr<DCCLFieldCodecBase> codec,
-    bool* return_value,
-    const boost::any& field_value,
-    const google::protobuf::FieldDescriptor* field_desc)
-{
-    codec->field_run_hooks(return_value, field_value, field_desc);
 }
 
 
