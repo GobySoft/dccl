@@ -2,7 +2,7 @@
 set(PROTOS protobuf/logger.proto
   protobuf/option_extensions.proto
   protobuf/dccl.proto
-  protobuf/arithmetic_extensions.proto)
+ )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
@@ -14,7 +14,6 @@ add_library(dccl
   dccl_field_codec_default.cpp
   dccl_field_codec_default_message.cpp
   dccl_field_codec_manager.cpp
-  dccl_field_codec_arithmetic.cpp
   dccl_type_helper.cpp
   dccl_bitset.cpp
   # COMMON
@@ -32,22 +31,17 @@ add_library(dccl
 target_link_libraries(dccl ${Cryptopp_LIBRARIES} ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES})
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
-set(CCL_PROTOS 
-  protobuf/ccl.proto
-  protobuf/ccl_extensions.proto)
 
-protobuf_generate_cpp(CCL_PROTO_SRCS CCL_PROTO_HDRS ${CCL_PROTOS})
+option(build_arithmetic "Build arithmetic coders shared library" ON)
+option(build_ccl "Build Compact Control Language (CCL) legacy support shared library" ON)
 
+if(build_ccl)
+  add_subdirectory(ccl)
+endif()
 
-add_library(dccl_ccl_compat SHARED
-  dccl_ccl_compatibility.cpp
-  WhoiUtil.cpp
-  ${CCL_PROTO_SRCS}
-  ${CCL_PROTO_HDRS}
-)
-
-target_link_libraries(dccl_ccl_compat dccl)
-
+if(build_arithmetic)
+  add_subdirectory(arithmetic)
+endif()
 
 if(enable_testing)
   add_subdirectory(test)

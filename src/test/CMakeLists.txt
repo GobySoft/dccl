@@ -1,11 +1,18 @@
-add_subdirectory(dccl1)
-add_subdirectory(dccl2)
-add_subdirectory(dccl3)
-add_subdirectory(dccl4)
-# add_subdirectory(dccl5) tests hooks
-add_subdirectory(dccl6)
-add_subdirectory(dccl7)
-add_subdirectory(dccl8)
-add_subdirectory(dccl9)
-add_subdirectory(dccl10)
+add_subdirectory(dccl_all_fields)
+add_subdirectory(dccl_custom_message)
+add_subdirectory(dccl_header)
+add_subdirectory(dccl_repeated)
+# add_subdirectory(dccl_hooks) tests hooks
+add_subdirectory(dccl_default_id)
+add_subdirectory(dccl_required_optional)
+add_subdirectory(dccl_static_methods)
+
+if(build_ccl)
+  add_subdirectory(dccl_custom_id_ccl)
+endif()
+
+if(build_arithmetic)
+  add_subdirectory(dccl_arithmetic)
+endif()
+
 add_subdirectory(logger1)
