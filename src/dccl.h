@@ -35,8 +35,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "goby/util/binary.h"
-#include "goby/util/dynamic_protobuf_manager.h"
+#include "binary.h"
+#include "dynamic_protobuf_manager.h"
 
 #include "dccl/protobuf/dccl.pb.h"
 #include "logger.h"

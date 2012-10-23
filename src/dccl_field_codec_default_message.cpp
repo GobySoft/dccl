@@ -23,7 +23,7 @@
 
 #include "dccl/dccl.h"
 #include "dccl_field_codec_default_message.h"
-#include "goby/util/dynamic_protobuf_manager.h"
+#include "dynamic_protobuf_manager.h"
 
 using dccl::dlog;
 

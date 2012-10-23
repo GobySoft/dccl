@@ -24,8 +24,6 @@
 #ifndef DYNAMICPROTOBUFMANAGER20110419H
 #define DYNAMICPROTOBUFMANAGER20110419H
 
-#define PROTO_RUNTIME_COMPILE 1
-
 #include <dlfcn.h>
 
 #include <set>
@@ -37,8 +35,6 @@
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/compiler/importer.h>
 
-
-#include <boost/signals2.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace goby
@@ -95,7 +91,6 @@ namespace goby
                 get_instance()->enable_disk_source_database();
             }
 
-#if PROTO_RUNTIME_COMPILE
             static const google::protobuf::FileDescriptor*
                 load_from_proto_file(const std::string& proto_file);
 
@@ -107,8 +102,6 @@ namespace goby
 
                 get_instance()->disk_source_tree_->MapPath("", path);
             }
-            
-#endif
             
             static void* load_from_shared_lib(const std::string& shared_lib_path)
             {

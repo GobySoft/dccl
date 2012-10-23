@@ -20,15 +20,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "dynamic_protobuf_manager.h"
 
-#include "goby/util/dynamic_protobuf_manager.h"
-
-//#include "goby/common/exception.h"
-//
-
-#if PROTO_RUNTIME_COMPILE
 #include <boost/filesystem.hpp>
-#endif
 
 boost::shared_ptr<goby::util::DynamicProtobufManager> goby::util::DynamicProtobufManager::inst_;
 
@@ -55,7 +49,6 @@ void goby::util::DynamicProtobufManager::enable_disk_source_database()
     add_database(source_database_);
 }
 
-#if PROTO_RUNTIME_COMPILE
 const google::protobuf::FileDescriptor*
 goby::util::DynamicProtobufManager::load_from_proto_file(const std::string& proto_file)
 {
@@ -73,7 +66,6 @@ goby::util::DynamicProtobufManager::load_from_proto_file(const std::string& prot
 
     return user_descriptor_pool().FindFileByName(proto_file_path.string());
 }
-#endif
 
 
 // GLogMultiFileErrorCollector

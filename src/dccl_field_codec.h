@@ -28,10 +28,7 @@
 #include <string>
 
 #include <boost/any.hpp>
-#include <boost/bind.hpp>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/signals2.hpp>
-#include <boost/ptr_container/ptr_map.hpp>
+
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor.h>

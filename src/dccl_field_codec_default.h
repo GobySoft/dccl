@@ -41,7 +41,7 @@
 
 #include "dccl/protobuf/option_extensions.pb.h"
 
-#include "goby/util/sci.h"
+#include "sci.h"
 
 #include "dccl_field_codec_default_message.h"
 #include "dccl_field_codec_fixed.h"

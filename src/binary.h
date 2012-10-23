@@ -28,9 +28,6 @@
 #include <cmath>
 #include <sstream>
 
-#include <boost/dynamic_bitset.hpp>
-#include <bitset>
-
 namespace goby
 {
     namespace util

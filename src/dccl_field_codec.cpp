@@ -21,8 +21,6 @@
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include <boost/foreach.hpp>
-
 #include "dccl_field_codec.h"
 #include "dccl_exception.h"
 #include "dccl/dccl.h"
@@ -428,10 +426,11 @@ unsigned dccl::DCCLFieldCodecBase::min_size_repeated()
 
 void dccl::DCCLFieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* wire_values, const std::vector<boost::any>& field_values)
 {
-    BOOST_FOREACH(const boost::any& field_value, field_values)
+    for(std::vector<boost::any>::const_iterator it = field_values.begin(),
+            end = field_values.end(); it != end; ++it)
     {
         boost::any wire_value;
-        any_pre_encode(&wire_value, field_value);
+        any_pre_encode(&wire_value, *it);
         wire_values->push_back(wire_value);
     }
     
@@ -439,10 +438,11 @@ void dccl::DCCLFieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* 
 void dccl::DCCLFieldCodecBase::any_post_decode_repeated(
     const std::vector<boost::any>& wire_values, std::vector<boost::any>* field_values)
 {
-    BOOST_FOREACH(const boost::any& wire_value, wire_values)
+    for(std::vector<boost::any>::const_iterator it = wire_values.begin(),
+            end = wire_values.end(); it != end; ++it)
     {
         boost::any field_value;
-        any_post_decode(wire_value, &field_value);
+        any_post_decode(*it, &field_value);
         field_values->push_back(field_value);
     }
 }

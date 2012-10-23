@@ -23,9 +23,6 @@
 
 #include <algorithm>
 
-#include <boost/foreach.hpp>
-#include <boost/assign.hpp>
-
 #include <dlfcn.h> // for shared library loading
 
 #ifdef HAS_CRYPTOPP
@@ -47,7 +44,6 @@
 
 #include "dccl/protobuf/option_extensions.pb.h"
 
-//#include "goby/common/header.pb.h"
 
 using goby::util::hex_encode;
 using goby::util::hex_decode;
