@@ -253,25 +253,29 @@ namespace dccl
         enum { SECONDS_IN_DAY = 86400 };
     };
     
-    template<uint64>
-        class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
+    template<>
+        class DCCLTimeCodec<uint64> : public DCCLDefaultNumericFieldCodec<int32, uint64>
     {
       public:
         int32 pre_encode(const uint64& time_of_day_microseconds) {
-            return (time_of_day_microseconds / 1e6) % SECONDS_IN_DAY;
+            return (time_of_day_microseconds / 1000000) % SECONDS_IN_DAY;
         }
 
-        uint64 post_decode(const int32& wire_value) {
+        uint64 post_decode(const int32& encoded_time) {
             timeval t;
             gettimeofday(&t, 0);
-            uint64 now = t.tv_sec;
-            uint64 daystart = now - (now % SECONDS_IN_DAY);
+            int64 now = t.tv_sec;
+            int64 daystart = now - (now % SECONDS_IN_DAY);
+            int64 today_time = now - daystart;
 
-            if ((timeofday - wire_value) > (SECONDS_IN_DAY/2)) {
+            // If time is more than 12 hours ahead of now, assume it's yesterday.
+            if ((encoded_time - today_time) > (SECONDS_IN_DAY/2)) {
                 daystart -= SECONDS_IN_DAY;
+            } else if ((today_time - encoded_time) > (SECONDS_IN_DAY/2)) {
+                daystart += SECONDS_IN_DAY;
             }
 
-            return 1e6 * (daystart + wire_value);
+            return 1000000 * (daystart + encoded_time);
         }
  
       private:
@@ -282,25 +286,29 @@ namespace dccl
         enum { SECONDS_IN_DAY = 86400 };
     };
 
-    template<double>
-        class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
+    template<>
+        class DCCLTimeCodec<double> : public DCCLDefaultNumericFieldCodec<int32, double>
     {
       public:
         int32 pre_encode(const double& time_of_day) {
-            return time_of_day % SECONDS_IN_DAY;
+            return static_cast<int64>(time_of_day) % SECONDS_IN_DAY;
         }
 
-        double post_decode(const int32& wire_value) {
+        double post_decode(const int32& encoded_time) {
             timeval t;
             gettimeofday(&t, 0);
             uint64 now = t.tv_sec;
-            uint64 daystart = now - (now % SECONDS_IN_DAY);
+            uint64 daystart = now - (static_cast<int64>(now) % SECONDS_IN_DAY);
+            uint64 today_time = now - daystart;
 
-            if ((timeofday - wire_value) > (SECONDS_IN_DAY/2)) {
+            if ((encoded_time - today_time) > (SECONDS_IN_DAY/2)) {
                 daystart -= SECONDS_IN_DAY;
+            } else if ((today_time - encoded_time) > (SECONDS_IN_DAY/2)) {
+                daystart += SECONDS_IN_DAY;
             }
 
-            return daystart + wire_value;
+
+            return daystart + encoded_time;
         }
  
       private:

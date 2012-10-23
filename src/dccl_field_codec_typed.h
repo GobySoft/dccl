@@ -263,9 +263,9 @@ namespace dccl
           try
           {
               std::vector<WireType> in;
-              BOOST_FOREACH(const boost::any& wire_value, wire_values)
-              {                  
-                  in.push_back(boost::any_cast<WireType>(wire_value));
+              for (typename std::vector<WireType>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
+              {
+                  in.push_back(boost::any_cast<WireType>(*it));
               }
                   
               *bits = encode_repeated(in);
@@ -316,9 +316,9 @@ namespace dccl
           try
           {
               std::vector<WireType> in;
-              BOOST_FOREACH(const boost::any& wire_value, wire_values)
-              {                  
-                  in.push_back(boost::any_cast<WireType>(wire_value));
+              for (typename std::vector<WireType>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
+              {
+                  in.push_back(boost::any_cast<WireType>(*it));
               }
                   
               return size_repeated(in);

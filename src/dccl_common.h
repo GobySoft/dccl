@@ -24,16 +24,12 @@
 #ifndef DCCLConstants20091211H
 #define DCCLConstants20091211H
 
-#include <string>
-#include <bitset>
-#include <limits>
-#include <vector>
-
-#include <google/protobuf/dynamic_message.h>
-#include <boost/dynamic_bitset.hpp>
-
 #include "dccl/dccl_bitset.h"
-#include "goby/acomms/acomms_constants.h"
+
+#include <google/protobuf/message.h>
+#include <google/protobuf/descriptor.h>
+
+#include <iostream>
 
 namespace dccl
 {

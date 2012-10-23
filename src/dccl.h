@@ -35,8 +35,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "goby/common/time.h"
-#include "goby/acomms/acomms_helpers.h"
 #include "goby/util/binary.h"
 #include "goby/util/dynamic_protobuf_manager.h"
 

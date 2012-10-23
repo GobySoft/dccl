@@ -59,7 +59,7 @@ dccl::Bitset dccl::DCCLDefaultIdentifierCodec::encode(const uint32& id)
     }
 }
 
-goby::uint32 dccl::DCCLDefaultIdentifierCodec::decode(Bitset* bits)
+dccl::uint32 dccl::DCCLDefaultIdentifierCodec::decode(Bitset* bits)
 {
     if(bits->test(0))
     {
@@ -342,12 +342,12 @@ void dccl::DCCLDefaultBytesCodec::validate()
 //
 // DCCLDefaultEnumCodec
 //
-goby::int32 dccl::DCCLDefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+dccl::int32 dccl::DCCLDefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
 {
     return field_value->index();
 }
 
-const google::protobuf::EnumValueDescriptor* dccl::DCCLDefaultEnumCodec::post_decode(const int32& wire_value)
+const google::protobuf::EnumValueDescriptor* dccl::DCCLDefaultEnumCodec::post_decode(const dccl::int32& wire_value)
 {
     const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
     const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
@@ -364,9 +364,9 @@ const google::protobuf::EnumValueDescriptor* dccl::DCCLDefaultEnumCodec::post_de
 // DCCLModemIdConverterCodec
 //
 
-boost::bimap<std::string, goby::int32> dccl::DCCLModemIdConverterCodec::platform2modem_id_;
+boost::bimap<std::string, dccl::int32> dccl::DCCLModemIdConverterCodec::platform2modem_id_;
 
-goby::int32 dccl::DCCLModemIdConverterCodec::pre_encode(const std::string& field_value)
+dccl::int32 dccl::DCCLModemIdConverterCodec::pre_encode(const std::string& field_value)
 {
     int32 v = BROADCAST_ID;
     if(platform2modem_id_.left.count(boost::to_lower_copy(field_value)))

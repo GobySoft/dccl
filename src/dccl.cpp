@@ -49,7 +49,6 @@
 
 //#include "goby/common/header.pb.h"
 
-using goby::common::goby_time;
 using goby::util::as;
 using goby::util::hex_encode;
 using goby::util::hex_decode;
