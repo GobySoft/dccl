@@ -26,6 +26,8 @@
 #ifndef DCCLFIELDCODECDEFAULT20110322H
 #define DCCLFIELDCODECDEFAULT20110322H
 
+#include <sys/time.h>
+
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/static_assert.hpp>
@@ -38,7 +40,6 @@
 #include "dccl/protobuf/option_extensions.pb.h"
 #include "goby/util/as.h"
 #include "goby/util/sci.h"
-#include "goby/common/time.h"
 #include "goby/acomms/acomms_constants.h"
 
 #include "dccl_field_codec_default_message.h"
