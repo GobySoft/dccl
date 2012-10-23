@@ -32,7 +32,7 @@ using namespace goby::acomms;
 
 extern "C"
 {
-    void goby_dccl_load(dccl::DCCLCodec* dccl)
+    void goby_dccl_load(dccl::Codec* dccl)
     {
         using namespace dccl;
         dccl->add_id_codec<LegacyCCLIdentifierCodec>("_ccl");

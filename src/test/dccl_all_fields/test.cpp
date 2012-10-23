@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     dccl::protobuf::DCCLConfig cfg;
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     codec.set_cfg(cfg);
 
     TestMsg msg_in;

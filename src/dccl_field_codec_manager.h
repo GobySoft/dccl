@@ -99,7 +99,16 @@ namespace dccl
             return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                           name, desc->full_name());
         }
-            
+
+        static boost::shared_ptr<DCCLFieldCodecBase> find(
+            google::protobuf::FieldDescriptor::Type type,
+            std::string name)
+        {
+            return __find(type, name);
+        }
+
+        
+        
       private:
         DCCLFieldCodecManager() { }
         ~DCCLFieldCodecManager() { }

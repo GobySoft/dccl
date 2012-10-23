@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     
     codec.validate<BytesMsg>();
     codec.info<BytesMsg>(&dccl::dlog);

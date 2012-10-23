@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     dccl::DCCLModemIdConverterCodec::add("topside", 1);
     
     
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     dccl::protobuf::DCCLConfig cfg;
     codec.set_cfg(cfg);
 

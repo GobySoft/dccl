@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     dccl::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");
     dccl::DCCLFieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
 

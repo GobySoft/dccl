@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
 
     GobyMessage1 msg_in1;
     GobyMessage2 msg_in2;

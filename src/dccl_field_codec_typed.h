@@ -97,7 +97,7 @@ namespace dccl
     /// \ingroup dccl_api
     ///
     ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DCCLDefaultEnumCodec which uses DCCLDefaultNumericFieldCodec to do all the numerical encoding / decoding while DCCLDefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
-    ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user DCCLCodec::decode(), DCCLCodec::encode(), etc. functions.
+    ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
         class DCCLTypedFieldCodec : public DCCLFieldCodecSelector<WireType, FieldType>
     {
@@ -191,7 +191,7 @@ namespace dccl
     /// \ingroup dccl_api
     ///
     ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DCCLDefaultEnumCodec which uses DCCLDefaultNumericFieldCodec to do all the numerical encoding / decoding while DCCLDefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
-    ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user DCCLCodec::decode(), DCCLCodec::encode(), etc. functions.
+    ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
         class DCCLRepeatedTypedFieldCodec : public DCCLTypedFieldCodec<WireType, FieldType>
     {

@@ -32,7 +32,7 @@ using dccl::operator<<;
 GobyMessage1 msg_in1;
 GobyMessage2 msg_in2;
 GobyMessage3 msg_in3;
-dccl::DCCLCodec codec;
+dccl::Codec codec;
 
 void decode(const std::string& bytes);
 

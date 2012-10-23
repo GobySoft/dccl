@@ -39,7 +39,7 @@ std::map<std::string, std::map<std::string, dccl::Bitset> > dccl::Model::last_bi
 
 extern "C"
 {
-    void goby_dccl_load(dccl::DCCLCodec* dccl)
+    void goby_dccl_load(dccl::Codec* dccl)
     {
         using namespace dccl;
         

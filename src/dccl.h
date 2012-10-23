@@ -56,7 +56,7 @@ namespace dccl
 {
     class DCCLFieldCodec;
   
-    /// \class DCCLCodec dccl/dccl.h dccl/dccl.h
+    /// \class Codec dccl/dccl.h dccl/dccl.h
     /// \brief provides an API to the Dynamic CCL Codec.
     /// \ingroup acomms_api
     /// \ingroup dccl_api
@@ -67,7 +67,7 @@ namespace dccl
     /// \verbinclude simple.proto
     /// 2. Write a bit of code like this:
     /// \code
-    /// dccl::DCCLCodec* dccl = dccl::DCCLCodec::get();
+    /// dccl::Codec* dccl = dccl::Codec::get();
     /// dccl->validate<Simple>();
     /// Simple message_out;
     /// message_out.set_telegram("Hello!");
@@ -89,21 +89,23 @@ namespace dccl
     class Codec
     {
       public:
-        Codec(const std::string& id_codec);
+        static const std::string DEFAULT_CODEC_NAME;
+        
+        Codec(const std::string& dccl_id_codec = "_default_id_codec");
         virtual ~Codec() { }
 
         /// \brief Load any codecs present in the given shared library handle
         ///
         /// Codecs must be loaded within the shared library using a C function
         /// (declared extern "C") called "goby_dccl_load" with the signature
-        /// void goby_dccl_load(dccl::DCCLCodec* codec)
+        /// void goby_dccl_load(dccl::Codec* codec)
         void load_library(void* dl_handle);
 
         /// \brief Load any codecs present in the given shared library handle
         ///
         /// Codecs must be loaded within the shared library using a C function
         /// (declared extern "C") called "goby_dccl_load" with the signature
-        /// void goby_dccl_load(dccl::DCCLCodec* codec)
+        /// void goby_dccl_load(dccl::Codec* codec)
         void load_library(const std::string& library_path);
         
         /// \brief All messages must be validated (size checks, option extensions checks, etc.) before they can be encoded/decoded. Use this form when the messages used are static (known at compile time).
@@ -119,11 +121,14 @@ namespace dccl
         /// \param desc The Google Protobuf "Descriptor" (meta-data) of the message to validate.
         /// \throw DCCLException if message is invalid.
         void load(const google::protobuf::Descriptor* desc);
+
+        void set_crypto_passphrase(const std::string& passphrase);
+            
         //@}
             
         /// \name Informational Methods.
         ///
-        /// Provides various forms of information about the DCCLCodec
+        /// Provides various forms of information about the Codec
         //@{
 
         /// \brief Writes a human readable summary (including field sizes) of the provided DCCL type to the stream provided.
@@ -221,37 +226,44 @@ namespace dccl
             GoogleProtobufMessagePointer decode(const std::string& bytes)
         {
             // ownership of this object goes to the caller of decode()
-            unsigned id = id_from_encoded(bytes);   
+            unsigned this_id = id(bytes);   
 
-            if(!id2desc_.count(id))
-                throw(DCCLException("Message id " + goby::util::as<std::string>(id) + " has not been validated. Call validate() before decoding this type."));
+            if(!id2desc_.count(this_id))
+                throw(DCCLException("Message id " + goby::util::as<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
                     
             GoogleProtobufMessagePointer msg =
-                goby::util::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(id2desc_.find(id)->second);
+                goby::util::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(id2desc_.find(this_id)->second);
             decode(bytes, &(*msg));
             return msg;
         }
 
       private:
-        DCCLCodec(const DCCLCodec&);
-        DCCLCodec& operator= (const DCCLCodec&);
+        Codec(const Codec&);
+        Codec& operator= (const Codec&);
 
         void encrypt(std::string* s, const std::string& nonce);
         void decrypt(std::string* s, const std::string& nonce);
 
         void set_default_codecs();
 
+        boost::shared_ptr<DCCLFieldCodecBase> id_codec() const
+        {
+            return DCCLFieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_INT32,
+                                               id_codec_);
+        }
+        
+        
       private:
         // SHA256 hash of the crypto passphrase
         std::string crypto_key_;
         
         // maps `dccl.id`s onto Message Descriptors
         std::map<int32, const google::protobuf::Descriptor*> id2desc_;
+        std::string id_codec_;
 
-        boost::shared_ptr<DCCLTypedFieldCodec<uint32> > id_codec_;
     };
 
-    inline std::ostream& operator<<(std::ostream& os, const DCCLCodec& codec)
+    inline std::ostream& operator<<(std::ostream& os, const Codec& codec)
     {
         codec.info_all(&os);
         return os;

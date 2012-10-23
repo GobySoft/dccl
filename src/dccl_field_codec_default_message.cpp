@@ -172,7 +172,7 @@ bool dccl::DCCLDefaultMessageCodec::check_field(const google::protobuf::FieldDes
         else if(MessageHandler::current_part() == MessageHandler::UNKNOWN) // part not yet explicitly specified
         {
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
-               DCCLFieldCodecManager::find(field)->name() == DCCLCodec::DEFAULT_CODEC_NAME) // default message codec will expand
+               DCCLFieldCodecManager::find(field)->name() == Codec::DEFAULT_CODEC_NAME) // default message codec will expand
                 return true;
             else if((part() == MessageHandler::HEAD && !dccl_field_options.in_head())
                     || (part() == MessageHandler::BODY && dccl_field_options.in_head()))

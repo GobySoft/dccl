@@ -39,7 +39,7 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in,
               bool set_model = true)
 {
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
 
     void* dl_handle = dlopen("libdccl_arithmetic" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
     if(!dl_handle)
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         dccl::dlog.connect(dccl::logger::DEBUG2_PLUS, &std::cerr);
     
     dccl::protobuf::DCCLConfig cfg;
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     codec.set_cfg(cfg);
 
     

@@ -47,7 +47,7 @@
 
 namespace dccl
 {
-    class DCCLCodec;
+    class Codec;
 
     /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users will use the DCCLTypedFieldCodec or its children (e.g. DCCLTypedFixedFieldCodec) instead of directly inheriting from this class.
     class DCCLFieldCodecBase
@@ -109,7 +109,7 @@ namespace dccl
 
         /// \name Base message functions
         ///
-        /// These are called typically by DCCLCodec to start processing a new message. In this example "Foo" is a base message:
+        /// These are called typically by Codec to start processing a new message. In this example "Foo" is a base message:
         /// \code
         /// message Foo
         /// {

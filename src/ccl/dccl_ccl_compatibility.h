@@ -30,7 +30,7 @@
 
 extern "C"
 {
-    void goby_dccl_load(dccl::DCCLCodec* dccl);
+    void goby_dccl_load(dccl::Codec* dccl);
 }
 
 

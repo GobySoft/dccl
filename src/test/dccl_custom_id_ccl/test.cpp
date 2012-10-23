@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::DCCLCodec codec;
+    dccl::Codec codec;
     dccl::protobuf::DCCLConfig cfg;
     cfg.set_crypto_passphrase("309ldskjfla39");
     codec.set_cfg(cfg);

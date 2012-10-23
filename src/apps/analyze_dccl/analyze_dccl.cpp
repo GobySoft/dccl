@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
         goby::util::DynamicProtobufManager::load_from_proto_file(argv[1]);
 
     
-    dccl::DCCLCodec dccl;
+    dccl::Codec dccl;
     if(file_desc)
     {
         std::cout << "read in: " << argv[1] << std::endl;

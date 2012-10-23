@@ -61,21 +61,23 @@ using google::protobuf::FieldDescriptor;
 using google::protobuf::Descriptor;
 using google::protobuf::Reflection;
 
-boost::shared_ptr<dccl::DCCLCodec> dccl::DCCLCodec::inst_;
+const std::string dccl::Codec::DEFAULT_CODEC_NAME = "";
 
-const std::string dccl::DCCLCodec::DEFAULT_CODEC_NAME = "";
 
 //
-// DCCLCodec
+// Codec
 //
 
-dccl::DCCLCodec::DCCLCodec()
-    : current_id_codec_(DEFAULT_CODEC_NAME) {
+dccl::Codec::Codec(const std::string& dccl_id_codec)
+    : id_codec_(dccl_id_codec)
+{
+    DCCLFieldCodecManager::add<DCCLDefaultIdentifierCodec>("_default_id_codec");
+    // make sure the id codec exists
+    id_codec();
     set_default_codecs();
-    process_cfg();
 }
 
-void dccl::DCCLCodec::set_default_codecs()
+void dccl::Codec::set_default_codecs()
 {
     using google::protobuf::FieldDescriptor;
     DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<double> >(DEFAULT_CODEC_NAME);
@@ -90,7 +92,7 @@ void dccl::DCCLCodec::set_default_codecs()
     DCCLFieldCodecManager::add<DCCLDefaultEnumCodec>(DEFAULT_CODEC_NAME);
     DCCLFieldCodecManager::add<DCCLDefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(DEFAULT_CODEC_NAME);
 
-    DCCLFieldCodecManager::add<DCCLTimeCodec<std::string> >("_time");
+//    DCCLFieldCodecManager::add<DCCLTimeCodec<std::string> >("_time");
     DCCLFieldCodecManager::add<DCCLTimeCodec<uint64> >("_time");
     DCCLFieldCodecManager::add<DCCLTimeCodec<double> >("_time");
 
@@ -99,7 +101,7 @@ void dccl::DCCLCodec::set_default_codecs()
 }
 
 
-void dccl::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message& msg)
+void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -113,11 +115,13 @@ void dccl::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message
         if(!id2desc_.count(id(desc)))
             throw(DCCLException("Message id " +
                                 as<std::string>(id(desc))+
-                                " has not been validated. Call validate() before encoding this type."));
+                                " has not been loaded. Call load() before encoding this type."));
     
         
         //fixed header
-        Bitset head_bits = id_codec_[current_id_codec_]->encode(id(desc));        
+        Bitset head_bits;
+        id_codec()->field_encode(&head_bits, id(desc), 0);
+        
         Bitset body_bits;
         
         boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
@@ -158,7 +162,7 @@ void dccl::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message
 
         dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
 
-        *bytes =  head_bytes + body_bytes;
+        *bytes +=  head_bytes + body_bytes;
     }
     catch(std::exception& e)
     {
@@ -171,11 +175,11 @@ void dccl::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message
     }
 }
 
-unsigned dccl::DCCLCodec::id_from_encoded(const std::string& bytes)
+unsigned dccl::Codec::id(const std::string& bytes)
 {
     unsigned id_min_size = 0, id_max_size = 0;
-    id_codec_[current_id_codec_]->field_min_size(&id_min_size, 0);
-    id_codec_[current_id_codec_]->field_max_size(&id_max_size, 0);
+    id_codec()->field_min_size(&id_min_size, 0);
+    id_codec()->field_max_size(&id_max_size, 0);
     
     if(bytes.length() < (id_min_size / BITS_IN_BYTE))
         throw(DCCLException("Bytes passed (hex: " + hex_encode(bytes) + ") is too small to be a valid DCCL message"));
@@ -185,20 +189,31 @@ unsigned dccl::DCCLCodec::id_from_encoded(const std::string& bytes)
 
     Bitset these_bits(&fixed_header_bits);
     these_bits.get_more_bits(id_min_size);
+
+    boost::any return_value;
+    id_codec()->field_decode(&these_bits, &return_value, 0);
     
-    return id_codec_[current_id_codec_]->decode(&these_bits);
+    return boost::any_cast<int32>(return_value);
 }
 
-void dccl::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message* msg)
+
+void dccl::Codec::decode(std::string* bytes, google::protobuf::Message* msg)
+{
+    decode(*bytes, msg);
+    unsigned last_size = size(*msg);
+    bytes->erase(0, last_size);
+}
+
+void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* msg)
 {
     try
     {
-        unsigned id = id_from_encoded(bytes);
+        unsigned this_id = id(bytes);
 
-        dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << id << std::endl;
+        dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << this_id << std::endl;
         
-        if(!id2desc_.count(id))
-            throw(DCCLException("Message id " + as<std::string>(id) + " has not been validated. Call validate() before decoding this type."));
+        if(!id2desc_.count(this_id))
+            throw(DCCLException("Message id " + as<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
@@ -211,7 +226,10 @@ void dccl::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message
         unsigned head_size_bits, body_size_bits;
         codec->base_max_size(&head_size_bits, desc, MessageHandler::HEAD);
         codec->base_max_size(&body_size_bits, desc, MessageHandler::BODY);
-        head_size_bits += id_codec_[current_id_codec_]->size(id);
+
+        unsigned id_bits = 0;
+        id_codec()->field_size(&id_bits, this_id, 0);
+        head_size_bits += id_bits;
         
         unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
         unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
@@ -241,7 +259,7 @@ void dccl::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message
         dlog.is(DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
 
         // shift off ID bits
-        head_bits >>= id_codec_[current_id_codec_]->size(id);
+        head_bits >>= id_bits;
 
         dlog.is(DEBUG3) && dlog << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
         
@@ -276,7 +294,7 @@ void dccl::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void dccl::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
+void dccl::Codec::load(const google::protobuf::Descriptor* desc)
 {    
     try
     {
@@ -291,7 +309,10 @@ void dccl::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
         unsigned head_size_bits, body_size_bits;
         codec->base_max_size(&head_size_bits, desc, MessageHandler::HEAD);
         codec->base_max_size(&body_size_bits, desc, MessageHandler::BODY);
-        head_size_bits += id_codec_[current_id_codec_]->size(dccl_id);
+
+        unsigned id_bits = 0;
+        id_codec()->field_size(&id_bits, dccl_id, 0);
+        head_size_bits += id_bits;
         
         const unsigned byte_size = ceil_bits2bytes(head_size_bits) + ceil_bits2bytes(body_size_bits);
 
@@ -326,7 +347,7 @@ void dccl::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
     }
 }
 
-unsigned dccl::DCCLCodec::size(const google::protobuf::Message& msg)
+unsigned dccl::Codec::size(const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -335,7 +356,10 @@ unsigned dccl::DCCLCodec::size(const google::protobuf::Message& msg)
     unsigned dccl_id = id(desc);
     unsigned head_size_bits;
     codec->base_size(&head_size_bits, msg, MessageHandler::HEAD);
-    head_size_bits += id_codec_[current_id_codec_]->size(dccl_id);
+
+    unsigned id_bits = 0;
+    id_codec()->field_size(&id_bits, dccl_id, 0);
+    head_size_bits += id_bits;
     
     unsigned body_size_bits;
     codec->base_size(&body_size_bits, msg, MessageHandler::BODY);
@@ -345,20 +369,7 @@ unsigned dccl::DCCLCodec::size(const google::protobuf::Message& msg)
     return head_size_bytes + body_size_bytes;
 }
 
-
-
-void dccl::DCCLCodec::run_hooks(const google::protobuf::Message& msg)
-{
-    const Descriptor* desc = msg.GetDescriptor();
-
-    boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
-    
-    codec->base_run_hooks(msg, MessageHandler::HEAD);
-    codec->base_run_hooks(msg, MessageHandler::BODY);
-}
-
-
-void dccl::DCCLCodec::info(const google::protobuf::Descriptor* desc, std::ostream* os) const
+void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* os) const
 {
     try
     {   
@@ -369,7 +380,9 @@ void dccl::DCCLCodec::info(const google::protobuf::Descriptor* desc, std::ostrea
         codec->base_max_size(&body_bit_size, desc, MessageHandler::BODY);
 
         unsigned dccl_id = id(desc);
-        const unsigned id_bit_size = id_codec_.find(current_id_codec_)->second->size(dccl_id);
+        unsigned id_bit_size = 0;
+        id_codec()->field_size(&id_bit_size, dccl_id, 0);
+    
         const unsigned bit_size = id_bit_size + config_head_bit_size + body_bit_size;
 
         
@@ -402,22 +415,8 @@ void dccl::DCCLCodec::info(const google::protobuf::Descriptor* desc, std::ostrea
         
 }
 
-void dccl::DCCLCodec::validate_repeated(const std::list<const google::protobuf::Descriptor*>& desc)
-{
-    BOOST_FOREACH(const google::protobuf::Descriptor* p, desc)
-        validate(p);
-}
 
-void dccl::DCCLCodec::info_repeated(const std::list<const google::protobuf::Descriptor*>& desc, std::ostream* os) const
-{
-    BOOST_FOREACH(const google::protobuf::Descriptor* p, desc)
-        info(p, os);
-}
-
-
-
-
-void dccl::DCCLCodec::encrypt(std::string* s, const std::string& nonce /* message head */)
+void dccl::Codec::encrypt(std::string* s, const std::string& nonce /* message head */)
 {
 #ifdef HAS_CRYPTOPP
     using namespace CryptoPP;
@@ -437,7 +436,7 @@ void dccl::DCCLCodec::encrypt(std::string* s, const std::string& nonce /* messag
 #endif
 }
 
-void dccl::DCCLCodec::decrypt(std::string* s, const std::string& nonce)
+void dccl::Codec::decrypt(std::string* s, const std::string& nonce)
 {
 #ifdef HAS_CRYPTOPP
     using namespace CryptoPP;
@@ -458,65 +457,44 @@ void dccl::DCCLCodec::decrypt(std::string* s, const std::string& nonce)
 #endif
 }
 
-void dccl::DCCLCodec::merge_cfg(const protobuf::DCCLConfig& cfg)
-{
-    cfg_.MergeFrom(cfg);
-    process_cfg();
-}
-
-void dccl::DCCLCodec::set_cfg(const protobuf::DCCLConfig& cfg)
-{
-    cfg_.CopyFrom(cfg);
-    process_cfg();
-}
-
-void dccl::DCCLCodec::load_shared_library_codecs(void* dl_handle)
+void dccl::Codec::load_library(void* dl_handle)
 {
     if(!dl_handle)
         throw(DCCLException("Null shared library handle passed to load_shared_library_codecs"));
     
     // load any shared library codecs
-    void (*dccl_load_ptr)(dccl::DCCLCodec*);
-    dccl_load_ptr = (void (*)(dccl::DCCLCodec*)) dlsym(dl_handle, "goby_dccl_load");
+    void (*dccl_load_ptr)(dccl::Codec*);
+    dccl_load_ptr = (void (*)(dccl::Codec*)) dlsym(dl_handle, "goby_dccl_load");
     if(dccl_load_ptr)
         (*dccl_load_ptr)(this);
 }
 
 
 
-void dccl::DCCLCodec::process_cfg()
+void dccl::Codec::set_crypto_passphrase(const std::string& passphrase)
 {
     if(!crypto_key_.empty())
         crypto_key_.clear();
-    if(cfg_.has_crypto_passphrase())
-    {
 #ifdef HAS_CRYPTOPP
-        using namespace CryptoPP;
-        
-        SHA256 hash;
-        StringSource unused(cfg_.crypto_passphrase(), true, new HashFilter(hash, new StringSink(crypto_key_)));
-        
-        dlog.is(DEBUG1) && dlog << "Cryptography enabled with given passphrase" << std::endl;
+    using namespace CryptoPP;
+    
+    SHA256 hash;
+    StringSource unused(passphrase, true, new HashFilter(hash, new StringSink(crypto_key_)));
+    
+    dlog.is(DEBUG1) && dlog << "Cryptography enabled with given passphrase" << std::endl;
 #else
-        dlog.is(DEBUG1) && dlog << "Cryptography disabled because Goby was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
+    dlog.is(DEBUG1) && dlog << "Cryptography disabled because Goby was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
 #endif
-    }
-    else
-    {
-        dlog.is(DEBUG1) && dlog << "Cryptography disabled, set crypto_passphrase to enable." << std::endl;
-    }
 
-    add_id_codec<DCCLDefaultIdentifierCodec>(DEFAULT_CODEC_NAME);
-    set_id_codec(DEFAULT_CODEC_NAME);
 }
 
-void dccl::DCCLCodec::info_all(std::ostream* os) const
+void dccl::Codec::info_all(std::ostream* os) const
 {
-    *os << "=== Begin DCCLCodec ===" << "\n";
+    *os << "=== Begin Codec ===" << "\n";
     *os << id2desc_.size() << " messages loaded.\n";            
             
     for(std::map<int32, const google::protobuf::Descriptor*>::const_iterator it = id2desc_.begin(), n = id2desc_.end(); it != n; ++it)
         info(it->second, os);
                 
-    *os << "=== End DCCLCodec ===";
+    *os << "=== End Codec ===";
 }
