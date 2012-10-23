@@ -126,8 +126,6 @@ namespace goby
             
             static const google::protobuf::FileDescriptor* add_protobuf_file(
                 const google::protobuf::FileDescriptorProto& proto);
-            
-            static boost::signals2::signal<void (const google::protobuf::FileDescriptor*) > new_descriptor_hooks;
 
             static google::protobuf::DynamicMessageFactory& msg_factory()
             { return *get_instance()->msg_factory_; }
