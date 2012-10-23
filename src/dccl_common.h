@@ -34,7 +34,6 @@
 
 #include "dccl/dccl_bitset.h"
 #include "goby/acomms/acomms_constants.h"
-#include "goby/common/logger.h"
 
 namespace dccl
 {

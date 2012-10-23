@@ -24,26 +24,25 @@
 #ifndef DCCLException20100812H
 #define DCCLException20100812H
 
-#include "goby/common/exception.h"
+#include <stdexcept>
 
 namespace dccl
 {
     /// \brief Exception class for libdccl
-    class DCCLException : public goby::Exception
-    {
+    class Exception : std::runtime_error {
       public:
-      DCCLException(const std::string& s)
-          : Exception(s)
+      Exception(const std::string& s)
+          : std::runtime_error(s)
         { }
 
     };
 
     // used to signal null value in field codecs
-    class DCCLNullValueException : public DCCLException
+    class NullValueException : public Exception
     {
       public:
-      DCCLNullValueException()
-          : DCCLException("NULL Value")
+      NullValueException()
+          : Exception("NULL Value")
         { }    
     };
         

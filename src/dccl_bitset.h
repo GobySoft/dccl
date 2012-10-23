@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <limits>
 
-#include "goby/common/logger.h"
 #include "goby/common/exception.h"
 
 
