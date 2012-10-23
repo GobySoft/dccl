@@ -23,7 +23,7 @@
 
 #include "goby/util/dynamic_protobuf_manager.h"
 
-#include "goby/common/exception.h"
+//#include "goby/common/exception.h"
 //
 
 #if PROTO_RUNTIME_COMPILE

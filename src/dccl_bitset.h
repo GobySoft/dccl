@@ -28,8 +28,7 @@
 #include <algorithm>
 #include <limits>
 
-#include "goby/common/exception.h"
-
+#include "dccl_exception.h"
 
 namespace dccl
 {
@@ -67,7 +66,7 @@ namespace dccl
         Bitset& operator&=(const Bitset& rhs)
         {
             if(rhs.size() != size())
-                throw(goby::Exception("Bitset operator&= requires this->size() == rhs.size()"));
+                throw(dccl::Exception("Bitset operator&= requires this->size() == rhs.size()"));
                 
             for (size_type i = 0; i != this->size(); ++i)
                 (*this)[i] = (*this)[i] & rhs[i];
@@ -77,7 +76,7 @@ namespace dccl
         Bitset& operator|=(const Bitset& rhs)
         {
             if(rhs.size() != size())
-                throw(goby::Exception("Bitset operator|= requires this->size() == rhs.size()"));
+                throw(dccl::Exception("Bitset operator|= requires this->size() == rhs.size()"));
 
             for (size_type i = 0; i != this->size(); ++i)
                 (*this)[i] = (*this)[i] | rhs[i];
@@ -87,7 +86,7 @@ namespace dccl
         Bitset& operator^=(const Bitset& rhs)
         {
             if(rhs.size() != size())
-                throw(goby::Exception("Bitset operator^= requires this->size() == rhs.size()"));
+                throw(dccl::Exception("Bitset operator^= requires this->size() == rhs.size()"));
 
             for (size_type i = 0; i != this->size(); ++i)
                 (*this)[i] = (*this)[i] ^ rhs[i];
@@ -175,7 +174,7 @@ namespace dccl
         unsigned long to_ulong() const
         {
             if(size() > static_cast<size_type>(std::numeric_limits<unsigned long>::digits))
-                throw(goby::Exception("Type `unsigned long` cannot represent current bitset (this->size() > std::numeric_limits<unsigned long>::digits)"));                
+                throw(dccl::Exception("Type `unsigned long` cannot represent current bitset (this->size() > std::numeric_limits<unsigned long>::digits)"));                
 
             unsigned long out = 0;
             for(int i = 0, n = size(); i < n; ++i)

@@ -51,7 +51,7 @@ dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
         for(size_type i = 0; i < num_bits; ++i)
         {
             if(this->empty())
-                throw(goby::Exception("Cannot get_more_bits - no more bits to get!"));
+                throw(dccl::Exception("Cannot get_more_bits - no more bits to get!"));
             
             out.push_back(this->front());
             this->pop_front();
