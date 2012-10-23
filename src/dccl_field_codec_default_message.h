@@ -186,7 +186,7 @@ namespace dccl
             }
             catch(boost::bad_any_cast& e)
             {
-                throw(DCCLException("Bad type given to traverse const, expecting const google::protobuf::Message*, got " + std::string(wire_value.type().name())));
+                throw(Exception("Bad type given to traverse const, expecting const google::protobuf::Message*, got " + std::string(wire_value.type().name())));
             }
                 
         }
@@ -231,7 +231,7 @@ namespace dccl
             }
             catch(boost::bad_any_cast& e)
             {
-                throw(DCCLException("Bad type given to traverse, expecting const google::protobuf::Message*"));
+                throw(Exception("Bad type given to traverse, expecting const google::protobuf::Message*"));
             }
                 
         }

@@ -139,7 +139,7 @@ namespace dccl
               
           if(!DCCLFieldCodecBase::this_field()->is_required())
           {
-              if(!t) throw(DCCLNullValueException());
+              if(!t) throw(NullValueException());
               --t;
           }
               

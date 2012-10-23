@@ -110,10 +110,10 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
     try
     {
         if(!msg.IsInitialized())
-            throw(DCCLException("Message is not properly initialized. All `required` fields must be set."));
+            throw(Exception("Message is not properly initialized. All `required` fields must be set."));
         
         if(!id2desc_.count(id(desc)))
-            throw(DCCLException("Message id " +
+            throw(Exception("Message id " +
                                 as<std::string>(id(desc))+
                                 " has not been loaded. Call load() before encoding this type."));
     
@@ -136,7 +136,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         }
         else
         {
-            throw(DCCLException("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
+            throw(Exception("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
         
         // given header of not even byte size (e.g. 01011), make even byte size (e.g. 00001011)
@@ -171,7 +171,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         ss << "Message " << desc->full_name() << " failed to encode. Reason: " << e.what();
 
         dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
-        throw(DCCLException(ss.str()));
+        throw(Exception(ss.str()));
     }
 }
 
@@ -182,7 +182,7 @@ unsigned dccl::Codec::id(const std::string& bytes)
     id_codec()->field_max_size(&id_max_size, 0);
     
     if(bytes.length() < (id_min_size / BITS_IN_BYTE))
-        throw(DCCLException("Bytes passed (hex: " + hex_encode(bytes) + ") is too small to be a valid DCCL message"));
+        throw(Exception("Bytes passed (hex: " + hex_encode(bytes) + ") is too small to be a valid DCCL message"));
         
     Bitset fixed_header_bits;
     fixed_header_bits.from_byte_string(bytes.substr(0, std::ceil(double(id_max_size) / BITS_IN_BYTE)));
@@ -213,7 +213,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << this_id << std::endl;
         
         if(!id2desc_.count(this_id))
-            throw(DCCLException("Message id " + as<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
+            throw(Exception("Message id " + as<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
@@ -275,7 +275,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         }
         else
         {
-            throw(DCCLException("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
+            throw(Exception("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
 
         dlog.is(DEBUG1) && dlog << "Successfully decoded message of type: " << desc->full_name() << std::endl;
@@ -287,7 +287,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         ss << "Message " << hex_encode(bytes) <<  " failed to decode. Reason: " << e.what() << std::endl;
 
         dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
-        throw(DCCLException(ss.str()));
+        throw(Exception(ss.str()));
     }    
 
 }
@@ -299,9 +299,9 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
     try
     {
         if(!desc->options().GetExtension(dccl::msg).has_id())
-            throw(DCCLException("Missing message option `(goby.msg).dccl.id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (goby.msg).dccl.id = 3\""));
+            throw(Exception("Missing message option `(goby.msg).dccl.id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (goby.msg).dccl.id = 3\""));
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
-            throw(DCCLException("Missing message option `(goby.msg).dccl.max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (goby.msg).dccl.max_bytes = 32\""));
+            throw(Exception("Missing message option `(goby.msg).dccl.max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (goby.msg).dccl.max_bytes = 32\""));
         
         boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
 
@@ -317,26 +317,26 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
         const unsigned byte_size = ceil_bits2bytes(head_size_bits) + ceil_bits2bytes(body_size_bits);
 
         if(byte_size > desc->options().GetExtension(dccl::msg).max_bytes())
-            throw(DCCLException("Actual maximum size of message exceeds allowed maximum (dccl.max_bytes). Tighten bounds, remove fields, improve codecs, or increase the allowed dccl.max_bytes"));
+            throw(Exception("Actual maximum size of message exceeds allowed maximum (dccl.max_bytes). Tighten bounds, remove fields, improve codecs, or increase the allowed dccl.max_bytes"));
         
         codec->base_validate(desc, MessageHandler::HEAD);
         codec->base_validate(desc, MessageHandler::BODY);
 
         if(id2desc_.count(dccl_id) && desc != id2desc_.find(dccl_id)->second)
-            throw(DCCLException("`dccl.id` " + as<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + as<std::string>(id2desc_.find(dccl_id)->second)));
+            throw(Exception("`dccl.id` " + as<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + as<std::string>(id2desc_.find(dccl_id)->second)));
         else
             id2desc_.insert(std::make_pair(id(desc), desc));
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name() << std::endl;
 
     }
-    catch(DCCLException& e)
+    catch(Exception& e)
     {
         try
         {
             info(desc, &dlog);
         }
-        catch(DCCLException& e)
+        catch(Exception& e)
         { }
         
         dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": " << desc << " failed validation. Reason: "
@@ -408,7 +408,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* o
         
         *os << "= End " << desc->full_name() << " =" << std::endl;
     }
-    catch(DCCLException& e)
+    catch(Exception& e)
     {
         dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
     }
@@ -460,7 +460,7 @@ void dccl::Codec::decrypt(std::string* s, const std::string& nonce)
 void dccl::Codec::load_library(void* dl_handle)
 {
     if(!dl_handle)
-        throw(DCCLException("Null shared library handle passed to load_shared_library_codecs"));
+        throw(Exception("Null shared library handle passed to load_shared_library_codecs"));
     
     // load any shared library codecs
     void (*dccl_load_ptr)(dccl::Codec*);

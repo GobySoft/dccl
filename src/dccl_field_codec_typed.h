@@ -68,7 +68,7 @@ namespace dccl
             {
                 throw(type_error("pre_encode", typeid(FieldType), field_value.type()));
             }
-            catch(DCCLNullValueException&)
+            catch(NullValueException&)
             {
                 *wire_value = boost::any();
             }
@@ -86,7 +86,7 @@ namespace dccl
             {
                 throw(type_error("post_decode", typeid(WireType), wire_value.type()));
             }
-            catch(DCCLNullValueException&)
+            catch(NullValueException&)
             {
                 *field_value = boost::any();
             }
@@ -118,7 +118,7 @@ namespace dccl
       /// \return Bits represented the encoded field.
       virtual Bitset encode(const WireType& wire_value) = 0;
 
-      /// \brief Decode a field. If the field is empty (i.e. was encoded using the zero-argument encode()), throw DCCLNullValueException to indicate this.
+      /// \brief Decode a field. If the field is empty (i.e. was encoded using the zero-argument encode()), throw NullValueException to indicate this.
       ///
       /// \param bits Bits to use for decoding.
       /// \return the decoded value.
@@ -166,7 +166,7 @@ namespace dccl
               google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);  
               msg->CopyFrom(decode(bits));
           }
-          catch(DCCLNullValueException&)
+          catch(NullValueException&)
           {
               if(DCCLFieldCodecBase::this_field())
                   *wire_value = boost::any();
@@ -179,7 +179,7 @@ namespace dccl
       {
           try
           { *wire_value = decode(bits); }
-          catch(DCCLNullValueException&)
+          catch(NullValueException&)
           { *wire_value = boost::any(); }              
       }
 
@@ -230,7 +230,7 @@ namespace dccl
       virtual Bitset encode(const WireType& wire_value)
       { return encode_repeated(std::vector<WireType>(1, wire_value)); }          
 
-      /// \brief Decode a field. If the field is empty (i.e. was encoded using the zero-argument encode()), throw DCCLNullValueException to indicate this.
+      /// \brief Decode a field. If the field is empty (i.e. was encoded using the zero-argument encode()), throw NullValueException to indicate this.
       ///
       /// \param bits Bits to use for decoding.
       /// \return the decoded value.

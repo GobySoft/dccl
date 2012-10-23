@@ -21,8 +21,8 @@
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#ifndef DCCLException20100812H
-#define DCCLException20100812H
+#ifndef Exception20100812H
+#define Exception20100812H
 
 #include <stdexcept>
 

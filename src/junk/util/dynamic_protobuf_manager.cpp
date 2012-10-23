@@ -24,7 +24,7 @@
 #include "goby/util/dynamic_protobuf_manager.h"
 
 #include "goby/common/exception.h"
-//#include "goby/common/logger.h"
+//
 
 #if PROTO_RUNTIME_COMPILE
 #include <boost/filesystem.hpp>

@@ -124,7 +124,7 @@ namespace dccl
         {
             if(!model->user_model_.IsInitialized())
             {
-                throw(DCCLException("Invalid model: " +
+                throw(Exception("Invalid model: " +
                                     model->user_model_.DebugString() +
                                     "Missing fields: " + model->user_model_.InitializationErrorString()));
             }
@@ -142,7 +142,7 @@ namespace dccl
 
                 if(freq == 0 && symbol != Model::OUT_OF_RANGE_SYMBOL && symbol != Model::EOF_SYMBOL)
                 {
-                    throw(DCCLException("Invalid model: " +
+                    throw(Exception("Invalid model: " +
                                         model->user_model_.DebugString() +
                                         "All frequencies must be nonzero."));
                 }                      
@@ -156,7 +156,7 @@ namespace dccl
                 
             if(model->total_freq(Model::ENCODER) > Model::MAX_FREQUENCY)
             {
-                throw(DCCLException("Invalid model: " +
+                throw(Exception("Invalid model: " +
                                     model->user_model_.DebugString() +
                                     "Sum of all frequencies must be less than " +
                                     goby::util::as<std::string>(Model::MAX_FREQUENCY) +
@@ -165,7 +165,7 @@ namespace dccl
 
             if(model->user_model_.value_bound_size() != model->user_model_.frequency_size() + 1)
             {
-                throw(DCCLException("Invalid model: " +
+                throw(Exception("Invalid model: " +
                                     model->user_model_.DebugString() +
                                     "`value_bound` size must be exactly 1 more than number of symbols (= size of `frequency`)."));
             }
@@ -176,7 +176,7 @@ namespace dccl
                                    model->user_model_.value_bound().end(),
                                    std::greater_equal<Model::value_type>()) !=  model->user_model_.value_bound().end())
             {
-                throw(DCCLException("Invalid model: " +
+                throw(Exception("Invalid model: " +
                                     model->user_model_.DebugString() +
                                     "`value_bound` must be monotonically increasing."));
             }
@@ -187,7 +187,7 @@ namespace dccl
         {
             std::map<std::string, Model>::iterator it = arithmetic_models_.find(name);
             if(it == arithmetic_models_.end())
-                throw(DCCLException("Cannot find model called: " + name));
+                throw(Exception("Cannot find model called: " + name));
             else
                 return it->second;
         }
@@ -572,7 +572,7 @@ namespace dccl
           {
               ModelManager::find(model_name);
           }
-          catch(DCCLException& e)
+          catch(Exception& e)
           {
               DCCLFieldCodecBase::require(false, "no such (goby.field).dccl.arithmetic.model called \"" + model_name + "\" loaded.");
           }
@@ -680,7 +680,7 @@ namespace dccl
             if(return_value)
                 return return_value;
             else
-                throw(DCCLNullValueException());
+                throw(NullValueException());
         }
 
     };

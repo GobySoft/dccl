@@ -142,9 +142,9 @@ void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
     MessageHandler msg_handler(field);
     
     if(!field_value)
-        throw(DCCLException("Decode called with NULL boost::any"));
+        throw(Exception("Decode called with NULL boost::any"));
     else if(!bits)
-        throw(DCCLException("Decode called with NULL Bitset"));    
+        throw(Exception("Decode called with NULL Bitset"));    
     
     if(field)
         dlog.is(DEBUG2) && dlog << "Starting decode for field: " << field->DebugString() << std::flush;
@@ -173,9 +173,9 @@ void dccl::DCCLFieldCodecBase::field_decode_repeated(Bitset* bits,
     MessageHandler msg_handler(field);
     
     if(!field_values)
-        throw(DCCLException("Decode called with NULL field_values"));
+        throw(Exception("Decode called with NULL field_values"));
     else if(!bits)
-        throw(DCCLException("Decode called with NULL Bitset"));    
+        throw(Exception("Decode called with NULL Bitset"));    
     
     if(field)
         dlog.is(DEBUG2) && dlog  << "Starting repeated decode for field: " << field->DebugString();
@@ -208,7 +208,7 @@ void dccl::DCCLFieldCodecBase::base_max_size(unsigned* bit_size,
     if(desc)
         msg_handler.push(desc);
     else
-        throw(DCCLException("Max Size called with NULL Descriptor"));
+        throw(Exception("Max Size called with NULL Descriptor"));
     
     field_max_size(bit_size, static_cast<google::protobuf::FieldDescriptor*>(0));
 }
@@ -238,7 +238,7 @@ void dccl::DCCLFieldCodecBase::base_min_size(unsigned* bit_size,
     if(desc)
         msg_handler.push(desc);
     else
-        throw(DCCLException("Min Size called with NULL Descriptor"));
+        throw(Exception("Min Size called with NULL Descriptor"));
 
     field_min_size(bit_size, static_cast<google::protobuf::FieldDescriptor*>(0));
 }
@@ -265,7 +265,7 @@ void dccl::DCCLFieldCodecBase::base_validate(const google::protobuf::Descriptor*
     if(desc)
         msg_handler.push(desc);
     else
-        throw(DCCLException("Validate called with NULL Descriptor"));
+        throw(Exception("Validate called with NULL Descriptor"));
 
     bool b = false;
     field_validate(&b, static_cast<google::protobuf::FieldDescriptor*>(0));
@@ -278,7 +278,7 @@ void dccl::DCCLFieldCodecBase::field_validate(bool* b,
     MessageHandler msg_handler(field);
 
     if(field && dccl_field_options().in_head() && variable_size())
-        throw(DCCLException("Variable size codec used in header - header fields must be encoded with fixed size codec."));
+        throw(Exception("Variable size codec used in header - header fields must be encoded with fixed size codec."));
     
     validate();
 }
@@ -291,7 +291,7 @@ void dccl::DCCLFieldCodecBase::base_info(std::ostream* os, const google::protobu
     if(desc)
         msg_handler.push(desc);
     else
-        throw(DCCLException("info called with NULL Descriptor"));
+        throw(Exception("info called with NULL Descriptor"));
 
     field_info(os, static_cast<google::protobuf::FieldDescriptor*>(0));
 }
@@ -413,7 +413,7 @@ unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::an
 unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
-        throw(DCCLException("Missing (goby.field).dccl.max_repeat option on `repeated` field: " + this_field()->DebugString()));
+        throw(Exception("Missing (goby.field).dccl.max_repeat option on `repeated` field: " + this_field()->DebugString()));
     else
         return max_size() * dccl_field_options().max_repeat();
 }
@@ -421,7 +421,7 @@ unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
 unsigned dccl::DCCLFieldCodecBase::min_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
-        throw(DCCLException("Missing (goby.field).dccl.max_repeat option on `repeated` field " + this_field()->DebugString()));
+        throw(Exception("Missing (goby.field).dccl.max_repeat option on `repeated` field " + this_field()->DebugString()));
     else
         return min_size() * dccl_field_options().max_repeat();
 }

@@ -91,7 +91,7 @@ unsigned dccl::DCCLDefaultIdentifierCodec::size(const uint32& id)
 unsigned dccl::DCCLDefaultIdentifierCodec::this_size(const uint32& id)
 {
     if(id < 0 || id > TWO_BYTE_MAX_ID)
-        throw(DCCLException("dccl.id provided (" + goby::util::as<std::string>(id) + ") is less than 0 or exceeds maximum: " + goby::util::as<std::string>(int(TWO_BYTE_MAX_ID))));
+        throw(Exception("dccl.id provided (" + goby::util::as<std::string>(id) + ") is less than 0 or exceeds maximum: " + goby::util::as<std::string>(int(TWO_BYTE_MAX_ID))));
     
     return (id <= ONE_BYTE_MAX_ID) ?
         SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
@@ -140,7 +140,7 @@ bool dccl::DCCLDefaultBoolCodec::decode(Bitset* bits)
     }
     else
     {
-        throw(DCCLNullValueException());
+        throw(NullValueException());
     }
 }
 
@@ -223,7 +223,7 @@ std::string dccl::DCCLDefaultStringCodec::decode(Bitset* bits)
     }
     else
     {
-        throw(DCCLNullValueException());
+        throw(NullValueException());
     }
     
 }
@@ -311,7 +311,7 @@ std::string dccl::DCCLDefaultBytesCodec::decode(Bitset* bits)
         }
         else
         {
-            throw(DCCLNullValueException());
+            throw(NullValueException());
         }
     }
     else
@@ -355,7 +355,7 @@ const google::protobuf::EnumValueDescriptor* dccl::DCCLDefaultEnumCodec::post_de
     if(return_value)
         return return_value;
     else
-        throw(DCCLNullValueException());
+        throw(NullValueException());
 }
 
 
@@ -382,7 +382,7 @@ std::string dccl::DCCLModemIdConverterCodec::post_decode(const int32& wire_value
     else if(platform2modem_id_.right.count(wire_value))
         return platform2modem_id_.right.at(wire_value);
     else
-        throw DCCLNullValueException();
+        throw NullValueException();
 }            
 
 

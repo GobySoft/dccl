@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
         codec.validate(too_long_id_msg.GetDescriptor());
         assert(false);
     }
-    catch(dccl::DCCLException& e)
+    catch(dccl::Exception& e)
     { }
     
 

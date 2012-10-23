@@ -73,7 +73,7 @@ dccl::Model::value_type dccl::Model::symbol_to_value(symbol_type symbol) const
 {
 
     if(symbol == EOF_SYMBOL)
-        throw(DCCLException("EOF symbol has no value."));
+        throw(Exception("EOF symbol has no value."));
                           
     value_type value = (symbol == Model::OUT_OF_RANGE_SYMBOL) ?
         std::numeric_limits<value_type>::quiet_NaN() :

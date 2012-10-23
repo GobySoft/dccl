@@ -122,7 +122,7 @@ void dccl::DCCLDefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     }
     catch(boost::bad_any_cast& e)
     {
-        throw(DCCLException("Bad type given to traverse mutable, expecting google::protobuf::Message*, got " + std::string(wire_value->type().name())));
+        throw(Exception("Bad type given to traverse mutable, expecting google::protobuf::Message*, got " + std::string(wire_value->type().name())));
     }
 
 }

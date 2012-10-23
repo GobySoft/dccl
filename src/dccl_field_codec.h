@@ -287,7 +287,7 @@ namespace dccl
         ///
         /// \param b Currently unused (will be set to false)
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-        /// \throw DCCLException If field is invalid
+        /// \throw Exception If field is invalid
         void field_validate(bool* b, const google::protobuf::FieldDescriptor* field);
 
         /// \brief Write human readable information about the field and its bounds to the provided stream.
@@ -307,7 +307,7 @@ namespace dccl
             if(this_field())
                 return this_field()->options().GetExtension(dccl::field);
             else
-                throw(DCCLException("Cannot call dccl_field on base message (has no *field* option extension"));                
+                throw(Exception("Cannot call dccl_field on base message (has no *field* option extension"));                
                 
         }
             
@@ -315,15 +315,15 @@ namespace dccl
         ///
         /// \param b Boolean to assert (if true, execution continues, if false an exception is thrown)
         /// \param description Debugging description for this assertion (will be appended to the exception)
-        /// \throw DCCLException Thrown if !b
+        /// \throw Exception Thrown if !b
         void require(bool b, const std::string& description)
         {
             if(!b)
             {
                 if(this_field())
-                    throw(DCCLException("Field " + this_field()->name() + " failed validation: " + description));
+                    throw(Exception("Field " + this_field()->name() + " failed validation: " + description));
                 else
-                    throw(DCCLException("Message " + this_descriptor()->name() + " failed validation: " + description));
+                    throw(Exception("Message " + this_descriptor()->name() + " failed validation: " + description));
             }
                 
         }
@@ -368,7 +368,7 @@ namespace dccl
         virtual unsigned any_size(const boost::any& wire_value) = 0;
 
         // no boost::any
-        /// \brief Validate a field. Use require() inside your overloaded validate() to assert requirements or throw DCCLExceptions directly as needed.
+        /// \brief Validate a field. Use require() inside your overloaded validate() to assert requirements or throw Exceptions directly as needed.
         virtual void validate() { }
 
         /// \brief Write field specific information (in addition to general information such as sizes that are automatically written by this class for all fields.
@@ -432,7 +432,7 @@ namespace dccl
                   << ") | wire type: " << DCCLTypeHelper::find(field_codec.wire_type())->as_str();
     }
 
-    inline DCCLException type_error(const std::string& action,
+    inline Exception type_error(const std::string& action,
                                     const std::type_info& expected,
                                     const std::type_info& got)
     {
@@ -440,7 +440,7 @@ namespace dccl
         e += expected.name();
         e += ", got ";
         e += got.name();
-        return DCCLException(e);
+        return Exception(e);
     }
 
         
