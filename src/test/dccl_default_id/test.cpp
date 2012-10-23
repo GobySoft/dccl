@@ -26,14 +26,14 @@
 #include "dccl/dccl.h"
 #include "test.pb.h"
 
-using goby::acomms::operator<<;
+using dccl::operator<<;
 
 int main(int argc, char* argv[])
 {
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);
     
-    goby::acomms::DCCLCodec codec;
+    dccl::DCCLCodec codec;
 
     ShortIDMsg short_id_msg;
     codec.validate(short_id_msg.GetDescriptor());
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         codec.validate(too_long_id_msg.GetDescriptor());
         assert(false);
     }
-    catch(goby::acomms::DCCLException& e)
+    catch(dccl::DCCLException& e)
     { }
     
 

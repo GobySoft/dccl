@@ -1,7 +1,7 @@
 // provides MessageFile
 import "dccl/protobuf/option_extensions.proto";
 
-package goby.acomms.protobuf;
+package dccl.protobuf;
 
 message DCCLConfig
 {

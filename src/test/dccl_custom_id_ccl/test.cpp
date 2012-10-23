@@ -29,17 +29,17 @@
 #include "dccl/ccl/protobuf/ccl.pb.h"
 #include "test.pb.h"
 
-using goby::acomms::operator<<;
+using dccl::operator<<;
 
-class MicroModemMiniPacketDCCLIDCodec : public goby::acomms::DCCLTypedFixedFieldCodec<goby::uint32>
+class MicroModemMiniPacketDCCLIDCodec : public dccl::DCCLTypedFixedFieldCodec<goby::uint32>
 {
 private:
-    goby::acomms::Bitset encode(const goby::uint32& wire_value);
+    dccl::Bitset encode(const goby::uint32& wire_value);
     
-    goby::acomms::Bitset encode()
+    dccl::Bitset encode()
         { return encode(MINI_ID_OFFSET); }
     
-    goby::uint32 decode(goby::acomms::Bitset* bits)
+    goby::uint32 decode(dccl::Bitset* bits)
         { return bits->to_ulong() + MINI_ID_OFFSET; }
     
     unsigned size()
@@ -67,11 +67,11 @@ bool double_cmp(double a, double b, int precision)
     return (a_whole == b_whole) && (a_part == b_part);
 }
 
-goby::acomms::Bitset MicroModemMiniPacketDCCLIDCodec::encode(const goby::uint32& wire_value)
+dccl::Bitset MicroModemMiniPacketDCCLIDCodec::encode(const goby::uint32& wire_value)
 {
     // 16 bits, only 13 are useable, so
     // 3 "blank bits" + 3 bits for us
-    return goby::acomms::Bitset(MINI_ID_SIZE, wire_value - MINI_ID_OFFSET);
+    return dccl::Bitset(MINI_ID_SIZE, wire_value - MINI_ID_OFFSET);
 }
 
 
@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);    
     
-    goby::acomms::DCCLCodec codec;
-    goby::acomms::protobuf::DCCLConfig cfg;
+    dccl::DCCLCodec codec;
+    dccl::protobuf::DCCLConfig cfg;
     cfg.set_crypto_passphrase("309ldskjfla39");
     codec.set_cfg(cfg);
 

@@ -25,7 +25,7 @@
 
 using namespace goby::common::logger;
 
-goby::acomms::Bitset goby::acomms::Bitset::relinquish_bits(size_type num_bits,
+dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
                                                            bool final_child)
 {
 //    glog.is(DEBUG2) && glog  << group(DCCLCodec::glog_decode_group()) << "Asked to relinquish " << num_bits << " from " << this << ": " << *this << std::endl;
@@ -51,7 +51,7 @@ goby::acomms::Bitset goby::acomms::Bitset::relinquish_bits(size_type num_bits,
         for(size_type i = 0; i < num_bits; ++i)
         {
             if(this->empty())
-                throw(Exception("Cannot get_more_bits - no more bits to get!"));
+                throw(goby::Exception("Cannot get_more_bits - no more bits to get!"));
             
             out.push_back(this->front());
             this->pop_front();

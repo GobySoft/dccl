@@ -32,7 +32,7 @@
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
-using goby::acomms::operator<<;
+using dccl::operator<<;
 using goby::int32;
 
 bool found_dest = false;
@@ -79,14 +79,14 @@ int main(int argc, char* argv[])
     goby::glog.set_name(argv[0]);
 
 
-    goby::acomms::DCCLFieldCodecBase::register_wire_value_hook(queue_field.number(), &process_queue_field);
+    dccl::DCCLFieldCodecBase::register_wire_value_hook(queue_field.number(), &process_queue_field);
     
-    goby::acomms::DCCLModemIdConverterCodec::add("unicorn", 3);
-    goby::acomms::DCCLModemIdConverterCodec::add("topside", 1);
+    dccl::DCCLModemIdConverterCodec::add("unicorn", 3);
+    dccl::DCCLModemIdConverterCodec::add("topside", 1);
     
     
-    goby::acomms::DCCLCodec codec;
-    goby::acomms::protobuf::DCCLConfig cfg;
+    dccl::DCCLCodec codec;
+    dccl::protobuf::DCCLConfig cfg;
     codec.set_cfg(cfg);
 
     GobyMessage msg_in1, msg_out1;

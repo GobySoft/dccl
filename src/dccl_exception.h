@@ -26,30 +26,27 @@
 
 #include "goby/common/exception.h"
 
-namespace goby
+namespace dccl
 {
-    namespace acomms
+    /// \brief Exception class for libdccl
+    class DCCLException : public goby::Exception
     {
-        /// \brief Exception class for libdccl
-        class DCCLException : public goby::Exception
-        {
-          public:
-          DCCLException(const std::string& s)
-              : Exception(s)
-            { }
+      public:
+      DCCLException(const std::string& s)
+          : Exception(s)
+        { }
 
-        };
+    };
 
-        // used to signal null value in field codecs
-        class DCCLNullValueException : public DCCLException
-        {
-          public:
-          DCCLNullValueException()
-              : DCCLException("NULL Value")
-            { }    
-        };
+    // used to signal null value in field codecs
+    class DCCLNullValueException : public DCCLException
+    {
+      public:
+      DCCLNullValueException()
+          : DCCLException("NULL Value")
+        { }    
+    };
         
-    }
 }
 
 

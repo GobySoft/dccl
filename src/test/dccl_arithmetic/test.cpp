@@ -33,13 +33,13 @@
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
-using goby::acomms::operator<<;
+using dccl::operator<<;
 
-void run_test(goby::acomms::protobuf::ArithmeticModel& model,
+void run_test(dccl::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in,
               bool set_model = true)
 {
-    goby::acomms::DCCLCodec codec;
+    dccl::DCCLCodec codec;
 
     void* dl_handle = dlopen("libdccl_arithmetic" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
     if(!dl_handle)
@@ -53,7 +53,7 @@ void run_test(goby::acomms::protobuf::ArithmeticModel& model,
     if(set_model)
     {
         model.set_name("model");
-        goby::acomms::ModelManager::set_model(model);
+        dccl::ModelManager::set_model(model);
     }
     
     codec.info(msg_in.GetDescriptor(), &std::cout);
@@ -88,14 +88,14 @@ int main(int argc, char* argv[])
         goby::glog.add_stream(goby::common::logger::DEBUG2, &std::cerr);
     goby::glog.set_name(argv[0]);
     
-    goby::acomms::protobuf::DCCLConfig cfg;
-    goby::acomms::DCCLCodec codec;
+    dccl::protobuf::DCCLConfig cfg;
+    dccl::DCCLCodec codec;
     codec.set_cfg(cfg);
 
     
     // test case from Practical Implementations of Arithmetic Coding by Paul G. Howard and Je rey Scott Vitter
     {        
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
         
         model.set_eof_frequency(4); // "a"
 
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 
     // misc test case
     {            
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
 
         model.add_value_bound(100.0);
         model.add_frequency(100);
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     
     // edge case 1, should be just a single bit ("1")
     {            
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
 
         model.set_eof_frequency(10);
         model.set_out_of_range_frequency(0);
@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
 
     // edge case 2, should be full 23 or 24 bits
     {            
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
 
         model.set_eof_frequency(10);
         model.set_out_of_range_frequency(0);
@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
 
 
     {            
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
 
         model.set_eof_frequency(10);
         model.set_out_of_range_frequency(0);
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 
     // test case from Practical Implementations of Arithmetic Coding by Paul G. Howard and Je rey Scott Vitter
     {        
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
         
         model.set_eof_frequency(1);
 
@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
     // test case from Arithmetic Coding revealed: A guided tour from theory to praxis Sable Technical Report No. 2007-5 Eric Bodden
 
     {            
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
 
         model.set_eof_frequency(0);
         model.set_out_of_range_frequency(0);
@@ -319,7 +319,7 @@ int main(int argc, char* argv[])
     srand ( time(NULL) );
     for(unsigned i = 0; i <= ArithmeticDouble2TestMsg::descriptor()->FindFieldByName("value")->options().GetExtension(dccl::field).max_repeat(); ++i)
     {
-        goby::acomms::protobuf::ArithmeticModel model;
+        dccl::protobuf::ArithmeticModel model;
         
 
         // pick some endpoints
@@ -334,7 +334,7 @@ int main(int argc, char* argv[])
         std::cout << "symbols: " << symbols << std::endl;
         
         // maximum freq
-        goby::acomms::Model::freq_type each_max_freq = goby::acomms::Model::MAX_FREQUENCY / (symbols+2);
+        dccl::Model::freq_type each_max_freq = dccl::Model::MAX_FREQUENCY / (symbols+2);
         
         std::cout << "each_max_freq: " << each_max_freq << std::endl;
         

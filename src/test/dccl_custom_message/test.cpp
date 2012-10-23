@@ -30,18 +30,18 @@
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
-using goby::acomms::operator<<;
-using goby::acomms::Bitset;
+using dccl::operator<<;
+using dccl::Bitset;
 
-class CustomCodec : public goby::acomms::DCCLTypedFixedFieldCodec<CustomMsg>
+class CustomCodec : public dccl::DCCLTypedFixedFieldCodec<CustomMsg>
 {
 private:
-    unsigned size() { return (part() == goby::acomms::MessageHandler::HEAD) ? 0 : A_SIZE + B_SIZE; }
+    unsigned size() { return (part() == dccl::MessageHandler::HEAD) ? 0 : A_SIZE + B_SIZE; }
     Bitset encode() { return Bitset(size()); }
     
     Bitset encode(const CustomMsg& msg)
         {
-            if(part() == goby::acomms::MessageHandler::HEAD)
+            if(part() == dccl::MessageHandler::HEAD)
             { return encode(); }
             else
             {
@@ -58,8 +58,8 @@ private:
     
     CustomMsg decode(Bitset* bits)
         {
-            if(part() == goby::acomms::MessageHandler::HEAD)
-            { throw(goby::acomms::DCCLNullValueException()); }
+            if(part() == dccl::MessageHandler::HEAD)
+            { throw(dccl::DCCLNullValueException()); }
             else
             {
                 Bitset a = *bits;
@@ -83,7 +83,7 @@ private:
 };    
 
 class Int32RepeatedCodec :
-    public goby::acomms::DCCLRepeatedTypedFieldCodec<goby::int32>
+    public dccl::DCCLRepeatedTypedFieldCodec<goby::int32>
 {
 private:
     enum { REPEAT_STORAGE_BITS = 4 };    
@@ -171,11 +171,11 @@ int main(int argc, char* argv[])
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);
 
-    goby::acomms::DCCLCodec codec;
-    goby::acomms::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");
-    goby::acomms::DCCLFieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
+    dccl::DCCLCodec codec;
+    dccl::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");
+    dccl::DCCLFieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
 
-    goby::acomms::protobuf::DCCLConfig cfg;
+    dccl::protobuf::DCCLConfig cfg;
     cfg.set_crypto_passphrase("my_passphrase!");
     codec.set_cfg(cfg);
 

@@ -23,11 +23,11 @@
 
 #include "dccl_field_codec_manager.h"
 
-std::map<google::protobuf::FieldDescriptor::Type, goby::acomms::DCCLFieldCodecManager::InsideMap> goby::acomms::DCCLFieldCodecManager::codecs_;
+std::map<google::protobuf::FieldDescriptor::Type, dccl::DCCLFieldCodecManager::InsideMap> dccl::DCCLFieldCodecManager::codecs_;
 
 
-boost::shared_ptr<goby::acomms::DCCLFieldCodecBase>
-goby::acomms::DCCLFieldCodecManager::__find(google::protobuf::FieldDescriptor::Type type,
+boost::shared_ptr<dccl::DCCLFieldCodecBase>
+dccl::DCCLFieldCodecManager::__find(google::protobuf::FieldDescriptor::Type type,
                                                  const std::string& codec_name,
                                                  const std::string& type_name /* = "" */)
 {

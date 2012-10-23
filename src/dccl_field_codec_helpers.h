@@ -26,56 +26,51 @@
 
 #include "dccl_common.h"
 
-namespace goby
+namespace dccl
 {
-    namespace acomms
-    {        
-
-        //RAII handler for the current Message recursion stack
-        class MessageHandler
+    //RAII handler for the current Message recursion stack
+    class MessageHandler
+    {
+      public:
+        MessageHandler(const google::protobuf::FieldDescriptor* field = 0);
+                
+        ~MessageHandler()
         {
-          public:
-            MessageHandler(const google::protobuf::FieldDescriptor* field = 0);
-                
-            ~MessageHandler()
-            {
-                for(int i = 0; i < descriptors_pushed_; ++i)
-                    __pop_desc();
+            for(int i = 0; i < descriptors_pushed_; ++i)
+                __pop_desc();
                     
-                for(int i = 0; i < fields_pushed_; ++i)
-                    __pop_field();
+            for(int i = 0; i < fields_pushed_; ++i)
+                __pop_field();
 
-                if(desc_.empty())
-                    part_ = UNKNOWN;
+            if(desc_.empty())
+                part_ = UNKNOWN;
                 
-            }
+        }
 
-            enum MessagePart { HEAD, BODY, UNKNOWN };
+        enum MessagePart { HEAD, BODY, UNKNOWN };
             
-            bool first() 
-            { return desc_.empty(); }
-            int count() 
-            { return desc_.size(); }
+        bool first() 
+        { return desc_.empty(); }
+        int count() 
+        { return desc_.size(); }
 
-            void push(const google::protobuf::Descriptor* desc);
-            void push(const google::protobuf::FieldDescriptor* field);
+        void push(const google::protobuf::Descriptor* desc);
+        void push(const google::protobuf::FieldDescriptor* field);
 
-            static MessagePart current_part() { return part_; }
+        static MessagePart current_part() { return part_; }
             
             
-            friend class DCCLFieldCodecBase;
-          private:
-            void __pop_desc();
-            void __pop_field();
+        friend class DCCLFieldCodecBase;
+      private:
+        void __pop_desc();
+        void __pop_field();
                 
-            static std::vector<const google::protobuf::Descriptor*> desc_;
-            static std::vector<const google::protobuf::FieldDescriptor*> field_;
-            int descriptors_pushed_;
-            int fields_pushed_;
-            static MessagePart part_;
-        };
-
-    }
+        static std::vector<const google::protobuf::Descriptor*> desc_;
+        static std::vector<const google::protobuf::FieldDescriptor*> field_;
+        int descriptors_pushed_;
+        int fields_pushed_;
+        static MessagePart part_;
+    };
 }
 
 

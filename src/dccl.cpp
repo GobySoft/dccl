@@ -61,21 +61,21 @@ using google::protobuf::FieldDescriptor;
 using google::protobuf::Descriptor;
 using google::protobuf::Reflection;
 
-boost::shared_ptr<goby::acomms::DCCLCodec> goby::acomms::DCCLCodec::inst_;
+boost::shared_ptr<dccl::DCCLCodec> dccl::DCCLCodec::inst_;
 
-const std::string goby::acomms::DCCLCodec::DEFAULT_CODEC_NAME = "";
+const std::string dccl::DCCLCodec::DEFAULT_CODEC_NAME = "";
 
 //
 // DCCLCodec
 //
 
-goby::acomms::DCCLCodec::DCCLCodec()
+dccl::DCCLCodec::DCCLCodec()
     : current_id_codec_(DEFAULT_CODEC_NAME) {
     set_default_codecs();
     process_cfg();
 }
 
-void goby::acomms::DCCLCodec::set_default_codecs()
+void dccl::DCCLCodec::set_default_codecs()
 {
     using google::protobuf::FieldDescriptor;
     DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<double> >(DEFAULT_CODEC_NAME);
@@ -99,7 +99,7 @@ void goby::acomms::DCCLCodec::set_default_codecs()
 }
 
 
-void goby::acomms::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message& msg)
+void dccl::DCCLCodec::encode(std::string* bytes, const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -171,7 +171,7 @@ void goby::acomms::DCCLCodec::encode(std::string* bytes, const google::protobuf:
     }
 }
 
-unsigned goby::acomms::DCCLCodec::id_from_encoded(const std::string& bytes)
+unsigned dccl::DCCLCodec::id_from_encoded(const std::string& bytes)
 {
     unsigned id_min_size = 0, id_max_size = 0;
     id_codec_[current_id_codec_]->field_min_size(&id_min_size, 0);
@@ -189,7 +189,7 @@ unsigned goby::acomms::DCCLCodec::id_from_encoded(const std::string& bytes)
     return id_codec_[current_id_codec_]->decode(&these_bits);
 }
 
-void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message* msg)
+void dccl::DCCLCodec::decode(const std::string& bytes, google::protobuf::Message* msg)
 {
     try
     {
@@ -276,7 +276,7 @@ void goby::acomms::DCCLCodec::decode(const std::string& bytes, google::protobuf:
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void goby::acomms::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
+void dccl::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
 {    
     try
     {
@@ -326,7 +326,7 @@ void goby::acomms::DCCLCodec::validate(const google::protobuf::Descriptor* desc)
     }
 }
 
-unsigned goby::acomms::DCCLCodec::size(const google::protobuf::Message& msg)
+unsigned dccl::DCCLCodec::size(const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -347,7 +347,7 @@ unsigned goby::acomms::DCCLCodec::size(const google::protobuf::Message& msg)
 
 
 
-void goby::acomms::DCCLCodec::run_hooks(const google::protobuf::Message& msg)
+void dccl::DCCLCodec::run_hooks(const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -358,7 +358,7 @@ void goby::acomms::DCCLCodec::run_hooks(const google::protobuf::Message& msg)
 }
 
 
-void goby::acomms::DCCLCodec::info(const google::protobuf::Descriptor* desc, std::ostream* os) const
+void dccl::DCCLCodec::info(const google::protobuf::Descriptor* desc, std::ostream* os) const
 {
     try
     {   
@@ -402,13 +402,13 @@ void goby::acomms::DCCLCodec::info(const google::protobuf::Descriptor* desc, std
         
 }
 
-void goby::acomms::DCCLCodec::validate_repeated(const std::list<const google::protobuf::Descriptor*>& desc)
+void dccl::DCCLCodec::validate_repeated(const std::list<const google::protobuf::Descriptor*>& desc)
 {
     BOOST_FOREACH(const google::protobuf::Descriptor* p, desc)
         validate(p);
 }
 
-void goby::acomms::DCCLCodec::info_repeated(const std::list<const google::protobuf::Descriptor*>& desc, std::ostream* os) const
+void dccl::DCCLCodec::info_repeated(const std::list<const google::protobuf::Descriptor*>& desc, std::ostream* os) const
 {
     BOOST_FOREACH(const google::protobuf::Descriptor* p, desc)
         info(p, os);
@@ -417,7 +417,7 @@ void goby::acomms::DCCLCodec::info_repeated(const std::list<const google::protob
 
 
 
-void goby::acomms::DCCLCodec::encrypt(std::string* s, const std::string& nonce /* message head */)
+void dccl::DCCLCodec::encrypt(std::string* s, const std::string& nonce /* message head */)
 {
 #ifdef HAS_CRYPTOPP
     using namespace CryptoPP;
@@ -437,7 +437,7 @@ void goby::acomms::DCCLCodec::encrypt(std::string* s, const std::string& nonce /
 #endif
 }
 
-void goby::acomms::DCCLCodec::decrypt(std::string* s, const std::string& nonce)
+void dccl::DCCLCodec::decrypt(std::string* s, const std::string& nonce)
 {
 #ifdef HAS_CRYPTOPP
     using namespace CryptoPP;
@@ -458,33 +458,33 @@ void goby::acomms::DCCLCodec::decrypt(std::string* s, const std::string& nonce)
 #endif
 }
 
-void goby::acomms::DCCLCodec::merge_cfg(const protobuf::DCCLConfig& cfg)
+void dccl::DCCLCodec::merge_cfg(const protobuf::DCCLConfig& cfg)
 {
     cfg_.MergeFrom(cfg);
     process_cfg();
 }
 
-void goby::acomms::DCCLCodec::set_cfg(const protobuf::DCCLConfig& cfg)
+void dccl::DCCLCodec::set_cfg(const protobuf::DCCLConfig& cfg)
 {
     cfg_.CopyFrom(cfg);
     process_cfg();
 }
 
-void goby::acomms::DCCLCodec::load_shared_library_codecs(void* dl_handle)
+void dccl::DCCLCodec::load_shared_library_codecs(void* dl_handle)
 {
     if(!dl_handle)
         throw(DCCLException("Null shared library handle passed to load_shared_library_codecs"));
     
     // load any shared library codecs
-    void (*dccl_load_ptr)(goby::acomms::DCCLCodec*);
-    dccl_load_ptr = (void (*)(goby::acomms::DCCLCodec*)) dlsym(dl_handle, "goby_dccl_load");
+    void (*dccl_load_ptr)(dccl::DCCLCodec*);
+    dccl_load_ptr = (void (*)(dccl::DCCLCodec*)) dlsym(dl_handle, "goby_dccl_load");
     if(dccl_load_ptr)
         (*dccl_load_ptr)(this);
 }
 
 
 
-void goby::acomms::DCCLCodec::process_cfg()
+void dccl::DCCLCodec::process_cfg()
 {
     if(!crypto_key_.empty())
         crypto_key_.clear();
@@ -510,7 +510,7 @@ void goby::acomms::DCCLCodec::process_cfg()
     set_id_codec(DEFAULT_CODEC_NAME);
 }
 
-void goby::acomms::DCCLCodec::info_all(std::ostream* os) const
+void dccl::DCCLCodec::info_all(std::ostream* os) const
 {
     *os << "=== Begin DCCLCodec ===" << "\n";
     *os << id2desc_.size() << " messages loaded.\n";            

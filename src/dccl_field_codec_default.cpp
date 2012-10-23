@@ -36,20 +36,20 @@ using namespace goby::common::logger;
 // DCCLDefaultIdentifierCodec
 //
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultIdentifierCodec::encode()
+dccl::Bitset dccl::DCCLDefaultIdentifierCodec::encode()
 {
     return encode(0);
 }
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultIdentifierCodec::encode(const uint32& id)
+dccl::Bitset dccl::DCCLDefaultIdentifierCodec::encode(const uint32& id)
 {
     if(id <= ONE_BYTE_MAX_ID)
     {
-        return(goby::acomms::Bitset(this_size(id), id) << 1);
+        return(dccl::Bitset(this_size(id), id) << 1);
     }
     else
     {
-        goby::acomms::Bitset return_bits(this_size(id), id);
+        dccl::Bitset return_bits(this_size(id), id);
         return_bits <<= 1;
         // set LSB to indicate long header form
         return_bits.set(0, true);
@@ -59,7 +59,7 @@ goby::acomms::Bitset goby::acomms::DCCLDefaultIdentifierCodec::encode(const uint
     }
 }
 
-goby::uint32 goby::acomms::DCCLDefaultIdentifierCodec::decode(Bitset* bits)
+goby::uint32 dccl::DCCLDefaultIdentifierCodec::decode(Bitset* bits)
 {
     if(bits->test(0))
     {
@@ -78,17 +78,17 @@ goby::uint32 goby::acomms::DCCLDefaultIdentifierCodec::decode(Bitset* bits)
     }
 }
 
-unsigned goby::acomms::DCCLDefaultIdentifierCodec::size()
+unsigned dccl::DCCLDefaultIdentifierCodec::size()
 {
     return this_size(0);
 }
 
-unsigned goby::acomms::DCCLDefaultIdentifierCodec::size(const uint32& id)
+unsigned dccl::DCCLDefaultIdentifierCodec::size(const uint32& id)
 {
     return this_size(id);
 }
 
-unsigned goby::acomms::DCCLDefaultIdentifierCodec::this_size(const uint32& id)
+unsigned dccl::DCCLDefaultIdentifierCodec::this_size(const uint32& id)
 {
     if(id < 0 || id > TWO_BYTE_MAX_ID)
         throw(DCCLException("dccl.id provided (" + goby::util::as<std::string>(id) + ") is less than 0 or exceeds maximum: " + goby::util::as<std::string>(int(TWO_BYTE_MAX_ID))));
@@ -99,12 +99,12 @@ unsigned goby::acomms::DCCLDefaultIdentifierCodec::this_size(const uint32& id)
 }
 
 
-unsigned goby::acomms::DCCLDefaultIdentifierCodec::max_size()
+unsigned dccl::DCCLDefaultIdentifierCodec::max_size()
 {
     return LONG_FORM_ID_BYTES * BITS_IN_BYTE;
 }
 
-unsigned goby::acomms::DCCLDefaultIdentifierCodec::min_size()
+unsigned dccl::DCCLDefaultIdentifierCodec::min_size()
 {
     return SHORT_FORM_ID_BYTES * BITS_IN_BYTE;
 }
@@ -116,17 +116,17 @@ unsigned goby::acomms::DCCLDefaultIdentifierCodec::min_size()
 // DCCLDefaultBoolCodec
 //
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultBoolCodec::encode()
+dccl::Bitset dccl::DCCLDefaultBoolCodec::encode()
 {
     return Bitset(size());
 }
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultBoolCodec::encode(const bool& wire_value)
+dccl::Bitset dccl::DCCLDefaultBoolCodec::encode(const bool& wire_value)
 {
     return Bitset(size(), this_field()->is_required() ? wire_value : wire_value + 1);
 }
 
-bool goby::acomms::DCCLDefaultBoolCodec::decode(Bitset* bits)
+bool dccl::DCCLDefaultBoolCodec::decode(Bitset* bits)
 {
     unsigned long t = bits->to_ulong();
     if(this_field()->is_required())
@@ -145,29 +145,29 @@ bool goby::acomms::DCCLDefaultBoolCodec::decode(Bitset* bits)
 }
 
 
-unsigned goby::acomms::DCCLDefaultBoolCodec::size()
+unsigned dccl::DCCLDefaultBoolCodec::size()
 {    
     // true and false
     const unsigned BOOL_VALUES = 2;
     // if field unspecified
     const unsigned NULL_VALUE = this_field()->is_required() ? 0 : 1;
     
-    return util::ceil_log2(BOOL_VALUES + NULL_VALUE);
+    return goby::util::ceil_log2(BOOL_VALUES + NULL_VALUE);
 }
 
-void goby::acomms::DCCLDefaultBoolCodec::validate()
+void dccl::DCCLDefaultBoolCodec::validate()
 { }
 
 //
 // DCCLDefaultStringCodec
 //
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultStringCodec::encode()
+dccl::Bitset dccl::DCCLDefaultStringCodec::encode()
 {
     return Bitset(min_size());
 }
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultStringCodec::encode(const std::string& wire_value)
+dccl::Bitset dccl::DCCLDefaultStringCodec::encode(const std::string& wire_value)
 {
     std::string s = wire_value;
     if(s.size() > dccl_field_options().max_length())
@@ -197,7 +197,7 @@ goby::acomms::Bitset goby::acomms::DCCLDefaultStringCodec::encode(const std::str
     return length_bits;
 }
 
-std::string goby::acomms::DCCLDefaultStringCodec::decode(Bitset* bits)
+std::string dccl::DCCLDefaultStringCodec::decode(Bitset* bits)
 {
     unsigned value_length = bits->to_ulong();
     
@@ -228,30 +228,30 @@ std::string goby::acomms::DCCLDefaultStringCodec::decode(Bitset* bits)
     
 }
 
-unsigned goby::acomms::DCCLDefaultStringCodec::size()
+unsigned dccl::DCCLDefaultStringCodec::size()
 {
     return min_size();
 }
 
-unsigned goby::acomms::DCCLDefaultStringCodec::size(const std::string& wire_value)
+unsigned dccl::DCCLDefaultStringCodec::size(const std::string& wire_value)
 {
     return std::min(min_size() + static_cast<unsigned>(wire_value.length()*BITS_IN_BYTE), max_size());
 }
 
 
-unsigned goby::acomms::DCCLDefaultStringCodec::max_size()
+unsigned dccl::DCCLDefaultStringCodec::max_size()
 {
     // string length + actual string
     return min_size() + dccl_field_options().max_length() * BITS_IN_BYTE;
 }
 
-unsigned goby::acomms::DCCLDefaultStringCodec::min_size()
+unsigned dccl::DCCLDefaultStringCodec::min_size()
 {
-    return util::ceil_log2(MAX_STRING_LENGTH+1);
+    return goby::util::ceil_log2(MAX_STRING_LENGTH+1);
 }
 
 
-void goby::acomms::DCCLDefaultStringCodec::validate()
+void dccl::DCCLDefaultStringCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (goby.field).dccl.max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
@@ -261,13 +261,13 @@ void goby::acomms::DCCLDefaultStringCodec::validate()
 //
 // DCCLDefaultBytesCodec
 //
-goby::acomms::Bitset goby::acomms::DCCLDefaultBytesCodec::encode()
+dccl::Bitset dccl::DCCLDefaultBytesCodec::encode()
 {
     return Bitset(min_size(), 0);
 }
 
 
-goby::acomms::Bitset goby::acomms::DCCLDefaultBytesCodec::encode(const std::string& wire_value)
+dccl::Bitset dccl::DCCLDefaultBytesCodec::encode(const std::string& wire_value)
 {
     Bitset bits;
     bits.from_byte_string(wire_value);
@@ -282,19 +282,19 @@ goby::acomms::Bitset goby::acomms::DCCLDefaultBytesCodec::encode(const std::stri
     return bits;
 }
 
-unsigned goby::acomms::DCCLDefaultBytesCodec::size()
+unsigned dccl::DCCLDefaultBytesCodec::size()
 {
     return min_size();    
 }
 
 
-unsigned goby::acomms::DCCLDefaultBytesCodec::size(const std::string& wire_value)
+unsigned dccl::DCCLDefaultBytesCodec::size(const std::string& wire_value)
 {
     return max_size();
 }
 
 
-std::string goby::acomms::DCCLDefaultBytesCodec::decode(Bitset* bits)
+std::string dccl::DCCLDefaultBytesCodec::decode(Bitset* bits)
 {
     if(!this_field()->is_required())
     {
@@ -320,13 +320,13 @@ std::string goby::acomms::DCCLDefaultBytesCodec::decode(Bitset* bits)
     }
 }
 
-unsigned goby::acomms::DCCLDefaultBytesCodec::max_size()
+unsigned dccl::DCCLDefaultBytesCodec::max_size()
 {
     return dccl_field_options().max_length() * BITS_IN_BYTE +
         (this_field()->is_required() ? 0 : 1); // presence bit?
 }
 
-unsigned goby::acomms::DCCLDefaultBytesCodec::min_size()
+unsigned dccl::DCCLDefaultBytesCodec::min_size()
 {
     if(this_field()->is_required())
         return max_size();
@@ -334,7 +334,7 @@ unsigned goby::acomms::DCCLDefaultBytesCodec::min_size()
         return 1; // presence bit
 }
 
-void goby::acomms::DCCLDefaultBytesCodec::validate()
+void dccl::DCCLDefaultBytesCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (goby.field).dccl.max_length");
 }
@@ -342,12 +342,12 @@ void goby::acomms::DCCLDefaultBytesCodec::validate()
 //
 // DCCLDefaultEnumCodec
 //
-goby::int32 goby::acomms::DCCLDefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+goby::int32 dccl::DCCLDefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
 {
     return field_value->index();
 }
 
-const google::protobuf::EnumValueDescriptor* goby::acomms::DCCLDefaultEnumCodec::post_decode(const int32& wire_value)
+const google::protobuf::EnumValueDescriptor* dccl::DCCLDefaultEnumCodec::post_decode(const int32& wire_value)
 {
     const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
     const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
@@ -364,9 +364,9 @@ const google::protobuf::EnumValueDescriptor* goby::acomms::DCCLDefaultEnumCodec:
 // DCCLModemIdConverterCodec
 //
 
-boost::bimap<std::string, goby::int32> goby::acomms::DCCLModemIdConverterCodec::platform2modem_id_;
+boost::bimap<std::string, goby::int32> dccl::DCCLModemIdConverterCodec::platform2modem_id_;
 
-goby::int32 goby::acomms::DCCLModemIdConverterCodec::pre_encode(const std::string& field_value)
+goby::int32 dccl::DCCLModemIdConverterCodec::pre_encode(const std::string& field_value)
 {
     int32 v = BROADCAST_ID;
     if(platform2modem_id_.left.count(boost::to_lower_copy(field_value)))
@@ -375,7 +375,7 @@ goby::int32 goby::acomms::DCCLModemIdConverterCodec::pre_encode(const std::strin
     return v;
 }
             
-std::string goby::acomms::DCCLModemIdConverterCodec::post_decode(const int32& wire_value)
+std::string dccl::DCCLModemIdConverterCodec::post_decode(const int32& wire_value)
 {
     if(wire_value == BROADCAST_ID)
         return "broadcast";

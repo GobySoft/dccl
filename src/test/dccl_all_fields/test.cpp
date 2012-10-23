@@ -31,15 +31,15 @@
 #include "goby/common/time.h"
 #include "goby/util/binary.h"
 
-using goby::acomms::operator<<;
+using dccl::operator<<;
 
 int main(int argc, char* argv[])
 {
     goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
     goby::glog.set_name(argv[0]);
     
-    goby::acomms::protobuf::DCCLConfig cfg;
-    goby::acomms::DCCLCodec codec;
+    dccl::protobuf::DCCLConfig cfg;
+    dccl::DCCLCodec codec;
     codec.set_cfg(cfg);
 
     TestMsg msg_in;

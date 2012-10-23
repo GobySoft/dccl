@@ -24,41 +24,41 @@
 #include "dccl_field_codec_helpers.h"
 #include "dccl_field_codec.h"
 
-std::vector<const google::protobuf::FieldDescriptor*> goby::acomms::MessageHandler::field_;
-std::vector<const google::protobuf::Descriptor*> goby::acomms::MessageHandler::desc_;
-goby::acomms::MessageHandler::MessagePart goby::acomms::MessageHandler::part_ = goby::acomms::MessageHandler::UNKNOWN;
+std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageHandler::field_;
+std::vector<const google::protobuf::Descriptor*> dccl::MessageHandler::desc_;
+dccl::MessageHandler::MessagePart dccl::MessageHandler::part_ = dccl::MessageHandler::UNKNOWN;
 
 //
 // MessageHandler
 //
 
-void goby::acomms::MessageHandler::push(const google::protobuf::Descriptor* desc)
+void dccl::MessageHandler::push(const google::protobuf::Descriptor* desc)
  
 {
     desc_.push_back(desc);
     ++descriptors_pushed_;
 }
 
-void goby::acomms::MessageHandler::push(const google::protobuf::FieldDescriptor* field)
+void dccl::MessageHandler::push(const google::protobuf::FieldDescriptor* field)
 {
     field_.push_back(field);
     ++fields_pushed_;
 }
 
 
-void goby::acomms::MessageHandler::__pop_desc()
+void dccl::MessageHandler::__pop_desc()
 {
     if(!desc_.empty())
         desc_.pop_back();
 }
 
-void goby::acomms::MessageHandler::__pop_field()
+void dccl::MessageHandler::__pop_field()
 {
     if(!field_.empty())
         field_.pop_back();
 }
 
-goby::acomms::MessageHandler::MessageHandler(const google::protobuf::FieldDescriptor* field)
+dccl::MessageHandler::MessageHandler(const google::protobuf::FieldDescriptor* field)
     : descriptors_pushed_(0),
       fields_pushed_(0)
 {

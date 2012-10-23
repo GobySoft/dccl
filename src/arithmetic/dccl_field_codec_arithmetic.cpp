@@ -26,23 +26,22 @@
 using goby::glog;
 using namespace goby::common::logger;
 
-std::map<std::string, goby::acomms::Model> goby::acomms::ModelManager::arithmetic_models_;
-const goby::acomms::Model::symbol_type goby::acomms::Model::OUT_OF_RANGE_SYMBOL;
-const goby::acomms::Model::symbol_type goby::acomms::Model::EOF_SYMBOL;
-const goby::acomms::Model::symbol_type goby::acomms::Model::MIN_SYMBOL;
-const int goby::acomms::Model::CODE_VALUE_BITS;
-const int goby::acomms::Model::FREQUENCY_BITS;
-const goby::acomms::Model::freq_type goby::acomms::Model::MAX_FREQUENCY;
-std::map<std::string, std::map<std::string, goby::acomms::Bitset> > goby::acomms::Model::last_bits_map;
+std::map<std::string, dccl::Model> dccl::ModelManager::arithmetic_models_;
+const dccl::Model::symbol_type dccl::Model::OUT_OF_RANGE_SYMBOL;
+const dccl::Model::symbol_type dccl::Model::EOF_SYMBOL;
+const dccl::Model::symbol_type dccl::Model::MIN_SYMBOL;
+const int dccl::Model::CODE_VALUE_BITS;
+const int dccl::Model::FREQUENCY_BITS;
+const dccl::Model::freq_type dccl::Model::MAX_FREQUENCY;
+std::map<std::string, std::map<std::string, dccl::Bitset> > dccl::Model::last_bits_map;
 
 // shared library load
 
 extern "C"
 {
-    void goby_dccl_load(goby::acomms::DCCLCodec* dccl)
+    void goby_dccl_load(dccl::DCCLCodec* dccl)
     {
-        using namespace goby;
-        using namespace goby::acomms;
+        using namespace dccl;
         
         DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<int32> >("_arithmetic");
         DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<int64> >("_arithmetic");
@@ -55,7 +54,7 @@ extern "C"
     }
 }
 
-goby::acomms::Model::symbol_type goby::acomms::Model::value_to_symbol(value_type value) const
+dccl::Model::symbol_type dccl::Model::value_to_symbol(value_type value) const
 {
     
     symbol_type symbol =
@@ -70,7 +69,7 @@ goby::acomms::Model::symbol_type goby::acomms::Model::value_to_symbol(value_type
 }
               
                   
-goby::acomms::Model::value_type goby::acomms::Model::symbol_to_value(symbol_type symbol) const
+dccl::Model::value_type dccl::Model::symbol_to_value(symbol_type symbol) const
 {
 
     if(symbol == EOF_SYMBOL)
@@ -84,7 +83,7 @@ goby::acomms::Model::value_type goby::acomms::Model::symbol_to_value(symbol_type
 }
               
 
-std::pair<goby::acomms::Model::freq_type, goby::acomms::Model::freq_type> goby::acomms::Model::symbol_to_cumulative_freq(symbol_type symbol, ModelState state) const
+std::pair<dccl::Model::freq_type, dccl::Model::freq_type> dccl::Model::symbol_to_cumulative_freq(symbol_type symbol, ModelState state) const
 {
     const boost::bimap<symbol_type, freq_type>& c_freqs = (state == ENCODER) ?
         encoder_cumulative_freqs_ :
@@ -107,7 +106,7 @@ std::pair<goby::acomms::Model::freq_type, goby::acomms::Model::freq_type> goby::
                           
 }
 
-std::pair<goby::acomms::Model::symbol_type, goby::acomms::Model::symbol_type> goby::acomms::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_freq_pair,  ModelState state) const
+std::pair<dccl::Model::symbol_type, dccl::Model::symbol_type> dccl::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_freq_pair,  ModelState state) const
 {
 
     const boost::bimap<symbol_type, freq_type>& c_freqs = (state == ENCODER) ?
@@ -139,7 +138,7 @@ std::pair<goby::acomms::Model::symbol_type, goby::acomms::Model::symbol_type> go
 }
 
 
-void goby::acomms::Model::update_model(symbol_type symbol, ModelState state)
+void dccl::Model::update_model(symbol_type symbol, ModelState state)
 {
     if(!user_model_.is_adaptive())
         return;

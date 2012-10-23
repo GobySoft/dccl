@@ -37,24 +37,47 @@
 #include "goby/acomms/acomms_constants.h"
 #include "goby/common/logger.h"
 
-namespace goby
+namespace dccl
 {
+    // more efficient way to do ceil(total_bits / 8)
+    // to get the number of bytes rounded up.
+    enum { BYTE_MASK = 7 }; // 00000111
+    inline unsigned floor_bits2bytes(unsigned bits)
+    { return bits >> 3; }
+    inline unsigned ceil_bits2bytes(unsigned bits)
+    {
+        return (bits& BYTE_MASK) ?
+            floor_bits2bytes(bits) + 1 :
+            floor_bits2bytes(bits);
+    }      
 
-    namespace acomms
-    {        
-        // more efficient way to do ceil(total_bits / 8)
-        // to get the number of bytes rounded up.
-        enum { BYTE_MASK = 7 }; // 00000111
-        inline unsigned floor_bits2bytes(unsigned bits)
-        { return bits >> 3; }
-        inline unsigned ceil_bits2bytes(unsigned bits)
-        {
-            return (bits& BYTE_MASK) ?
-                floor_bits2bytes(bits) + 1 :
-                floor_bits2bytes(bits);
-        }
+
+    // use the Google Protobuf types as they handle system quirks already
+    /// an unsigned 32 bit integer
+    typedef google::protobuf::uint32 uint32;
+    /// a signed 32 bit integer
+    typedef google::protobuf::int32 int32;
+    /// an unsigned 64 bit integer
+    typedef google::protobuf::uint64 uint64;
+    /// a signed 64 bit integer
+    typedef google::protobuf::int64 int64;
+
+    const unsigned BITS_IN_BYTE = 8;
+    // one hex char is a nibble (4 bits), two nibbles per byte
+    const unsigned NIBS_IN_BYTE = 2;
+
+    /// special modem id for the broadcast destination - no one is assigned this address. Analogous to 192.168.1.255 on a 192.168.1.0 subnet
+    const int BROADCAST_ID = 0;
         
-        
+    
+    inline std::ostream& operator<<(std::ostream& out,
+                                    const google::protobuf::Message& msg)
+    {
+        return (out << "[["
+                << msg.GetDescriptor()->name()
+                << "]] " << msg.DebugString());
     }
+
+    
 }
 #endif

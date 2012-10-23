@@ -32,9 +32,9 @@ using namespace goby::acomms;
 
 extern "C"
 {
-    void goby_dccl_load(goby::acomms::DCCLCodec* dccl)
+    void goby_dccl_load(dccl::DCCLCodec* dccl)
     {
-        using namespace goby::acomms;
+        using namespace dccl;
         dccl->add_id_codec<LegacyCCLIdentifierCodec>("_ccl");
         dccl->set_id_codec("_ccl");
             
@@ -66,17 +66,17 @@ extern "C"
 // LegacyCCLLatLonCompressedCodec
 //
 
-goby::acomms::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode()
+dccl::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode()
 {
     return encode(0);
 }
 
-goby::acomms::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode(const double& wire_value)
+dccl::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode(const double& wire_value)
 {
     LONG_AND_COMP encoded;
     encoded.as_long = 0;
     encoded.as_compressed = Encode_latlon(wire_value);
-    return goby::acomms::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
+    return dccl::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
 }
 
 double dccl::LegacyCCLLatLonCompressedCodec::decode(Bitset* bits)
@@ -95,17 +95,17 @@ unsigned dccl::LegacyCCLLatLonCompressedCodec::size()
 // LegacyCCLTimeDateCodec
 //
 
-goby::acomms::Bitset dccl::LegacyCCLTimeDateCodec::encode()
+dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode()
 {
     return encode(0);
 }
 
-goby::acomms::Bitset dccl::LegacyCCLTimeDateCodec::encode(const goby::uint64& wire_value)
+dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const goby::uint64& wire_value)
 {
     TIME_DATE_LONG encoded;
     encoded.as_long = 0;
     encoded.as_time_date = Encode_time_date(wire_value / MICROSECONDS_IN_SECOND);
-    return goby::acomms::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
+    return dccl::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
 }
 
 goby::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
@@ -134,8 +134,8 @@ unsigned dccl::LegacyCCLTimeDateCodec::size()
 //
 // LegacyCCLHeadingCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLHeadingCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_heading(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLHeadingCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_heading(wire_value)); } 
 
 float dccl::LegacyCCLHeadingCodec::decode(Bitset* bits)
 { return Decode_heading(bits->to_ulong()); }
@@ -144,8 +144,8 @@ float dccl::LegacyCCLHeadingCodec::decode(Bitset* bits)
 //
 // LegacyCCLDepthCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLDepthCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_depth(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLDepthCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_depth(wire_value)); } 
 
 float dccl::LegacyCCLDepthCodec::decode(Bitset* bits)
 { return Decode_depth(bits->to_ulong()); }
@@ -153,9 +153,9 @@ float dccl::LegacyCCLDepthCodec::decode(Bitset* bits)
 //
 // LegacyCCLVelocityCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLVelocityCodec::encode(const float& wire_value)
+dccl::Bitset dccl::LegacyCCLVelocityCodec::encode(const float& wire_value)
 {
-    return goby::acomms::Bitset(size(), Encode_est_velocity(wire_value));
+    return dccl::Bitset(size(), Encode_est_velocity(wire_value));
 } 
 
 float dccl::LegacyCCLVelocityCodec::decode(Bitset* bits)
@@ -165,7 +165,7 @@ float dccl::LegacyCCLVelocityCodec::decode(Bitset* bits)
 //
 // LegacyCCLSpeedCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
+dccl::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
 {
     const google::protobuf::Message* root = DCCLFieldCodecBase::root_message();
     const google::protobuf::FieldDescriptor* thrust_mode_field_desc =
@@ -176,10 +176,10 @@ goby::acomms::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
     {
         default:
         case protobuf::CCLMDATRedirect::RPM:
-            return goby::acomms::Bitset(size(), Encode_speed(SPEED_MODE_RPM, wire_value));
+            return dccl::Bitset(size(), Encode_speed(SPEED_MODE_RPM, wire_value));
             
         case protobuf::CCLMDATRedirect::METERS_PER_SECOND:
-            return goby::acomms::Bitset(size(), Encode_speed(SPEED_MODE_MSEC, wire_value));
+            return dccl::Bitset(size(), Encode_speed(SPEED_MODE_MSEC, wire_value));
     }
 } 
 
@@ -206,8 +206,8 @@ float dccl::LegacyCCLSpeedCodec::decode(Bitset* bits)
 //
 // LegacyCCLWattsCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLWattsCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_watts(wire_value, 1)); } 
+dccl::Bitset dccl::LegacyCCLWattsCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_watts(wire_value, 1)); } 
 
 float dccl::LegacyCCLWattsCodec::decode(Bitset* bits)
 { return Decode_watts(bits->to_ulong()); }
@@ -215,9 +215,9 @@ float dccl::LegacyCCLWattsCodec::decode(Bitset* bits)
 //
 // LegacyCCLGFIPitchOilCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLGFIPitchOilCodec::encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value)
+dccl::Bitset dccl::LegacyCCLGFIPitchOilCodec::encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value)
 {
-    return goby::acomms::Bitset(size(), Encode_gfi_pitch_oil(wire_value.gfi(), wire_value.pitch(), wire_value.oil()));
+    return dccl::Bitset(size(), Encode_gfi_pitch_oil(wire_value.gfi(), wire_value.pitch(), wire_value.oil()));
 }
 
 dccl::protobuf::CCLMDATState::GFIPitchOil dccl::LegacyCCLGFIPitchOilCodec::decode(Bitset* bits)
@@ -234,8 +234,8 @@ dccl::protobuf::CCLMDATState::GFIPitchOil dccl::LegacyCCLGFIPitchOilCodec::decod
 //
 // LegacyCCLHiResAltitudeCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLHiResAltitudeCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_hires_altitude(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLHiResAltitudeCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_hires_altitude(wire_value)); } 
 
 float dccl::LegacyCCLHiResAltitudeCodec::decode(Bitset* bits)
 { return Decode_hires_altitude(bits->to_ulong()); }
@@ -243,8 +243,8 @@ float dccl::LegacyCCLHiResAltitudeCodec::decode(Bitset* bits)
 //
 // LegacyCCLSalinityCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLSalinityCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_salinity(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLSalinityCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_salinity(wire_value)); } 
 
 float dccl::LegacyCCLSalinityCodec::decode(Bitset* bits)
 { return Decode_salinity(bits->to_ulong()); }
@@ -252,8 +252,8 @@ float dccl::LegacyCCLSalinityCodec::decode(Bitset* bits)
 //
 // LegacyCCLTemperatureCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLTemperatureCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_temperature(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLTemperatureCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_temperature(wire_value)); } 
 
 float dccl::LegacyCCLTemperatureCodec::decode(Bitset* bits)
 { return Decode_temperature(bits->to_ulong()); }
@@ -261,8 +261,8 @@ float dccl::LegacyCCLTemperatureCodec::decode(Bitset* bits)
 //
 // LegacyCCLSoundSpeedCodec
 //
-goby::acomms::Bitset dccl::LegacyCCLSoundSpeedCodec::encode(const float& wire_value)
-{ return goby::acomms::Bitset(size(), Encode_sound_speed(wire_value)); } 
+dccl::Bitset dccl::LegacyCCLSoundSpeedCodec::encode(const float& wire_value)
+{ return dccl::Bitset(size(), Encode_sound_speed(wire_value)); } 
 
 float dccl::LegacyCCLSoundSpeedCodec::decode(Bitset* bits)
 { return Decode_sound_speed(bits->to_ulong()); }
