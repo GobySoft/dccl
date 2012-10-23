@@ -83,10 +83,9 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
 int main(int argc, char* argv[])
 {
     if(argc > 1 && goby::util::as<bool>(argv[1]) == 1)
-        goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
+        dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
-        goby::glog.add_stream(goby::common::logger::DEBUG2, &std::cerr);
-    goby::glog.set_name(argv[0]);
+        dccl::dlog.connect(dccl::logger::DEBUG2_PLUS, &std::cerr);
     
     dccl::protobuf::DCCLConfig cfg;
     dccl::DCCLCodec codec;

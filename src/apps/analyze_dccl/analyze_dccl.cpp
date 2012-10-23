@@ -34,8 +34,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    goby::glog.add_stream(goby::common::logger::WARN, &std::cerr);
-    goby::glog.set_name(argv[0]);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     goby::util::DynamicProtobufManager::enable_compilation();
     

@@ -119,7 +119,7 @@ namespace dccl
               return Bitset(size());
               
               
-//              goby::glog.is(common::logger::DEBUG2) && goby::glog << group(DCCLCodec::glog_encode_group()) << "(DCCLDefaultNumericFieldCodec) Encoding using wire value (=field value) " << wire_value << std::endl;
+//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(DCCLCodec::dlog_encode_group()) << "(DCCLDefaultNumericFieldCodec) Encoding using wire value (=field value) " << wire_value << std::endl;
               
           wire_value -= min();
           wire_value *= std::pow(10.0, precision());
@@ -145,7 +145,7 @@ namespace dccl
           WireType return_value = goby::util::unbiased_round(
               t / (std::pow(10.0, precision())) + min(), precision());
               
-//              goby::glog.is(common::logger::DEBUG2) && goby::glog << group(DCCLCodec::glog_decode_group()) << "(DCCLDefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
+//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(DCCLCodec::dlog_decode_group()) << "(DCCLDefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
 
           return return_value;
               

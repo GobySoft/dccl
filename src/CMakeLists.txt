@@ -18,11 +18,6 @@ add_library(dccl
   dccl_bitset.cpp
   # COMMON
   junk/common/time.cpp
-  junk/common/logger/logger_manipulators.cpp
-  junk/common/logger/term_color.cpp
-  junk/common/logger/flex_ostream.cpp
-  junk/common/logger/flex_ostreambuf.cpp
-
   junk/util/dynamic_protobuf_manager.cpp
   
   ${PROTO_SRCS} ${PROTO_HDRS}

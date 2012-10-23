@@ -30,14 +30,13 @@ using dccl::operator<<;
 
 int main(int argc, char* argv[])
 {
-    goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
-    goby::glog.set_name(argv[0]);
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     dccl::DCCLCodec codec;
 
     ShortIDMsg short_id_msg;
     codec.validate(short_id_msg.GetDescriptor());
-    codec.info(short_id_msg.GetDescriptor(), &goby::glog);
+    codec.info(short_id_msg.GetDescriptor(), &dccl::dlog);
 
     std::string encoded;
     assert(codec.size(short_id_msg) == 1);
@@ -46,7 +45,7 @@ int main(int argc, char* argv[])
 
     LongIDMsg long_id_msg;
     codec.validate(long_id_msg.GetDescriptor());
-    codec.info(long_id_msg.GetDescriptor(), &goby::glog);
+    codec.info(long_id_msg.GetDescriptor(), &dccl::dlog);
     assert(codec.size(long_id_msg) == 2);
     codec.encode(&encoded, long_id_msg);
     codec.decode(encoded, &long_id_msg);
@@ -54,14 +53,14 @@ int main(int argc, char* argv[])
 
     ShortIDEdgeMsg short_id_edge_msg;
     codec.validate(short_id_edge_msg.GetDescriptor());
-    codec.info(short_id_edge_msg.GetDescriptor(), &goby::glog);
+    codec.info(short_id_edge_msg.GetDescriptor(), &dccl::dlog);
     assert(codec.size(short_id_edge_msg) == 1);
     codec.encode(&encoded, short_id_edge_msg);
     codec.decode(encoded, &short_id_edge_msg);
 
     LongIDEdgeMsg long_id_edge_msg;
     codec.validate(long_id_edge_msg.GetDescriptor());
-    codec.info(long_id_edge_msg.GetDescriptor(), &goby::glog);
+    codec.info(long_id_edge_msg.GetDescriptor(), &dccl::dlog);
     codec.encode(&encoded, long_id_edge_msg);
     codec.decode(encoded, &long_id_edge_msg);
     assert(codec.size(long_id_edge_msg) == 2);
@@ -79,7 +78,7 @@ int main(int argc, char* argv[])
 
     ShortIDMsgWithData short_id_msg_with_data;
     codec.validate(short_id_msg_with_data.GetDescriptor());
-    codec.info(short_id_msg_with_data.GetDescriptor(), &goby::glog);
+    codec.info(short_id_msg_with_data.GetDescriptor(), &dccl::dlog);
 
     short_id_msg_with_data.set_in_head(42);
     short_id_msg_with_data.set_in_body(37);

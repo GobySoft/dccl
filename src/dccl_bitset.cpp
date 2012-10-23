@@ -23,23 +23,23 @@
 #include "dccl_bitset.h"
 #include "dccl/dccl.h"
 
-using namespace goby::common::logger;
+using namespace dccl::logger;
 
 dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
                                                            bool final_child)
 {
-//    glog.is(DEBUG2) && glog  << group(DCCLCodec::glog_decode_group()) << "Asked to relinquish " << num_bits << " from " << this << ": " << *this << std::endl;
+//    dlog.is(DEBUG2) && dlog  << group(DCCLCodec::dlog_decode_group()) << "Asked to relinquish " << num_bits << " from " << this << ": " << *this << std::endl;
 
     if(final_child || this->size() < num_bits)
     {
         size_type num_parent_bits = (final_child) ? num_bits : num_bits - this->size();
-//        glog.is(DEBUG2) && glog  << group(DCCLCodec::glog_decode_group()) << "Need to get " << num_parent_bits << " from parent" << std::endl;
+//        dlog.is(DEBUG2) && dlog  << group(DCCLCodec::dlog_decode_group()) << "Need to get " << num_parent_bits << " from parent" << std::endl;
 
         if(parent_)
         {
             Bitset parent_bits = parent_->relinquish_bits(num_parent_bits, false);
             
-//            glog.is(DEBUG2) && glog  << group(DCCLCodec::glog_decode_group()) << "parent_bits: " << parent_bits << std::endl;
+//            dlog.is(DEBUG2) && dlog  << group(DCCLCodec::dlog_decode_group()) << "parent_bits: " << parent_bits << std::endl;
             
             append(parent_bits);
         }

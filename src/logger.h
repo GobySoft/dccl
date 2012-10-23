@@ -29,16 +29,23 @@
 namespace dccl {
  namespace logger {
   enum Verbosity {
-      WARN = 1<<1, INFO = 1<<2, DEBUG1 = 1<<3, DEBUG2 = 1<<4, DEBUG3 = 1<<5,
+      WARN = 1<<1,
+      INFO = 1<<2,
+      DEBUG1 = 1<<3,
+      DEBUG2 = 1<<4,
+      DEBUG3 = 1<<5,
       ALL = DEBUG3 | DEBUG3-1,
+      WARN_PLUS = WARN | WARN - 1,
+      INFO_PLUS = INFO | INFO - 1,
+      DEBUG1_PLUS = DEBUG1 | DEBUG1 - 1,
+      DEBUG2_PLUS = DEBUG2 | DEBUG2 - 1,
+      DEBUG3_PLUS = DEBUG3 | DEBUG3 - 1
   };
+  
  }
-
- class LogBuffer : public std::streambuf {
- private:
-     logger::Verbosity verbosity_;
-     std::deque<std::string> buffer_;
-
+ 
+ class LogBuffer : public std::streambuf
+ {
  public:
      LogBuffer() : verbosity_(logger::INFO), buffer_(1) { }
      ~LogBuffer() { }
@@ -50,7 +57,7 @@ namespace dccl {
      /// virtual inherited from std::streambuf. Called when something is inserted into the stream
      /// Called when std::endl or std::flush is inserted into the stream
      int overflow(int c = EOF);
-
+     
      /// connect a signal to a slot (function pointer or similar)
      template <typename Slot>
      void connect(int verbosity_mask, Slot slot) {
@@ -61,8 +68,7 @@ namespace dccl {
          if(verbosity_mask & logger::DEBUG2) debug2_signal.connect(slot);
          if(verbosity_mask & logger::DEBUG3) debug3_signal.connect(slot);
      }
-
-
+     
      void disconnect(int verbosity_mask) {
          enabled_verbosities_ &= ~verbosity_mask;
          if(verbosity_mask & logger::WARN) warn_signal.disconnect_all_slots();
@@ -81,6 +87,12 @@ namespace dccl {
          return verbosity & enabled_verbosities_;
      }
 
+     void to_ostream(const std::string& msg, 
+                     dccl::logger::Verbosity vrb,
+                     std::ostream* os)
+     { *os << msg << std::endl; }
+
+     
  private:
      void display(const std::string& s) {
          if(verbosity_ & logger::WARN) warn_signal(s, logger::WARN);
@@ -89,7 +101,12 @@ namespace dccl {
          if(verbosity_ & logger::DEBUG2) debug2_signal(s, logger::DEBUG2);
          if(verbosity_ & logger::DEBUG3) debug3_signal(s, logger::DEBUG3);
      }
+     
+     
 
+   private:
+     logger::Verbosity verbosity_;
+     std::deque<std::string> buffer_;
      int enabled_verbosities_; // mask of verbosity settings enabled
 
      boost::signals2::signal<void (const std::string& msg, logger::Verbosity vrb)> warn_signal;
@@ -97,11 +114,10 @@ namespace dccl {
      boost::signals2::signal<void (const std::string& msg, logger::Verbosity vrb)> debug1_signal;
      boost::signals2::signal<void (const std::string& msg, logger::Verbosity vrb)> debug2_signal;
      boost::signals2::signal<void (const std::string& msg, logger::Verbosity vrb)> debug3_signal;
+     
  };
 
  class Logger : public std::ostream {
- private:
-     LogBuffer buf_;
  public:
      Logger() : std::ostream(&buf_) { }
      virtual ~Logger() { }
@@ -113,12 +129,7 @@ namespace dccl {
              buf_.set_verbosity(verbosity);
              return true;
          }
-     }
-
-     /// returns verbosity mask for given verbosity that includes all higher verbosity levels as well
-     int verbosity_plus_higher(logger::Verbosity verbosity)
-     { return verbosity | verbosity - 1; }
-     
+     }     
      
      /// connect a signal to a slot (function pointer or similar)
      template<typename Slot>
@@ -132,10 +143,21 @@ namespace dccl {
          connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2));
      }
 
-     void disconnect(int verbosity_mask)
+     /// connect a verbosity to a ostream
+     void connect(int verbosity_mask, std::ostream* os)
      {
-         buf_.disconnect(verbosity_mask);
+         buf_.connect(verbosity_mask,
+                      boost::bind(&LogBuffer::to_ostream,
+                                  &buf_, _1, _2, os));
      }
+     
+     void disconnect(int verbosity_mask)
+     { buf_.disconnect(verbosity_mask); }
+
+
+     
+   private:
+     LogBuffer buf_;
      
  };
  

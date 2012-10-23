@@ -168,8 +168,7 @@ private:
     
 int main(int argc, char* argv[])
 {
-    goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
-    goby::glog.set_name(argv[0]);
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     dccl::DCCLCodec codec;
     dccl::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");

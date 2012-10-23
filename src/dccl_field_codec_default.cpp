@@ -29,7 +29,7 @@
 #include "dccl_type_helper.h"
 #include "dccl/dccl.h"
 
-using namespace goby::common::logger;
+using namespace dccl::logger;
 
 
 //
@@ -172,7 +172,7 @@ dccl::Bitset dccl::DCCLDefaultStringCodec::encode(const std::string& wire_value)
     std::string s = wire_value;
     if(s.size() > dccl_field_options().max_length())
     {
-        goby::glog.is(DEBUG2) && goby::glog << warn << "String " << s <<  " exceeds `dccl.max_length`, truncating" << std::endl;
+        dccl::dlog.is(DEBUG2) && dccl::dlog << "String " << s <<  " exceeds `dccl.max_length`, truncating" << std::endl;
         s.resize(dccl_field_options().max_length()); 
     }
         
@@ -182,16 +182,16 @@ dccl::Bitset dccl::DCCLDefaultStringCodec::encode(const std::string& wire_value)
     
     Bitset length_bits(min_size(), s.length());
 
-    goby::glog.is(DEBUG2) && goby::glog << "DCCLDefaultStringCodec value_bits: " << value_bits << std::endl;    
+    dccl::dlog.is(DEBUG2) && dccl::dlog << "DCCLDefaultStringCodec value_bits: " << value_bits << std::endl;    
 
     
-    goby::glog.is(DEBUG2) && goby::glog << "DCCLDefaultStringCodec length_bits: " << length_bits << std::endl;    
+    dccl::dlog.is(DEBUG2) && dccl::dlog << "DCCLDefaultStringCodec length_bits: " << length_bits << std::endl;    
     
     // adds to MSBs
     for(int i = 0, n = value_bits.size(); i < n; ++i)
         length_bits.push_back(value_bits[i]);
 
-    goby::glog.is(DEBUG2) && goby::glog << "DCCLDefaultStringCodec created: " << length_bits << std::endl;
+    dccl::dlog.is(DEBUG2) && dccl::dlog << "DCCLDefaultStringCodec created: " << length_bits << std::endl;
     
     
     return length_bits;
@@ -206,15 +206,15 @@ std::string dccl::DCCLDefaultStringCodec::decode(Bitset* bits)
         
         unsigned header_length = min_size();
         
-        goby::glog.is(DEBUG2) && goby::glog << "Length of string is = " << value_length << std::endl;
+        dccl::dlog.is(DEBUG2) && dccl::dlog << "Length of string is = " << value_length << std::endl;
         
-        goby::glog.is(DEBUG2) && goby::glog << "bits before get_more_bits " << bits << std::endl;    
+        dccl::dlog.is(DEBUG2) && dccl::dlog << "bits before get_more_bits " << bits << std::endl;    
 
         // grabs more bits to add to the MSBs of `bits`
         bits->get_more_bits(value_length*BITS_IN_BYTE);
 
         
-        goby::glog.is(DEBUG2) && goby::glog << "bits after get_more_bits " << *bits << std::endl;    
+        dccl::dlog.is(DEBUG2) && dccl::dlog << "bits after get_more_bits " << *bits << std::endl;    
         Bitset string_body_bits = *bits;
         string_body_bits >>= header_length;
         string_body_bits.resize(bits->size() - header_length);

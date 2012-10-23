@@ -36,8 +36,7 @@ using dccl::operator<<;
 
 int main(int argc, char* argv[])
 {
-    goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
-    goby::glog.set_name(argv[0]);
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     dccl::DCCLModemIdConverterCodec::add("unicorn", 3);
     dccl::DCCLModemIdConverterCodec::add("topside", 1);

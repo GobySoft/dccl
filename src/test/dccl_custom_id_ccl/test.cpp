@@ -77,8 +77,7 @@ dccl::Bitset MicroModemMiniPacketDCCLIDCodec::encode(const goby::uint32& wire_va
 
 int main(int argc, char* argv[])
 {
-    goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
-    goby::glog.set_name(argv[0]);    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     dccl::DCCLCodec codec;
     dccl::protobuf::DCCLConfig cfg;
@@ -90,7 +89,7 @@ int main(int argc, char* argv[])
     codec.set_id_codec("mini_id_codec");    
 
     codec.validate<MiniUser>();
-    codec.info<MiniUser>(&goby::glog);    
+    codec.info<MiniUser>(&dccl::dlog);    
 
     MiniUser mini_user_msg_in, mini_user_msg_out;
     mini_user_msg_in.set_user(876);
@@ -100,7 +99,7 @@ int main(int argc, char* argv[])
     assert(mini_user_msg_out.SerializeAsString() == mini_user_msg_in.SerializeAsString());
 
     codec.validate<MiniOWTT>();
-    codec.info<MiniOWTT>(&goby::glog);
+    codec.info<MiniOWTT>(&dccl::dlog);
 
     MiniOWTT mini_owtt_in, mini_owtt_out; 
     mini_owtt_in.set_clock_mode(3);
@@ -114,7 +113,7 @@ int main(int argc, char* argv[])
     assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());
     
     codec.validate<MiniAbort>();
-    codec.info<MiniAbort>(&goby::glog);
+    codec.info<MiniAbort>(&dccl::dlog);
 
     MiniAbort mini_abort_in, mini_abort_out; 
     mini_abort_in.set_user(130);
@@ -135,7 +134,7 @@ int main(int argc, char* argv[])
     codec.load_shared_library_codecs(dl_handle);
     
     codec.validate<NormalDCCL>();
-    codec.info<NormalDCCL>(&goby::glog);
+    codec.info<NormalDCCL>(&dccl::dlog);
     NormalDCCL normal_msg, normal_msg_out;
     normal_msg.set_a(123);
     normal_msg.set_b(321);
@@ -147,7 +146,7 @@ int main(int argc, char* argv[])
     
     assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
 
-    codec.info<dccl::protobuf::CCLMDATState>(&goby::glog);
+    codec.info<dccl::protobuf::CCLMDATState>(&dccl::dlog);
 
     dccl::protobuf::CCLMDATState state_in, state_out;
     std::string test_state_encoded = "0e86fa11ad20c9011b4432bf47d10000002401042f0e7d87fa111620c95a200a";
@@ -208,7 +207,7 @@ int main(int argc, char* argv[])
     std::cout << goby::util::hex_encode(state_out.faults_2()) << std::endl;
 
 
-    codec.info<dccl::protobuf::CCLMDATRedirect>(&goby::glog);
+    codec.info<dccl::protobuf::CCLMDATRedirect>(&dccl::dlog);
 
     dccl::protobuf::CCLMDATRedirect redirect_in, redirect_out;
     std::string test_redirect_encoded = "07522cf9113d20c99964003d6464003d640be60014142035f911ef21c9000000";
@@ -256,11 +255,11 @@ int main(int argc, char* argv[])
     assert(test_redirect_encoded == goby::util::hex_encode(redirect_encoded));
     
 
-    codec.info<dccl::protobuf::CCLMDATEmpty>(&goby::glog);
-    codec.info<dccl::protobuf::CCLMDATBathy>(&goby::glog);
-    codec.info<dccl::protobuf::CCLMDATCTD>(&goby::glog);
-    codec.info<dccl::protobuf::CCLMDATError>(&goby::glog);
-    codec.info<dccl::protobuf::CCLMDATCommand>(&goby::glog);
+    codec.info<dccl::protobuf::CCLMDATEmpty>(&dccl::dlog);
+    codec.info<dccl::protobuf::CCLMDATBathy>(&dccl::dlog);
+    codec.info<dccl::protobuf::CCLMDATCTD>(&dccl::dlog);
+    codec.info<dccl::protobuf::CCLMDATError>(&dccl::dlog);
+    codec.info<dccl::protobuf::CCLMDATCommand>(&dccl::dlog);
     
     
     std::cout << "all tests passed" << std::endl;

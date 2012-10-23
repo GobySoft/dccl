@@ -35,8 +35,8 @@ const google::protobuf::Message* dccl::DCCLFieldCodecBase::root_message_ = 0;
 boost::ptr_map<int, boost::signals2::signal<void (const boost::any& field_value, const boost::any& wire_value, const boost::any& extension_value)> >   dccl::DCCLFieldCodecBase::wire_value_hooks_;
 
 
-using goby::glog;
-using namespace goby::common::logger;
+using dccl::dlog;
+using namespace dccl::logger;
 
 //
 // DCCLFieldCodecBase public
@@ -64,7 +64,7 @@ void dccl::DCCLFieldCodecBase::field_encode(Bitset* bits,
     MessageHandler msg_handler(field);
 
     if(field)
-        glog.is(DEBUG2) && glog << "Starting encode for field: " << field->DebugString() << std::flush;
+        dlog.is(DEBUG2) && dlog << "Starting encode for field: " << field->DebugString() << std::flush;
 
     boost::any wire_value;
     field_pre_encode(&wire_value, field_value);
@@ -168,9 +168,9 @@ void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
         throw(DCCLException("Decode called with NULL Bitset"));    
     
     if(field)
-        glog.is(DEBUG2) && glog << "Starting decode for field: " << field->DebugString() << std::flush;
+        dlog.is(DEBUG2) && dlog << "Starting decode for field: " << field->DebugString() << std::flush;
     
-    glog.is(DEBUG3) && glog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
+    dlog.is(DEBUG3) && dlog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
     
     Bitset these_bits(bits);
 
@@ -178,7 +178,7 @@ void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
     field_min_size(&bits_to_transfer, field);
     these_bits.get_more_bits(bits_to_transfer);    
     
-    glog.is(DEBUG2) && glog  << "... using these bits: " << these_bits << std::endl;
+    dlog.is(DEBUG2) && dlog  << "... using these bits: " << these_bits << std::endl;
 
     boost::any wire_value = *field_value;
     
@@ -199,7 +199,7 @@ void dccl::DCCLFieldCodecBase::field_decode_repeated(Bitset* bits,
         throw(DCCLException("Decode called with NULL Bitset"));    
     
     if(field)
-        glog.is(DEBUG2) && glog  << "Starting repeated decode for field: " << field->DebugString();
+        dlog.is(DEBUG2) && dlog  << "Starting repeated decode for field: " << field->DebugString();
     
     Bitset these_bits(bits);
     
@@ -207,7 +207,7 @@ void dccl::DCCLFieldCodecBase::field_decode_repeated(Bitset* bits,
     field_min_size(&bits_to_transfer, field);
     these_bits.get_more_bits(bits_to_transfer);
     
-    glog.is(DEBUG2) && glog  << "using these " <<
+    dlog.is(DEBUG2) && dlog  << "using these " <<
         these_bits.size() << " bits: " << these_bits << std::endl;
 
     std::vector<boost::any> wire_values = *field_values;
@@ -434,9 +434,9 @@ unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::an
 void dccl::DCCLFieldCodecBase::any_run_hooks(const boost::any& field_value)   
 {
     if(this_field())
-        glog.is(DEBUG2) && glog << "Running hooks for " << this_field()->DebugString() << std::flush;
+        dlog.is(DEBUG2) && dlog << "Running hooks for " << this_field()->DebugString() << std::flush;
     else
-        glog.is(DEBUG2) && glog << "running hooks for base message" << std::endl;
+        dlog.is(DEBUG2) && dlog << "running hooks for base message" << std::endl;
 
     
     typedef boost::ptr_map<int, boost::signals2::signal<void (const boost::any& field_value,
@@ -463,12 +463,12 @@ void dccl::DCCLFieldCodecBase::any_run_hooks(const boost::any& field_value)
                 field_pre_encode(&wire_value, field_value);
                 
                 i->second->operator()(field_value, wire_value, extension_value);   
-                glog.is(DEBUG2) && glog  <<"Found : " << i->first << ": " << extension_desc->DebugString() << std::endl;
+                dlog.is(DEBUG2) && dlog  <<"Found : " << i->first << ": " << extension_desc->DebugString() << std::endl;
             }
             
             catch(std::exception& e)
             {
-                glog.is(DEBUG1) && glog << "failed to run hook for " << i->first << ", exception: " << e.what() << std::endl;
+                dlog.is(DEBUG1) && dlog << "failed to run hook for " << i->first << ", exception: " << e.what() << std::endl;
             }
         }
     }

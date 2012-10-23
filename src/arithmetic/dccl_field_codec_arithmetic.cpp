@@ -23,8 +23,8 @@
 #include "dccl_field_codec_arithmetic.h"
 #include "dccl/dccl_field_codec_manager.h"
 
-using goby::glog;
-using namespace goby::common::logger;
+using dccl::dlog;
+using namespace dccl::logger;
 
 std::map<std::string, dccl::Model> dccl::ModelManager::arithmetic_models_;
 const dccl::Model::symbol_type dccl::Model::OUT_OF_RANGE_SYMBOL;
@@ -147,15 +147,15 @@ void dccl::Model::update_model(symbol_type symbol, ModelState state)
         encoder_cumulative_freqs_ :
         decoder_cumulative_freqs_;
 
-    if(glog.is(DEBUG3))
+    if(dlog.is(DEBUG3))
     {
-        glog << "Model was: " << std::endl;
+        dlog << "Model was: " << std::endl;
         for(symbol_type i = MIN_SYMBOL, n = max_symbol(); i <= n; ++i)
         {
             boost::bimap<symbol_type, freq_type>::left_iterator it =
                 c_freqs.left.find(i);
             if(it != c_freqs.left.end())
-                glog << "Symbol: " << it->first << ", c_freq: " << it->second << std::endl;
+                dlog << "Symbol: " << it->first << ", c_freq: " << it->second << std::endl;
         }
     }
     
@@ -168,18 +168,18 @@ void dccl::Model::update_model(symbol_type symbol, ModelState state)
             c_freqs.left.replace_data(it, it->second + 1);
     }
 
-    if(glog.is(DEBUG3))
+    if(dlog.is(DEBUG3))
     {
-        glog << "Model is now: " << std::endl;
+        dlog << "Model is now: " << std::endl;
         for(symbol_type i = MIN_SYMBOL, n = max_symbol(); i <= n; ++i)
         {
             boost::bimap<symbol_type, freq_type>::left_iterator it =
                 c_freqs.left.find(i);
             if(it != c_freqs.left.end())
-                glog << "Symbol: " << it->first << ", c_freq: " << it->second << std::endl;
+                dlog << "Symbol: " << it->first << ", c_freq: " << it->second << std::endl;
         }
     }
     
-    glog.is(DEBUG3) && glog << "total freq: " << total_freq(state) << std::endl;
+    dlog.is(DEBUG3) && dlog << "total freq: " << total_freq(state) << std::endl;
                 
 }

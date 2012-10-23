@@ -24,7 +24,7 @@
 #include "goby/util/dynamic_protobuf_manager.h"
 
 #include "goby/common/exception.h"
-#include "goby/common/logger.h"
+//#include "goby/common/logger.h"
 
 #if PROTO_RUNTIME_COMPILE
 #include <boost/filesystem.hpp>
@@ -84,11 +84,11 @@ goby::util::DynamicProtobufManager::load_from_proto_file(const std::string& prot
 void goby::util::DynamicProtobufManager::GLogMultiFileErrorCollector::AddError(const std::string & filename, int line, int column,
                                                                                const std::string & message)
 {
-    goby::glog.is(goby::common::logger::DIE) &&
-        goby::glog << "File: " << filename
-                   << " has error (line: " << line << ", column: "
-                   << column << "): "
-                   << message << std::endl;
+    // goby::glog.is(goby::common::logger::DIE) &&
+    //     goby::glog << "File: " << filename
+    //                << " has error (line: " << line << ", column: "
+    //                << column << "): "
+    //                << message << std::endl;
 }
 
 

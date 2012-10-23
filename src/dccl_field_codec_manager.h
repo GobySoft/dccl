@@ -26,6 +26,7 @@
 
 #include "dccl_type_helper.h"
 #include "dccl_field_codec.h"
+#include "dccl/logger.h"
 
 namespace dccl
 {
@@ -210,7 +211,7 @@ void dccl::DCCLFieldCodecManager::__add(const std::string& name,
         new_field_codec->set_wire_type(wire_type);
         
         codecs_[field_type][name] = new_field_codec;
-        goby::glog.is(goby::common::logger::DEBUG1) && goby::glog << "Adding codec " << *new_field_codec << std::endl;
+        dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog << "Adding codec " << *new_field_codec << std::endl;
     }            
     else
     {
@@ -219,7 +220,7 @@ void dccl::DCCLFieldCodecManager::__add(const std::string& name,
         new_field_codec->set_field_type(field_type);
         new_field_codec->set_wire_type(wire_type);
         
-        goby::glog.is(goby::common::logger::DEBUG1) && goby::glog << "Trying to add: " << *new_field_codec
+        dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog << "Trying to add: " << *new_field_codec
                                                             << ", but already have duplicate codec (For `name`/`field type` pair) "
                                                             << *(codecs_[field_type].find(name)->second)
                                                             << std::endl;

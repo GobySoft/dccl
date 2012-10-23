@@ -38,17 +38,15 @@ void decode(const std::string& bytes);
 
 int main(int argc, char* argv[])
 {
-    goby::glog.add_stream(goby::common::logger::DEBUG3, &std::cerr);
-    goby::glog.set_name(argv[0]);
-
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     codec.validate<GobyMessage1>();
     codec.validate<GobyMessage2>();
     codec.validate<GobyMessage3>();
 
-    codec.info<GobyMessage1>(&goby::glog);
-    codec.info<GobyMessage2>(&goby::glog);
-    codec.info<GobyMessage3>(&goby::glog);
+    codec.info<GobyMessage1>(&dccl::dlog);
+    codec.info<GobyMessage2>(&dccl::dlog);
+    codec.info<GobyMessage3>(&dccl::dlog);
 
     
  

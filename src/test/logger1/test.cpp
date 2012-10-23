@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     using namespace dccl::logger;
 
     std::cout << "attaching info() to DEBUG3+" << std::endl;
-    dlog.connect(dlog.verbosity_plus_higher(DEBUG3), &info);
+    dlog.connect(DEBUG3_PLUS, &info);
     dlog.is(DEBUG3) && dlog << "debug3 ok" << std::endl;
     dlog.is(DEBUG2) && dlog << "debug2 ok" << std::endl;
     dlog.is(DEBUG1) && dlog << "debug1 ok" << std::endl;
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     dlog.is(WARN) && dlog << stream_assert << std::endl;
     
     std::cout << "attaching info() to WARN+" << std::endl;
-    dlog.connect(dlog.verbosity_plus_higher(WARN), &info);
+    dlog.connect(WARN_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG1) && dlog << stream_assert << std::endl;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     dlog.disconnect(ALL);
 
     std::cout << "attaching info() to INFO+" << std::endl;
-    dlog.connect(dlog.verbosity_plus_higher(INFO), &info);
+    dlog.connect(INFO_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG1) && dlog << stream_assert << std::endl;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     dlog.disconnect(ALL);    
     
     std::cout << "attaching info() to DEBUG1+" << std::endl;
-    dlog.connect(dlog.verbosity_plus_higher(DEBUG1), &info);
+    dlog.connect(DEBUG1_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG1) && dlog << "debug1 ok" << std::endl;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     dlog.disconnect(ALL);    
 
     std::cout << "attaching info() to DEBUG2+" << std::endl;
-    dlog.connect(dlog.verbosity_plus_higher(DEBUG2), &info);
+    dlog.connect(DEBUG2_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << "debug2 ok" << std::endl;
     dlog.is(DEBUG1) && dlog << "debug1 ok" << std::endl;

@@ -25,7 +25,7 @@
 #include "dccl_field_codec_default_message.h"
 #include "goby/util/dynamic_protobuf_manager.h"
 
-using goby::glog;
+using dccl::dlog;
 
 //
 // DCCLDefaultMessageCodec
@@ -205,7 +205,7 @@ void dccl::DCCLDefaultMessageCodec::RunHooks::repeated(
     const std::vector<boost::any>& field_values,
     const google::protobuf::FieldDescriptor* field_desc)
 {
-    goby::glog.is(goby::common::logger::DEBUG2) && glog << goby::common::logger::warn << "Hooks not run on repeated message: " << field_desc->DebugString() << std::flush;
+    dccl::dlog.is(dccl::logger::DEBUG2) && dlog << "Hooks not run on repeated message: " << field_desc->DebugString() << std::flush;
 }
 
 void dccl::DCCLDefaultMessageCodec::RunHooks::single(
