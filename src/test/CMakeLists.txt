@@ -6,9 +6,10 @@ add_subdirectory(dccl_repeated)
 add_subdirectory(dccl_default_id)
 add_subdirectory(dccl_required_optional)
 add_subdirectory(dccl_static_methods)
+add_subdirectory(dccl_custom_id)
 
 if(build_ccl)
-  add_subdirectory(dccl_custom_id_ccl)
+  add_subdirectory(dccl_ccl)
 endif()
 
 if(build_arithmetic)

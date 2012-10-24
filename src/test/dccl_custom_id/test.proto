@@ -37,16 +37,3 @@ message MiniAbort
                             (dccl.field).max=0x03FF,
                             (dccl.field).in_head=true];
 }
-
-message NormalDCCL
-{
-  option (dccl.msg).id = 1;
-  option (dccl.msg).max_bytes = 32;
-
-  required int32 a = 1 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  required int32 b = 2 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  
-}
-
