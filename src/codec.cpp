@@ -56,8 +56,6 @@ using google::protobuf::FieldDescriptor;
 using google::protobuf::Descriptor;
 using google::protobuf::Reflection;
 
-const std::string dccl::Codec::DEFAULT_CODEC_NAME = "";
-
 
 //
 // Codec
@@ -74,23 +72,31 @@ dccl::Codec::Codec(const std::string& dccl_id_codec)
 
 void dccl::Codec::set_default_codecs()
 {
-    using google::protobuf::FieldDescriptor;
-    FieldCodecManager::add<DefaultNumericFieldCodec<double> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultNumericFieldCodec<float> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultBoolCodec>(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultNumericFieldCodec<int32> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultNumericFieldCodec<int64> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultNumericFieldCodec<uint32> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultEnumCodec>(DEFAULT_CODEC_NAME);
-    FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(DEFAULT_CODEC_NAME);
+    // only need to load these once into the static FieldCodecManager
+    static bool defaults_loaded = false;
 
-    FieldCodecManager::add<TimeCodec<uint64> >("_time");
-    FieldCodecManager::add<TimeCodec<double> >("_time");
+    if(!defaults_loaded)
+    {
+        using google::protobuf::FieldDescriptor;
 
-    FieldCodecManager::add<StaticCodec<std::string> >("_static"); 
+        FieldCodecManager::add<DefaultNumericFieldCodec<double> >(default_codec_name());
+        FieldCodecManager::add<DefaultNumericFieldCodec<float> >(default_codec_name());
+        FieldCodecManager::add<DefaultBoolCodec>(default_codec_name());
+        FieldCodecManager::add<DefaultNumericFieldCodec<int32> >(default_codec_name());
+        FieldCodecManager::add<DefaultNumericFieldCodec<int64> >(default_codec_name());
+        FieldCodecManager::add<DefaultNumericFieldCodec<uint32> >(default_codec_name());
+        FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(default_codec_name());
+        FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
+        FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
+        FieldCodecManager::add<DefaultEnumCodec>(default_codec_name());
+        FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
+        
+        FieldCodecManager::add<TimeCodec<uint64> >("_time");
+        FieldCodecManager::add<TimeCodec<double> >("_time");
+        
+        FieldCodecManager::add<StaticCodec<std::string> >("_static");
+        defaults_loaded = true;
+    }
 }
 
 

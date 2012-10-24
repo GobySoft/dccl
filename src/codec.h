@@ -84,9 +84,7 @@ namespace dccl
     /// two_message.cpp
     class Codec
     {
-      public:
-        static const std::string DEFAULT_CODEC_NAME;
-        
+      public:       
         Codec(const std::string& dccl_id_codec = "_default_id_codec");
         virtual ~Codec() { }
 
@@ -244,7 +242,7 @@ namespace dccl
     
             return msg;
         }
-        
+        friend class DefaultMessageCodec;
       private:
         Codec(const Codec&);
         Codec& operator= (const Codec&);
@@ -257,7 +255,12 @@ namespace dccl
         boost::shared_ptr<FieldCodecBase> id_codec() const
         {
             return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
-                                               id_codec_);
+                                           id_codec_);
+        }
+        
+        static const std::string& default_codec_name()
+        {
+            return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
         }
         
         
