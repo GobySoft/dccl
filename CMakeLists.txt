@@ -96,6 +96,8 @@ foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
 
+configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
+
 
 ## boost
 find_package(Boost 1.40.0 COMPONENTS filesystem)
