@@ -97,11 +97,14 @@ configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 
 ## boost
-find_package(Boost 1.40.0 COMPONENTS filesystem)
+find_package(Boost 1.40.0 COMPONENTS filesystem system)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(ProtobufDCCL REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
+
+# Protobuf uses pthread so we need to link it too (if it's here)
+find_package(Threads)
 
 # shared library suffix
 add_definitions(-DSHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}")

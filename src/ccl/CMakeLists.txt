@@ -12,8 +12,7 @@ add_library(dccl_ccl_compat SHARED
   ${CCL_PROTO_HDRS}
 )
 
-set_target_properties(dccl_ccl_compat 
-  PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
-
 target_link_libraries(dccl_ccl_compat dccl)
 
+set_target_properties(dccl_ccl_compat 
+  PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")

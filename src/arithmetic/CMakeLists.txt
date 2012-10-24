@@ -14,5 +14,7 @@ add_library(dccl_arithmetic SHARED
   ${ARITHMETIC_PROTO_HDRS}
 )
 
+target_link_libraries(dccl_arithmetic dccl)
+
 set_target_properties(dccl_arithmetic 
   PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
