@@ -24,13 +24,12 @@
 #define DCCLCCLCOMPATIBILITY20120426H
 
 #include "dccl/dccl_field_codec_default.h"
-#include "goby/acomms/acomms_constants.h"
 #include "dccl/ccl/protobuf/ccl.pb.h"
 #include "dccl/ccl/protobuf/ccl_extensions.pb.h"
 
 extern "C"
 {
-    void goby_dccl_load(dccl::Codec* dccl);
+    void dccl3_load(dccl::Codec* dccl);
 }
 
 
@@ -45,7 +44,7 @@ namespace dccl
         dccl::Bitset encode()
         { return encode(0); }
             
-        dccl::Bitset encode(const goby::uint32& wire_value)
+        dccl::Bitset encode(const dccl::uint32& wire_value)
         {
             if((wire_value & 0xFFFF0000) == CCL_DCCL_ID_PREFIX)
             {
@@ -61,7 +60,7 @@ namespace dccl
                 
         }
                 
-        goby::uint32 decode(dccl::Bitset* bits)
+        dccl::uint32 decode(dccl::Bitset* bits)
         {
             unsigned ccl_id = bits->to_ulong();
                 
@@ -82,7 +81,7 @@ namespace dccl
         unsigned size()
         { return size(0); }
             
-        unsigned size(const goby::uint32& field_value)
+        unsigned size(const dccl::uint32& field_value)
         {
             if((field_value & 0xFFFF0000) == CCL_DCCL_ID_PREFIX)
             {
@@ -117,7 +116,7 @@ namespace dccl
         enum { LATLON_COMPRESSED_BYTE_SIZE = 3 };            
     };
 
-    class LegacyCCLFixAgeCodec : public dccl::DCCLDefaultNumericFieldCodec<goby::uint32>
+    class LegacyCCLFixAgeCodec : public dccl::DCCLDefaultNumericFieldCodec<dccl::uint32>
     {
       private:
         dccl::Bitset encode()
@@ -125,16 +124,16 @@ namespace dccl
             return encode(max());
         }
             
-        dccl::Bitset encode(const goby::uint32& wire_value)
+        dccl::Bitset encode(const dccl::uint32& wire_value)
         {
-            return DCCLDefaultNumericFieldCodec<goby::uint32>::encode(
+            return DCCLDefaultNumericFieldCodec<dccl::uint32>::encode(
                 std::min<unsigned char>(max(), wire_value / SCALE_FACTOR));
         }
             
-        goby::uint32 decode(dccl::Bitset* bits)
+        dccl::uint32 decode(dccl::Bitset* bits)
         {
             return SCALE_FACTOR *
-                DCCLDefaultNumericFieldCodec<goby::uint32>::decode(bits);
+                DCCLDefaultNumericFieldCodec<dccl::uint32>::decode(bits);
         }
                         
         double max() { return (1 << dccl::BITS_IN_BYTE) - 1; }
@@ -146,18 +145,20 @@ namespace dccl
     };
         
             
-    class LegacyCCLTimeDateCodec : public dccl::DCCLTypedFixedFieldCodec<goby::uint64>
+    class LegacyCCLTimeDateCodec : public dccl::DCCLTypedFixedFieldCodec<dccl::uint64>
     {
+      public:
+        static dccl::uint64 to_uint64_time(const boost::posix_time::ptime& time_date);
+
       private:
         dccl::Bitset encode();
-        dccl::Bitset encode(const goby::uint64& wire_value);
-        goby::uint64 decode(dccl::Bitset* bits);
+        dccl::Bitset encode(const dccl::uint64& wire_value);
+        dccl::uint64 decode(dccl::Bitset* bits);
         unsigned size();
 
         enum { MICROSECONDS_IN_SECOND = 1000000 };
         enum { TIME_DATE_COMPRESSED_BYTE_SIZE = 3 };
-            
-                
+
             
     };
 

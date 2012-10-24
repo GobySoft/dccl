@@ -458,7 +458,7 @@ void dccl::Codec::load_library(void* dl_handle)
     
     // load any shared library codecs
     void (*dccl_load_ptr)(dccl::Codec*);
-    dccl_load_ptr = (void (*)(dccl::Codec*)) dlsym(dl_handle, "goby_dccl_load");
+    dccl_load_ptr = (void (*)(dccl::Codec*)) dlsym(dl_handle, "dccl3_load");
     if(dccl_load_ptr)
         (*dccl_load_ptr)(this);
 }

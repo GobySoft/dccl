@@ -20,24 +20,23 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Goby.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <ctime>
+
+#include <boost/date_time.hpp>
+
 #include "dccl_ccl_compatibility.h"
 #include "WhoiUtil.h"
-#include <ctime>
 #include "dccl/dccl.h"
 
 // shared library load
 
-using namespace goby::acomms;
-
 
 extern "C"
 {
-    void goby_dccl_load(dccl::Codec* dccl)
+    void dccl3_load(dccl::Codec* dccl)
     {
         using namespace dccl;
-        dccl->add_id_codec<LegacyCCLIdentifierCodec>("_ccl");
-        dccl->set_id_codec("_ccl");
-            
+        
         DCCLFieldCodecManager::add<LegacyCCLLatLonCompressedCodec>("_ccl_latloncompressed");
         DCCLFieldCodecManager::add<LegacyCCLFixAgeCodec>("_ccl_fix_age");
         DCCLFieldCodecManager::add<LegacyCCLTimeDateCodec>("_ccl_time_date");
@@ -52,13 +51,13 @@ extern "C"
         DCCLFieldCodecManager::add<LegacyCCLSalinityCodec>("_ccl_salinity");
         DCCLFieldCodecManager::add<LegacyCCLSoundSpeedCodec>("_ccl_sound_speed");
         
-        dccl->validate<dccl::protobuf::CCLMDATEmpty>();
-        dccl->validate<dccl::protobuf::CCLMDATRedirect>();
-        dccl->validate<dccl::protobuf::CCLMDATBathy>();
-        dccl->validate<dccl::protobuf::CCLMDATCTD>();
-        dccl->validate<dccl::protobuf::CCLMDATState>();
-        dccl->validate<dccl::protobuf::CCLMDATCommand>();
-        dccl->validate<dccl::protobuf::CCLMDATError>();
+        dccl->load<dccl::protobuf::CCLMDATEmpty>();
+        dccl->load<dccl::protobuf::CCLMDATRedirect>();
+        dccl->load<dccl::protobuf::CCLMDATBathy>();
+        dccl->load<dccl::protobuf::CCLMDATCTD>();
+        dccl->load<dccl::protobuf::CCLMDATState>();
+        dccl->load<dccl::protobuf::CCLMDATCommand>();
+        dccl->load<dccl::protobuf::CCLMDATError>();
     }
 }
 
@@ -100,7 +99,7 @@ dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode()
     return encode(0);
 }
 
-dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const goby::uint64& wire_value)
+dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const dccl::uint64& wire_value)
 {
     TIME_DATE_LONG encoded;
     encoded.as_long = 0;
@@ -108,7 +107,7 @@ dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const goby::uint64& wire_value
     return dccl::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
 }
 
-goby::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
+dccl::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
 {
     TIME_DATE_LONG decoded;
     decoded.as_long = bits->to_ulong();
@@ -122,9 +121,33 @@ goby::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
         boost::gregorian::date(boost::gregorian::day_clock::universal_day().year(),
                                mon, day), 
         boost::posix_time::time_duration(hour,min,sec));
-    
-    return goby::util::as<goby::uint64>(time_date);
+
+    return to_uint64_time(time_date);
 }
+
+dccl::uint64 dccl::LegacyCCLTimeDateCodec::to_uint64_time(const boost::posix_time::ptime& time_date)
+{
+            
+    using namespace boost::posix_time;
+    using namespace boost::gregorian;
+    
+    if (time_date == not_a_date_time)
+        return std::numeric_limits<uint64>::max();
+    else
+    {
+        const int MICROSEC_IN_SEC = 1000000;
+
+        date_duration date_diff = time_date.date() - date(1970,1,1);
+        time_duration time_diff = time_date.time_of_day();
+        
+        return
+            static_cast<uint64>(date_diff.days())*24*3600*MICROSEC_IN_SEC + 
+            static_cast<uint64>(time_diff.total_seconds())*MICROSEC_IN_SEC +
+            static_cast<uint64>(time_diff.fractional_seconds()) /
+            (time_duration::ticks_per_second() / MICROSEC_IN_SEC);        
+    }    
+}
+
 
 unsigned dccl::LegacyCCLTimeDateCodec::size()
 {

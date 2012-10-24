@@ -1,5 +1,6 @@
 set(ARITHMETIC_PROTOS 
 protobuf/arithmetic_extensions.proto
+protobuf/arithmetic.proto
 )
 
 protobuf_generate_cpp(ARITHMETIC_PROTO_SRCS

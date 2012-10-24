@@ -37,8 +37,6 @@
 
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
-
-#include "dccl/protobuf/dccl.pb.h"
 #include "logger.h"
 #include "protobuf_cpp_type_helpers.h"
 #include "dccl_exception.h"

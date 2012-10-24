@@ -30,17 +30,19 @@
 #include <algorithm>
 
 #include <boost/bimap.hpp>
-
+#include <boost/lexical_cast.hpp>
 
 #include "dccl/dccl_field_codec_typed.h"
-#include "dccl/protobuf/dccl.pb.h"
+
 #include "dccl/arithmetic/protobuf/arithmetic_extensions.pb.h"
-#include "goby/util/sci.h"
+#include "dccl/arithmetic/protobuf/arithmetic.pb.h"
+#include "dccl/sci.h"
 #include "dccl/logger.h"
+
 
 extern "C"
 {
-    void goby_dccl_load(dccl::Codec* dccl);
+    void dccl3_load(dccl::Codec* dccl);
 }
 
 namespace dccl
@@ -632,7 +634,7 @@ namespace dccl
       }
               
               
-      goby::int32 max_repeat()
+      dccl::int32 max_repeat()
       {
           return DCCLFieldCodecBase::this_field()->is_repeated() ? DCCLFieldCodecBase::dccl_field_options().max_repeat() : 1;
       }

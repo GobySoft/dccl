@@ -1,7 +1,6 @@
 
 set(PROTOS protobuf/logger.proto
   protobuf/option_extensions.proto
-  protobuf/dccl.proto
  )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})

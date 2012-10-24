@@ -35,9 +35,7 @@
 
 #include "dccl_common.h"
 #include "dccl_exception.h"
-#include "dccl/protobuf/dccl.pb.h"
 #include "dccl/protobuf/option_extensions.pb.h"
-
 #include "dccl_type_helper.h"
 #include "dccl_field_codec_helpers.h"
 

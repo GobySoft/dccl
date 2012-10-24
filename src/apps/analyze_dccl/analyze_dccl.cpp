@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
             
             if(desc)
             {
-                try { dccl.validate(desc); }
+                try { dccl.load(desc); }
                 catch(std::exception& e)
                 {
                     std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\n" << e.what() << std::endl;

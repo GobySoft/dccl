@@ -47,7 +47,7 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
         std::cerr << "Failed to open libdccl_arithmetic" SHARED_LIBRARY_SUFFIX << std::endl;
         exit(1);
     }
-    codec.load_shared_library_codecs(dl_handle);
+    codec.load_library(dl_handle);
 
     
     if(set_model)
@@ -82,15 +82,12 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
 // usage: dccl_test10 [boolean: verbose]
 int main(int argc, char* argv[])
 {
-    if(argc > 1 && goby::util::as<bool>(argv[1]) == 1)
+    if(argc > 1 && std::string(argv[1]) == "1")
         dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
         dccl::dlog.connect(dccl::logger::DEBUG2_PLUS, &std::cerr);
     
-    dccl::protobuf::DCCLConfig cfg;
     dccl::Codec codec;
-    codec.set_cfg(cfg);
-
     
     // test case from Practical Implementations of Arithmetic Coding by Paul G. Howard and Je rey Scott Vitter
     {        
