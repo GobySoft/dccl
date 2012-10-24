@@ -124,43 +124,36 @@ namespace dccl
         return out;
     }
 
-    /// \brief attempts to convert a hex string into a numerical representation (of type T)
-    ///
-    /// \return true if conversion succeeds, false otherwise
-    template <typename T> bool hex_string2number(const std::string & s, T & t)
+
+    
+        
+    /// \return ceil(log2(v))
+    inline unsigned ceil_log2(unsigned v)
     {
-        std::stringstream ss;
-        ss << s;
-        ss >> std::hex >> t;
-        return !ss.fail();	      
+        // r will be one greater (ceil) if v is not a power of 2
+        unsigned r = ((v & (v - 1)) == 0) ? 0 : 1;
+        while (v >>= 1)
+            r++;
+        return r;
     }
-	
-	
-    /// \brief converts a decimal number of type T into a hex string
-    ///
-    /// \param s string reference to store result in
-    /// \param t decimal number to convert
-    /// \param width desired width (in characters) of return string. Width should be twice the number of bytes
-    /// \return true if successful, false otherwise
-    template <typename T> bool number2hex_string(std::string & s, const T & t, unsigned int width = 2)
+        
+    inline unsigned ceil_log2(double d)
     {
-        std::stringstream ss;
-        ss << std::hex << std::setw(width) << std::setfill('0') << static_cast<unsigned int>(t);
-        s  = ss.str();
-        return !ss.fail();	      
+        return ceil_log2(static_cast<unsigned>(std::ceil(d)));
     }
 
-    /// \brief converts a decimal number of type T into a hex string assuming success
-    ///
-    /// \param t decimal number to convert
-    /// \param width desired width (in characters) of return string. Width should be twice the number of bytes
-    /// \return hex string
-    template <typename T> std::string number2hex_string(const T & t, unsigned int width = 2)
+    inline unsigned ceil_log2(int i)
     {
-        std::string s;
-        number2hex_string(s,t,width);
-        return s;
+        return ceil_log2(static_cast<unsigned>(i));
     }
+        
+    inline double log2(double d)
+    {
+        static double log_2 = log(2);
+        return log(d)/log_2;
+    }
+        
+
 
     //@}
 }

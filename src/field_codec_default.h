@@ -41,11 +41,10 @@
 
 #include "dccl/protobuf/option_extensions.pb.h"
 
-#include "sci.h"
-
 #include "field_codec_default_message.h"
 #include "field_codec_fixed.h"
 #include "field_codec.h"
+#include "binary.h"
 
 namespace dccl
 {

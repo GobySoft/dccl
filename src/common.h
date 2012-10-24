@@ -25,27 +25,28 @@
 #ifndef DCCLConstants20091211H
 #define DCCLConstants20091211H
 
-#include "dccl/bitset.h"
+#include <iostream>
+#include <cmath>
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 
-#include <iostream>
+#include "dccl/bitset.h"
+
 
 namespace dccl
 {
-    // more efficient way to do ceil(total_bits / 8)
-    // to get the number of bytes rounded up.
-    enum { BYTE_MASK = 7 }; // 00000111
     inline unsigned floor_bits2bytes(unsigned bits)
     { return bits >> 3; }
+    // more efficient way to do ceil(total_bits / 8)
+    // to get the number of bytes rounded up.
     inline unsigned ceil_bits2bytes(unsigned bits)
     {
+        enum { BYTE_MASK = 7 }; // 00000111
         return (bits& BYTE_MASK) ?
             floor_bits2bytes(bits) + 1 :
             floor_bits2bytes(bits);
-    }      
-
+    }
 
     // use the Google Protobuf types as they handle system quirks already
     /// an unsigned 32 bit integer
@@ -58,12 +59,6 @@ namespace dccl
     typedef google::protobuf::int64 int64;
 
     const unsigned BITS_IN_BYTE = 8;
-    // one hex char is a nibble (4 bits), two nibbles per byte
-    const unsigned NIBS_IN_BYTE = 2;
-
-    /// special modem id for the broadcast destination - no one is assigned this address. Analogous to 192.168.1.255 on a 192.168.1.0 subnet
-    const int BROADCAST_ID = 0;
-        
     
     inline std::ostream& operator<<(std::ostream& out,
                                     const google::protobuf::Message& msg)
@@ -72,6 +67,28 @@ namespace dccl
                 << msg.GetDescriptor()->name()
                 << "]] " << msg.DebugString());
     }
+
+
+    /// round 'r' to 'dec' number of decimal places
+    /// we want no upward bias so
+    /// round 5 up if odd next to it, down if even
+    /// \param r value to round
+    /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
+    /// \return r rounded
+
+    inline double unbiased_round(double r, double dec)
+    {
+        double ex = std::pow(10.0, dec);
+        double final = std::floor(r * ex);
+        double s = (r * ex) - final;
+
+        // remainder less than 0.5 or even number next to it
+        if (s < 0.5 || (s==0.5 && !(static_cast<unsigned long>(final)&1)))
+            return final / ex;
+        else 
+            return (final+1) / ex;
+    }
+
 
     
 }

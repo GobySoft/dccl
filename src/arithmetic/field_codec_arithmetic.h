@@ -37,9 +37,10 @@
 
 #include "dccl/arithmetic/protobuf/arithmetic_extensions.pb.h"
 #include "dccl/arithmetic/protobuf/arithmetic.pb.h"
-#include "dccl/sci.h"
+
 #include "dccl/logger.h"
 
+#include "dccl/binary.h"
 
 extern "C"
 {
