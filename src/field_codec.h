@@ -278,7 +278,7 @@ namespace dccl
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
         void field_min_size(unsigned* bit_size, const google::protobuf::FieldDescriptor* field);
 
-        /// \brief Validate this field, checking that all required option extensions are set (e.g. (goby.field).dccl.max and (goby.field).dccl.min for arithmetic codecs)
+        /// \brief Validate this field, checking that all required option extensions are set (e.g. (dccl.field).max and (dccl.field).min for arithmetic codecs)
         ///
         /// \param b Currently unused (will be set to false)
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.

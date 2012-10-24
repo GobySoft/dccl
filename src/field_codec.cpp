@@ -419,7 +419,7 @@ unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::an
 unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
-        throw(Exception("Missing (goby.field).dccl.max_repeat option on `repeated` field: " + this_field()->DebugString()));
+        throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " + this_field()->DebugString()));
     else
         return max_size() * dccl_field_options().max_repeat();
 }
@@ -427,7 +427,7 @@ unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
 unsigned dccl::DCCLFieldCodecBase::min_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
-        throw(Exception("Missing (goby.field).dccl.max_repeat option on `repeated` field " + this_field()->DebugString()));
+        throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field " + this_field()->DebugString()));
     else
         return min_size() * dccl_field_options().max_repeat();
 }

@@ -102,7 +102,7 @@ namespace dccl
         unsigned min_size()
         { return dccl::BITS_IN_BYTE; }
 
-        // prefixes (goby.msg).dccl.id to indicate that this DCCL
+        // prefixes (dccl.msg).id to indicate that this DCCL
         // message is an encoding of a legacy CCL message
         enum { CCL_DCCL_ID_PREFIX = 0x0CC10000 };
     };
@@ -201,7 +201,7 @@ namespace dccl
             
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_bit_size(), "missing (goby.field).dccl.ccl.bit_size");
+            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_bit_size(), "missing (dccl.field).ccl.bit_size");
         }
             
     };
@@ -225,7 +225,7 @@ namespace dccl
 
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_thrust_mode_tag(), "missing (goby.field).dccl.ccl.thrust_mode_tag");
+            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_thrust_mode_tag(), "missing (dccl.field).ccl.thrust_mode_tag");
         }
     };
 

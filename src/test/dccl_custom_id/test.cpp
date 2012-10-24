@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 
         encoded.clear();
         codec.encode(&encoded, mini_owtt_in);
-        std::cout << "OWTT as hex: " << goby::util::hex_encode(encoded) << std::endl;
+        std::cout << "OWTT as hex: " << dccl::hex_encode(encoded) << std::endl;
         
         codec.decode(encoded, &mini_owtt_out);
         assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());

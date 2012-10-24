@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     msg_in.set_bool_default_optional(true);
 
     msg_in.set_string_default_optional("abc123");
-    msg_in.set_bytes_default_optional(goby::util::hex_decode("00112233aabbcc1234"));
+    msg_in.set_bytes_default_optional(dccl::hex_decode("00112233aabbcc1234"));
     
     msg_in.set_enum_default_optional(ENUM_C);
     msg_in.mutable_msg_default_optional()->set_val(++i + 0.3);
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     msg_in.set_bool_default_required(true);
 
     msg_in.set_string_default_required("abc123");
-    msg_in.set_bytes_default_required(goby::util::hex_decode("00112233aabbcc1234"));
+    msg_in.set_bytes_default_required(dccl::hex_decode("00112233aabbcc1234"));
     
     msg_in.set_enum_default_required(ENUM_C);
     msg_in.mutable_msg_default_required()->set_val(++i + 0.3);
@@ -110,9 +110,9 @@ int main(int argc, char* argv[])
         msg_in.add_string_default_repeat("abc123");
 
         if(j)
-            msg_in.add_bytes_default_repeat(goby::util::hex_decode("00aabbcc"));
+            msg_in.add_bytes_default_repeat(dccl::hex_decode("00aabbcc"));
         else
-            msg_in.add_bytes_default_repeat(goby::util::hex_decode("ffeedd12"));
+            msg_in.add_bytes_default_repeat(dccl::hex_decode("ffeedd12"));
         
         msg_in.add_enum_default_repeat(static_cast<Enum1>((++i % 3) + 1));
         EmbeddedMsg1* em_msg = msg_in.add_msg_default_repeat();
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     std::cout << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes) << std::endl;
+    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
 

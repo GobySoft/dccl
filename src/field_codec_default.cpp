@@ -153,7 +153,7 @@ unsigned dccl::DCCLDefaultBoolCodec::size()
     // if field unspecified
     const unsigned NULL_VALUE = this_field()->is_required() ? 0 : 1;
     
-    return goby::util::ceil_log2(BOOL_VALUES + NULL_VALUE);
+    return dccl::ceil_log2(BOOL_VALUES + NULL_VALUE);
 }
 
 void dccl::DCCLDefaultBoolCodec::validate()
@@ -248,15 +248,15 @@ unsigned dccl::DCCLDefaultStringCodec::max_size()
 
 unsigned dccl::DCCLDefaultStringCodec::min_size()
 {
-    return goby::util::ceil_log2(MAX_STRING_LENGTH+1);
+    return dccl::ceil_log2(MAX_STRING_LENGTH+1);
 }
 
 
 void dccl::DCCLDefaultStringCodec::validate()
 {
-    require(dccl_field_options().has_max_length(), "missing (goby.field).dccl.max_length");
+    require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
-            "(goby.field).dccl.max_length must be <= " + boost::lexical_cast<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
+            "(dccl.field).max_length must be <= " + boost::lexical_cast<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
 }
 
 //
@@ -337,7 +337,7 @@ unsigned dccl::DCCLDefaultBytesCodec::min_size()
 
 void dccl::DCCLDefaultBytesCodec::validate()
 {
-    require(dccl_field_options().has_max_length(), "missing (goby.field).dccl.max_length");
+    require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
 }
 
 //

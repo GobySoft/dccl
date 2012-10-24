@@ -37,13 +37,13 @@ int main(int argc, char* argv[])
 
     dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
-    goby::util::DynamicProtobufManager::enable_compilation();
+    dccl::DynamicProtobufManager::enable_compilation();
     
     for(int i = 2; i < argc; ++i)
-        goby::util::DynamicProtobufManager::add_include_path(argv[i]);
+        dccl::DynamicProtobufManager::add_include_path(argv[i]);
     
     const google::protobuf::FileDescriptor* file_desc =
-        goby::util::DynamicProtobufManager::load_from_proto_file(argv[1]);
+        dccl::DynamicProtobufManager::load_from_proto_file(argv[1]);
 
     
     dccl::Codec dccl;

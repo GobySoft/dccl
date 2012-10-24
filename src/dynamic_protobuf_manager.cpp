@@ -21,13 +21,18 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#include <sstream>
+
 #include "dynamic_protobuf_manager.h"
+#include "logger.h"
+#include "exception.h"
 
 #include <boost/filesystem.hpp>
 
-boost::shared_ptr<goby::util::DynamicProtobufManager> goby::util::DynamicProtobufManager::inst_;
 
-const google::protobuf::FileDescriptor* goby::util::DynamicProtobufManager::add_protobuf_file(const google::protobuf::FileDescriptorProto& proto)
+boost::shared_ptr<dccl::DynamicProtobufManager> dccl::DynamicProtobufManager::inst_;
+
+const google::protobuf::FileDescriptor* dccl::DynamicProtobufManager::add_protobuf_file(const google::protobuf::FileDescriptorProto& proto)
 {
     simple_database().Add(proto);
     
@@ -35,14 +40,14 @@ const google::protobuf::FileDescriptor* goby::util::DynamicProtobufManager::add_
     return return_desc; 
 }
 
-void goby::util::DynamicProtobufManager::enable_disk_source_database()
+void dccl::DynamicProtobufManager::enable_disk_source_database()
 {
     if(disk_source_tree_)
         return;
     
     disk_source_tree_ = new google::protobuf::compiler::DiskSourceTree;
     source_database_ = new google::protobuf::compiler::SourceTreeDescriptorDatabase(disk_source_tree_);
-    error_collector_ = new GLogMultiFileErrorCollector;
+    error_collector_ = new DLogMultiFileErrorCollector;
     
     source_database_->RecordErrorsTo(error_collector_);
     disk_source_tree_->MapPath("/", "/");
@@ -51,7 +56,7 @@ void goby::util::DynamicProtobufManager::enable_disk_source_database()
 }
 
 const google::protobuf::FileDescriptor*
-goby::util::DynamicProtobufManager::load_from_proto_file(const std::string& proto_file)
+dccl::DynamicProtobufManager::load_from_proto_file(const std::string& proto_file)
 {
     if(!get_instance()->source_database_)
         throw(std::runtime_error("Must called enable_compilation() before loading proto files directly"));
@@ -69,16 +74,20 @@ goby::util::DynamicProtobufManager::load_from_proto_file(const std::string& prot
 }
 
 
-// GLogMultiFileErrorCollector
-
-void goby::util::DynamicProtobufManager::GLogMultiFileErrorCollector::AddError(const std::string & filename, int line, int column,
-                                                                               const std::string & message)
+// DLogMultiFileErrorCollector
+void dccl::DynamicProtobufManager::DLogMultiFileErrorCollector::AddError(const std::string & filename, int line, int column,
+                                                                         const std::string & message)
 {
-    // goby::glog.is(goby::common::logger::DIE) &&
-    //     goby::glog << "File: " << filename
-    //                << " has error (line: " << line << ", column: "
-    //                << column << "): "
-    //                << message << std::endl;
+    std::stringstream ss;
+    ss << "File: " << filename
+       << " has error (line: " << line << ", column: "
+       << column << ")";
+    
+    dccl::dlog.is(dccl::logger::WARN) &&
+        dccl::dlog << ss.str() << ": " << message << std::endl;
+
+    throw(dccl::Exception(ss.str()));
+
 }
 
 

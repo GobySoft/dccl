@@ -1,5 +1,5 @@
 
-set(PROTOS protobuf/logger.proto
+set(PROTOS
   protobuf/option_extensions.proto
  )
 

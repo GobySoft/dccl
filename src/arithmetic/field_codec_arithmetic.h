@@ -504,7 +504,7 @@ namespace dccl
       // probability of this least probable set of symbols
       unsigned max_size_repeated()
       {
-          using goby::util::log2;
+          using dccl::log2;
                   
           Model& model = current_model();
                   
@@ -536,7 +536,7 @@ namespace dccl
               
       unsigned min_size_repeated()
       {
-          using goby::util::log2;
+          using dccl::log2;
           const Model& model = current_model();
 
           if(model.user_model().is_adaptive())
@@ -568,7 +568,7 @@ namespace dccl
       void validate()
       {
           DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().HasExtension(arithmetic),
-                                      "missing (goby.field).dccl.arithmetic");
+                                      "missing (dccl.field).arithmetic");
 
           std::string model_name = DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
           try
@@ -577,7 +577,7 @@ namespace dccl
           }
           catch(Exception& e)
           {
-              DCCLFieldCodecBase::require(false, "no such (goby.field).dccl.arithmetic.model called \"" + model_name + "\" loaded.");
+              DCCLFieldCodecBase::require(false, "no such (dccl.field).arithmetic.model called \"" + model_name + "\" loaded.");
           }
       }
 

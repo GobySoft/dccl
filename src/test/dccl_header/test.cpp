@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     std::cout << "Try encode..." << std::endl;
     std::string bytes1;
     codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes1) << std::endl;
+    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
 
     // test that adding garbage to the end does not affect decoding
     bytes1 += std::string(10, '\0');

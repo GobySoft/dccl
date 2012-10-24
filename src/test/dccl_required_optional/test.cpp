@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
 
     BytesMsg msg_in;
 
-    msg_in.set_req_bytes(goby::util::hex_decode("88abcd1122338754"));
-    msg_in.set_opt_bytes(goby::util::hex_decode("102030adef2cb79d"));
+    msg_in.set_req_bytes(dccl::hex_decode("88abcd1122338754"));
+    msg_in.set_opt_bytes(dccl::hex_decode("102030adef2cb79d"));
 
     std::string encoded;
     codec.encode(&encoded, msg_in);

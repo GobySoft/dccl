@@ -58,11 +58,11 @@ int main(int argc, char* argv[])
     std::cout << "Try encode..." << std::endl;
     std::string bytes1, bytes2, bytes3;
     codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes for GobyMessage1 (hex): " << goby::util::hex_encode(bytes1) << std::endl;
+    std::cout << "... got bytes for GobyMessage1 (hex): " << dccl::hex_encode(bytes1) << std::endl;
     codec.encode(&bytes2, msg_in2);
-    std::cout << "... got bytes for GobyMessage2 (hex): " << goby::util::hex_encode(bytes2) << std::endl;
+    std::cout << "... got bytes for GobyMessage2 (hex): " << dccl::hex_encode(bytes2) << std::endl;
     codec.encode(&bytes3, msg_in3);
-    std::cout << "... got bytes for GobyMessage3 (hex): " << goby::util::hex_encode(bytes3) << std::endl;
+    std::cout << "... got bytes for GobyMessage3 (hex): " << dccl::hex_encode(bytes3) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
 

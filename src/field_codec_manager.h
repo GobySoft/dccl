@@ -43,7 +43,7 @@ namespace dccl
         /// \brief Add a new field codec (used for codecs operating on statically generated Protobuf messages, that is, children of google::protobuf::Message but not google::protobuf::Message itself).
         ///
         /// \tparam Codec A child of DCCLFieldCodecBase
-        /// \param name Name to use for this codec. Corresponds to (goby.field).dccl.codec="name" in .proto file.
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
         template<class Codec>
             typename boost::enable_if<
@@ -56,7 +56,7 @@ namespace dccl
         /// \brief Add a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
         ///
         /// \tparam Codec A child of DCCLFieldCodecBase
-        /// \param name Name to use for this codec. Corresponds to (goby.field).dccl.codec="name" in .proto file.
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
         template<class Codec>
             typename boost::disable_if<
@@ -70,11 +70,11 @@ namespace dccl
         ///
         /// \tparam Codec A child of DCCLFieldCodecBase
         /// \tparam type The google::protobuf::FieldDescriptor::Type enumeration that this codec works on.
-        /// \param name Name to use for this codec. Corresponds to (goby.field).dccl.codec="name" in .proto file.
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         template<class Codec, google::protobuf::FieldDescriptor::Type type>
             static void add(const std::string& name);
 
-        /// \brief Find the codec for a given field. For embedded messages, prefers (goby.field).dccl.codec (inside field) over (goby.msg).dccl.codec (inside embedded message).
+        /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
         static boost::shared_ptr<DCCLFieldCodecBase> find(
             const google::protobuf::FieldDescriptor* field)
         {

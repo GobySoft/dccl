@@ -96,16 +96,16 @@ namespace dccl
       virtual void validate()
       {
           DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_min(),
-                                      "missing (goby.field).dccl.min");
+                                      "missing (dccl.field).min");
           DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_max(),
-                                      "missing (goby.field).dccl.max");
+                                      "missing (dccl.field).max");
 
 
           // ensure given max and min fit within WireType ranges
           DCCLFieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
-                                      "(goby.field).dccl.min must be >= minimum of this field type.");
+                                      "(dccl.field).min must be >= minimum of this field type.");
           DCCLFieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
-                                      "(goby.field).dccl.max must be <= maximum of this field type.");
+                                      "(dccl.field).max must be <= maximum of this field type.");
       }
 
       Bitset encode()
@@ -131,7 +131,7 @@ namespace dccl
           if(!DCCLFieldCodecBase::this_field()->is_required())
               wire_value += 1;
 
-          wire_value = goby::util::unbiased_round(wire_value, 0);
+          wire_value = dccl::unbiased_round(wire_value, 0);
           return Bitset(size(), boost::numeric_cast<unsigned long>(wire_value));
       }
           
@@ -145,7 +145,7 @@ namespace dccl
               --t;
           }
               
-          WireType return_value = goby::util::unbiased_round(
+          WireType return_value = dccl::unbiased_round(
               t / (std::pow(10.0, precision())) + min(), precision());
               
 //              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_decode_group()) << "(DCCLDefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
@@ -159,7 +159,7 @@ namespace dccl
           // if not required field, leave one value for unspecified (always encoded as 0)
           const unsigned NULL_VALUE = DCCLFieldCodecBase::this_field()->is_required() ? 0 : 1;
               
-          return goby::util::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
+          return dccl::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
       }
             
     };
@@ -232,14 +232,18 @@ namespace dccl
     };
         
         
-    /// \brief Encodes time of day (second precision) for times represented by the string representation of boost::posix_time::ptime (e.g. obtained from goby_time<std::string>()).
+    /// \brief Encodes time of day (second precision) 
     ///
-    /// \tparam TimeType A type representing time: See the various specializations of goby_time() for allowed types.
+    /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
     template<typename TimeType>
         class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
     {
+        // must use specialization
+        BOOST_STATIC_ASSERT(sizeof(TimeType) == 0);
+        
       public:
         int32 pre_encode(const TimeType& field_value) {
+            
             throw Exception("Not Implemented - Use Specialization");
         }
 
@@ -342,7 +346,7 @@ namespace dccl
             
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_static_value(), "missing (goby.field).dccl.static_value");
+            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
         }
             
     };

@@ -67,7 +67,7 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
     std::cout << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes) << std::endl;
+    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
 

@@ -46,8 +46,8 @@
 #include "dccl/protobuf/option_extensions.pb.h"
 
 
-using goby::util::hex_encode;
-using goby::util::hex_decode;
+using dccl::hex_encode;
+using dccl::hex_decode;
 
 using namespace dccl;
 using namespace dccl::logger;
@@ -131,7 +131,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         }
         else
         {
-            throw(Exception("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
+            throw(Exception("Failed to find (dccl.msg).codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
         
         // given header of not even byte size (e.g. 01011), make even byte size (e.g. 00001011)
@@ -270,7 +270,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         }
         else
         {
-            throw(Exception("Failed to find (goby.msg).dccl.codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
+            throw(Exception("Failed to find (dccl.msg).codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
 
         dlog.is(DEBUG1) && dlog << "Successfully decoded message of type: " << desc->full_name() << std::endl;
@@ -294,9 +294,9 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
     try
     {
         if(!desc->options().GetExtension(dccl::msg).has_id())
-            throw(Exception("Missing message option `(goby.msg).dccl.id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (goby.msg).dccl.id = 3\""));
+            throw(Exception("Missing message option `(dccl.msg).id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (dccl.msg).id = 3\""));
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
-            throw(Exception("Missing message option `(goby.msg).dccl.max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (goby.msg).dccl.max_bytes = 32\""));
+            throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (dccl.msg).max_bytes = 32\""));
         
         boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
 
