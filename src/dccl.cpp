@@ -187,7 +187,7 @@ unsigned dccl::Codec::id(const std::string& bytes)
     boost::any return_value;
     id_codec()->field_decode(&these_bits, &return_value, 0);
     
-    return boost::any_cast<int32>(return_value);
+    return boost::any_cast<uint32>(return_value);
 }
 
 

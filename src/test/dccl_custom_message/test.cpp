@@ -27,8 +27,8 @@
 #include "dccl/dccl.h"
 #include "test.pb.h"
 
-#include "goby/common/time.h"
-#include "goby/util/binary.h"
+
+#include "dccl/binary.h"
 
 using dccl::operator<<;
 using dccl::Bitset;
@@ -83,17 +83,17 @@ private:
 };    
 
 class Int32RepeatedCodec :
-    public dccl::DCCLRepeatedTypedFieldCodec<goby::int32>
+    public dccl::DCCLRepeatedTypedFieldCodec<dccl::int32>
 {
 private:
     enum { REPEAT_STORAGE_BITS = 4 };    
     enum { MAX_REPEAT_SIZE = 1 << REPEAT_STORAGE_BITS }; // 2^4
 
-    goby::int32 max() { return DCCLFieldCodecBase::dccl_field_options().max(); }
-    goby::int32 min() { return DCCLFieldCodecBase::dccl_field_options().min(); }
-    goby::int32 max_repeat() { return DCCLFieldCodecBase::dccl_field_options().max_repeat(); }
+    dccl::int32 max() { return DCCLFieldCodecBase::dccl_field_options().max(); }
+    dccl::int32 min() { return DCCLFieldCodecBase::dccl_field_options().min(); }
+    dccl::int32 max_repeat() { return DCCLFieldCodecBase::dccl_field_options().max_repeat(); }
     
-    Bitset encode_repeated(const std::vector<goby::int32>& wire_values)
+    Bitset encode_repeated(const std::vector<dccl::int32>& wire_values)
         {            
             Bitset value_bits;
             int repeat_size = static_cast<int>(wire_values.size()) > max_repeat() ?
@@ -104,7 +104,7 @@ private:
             
             for(int i = 0, n = repeat_size; i < n; ++i)
             {
-                goby::int32 wire_value = wire_values[i];
+                dccl::int32 wire_value = wire_values[i];
                 wire_value -= min();
                 value_bits.append(Bitset(singular_size(), static_cast<unsigned long>(wire_value)));
             }
@@ -116,7 +116,7 @@ private:
             return out;
         }
     
-    std::vector<goby::int32> decode_repeated(Bitset* bits)
+    std::vector<dccl::int32> decode_repeated(Bitset* bits)
         {
             int repeat_size = bits->to_ulong();
             std::cout << "repeat size is " << repeat_size << std::endl;
@@ -126,10 +126,10 @@ private:
             Bitset value_bits = *bits;
             value_bits >>= REPEAT_STORAGE_BITS;
 
-            std::vector<goby::int32> out;
+            std::vector<dccl::int32> out;
             for(int i = 0; i < repeat_size; ++i)
             {
-                goby::int32 value = value_bits.to_ulong() & ((1 << singular_size()) - 1);
+                dccl::int32 value = value_bits.to_ulong() & ((1 << singular_size()) - 1);
                 value += min();
                 out.push_back(value);
                 value_bits >>= singular_size();
@@ -137,7 +137,7 @@ private:
             return out;
         }
     
-    unsigned size_repeated(const std::vector<goby::int32>& field_values)
+    unsigned size_repeated(const std::vector<dccl::int32>& field_values)
         {
             return REPEAT_STORAGE_BITS + field_values.size()*singular_size();
         }
@@ -174,9 +174,7 @@ int main(int argc, char* argv[])
     dccl::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");
     dccl::DCCLFieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
 
-    dccl::protobuf::DCCLConfig cfg;
-    cfg.set_crypto_passphrase("my_passphrase!");
-    codec.set_cfg(cfg);
+    codec.set_crypto_passphrase("my_passphrase!");
 
     CustomMsg msg_in1;
 
@@ -185,7 +183,7 @@ int main(int argc, char* argv[])
     
     codec.info(msg_in1.GetDescriptor(), &std::cout);    
     std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
-    codec.validate(msg_in1.GetDescriptor());
+    codec.load(msg_in1.GetDescriptor());
     std::cout << "Try encode..." << std::endl;
     std::string bytes1;
     codec.encode(&bytes1, msg_in1);
@@ -204,7 +202,7 @@ int main(int argc, char* argv[])
 
     codec.info(msg_in2.GetDescriptor(), &std::cout);    
     std::cout << "Message in:\n" << msg_in2.DebugString() << std::endl;
-    codec.validate(msg_in2.GetDescriptor());
+    codec.load(msg_in2.GetDescriptor());
     std::cout << "Try encode..." << std::endl;
     std::string bytes2;
     codec.encode(&bytes2, msg_in2);

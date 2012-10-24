@@ -29,6 +29,7 @@ inline std::ostream& stream_assert(std::ostream & os)
 {
     bool failed_to_short_circuit_logging_statement = false;
     assert(failed_to_short_circuit_logging_statement);
+    return os;
 }
 
 

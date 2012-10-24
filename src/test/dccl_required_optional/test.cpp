@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     
     dccl::Codec codec;
     
-    codec.validate<BytesMsg>();
+    codec.load<BytesMsg>();
     codec.info<BytesMsg>(&dccl::dlog);
 
     BytesMsg msg_in;

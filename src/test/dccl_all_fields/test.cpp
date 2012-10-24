@@ -23,13 +23,13 @@
 
 // tests all protobuf types with _default codecs, repeat and non repeat
 
+#include <fstream>
+
 #include <google/protobuf/descriptor.pb.h>
 
 #include "dccl/dccl.h"
 #include "test.pb.h"
-
-#include "goby/common/time.h"
-#include "goby/util/binary.h"
+#include "dccl/binary.h"
 
 using dccl::operator<<;
 
@@ -37,9 +37,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::protobuf::DCCLConfig cfg;
     dccl::Codec codec;
-    codec.set_cfg(cfg);
 
     TestMsg msg_in;
     int i = 0;
@@ -129,7 +127,7 @@ int main(int argc, char* argv[])
     
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
      
-    codec.validate(msg_in.GetDescriptor());
+    codec.load(msg_in.GetDescriptor());
 
     std::cout << "Try encode..." << std::endl;
     std::string bytes;

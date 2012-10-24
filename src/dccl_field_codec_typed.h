@@ -263,7 +263,7 @@ namespace dccl
           try
           {
               std::vector<WireType> in;
-              for (typename std::vector<WireType>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
+              for (std::vector<boost::any>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
               {
                   in.push_back(boost::any_cast<WireType>(*it));
               }
@@ -316,7 +316,7 @@ namespace dccl
           try
           {
               std::vector<WireType> in;
-              for (typename std::vector<WireType>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
+              for (std::vector<boost::any>::const_iterator it = wire_values.begin(); it != wire_values.end(); ++it)
               {
                   in.push_back(boost::any_cast<WireType>(*it));
               }

@@ -234,6 +234,18 @@ namespace dccl
             return msg;
         }
 
+        template<typename GoogleProtobufMessagePointer>
+            GoogleProtobufMessagePointer decode(std::string* bytes)
+        {
+            GoogleProtobufMessagePointer msg = 
+                decode<GoogleProtobufMessagePointer>(*bytes);
+            
+            unsigned last_size = size(*msg);
+            bytes->erase(0, last_size);
+    
+            return msg;
+        }
+        
       private:
         Codec(const Codec&);
         Codec& operator= (const Codec&);
@@ -245,7 +257,7 @@ namespace dccl
 
         boost::shared_ptr<DCCLFieldCodecBase> id_codec() const
         {
-            return DCCLFieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_INT32,
+            return DCCLFieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
                                                id_codec_);
         }
         

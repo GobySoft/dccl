@@ -40,9 +40,9 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    codec.validate<GobyMessage1>();
-    codec.validate<GobyMessage2>();
-    codec.validate<GobyMessage3>();
+    codec.load<GobyMessage1>();
+    codec.load<GobyMessage2>();
+    codec.load<GobyMessage3>();
 
     codec.info<GobyMessage1>(&dccl::dlog);
     codec.info<GobyMessage2>(&dccl::dlog);
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
 void decode(const std::string& bytes)
 {
-    unsigned dccl_id = codec.id_from_encoded(bytes);
+    unsigned dccl_id = codec.id(bytes);
     
     if(dccl_id == codec.id<GobyMessage1>())
     {

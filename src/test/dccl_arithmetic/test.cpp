@@ -30,8 +30,8 @@
 
 #include "test.pb.h"
 
-#include "goby/common/time.h"
-#include "goby/util/binary.h"
+
+#include "dccl/binary.h"
 
 using dccl::operator<<;
 
@@ -58,7 +58,7 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
     
     codec.info(msg_in.GetDescriptor(), &std::cout);
 
-    codec.validate(msg_in.GetDescriptor());
+    codec.load(msg_in.GetDescriptor());
     
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
 
@@ -322,13 +322,13 @@ int main(int argc, char* argv[])
         
 
         // pick some endpoints
-        goby::int32 low = -(rand() % std::numeric_limits<goby::int32>::max());
-        goby::int32 high = rand() % std::numeric_limits<goby::int32>::max();
+        dccl::int32 low = -(rand() % std::numeric_limits<dccl::int32>::max());
+        dccl::int32 high = rand() % std::numeric_limits<dccl::int32>::max();
 
         std::cout << "low: " << low << ", high: " << high << std::endl;
 
         // number of symbols
-        goby::int32 symbols = rand() % 1000 + 10;
+        dccl::int32 symbols = rand() % 1000 + 10;
         
         std::cout << "symbols: " << symbols << std::endl;
         
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
         {
 //            std::cout << "j: " << j << std::endl;
 
-            goby::int32 remaining_range = high-model.value_bound(j-1);
+            dccl::int32 remaining_range = high-model.value_bound(j-1);
             model.add_value_bound(model.value_bound(j-1) + rand() % (remaining_range/symbols-j) +1);
             model.add_frequency(rand() % each_max_freq + 1);            
         }

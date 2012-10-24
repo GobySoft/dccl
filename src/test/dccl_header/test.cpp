@@ -27,8 +27,8 @@
 #include "dccl/dccl_field_codec_default.h"
 #include "test.pb.h"
 
-#include "goby/common/time.h"
-#include "goby/util/binary.h"
+
+#include "dccl/binary.h"
 
 using dccl::operator<<;
 
@@ -43,21 +43,23 @@ int main(int argc, char* argv[])
     
     
     dccl::Codec codec;
-    dccl::protobuf::DCCLConfig cfg;
-    codec.set_cfg(cfg);
 
     GobyMessage msg_in1;
 
     msg_in1.set_telegram("hello!");
-    msg_in1.mutable_header()->set_time(
-        boost::lexical_cast<std::string>(boost::posix_time::second_clock::universal_time()));
+
+    timeval t;
+    gettimeofday(&t, 0);
+    dccl::int64 now = 1000000 * t.tv_sec;
+    
+    msg_in1.mutable_header()->set_time(now);
     msg_in1.mutable_header()->set_source_platform("topside");
     msg_in1.mutable_header()->set_dest_platform("unicorn");
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
     
     codec.info(msg_in1.GetDescriptor(), &std::cout);    
     std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
-    codec.validate(msg_in1.GetDescriptor());
+    codec.load(msg_in1.GetDescriptor());
     std::cout << "Try encode..." << std::endl;
     std::string bytes1;
     codec.encode(&bytes1, msg_in1);

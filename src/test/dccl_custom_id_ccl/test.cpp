@@ -45,7 +45,7 @@ private:
     unsigned size()
         { return MINI_ID_SIZE; }
     
-    void validate()
+    void.load()
         { }
     
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
     codec.add_id_codec<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
     codec.set_id_codec("mini_id_codec");    
 
-    codec.validate<MiniUser>();
+    codec.load<MiniUser>();
     codec.info<MiniUser>(&dccl::dlog);    
 
     MiniUser mini_user_msg_in, mini_user_msg_out;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     codec.decode(encoded, &mini_user_msg_out);
     assert(mini_user_msg_out.SerializeAsString() == mini_user_msg_in.SerializeAsString());
 
-    codec.validate<MiniOWTT>();
+    codec.load<MiniOWTT>();
     codec.info<MiniOWTT>(&dccl::dlog);
 
     MiniOWTT mini_owtt_in, mini_owtt_out; 
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     codec.decode(encoded, &mini_owtt_out);
     assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());
     
-    codec.validate<MiniAbort>();
+    codec.load<MiniAbort>();
     codec.info<MiniAbort>(&dccl::dlog);
 
     MiniAbort mini_abort_in, mini_abort_out; 
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     }
     codec.load_shared_library_codecs(dl_handle);
     
-    codec.validate<NormalDCCL>();
+    codec.load<NormalDCCL>();
     codec.info<NormalDCCL>(&dccl::dlog);
     NormalDCCL normal_msg, normal_msg_out;
     normal_msg.set_a(123);

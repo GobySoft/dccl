@@ -34,12 +34,12 @@ namespace dccl {
       DEBUG1 = 1<<3,
       DEBUG2 = 1<<4,
       DEBUG3 = 1<<5,
-      ALL = DEBUG3 | DEBUG3-1,
-      WARN_PLUS = WARN | WARN - 1,
-      INFO_PLUS = INFO | INFO - 1,
-      DEBUG1_PLUS = DEBUG1 | DEBUG1 - 1,
-      DEBUG2_PLUS = DEBUG2 | DEBUG2 - 1,
-      DEBUG3_PLUS = DEBUG3 | DEBUG3 - 1
+      ALL = DEBUG3 | (DEBUG3-1),
+      WARN_PLUS = WARN | (WARN - 1),
+      INFO_PLUS = INFO | (INFO - 1),
+      DEBUG1_PLUS = DEBUG1 | (DEBUG1 - 1),
+      DEBUG2_PLUS = DEBUG2 | (DEBUG2 - 1),
+      DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1)
   };
   
  }

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     dccl::Codec codec;
 
     ShortIDMsg short_id_msg;
-    codec.validate(short_id_msg.GetDescriptor());
+    codec.load(short_id_msg.GetDescriptor());
     codec.info(short_id_msg.GetDescriptor(), &dccl::dlog);
 
     std::string encoded;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     codec.decode(encoded, &short_id_msg);
 
     LongIDMsg long_id_msg;
-    codec.validate(long_id_msg.GetDescriptor());
+    codec.load(long_id_msg.GetDescriptor());
     codec.info(long_id_msg.GetDescriptor(), &dccl::dlog);
     assert(codec.size(long_id_msg) == 2);
     codec.encode(&encoded, long_id_msg);
@@ -52,14 +52,14 @@ int main(int argc, char* argv[])
     
 
     ShortIDEdgeMsg short_id_edge_msg;
-    codec.validate(short_id_edge_msg.GetDescriptor());
+    codec.load(short_id_edge_msg.GetDescriptor());
     codec.info(short_id_edge_msg.GetDescriptor(), &dccl::dlog);
     assert(codec.size(short_id_edge_msg) == 1);
     codec.encode(&encoded, short_id_edge_msg);
     codec.decode(encoded, &short_id_edge_msg);
 
     LongIDEdgeMsg long_id_edge_msg;
-    codec.validate(long_id_edge_msg.GetDescriptor());
+    codec.load(long_id_edge_msg.GetDescriptor());
     codec.info(long_id_edge_msg.GetDescriptor(), &dccl::dlog);
     codec.encode(&encoded, long_id_edge_msg);
     codec.decode(encoded, &long_id_edge_msg);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     // should fail validation
     try
     {
-        codec.validate(too_long_id_msg.GetDescriptor());
+        codec.load(too_long_id_msg.GetDescriptor());
         assert(false);
     }
     catch(dccl::Exception& e)
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     
 
     ShortIDMsgWithData short_id_msg_with_data;
-    codec.validate(short_id_msg_with_data.GetDescriptor());
+    codec.load(short_id_msg_with_data.GetDescriptor());
     codec.info(short_id_msg_with_data.GetDescriptor(), &dccl::dlog);
 
     short_id_msg_with_data.set_in_head(42);

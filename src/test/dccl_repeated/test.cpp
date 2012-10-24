@@ -23,12 +23,14 @@
 
 // tests functionality of std::list<const google::protobuf::Message*> calls
 
+
+#include <boost/foreach.hpp>
+
 #include "dccl/dccl.h"
 #include "dccl/dccl_field_codec_default.h"
-#include "test.pb.h"
+#include "dccl/binary.h"
 
-#include "goby/common/time.h"
-#include "goby/util/binary.h"
+#include "test.pb.h"
 
 using dccl::operator<<;
 
@@ -60,32 +62,51 @@ int main(int argc, char* argv[])
     descs.push_back(msg_in3.GetDescriptor());    
     descs.push_back(msg_in4.GetDescriptor());
     
-    codec.info_repeated(descs, &std::cout);    
-
-    BOOST_FOREACH(const google::protobuf::Message* p, msgs)
+    for(std::list<const google::protobuf::Descriptor*>::const_iterator it = descs.begin(),
+            end = descs.end(); it != end; ++it)
     {
-        static int i = 0;
-        std::cout << "Message " << ++i << " in:\n" << p->DebugString() << std::endl;
+        codec.info(*it, &std::cout);
+        codec.load(*it);
     }
     
-    codec.validate_repeated(descs);
+    std::string bytes1;
+    for(std::list<const google::protobuf::Message*>::const_iterator it = msgs.begin(),
+            end = msgs.end(); it != end; ++it)
+    {
+        static int i = 0;
+        std::cout << "Message " << ++i << " in:\n" << (*it)->DebugString() << std::endl;
+        std::cout << "Try encode..." << std::endl;
+        codec.encode(&bytes1, *(*it));
+    }    
+    bytes1 += std::string(4, '\0');    
+
     
-    std::cout << "Try encode..." << std::endl;
-    std::string bytes1 = codec.encode_repeated(msgs) + std::string(4, '\0');
     std::cout << "... got bytes (hex): " << goby::util::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
+
+
     
-    std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out = codec.decode_repeated<boost::shared_ptr<google::protobuf::Message> >(bytes1);
+    std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
+    try
+    {
+        while(!bytes1.empty())
+            msgs_out.push_back(codec.decode<boost::shared_ptr<google::protobuf::Message> >(&bytes1));
+    }
+    catch(dccl::Exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
     std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
 
     assert(msgs.size() == msgs_out.size());
     
-    BOOST_FOREACH(boost::shared_ptr<google::protobuf::Message> p, msgs_out)
+    for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
+            end = msgs_out.end(); it != end; ++it)
     {
         static int i = 0;
-        std::cout << "... got Message " << ++i << " out:\n" << p->DebugString() << std::endl;
-        assert((*in_it)->SerializeAsString() == p->SerializeAsString());
+        std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
+        assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
         ++in_it;
     }
     

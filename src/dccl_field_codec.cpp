@@ -50,6 +50,8 @@ void dccl::DCCLFieldCodecBase::base_encode(Bitset* bits,
     field_encode(bits,
                  DCCLTypeHelper::find(field_value.GetDescriptor())->get_value(field_value),
                  0);
+
+    root_message_ = 0;
 }
 
 void dccl::DCCLFieldCodecBase::field_encode(Bitset* bits,
@@ -93,6 +95,8 @@ void dccl::DCCLFieldCodecBase::base_size(unsigned* bit_size,
     root_message_ = &msg;
     part_ = part;
     field_size(bit_size, &msg, 0);
+
+    root_message_ = 0;
 }
 
 void dccl::DCCLFieldCodecBase::field_size(unsigned* bit_size,
@@ -130,6 +134,8 @@ void dccl::DCCLFieldCodecBase::base_decode(Bitset* bits,
     root_message_ = field_value;
     boost::any value(field_value);
     field_decode(bits, &value, 0);
+    
+    root_message_ = 0;
 }
 
 
@@ -147,7 +153,8 @@ void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
     if(field)
         dlog.is(DEBUG2) && dlog << "Starting decode for field: " << field->DebugString() << std::flush;
     
-    dlog.is(DEBUG3) && dlog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
+    if(root_message())
+        dlog.is(DEBUG3) && dlog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
     
     Bitset these_bits(bits);
 
