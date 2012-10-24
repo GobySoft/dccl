@@ -40,16 +40,20 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in,
               bool set_model = true)
 {
-    dccl::Codec codec;
+    static int i = 0;
+    
+    static dccl::Codec codec;
 
-    void* dl_handle = dlopen("libdccl_arithmetic" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
-    if(!dl_handle)
+    if(!i)
     {
-        std::cerr << "Failed to open libdccl_arithmetic" SHARED_LIBRARY_SUFFIX << std::endl;
-        exit(1);
-    }
-    codec.load_library(dl_handle);
-
+        void* dl_handle = dlopen("libdccl_arithmetic" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
+        if(!dl_handle)
+        {
+            std::cerr << "Failed to open libdccl_arithmetic" SHARED_LIBRARY_SUFFIX << std::endl;
+            exit(1);
+        }
+        codec.load_library(dl_handle);
+    }    
     
     if(set_model)
     {
@@ -77,6 +81,7 @@ void run_test(dccl::protobuf::ArithmeticModel& model,
     std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
     
     assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
+    ++i;
 }
 
 

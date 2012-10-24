@@ -27,6 +27,7 @@
 
 #include <boost/any.hpp>
 #include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/message.h>
 
 
@@ -41,116 +42,14 @@ namespace dccl
         virtual std::string as_str() { return "TYPE_UNKNOWN"; }   
     };        
         
-    template<google::protobuf::FieldDescriptor::Type> class FromProtoType { };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_DOUBLE>
-        : public FromProtoTypeBase
+    template<google::protobuf::FieldDescriptor::Type t>
+        class FromProtoType : public FromProtoTypeBase
     {
       public:
-        std::string as_str() { return "TYPE_DOUBLE"; }
+        std::string as_str()
+        { return google::protobuf::FieldDescriptorProto::Type_Name(static_cast<google::protobuf::FieldDescriptorProto::Type>(t)); }
+        
     };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_FLOAT>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_FLOAT"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_INT64>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_INT64"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_UINT64>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_UINT64"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_INT32>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_INT32"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_FIXED64>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_FIXED64"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_FIXED32>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_FIXED32"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_BOOL>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_BOOL"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_STRING>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_STRING"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_GROUP>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_GROUP"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_MESSAGE>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_MESSAGE"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_BYTES>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_BYTES"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_UINT32>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_UINT32"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_ENUM>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_ENUM"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_SFIXED32>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_SFIXED32"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_SFIXED64>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_SFIXED64"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_SINT32>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_SINT32"; }
-    };
-    template<> class FromProtoType<google::protobuf::FieldDescriptor::TYPE_SINT64>
-        : public FromProtoTypeBase
-    {
-      public:
-        std::string as_str() { return "TYPE_SINT64"; }
-    };
-
         
     /// \brief Provides various representations of a google::protobuf::FieldDescriptor::CppType enumeration, and ways to access the google::protobuf::Reflection object for a given type.
     class FromProtoCppTypeBase
