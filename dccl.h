@@ -28,6 +28,6 @@
 #ifndef DCCLCOURTESY20091211H
 #define DCCLCOURTESY20091211H
 
-#include "dccl/dccl.h"
+#include "dccl/codec.h"
 
 #endif

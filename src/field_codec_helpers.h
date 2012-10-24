@@ -25,7 +25,7 @@
 #ifndef DCCLFIELDCODECHELPERS20110825H
 #define DCCLFIELDCODECHELPERS20110825H
 
-#include "dccl_common.h"
+#include "common.h"
 
 namespace dccl
 {

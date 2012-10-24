@@ -40,12 +40,12 @@
 #include "dynamic_protobuf_manager.h"
 #include "logger.h"
 #include "protobuf_cpp_type_helpers.h"
-#include "dccl_exception.h"
-#include "dccl_field_codec.h"
-#include "dccl_field_codec_fixed.h"
-#include "dccl_field_codec_default.h"
-#include "dccl_type_helper.h"
-#include "dccl_field_codec_manager.h"
+#include "exception.h"
+#include "field_codec.h"
+#include "field_codec_fixed.h"
+#include "field_codec_default.h"
+#include "type_helper.h"
+#include "field_codec_manager.h"
  
 /// Objects pertaining to acoustic communications (acomms)
 namespace dccl

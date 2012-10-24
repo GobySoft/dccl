@@ -25,7 +25,7 @@
 #ifndef DCCLFIELDCODECTYPED20120312H
 #define DCCLFIELDCODECTYPED20120312H
 
-#include "dccl_field_codec.h"
+#include "field_codec.h"
 
 namespace dccl
 {

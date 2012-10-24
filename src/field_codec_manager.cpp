@@ -22,7 +22,7 @@
 
 
 
-#include "dccl_field_codec_manager.h"
+#include "field_codec_manager.h"
 
 std::map<google::protobuf::FieldDescriptor::Type, dccl::DCCLFieldCodecManager::InsideMap> dccl::DCCLFieldCodecManager::codecs_;
 

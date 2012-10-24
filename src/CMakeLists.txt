@@ -7,14 +7,14 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 add_library(dccl 
   logger.cpp
-  dccl.cpp
-  dccl_field_codec.cpp
-  dccl_field_codec_helpers.cpp
-  dccl_field_codec_default.cpp
-  dccl_field_codec_default_message.cpp
-  dccl_field_codec_manager.cpp
-  dccl_type_helper.cpp
-  dccl_bitset.cpp
+  codec.cpp
+  field_codec.cpp
+  field_codec_helpers.cpp
+  field_codec_default.cpp
+  field_codec_default_message.cpp
+  field_codec_manager.cpp
+  type_helper.cpp
+  bitset.cpp
   dynamic_protobuf_manager.cpp
   
   ${PROTO_SRCS} ${PROTO_HDRS}

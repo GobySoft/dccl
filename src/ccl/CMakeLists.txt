@@ -6,7 +6,7 @@ set(CCL_PROTOS
 protobuf_generate_cpp(CCL_PROTO_SRCS CCL_PROTO_HDRS ${CCL_PROTOS})
 
 add_library(dccl_ccl_compat SHARED
-  dccl_ccl_compatibility.cpp
+  ccl_compatibility.cpp
   WhoiUtil.cpp
   ${CCL_PROTO_SRCS}
   ${CCL_PROTO_HDRS}

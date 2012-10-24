@@ -24,7 +24,7 @@
 
 // tests fixed id header
 
-#include "dccl/dccl.h"
+#include "dccl/codec.h"
 #include "test.pb.h"
 
 using dccl::operator<<;

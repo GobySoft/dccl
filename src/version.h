@@ -21,37 +21,20 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#ifndef VERSION20110304H
+#define VERSION20110304H
 
-// tests required versus optional encoding of fields using a presence bit
+#include <string>
 
-#include "dccl/codec.h"
-#include "test.pb.h"
+#define DCCL_VERSION_MAJOR @DCCL_VERSION_MAJOR@
+#define DCCL_VERSION_MINOR @DCCL_VERSION_MINOR@
+#define DCCL_VERSION_PATCH @DCCL_VERSION_PATCH@
 
-using dccl::operator<<;
-
-int main(int argc, char* argv[])
+namespace dccl
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
-    dccl::Codec codec;
-    
-    codec.load<BytesMsg>();
-    codec.info<BytesMsg>(&dccl::dlog);
-
-    BytesMsg msg_in;
-
-    msg_in.set_req_bytes(goby::util::hex_decode("88abcd1122338754"));
-    msg_in.set_opt_bytes(goby::util::hex_decode("102030adef2cb79d"));
-
-    std::string encoded;
-    codec.encode(&encoded, msg_in);
-    
-    BytesMsg msg_out;
-    codec.decode(encoded, &msg_out);
-
-    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-    
-    
-    std::cout << "all tests passed" << std::endl;
+    const std::string VERSION_STRING = "@DCCL_VERSION@";
+    const std::string VERSION_DATE = "@DCCL_VERSION_DATE@";
+    const std::string COMPILE_DATE = "@DCCL_COMPILE_DATE@";
 }
 
+#endif

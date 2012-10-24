@@ -25,8 +25,8 @@
 #ifndef DCCLFIELDCODECDEFAULTMESSAGE20110510H
 #define DCCLFIELDCODECDEFAULTMESSAGE20110510H
 
-#include "dccl_field_codec.h"
-#include "dccl_field_codec_manager.h"
+#include "field_codec.h"
+#include "field_codec_manager.h"
 
 #include "dccl/protobuf/option_extensions.pb.h"
 

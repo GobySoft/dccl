@@ -22,7 +22,7 @@
 
 
 
-#include "dccl_type_helper.h"
+#include "type_helper.h"
 
 #include <boost/assign.hpp>
 

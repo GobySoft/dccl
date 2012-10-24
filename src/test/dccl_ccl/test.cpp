@@ -26,9 +26,9 @@
 
 #include <boost/date_time.hpp>
 
-#include "dccl/dccl.h"
-#include "dccl/dccl_field_codec.h"
-#include "dccl/ccl/dccl_ccl_compatibility.h"
+#include "dccl/codec.h"
+#include "dccl/field_codec.h"
+#include "dccl/ccl/ccl_compatibility.h"
 #include "test.pb.h"
 
 

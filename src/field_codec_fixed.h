@@ -25,7 +25,7 @@
 #ifndef DCCLFIELDCODEC20110510H
 #define DCCLFIELDCODEC20110510H
 
-#include "dccl_field_codec_typed.h"
+#include "field_codec_typed.h"
 
 namespace dccl
 {

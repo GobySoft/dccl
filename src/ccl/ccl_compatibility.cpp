@@ -25,9 +25,9 @@
 
 #include <boost/date_time.hpp>
 
-#include "dccl_ccl_compatibility.h"
+#include "ccl_compatibility.h"
 #include "WhoiUtil.h"
-#include "dccl/dccl.h"
+#include "dccl/codec.h"
 
 // shared library load
 

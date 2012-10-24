@@ -21,8 +21,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "dccl_bitset.h"
-#include "dccl/dccl.h"
+#include "bitset.h"
+#include "dccl/codec.h"
 
 using namespace dccl::logger;
 

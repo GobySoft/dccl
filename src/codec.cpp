@@ -40,8 +40,8 @@
 #endif // CRYPTOPP_PATH_USES_PLUS_SIGN
 #endif // HAS_CRYPTOPP
 
-#include "dccl/dccl.h"
-#include "dccl_field_codec_default.h"
+#include "dccl/codec.h"
+#include "field_codec_default.h"
 
 #include "dccl/protobuf/option_extensions.pb.h"
 

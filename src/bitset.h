@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <limits>
 
-#include "dccl_exception.h"
+#include "exception.h"
 
 namespace dccl
 {

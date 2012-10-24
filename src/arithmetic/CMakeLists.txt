@@ -9,7 +9,7 @@ protobuf_generate_cpp(ARITHMETIC_PROTO_SRCS
 
 
 add_library(dccl_arithmetic SHARED
-  dccl_field_codec_arithmetic.cpp
+  field_codec_arithmetic.cpp
   ${ARITHMETIC_PROTO_SRCS}
   ${ARITHMETIC_PROTO_HDRS}
 )

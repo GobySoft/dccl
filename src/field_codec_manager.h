@@ -25,8 +25,8 @@
 #ifndef DCCLFieldCodecManager20110405H
 #define DCCLFieldCodecManager20110405H
 
-#include "dccl_type_helper.h"
-#include "dccl_field_codec.h"
+#include "type_helper.h"
+#include "field_codec.h"
 #include "dccl/logger.h"
 
 namespace dccl

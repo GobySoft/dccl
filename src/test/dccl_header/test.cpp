@@ -24,8 +24,8 @@
 
 // tests proper encoding of standard Goby header
 
-#include "dccl/dccl.h"
-#include "dccl/dccl_field_codec_default.h"
+#include "dccl/codec.h"
+#include "dccl/field_codec_default.h"
 #include "test.pb.h"
 
 

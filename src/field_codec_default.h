@@ -44,9 +44,9 @@
 
 #include "sci.h"
 
-#include "dccl_field_codec_default_message.h"
-#include "dccl_field_codec_fixed.h"
-#include "dccl_field_codec.h"
+#include "field_codec_default_message.h"
+#include "field_codec_fixed.h"
+#include "field_codec.h"
 
 namespace dccl
 {

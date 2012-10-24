@@ -24,8 +24,8 @@
 
 // tests usage of a custom DCCL ID codec
 
-#include "dccl/dccl.h"
-#include "dccl/dccl_field_codec.h"
+#include "dccl/codec.h"
+#include "dccl/field_codec.h"
 #include "test.pb.h"
 
 using dccl::operator<<;

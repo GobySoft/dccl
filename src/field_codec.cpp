@@ -22,9 +22,9 @@
 
 
 
-#include "dccl_field_codec.h"
-#include "dccl_exception.h"
-#include "dccl/dccl.h"
+#include "field_codec.h"
+#include "exception.h"
+#include "dccl/codec.h"
 
 dccl::MessageHandler::MessagePart dccl::DCCLFieldCodecBase::part_ =
     dccl::MessageHandler::BODY;

@@ -33,7 +33,7 @@
 #include <boost/bimap.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "dccl/dccl_field_codec_typed.h"
+#include "dccl/field_codec_typed.h"
 
 #include "dccl/arithmetic/protobuf/arithmetic_extensions.pb.h"
 #include "dccl/arithmetic/protobuf/arithmetic.pb.h"

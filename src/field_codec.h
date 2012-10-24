@@ -34,11 +34,11 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor.h>
 
-#include "dccl_common.h"
-#include "dccl_exception.h"
+#include "common.h"
+#include "exception.h"
 #include "dccl/protobuf/option_extensions.pb.h"
-#include "dccl_type_helper.h"
-#include "dccl_field_codec_helpers.h"
+#include "type_helper.h"
+#include "field_codec_helpers.h"
 
 namespace dccl
 {

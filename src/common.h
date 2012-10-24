@@ -25,7 +25,7 @@
 #ifndef DCCLConstants20091211H
 #define DCCLConstants20091211H
 
-#include "dccl/dccl_bitset.h"
+#include "dccl/bitset.h"
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>

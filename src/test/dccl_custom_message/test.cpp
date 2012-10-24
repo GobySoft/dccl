@@ -25,7 +25,7 @@
 // tests custom message codec
 // tests cryptography
 
-#include "dccl/dccl.h"
+#include "dccl/codec.h"
 #include "test.pb.h"
 
 

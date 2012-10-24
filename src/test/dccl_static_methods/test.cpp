@@ -24,7 +24,7 @@
 
 // tests receiving one of several static types
 
-#include "dccl/dccl.h"
+#include "dccl/codec.h"
 #include "test.pb.h"
 
 

@@ -24,7 +24,7 @@
 #ifndef DCCLCCLCOMPATIBILITY20120426H
 #define DCCLCCLCOMPATIBILITY20120426H
 
-#include "dccl/dccl_field_codec_default.h"
+#include "dccl/field_codec_default.h"
 #include "dccl/ccl/protobuf/ccl.pb.h"
 #include "dccl/ccl/protobuf/ccl_extensions.pb.h"
 

@@ -22,8 +22,8 @@
 
 
 
-#include "dccl_field_codec_helpers.h"
-#include "dccl_field_codec.h"
+#include "field_codec_helpers.h"
+#include "field_codec.h"
 
 std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageHandler::field_;
 std::vector<const google::protobuf::Descriptor*> dccl::MessageHandler::desc_;

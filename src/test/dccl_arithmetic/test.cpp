@@ -26,8 +26,8 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/dccl.h"
-#include "dccl/arithmetic/dccl_field_codec_arithmetic.h"
+#include "dccl/codec.h"
+#include "dccl/arithmetic/field_codec_arithmetic.h"
 
 #include "test.pb.h"
 
