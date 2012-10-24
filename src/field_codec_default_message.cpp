@@ -24,7 +24,6 @@
 
 #include "dccl/codec.h"
 #include "field_codec_default_message.h"
-#include "dynamic_protobuf_manager.h"
 
 using dccl::dlog;
 
