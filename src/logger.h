@@ -1,19 +1,25 @@
-// Copyright 2012- DCCL Developers Team (https://launchpad.net/~dccl-dev)
+// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+//                     Massachusetts Institute of Technology (2007-)
+//                     Woods Hole Oceanographic Institution (2007-)
+//                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
+// 
 //
-// This file is part of the DCCL Library.
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
 //
-// The DCCL Library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
+// DCCL is free software: you can redistribute them and/or modify
+// them under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The DCCL Library is distributed in the hope that they will be useful,
+// DCCL is distributed in the hope that they will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
 
 
 #ifndef DCCLLOGGER20121009H
