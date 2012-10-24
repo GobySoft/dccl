@@ -44,14 +44,14 @@ extern "C"
     {
         using namespace dccl;
         
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<int32> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<int64> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<uint32> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<uint64> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<double> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<float> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<bool> >("_arithmetic");
-        DCCLFieldCodecManager::add<DCCLArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<int32> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<int64> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<uint32> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<uint64> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<double> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<float> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<bool> >("_arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
     }
 }
 

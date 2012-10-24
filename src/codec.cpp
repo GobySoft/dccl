@@ -66,7 +66,7 @@ const std::string dccl::Codec::DEFAULT_CODEC_NAME = "";
 dccl::Codec::Codec(const std::string& dccl_id_codec)
     : id_codec_(dccl_id_codec)
 {
-    DCCLFieldCodecManager::add<DCCLDefaultIdentifierCodec>("_default_id_codec");
+    FieldCodecManager::add<DefaultIdentifierCodec>("_default_id_codec");
     // make sure the id codec exists
     id_codec();
     set_default_codecs();
@@ -75,24 +75,22 @@ dccl::Codec::Codec(const std::string& dccl_id_codec)
 void dccl::Codec::set_default_codecs()
 {
     using google::protobuf::FieldDescriptor;
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<double> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<float> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultBoolCodec>(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<int32> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<int64> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<uint32> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultNumericFieldCodec<uint64> >(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultStringCodec, FieldDescriptor::TYPE_STRING>(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultEnumCodec>(DEFAULT_CODEC_NAME);
-    DCCLFieldCodecManager::add<DCCLDefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<double> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<float> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultBoolCodec>(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<int32> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<int64> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<uint32> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultEnumCodec>(DEFAULT_CODEC_NAME);
+    FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(DEFAULT_CODEC_NAME);
 
-//    DCCLFieldCodecManager::add<DCCLTimeCodec<std::string> >("_time");
-    DCCLFieldCodecManager::add<DCCLTimeCodec<uint64> >("_time");
-    DCCLFieldCodecManager::add<DCCLTimeCodec<double> >("_time");
+    FieldCodecManager::add<TimeCodec<uint64> >("_time");
+    FieldCodecManager::add<TimeCodec<double> >("_time");
 
-    DCCLFieldCodecManager::add<DCCLStaticCodec<std::string> >("_static"); 
-    DCCLFieldCodecManager::add<DCCLModemIdConverterCodec>("_platform<->modem_id");
+    FieldCodecManager::add<StaticCodec<std::string> >("_static"); 
 }
 
 
@@ -119,8 +117,8 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         
         Bitset body_bits;
         
-        boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
-        boost::shared_ptr<FromProtoCppTypeBase> helper = DCCLTypeHelper::find(desc);
+        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+        boost::shared_ptr<FromProtoCppTypeBase> helper = TypeHelper::find(desc);
 
         if(codec)
         {
@@ -214,8 +212,8 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         
         dlog.is(DEBUG1) && dlog << "Type name: " << desc->full_name() << std::endl;
         
-        boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
-        boost::shared_ptr<FromProtoCppTypeBase> helper = DCCLTypeHelper::find(desc);
+        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+        boost::shared_ptr<FromProtoCppTypeBase> helper = TypeHelper::find(desc);
 
         
         unsigned head_size_bits, body_size_bits;
@@ -298,7 +296,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
             throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (dccl.msg).max_bytes = 32\""));
         
-        boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
+        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
         unsigned dccl_id = id(desc);
         unsigned head_size_bits, body_size_bits;
@@ -346,7 +344,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
+    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
     
     unsigned dccl_id = id(desc);
     unsigned head_size_bits;
@@ -368,7 +366,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* o
 {
     try
     {   
-        boost::shared_ptr<DCCLFieldCodecBase> codec = DCCLFieldCodecManager::find(desc);
+        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
         unsigned config_head_bit_size, body_bit_size;
         codec->base_max_size(&config_head_bit_size, desc, MessageHandler::HEAD);

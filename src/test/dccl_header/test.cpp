@@ -37,11 +37,7 @@ using dccl::operator<<;
 
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
-    dccl::DCCLModemIdConverterCodec::add("unicorn", 3);
-    dccl::DCCLModemIdConverterCodec::add("topside", 1);
-    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
     
     dccl::Codec codec;
 
@@ -54,8 +50,8 @@ int main(int argc, char* argv[])
     dccl::int64 now = 1000000 * t.tv_sec;
     
     msg_in1.mutable_header()->set_time(now);
-    msg_in1.mutable_header()->set_source_platform("topside");
-    msg_in1.mutable_header()->set_dest_platform("unicorn");
+    msg_in1.mutable_header()->set_source_platform(1);
+    msg_in1.mutable_header()->set_dest_platform(3);
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
     
     codec.info(msg_in1.GetDescriptor(), &std::cout);    

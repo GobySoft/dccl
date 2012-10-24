@@ -22,7 +22,7 @@
 
 
 
-// implements DCCLFieldCodecBase for all the basic DCCL types
+// implements FieldCodecBase for all the basic DCCL types
 
 #ifndef DCCLFIELDCODECDEFAULT20110322H
 #define DCCLFIELDCODECDEFAULT20110322H
@@ -32,7 +32,6 @@
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/bimap.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -51,7 +50,7 @@
 namespace dccl
 {
     /// \brief Provides the default 1 byte or 2 byte DCCL ID codec
-    class DCCLDefaultIdentifierCodec : public DCCLTypedFieldCodec<uint32>
+    class DefaultIdentifierCodec : public TypedFieldCodec<uint32>
     {
       protected:
         virtual Bitset encode();
@@ -80,31 +79,31 @@ namespace dccl
     ///
     /// Takes ceil(log2((max-min)*10^precision)+1) bits for required fields, ceil(log2((max-min)*10^precision)+2) for optional fields.
     template<typename WireType, typename FieldType = WireType>
-        class DCCLDefaultNumericFieldCodec : public DCCLTypedFixedFieldCodec<WireType, FieldType>
+        class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType>
     {
       protected:
 
       virtual double max()
-      { return DCCLFieldCodecBase::dccl_field_options().max(); }
+      { return FieldCodecBase::dccl_field_options().max(); }
 
       virtual double min()
-      { return DCCLFieldCodecBase::dccl_field_options().min(); }
+      { return FieldCodecBase::dccl_field_options().min(); }
 
       virtual double precision()
-      { return DCCLFieldCodecBase::dccl_field_options().precision(); }
+      { return FieldCodecBase::dccl_field_options().precision(); }
             
       virtual void validate()
       {
-          DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_min(),
+          FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(),
                                       "missing (dccl.field).min");
-          DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_max(),
+          FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_max(),
                                       "missing (dccl.field).max");
 
 
           // ensure given max and min fit within WireType ranges
-          DCCLFieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
+          FieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
                                       "(dccl.field).min must be >= minimum of this field type.");
-          DCCLFieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
+          FieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
                                       "(dccl.field).max must be <= maximum of this field type.");
       }
 
@@ -122,13 +121,13 @@ namespace dccl
               return Bitset(size());
               
               
-//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_encode_group()) << "(DCCLDefaultNumericFieldCodec) Encoding using wire value (=field value) " << wire_value << std::endl;
+//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_encode_group()) << "(DefaultNumericFieldCodec) Encoding using wire value (=field value) " << wire_value << std::endl;
               
           wire_value -= min();
           wire_value *= std::pow(10.0, precision());
 
           // "presence" value (0)
-          if(!DCCLFieldCodecBase::this_field()->is_required())
+          if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
 
           wire_value = dccl::unbiased_round(wire_value, 0);
@@ -139,7 +138,7 @@ namespace dccl
       {
           unsigned long t = bits->to_ulong();
               
-          if(!DCCLFieldCodecBase::this_field()->is_required())
+          if(!FieldCodecBase::this_field()->is_required())
           {
               if(!t) throw(NullValueException());
               --t;
@@ -148,7 +147,7 @@ namespace dccl
           WireType return_value = dccl::unbiased_round(
               t / (std::pow(10.0, precision())) + min(), precision());
               
-//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_decode_group()) << "(DCCLDefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
+//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_decode_group()) << "(DefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
 
           return return_value;
               
@@ -157,7 +156,7 @@ namespace dccl
       unsigned size()
       {
           // if not required field, leave one value for unspecified (always encoded as 0)
-          const unsigned NULL_VALUE = DCCLFieldCodecBase::this_field()->is_required() ? 0 : 1;
+          const unsigned NULL_VALUE = FieldCodecBase::this_field()->is_required() ? 0 : 1;
               
           return dccl::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
       }
@@ -167,7 +166,7 @@ namespace dccl
     /// \brief Provides a bool encoder. Uses 1 bit if field is `required`, 2 bits if `optional`
     ///
     /// [presence bit (0 bits if required, 1 bit if optional)][value (1 bit)]
-    class DCCLDefaultBoolCodec : public DCCLTypedFixedFieldCodec<bool>
+    class DefaultBoolCodec : public TypedFixedFieldCodec<bool>
     {
       private:
         Bitset encode(const bool& wire_value);
@@ -180,7 +179,7 @@ namespace dccl
     /// \brief Provides an variable length ASCII string encoder. Can encode strings up to 255 bytes by using a length byte preceeding the string.
     ///
     /// [length of following string (1 byte)][string (0-255 bytes)]
-    class DCCLDefaultStringCodec : public DCCLTypedFieldCodec<std::string>
+    class DefaultStringCodec : public TypedFieldCodec<std::string>
     {
       private:
         Bitset encode();
@@ -198,7 +197,7 @@ namespace dccl
 
 
     /// \brief Provides an fixed length byte string encoder.        
-    class DCCLDefaultBytesCodec : public DCCLTypedFieldCodec<std::string>
+    class DefaultBytesCodec : public TypedFieldCodec<std::string>
     {
       private:
         Bitset encode();
@@ -211,9 +210,9 @@ namespace dccl
         void validate();
     };
 
-    /// \brief Provides an enum encoder. This converts the enumeration to an integer (based on the enumeration <i>index</i> (<b>not</b> its <i>value</i>) and uses DCCLDefaultNumericFieldCodec to encode the integer.
-    class DCCLDefaultEnumCodec
-        : public DCCLDefaultNumericFieldCodec<int32, const google::protobuf::EnumValueDescriptor*>
+    /// \brief Provides an enum encoder. This converts the enumeration to an integer (based on the enumeration <i>index</i> (<b>not</b> its <i>value</i>) and uses DefaultNumericFieldCodec to encode the integer.
+    class DefaultEnumCodec
+        : public DefaultNumericFieldCodec<int32, const google::protobuf::EnumValueDescriptor*>
     {
       public:
         int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
@@ -236,7 +235,7 @@ namespace dccl
     ///
     /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
     template<typename TimeType>
-        class DCCLTimeCodec : public DCCLDefaultNumericFieldCodec<int32, TimeType>
+        class TimeCodec : public DefaultNumericFieldCodec<int32, TimeType>
     {
         // must use specialization
         BOOST_STATIC_ASSERT(sizeof(TimeType) == 0);
@@ -260,7 +259,7 @@ namespace dccl
     };
     
     template<>
-        class DCCLTimeCodec<uint64> : public DCCLDefaultNumericFieldCodec<int32, uint64>
+        class TimeCodec<uint64> : public DefaultNumericFieldCodec<int32, uint64>
     {
       public:
         int32 pre_encode(const uint64& time_of_day_microseconds) {
@@ -293,7 +292,7 @@ namespace dccl
     };
 
     template<>
-        class DCCLTimeCodec<double> : public DCCLDefaultNumericFieldCodec<int32, double>
+        class TimeCodec<double> : public DefaultNumericFieldCodec<int32, double>
     {
       public:
         int32 pre_encode(const double& time_of_day) {
@@ -327,7 +326,7 @@ namespace dccl
         
     /// \brief Placeholder codec that takes no space on the wire (0 bits).
     template<typename T>
-        class DCCLStaticCodec : public DCCLTypedFixedFieldCodec<T>
+        class StaticCodec : public TypedFixedFieldCodec<T>
     {
         Bitset encode(const T&)
         { return Bitset(size()); }
@@ -337,7 +336,7 @@ namespace dccl
 
         T decode(Bitset* bits)
         {
-            std::string t = DCCLFieldCodecBase::dccl_field_options().static_value();
+            std::string t = FieldCodecBase::dccl_field_options().static_value();
             return boost::lexical_cast<T>(t);
         }
             
@@ -346,36 +345,10 @@ namespace dccl
             
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
         }
             
     };
-
-        
-    /// \brief Codec that converts string names (e.g. "AUV-Unicorn") to integer MAC addresses (modem ID) and encodes the modem ID using DCCLDefaultNumericFieldCodec. The conversion is done using a lookup table.
-    class DCCLModemIdConverterCodec : public DCCLDefaultNumericFieldCodec<int32, std::string>
-    {
-      public:
-        /// \brief Add an entry to the lookup table used for conversions. 
-        static void add(std::string platform, int32 id)
-        {
-            boost::to_lower(platform);
-            platform2modem_id_.left.insert(std::make_pair(platform, id));
-        }
-            
-        int32 pre_encode(const std::string& field_value);
-        std::string post_decode(const int32& wire_value);
-            
-
-      private:  
-        void validate() { }
-        double max() { return 30; }
-        double min() { return 0; }
-
-      private:
-        static boost::bimap<std::string, int32> platform2modem_id_;
-    };
-
         
 }
 

@@ -22,8 +22,8 @@
 
 
 
-#ifndef DCCLFieldCodecManager20110405H
-#define DCCLFieldCodecManager20110405H
+#ifndef FieldCodecManager20110405H
+#define FieldCodecManager20110405H
 
 #include "type_helper.h"
 #include "field_codec.h"
@@ -33,7 +33,7 @@ namespace dccl
 {
 
     /// \todo (tes) Make sanity check for newly added FieldCodecs
-    class DCCLFieldCodecManager
+    class FieldCodecManager
     {
       public:
         // field type == wire type
@@ -42,7 +42,7 @@ namespace dccl
             
         /// \brief Add a new field codec (used for codecs operating on statically generated Protobuf messages, that is, children of google::protobuf::Message but not google::protobuf::Message itself).
         ///
-        /// \tparam Codec A child of DCCLFieldCodecBase
+        /// \tparam Codec A child of FieldCodecBase
         /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
         template<class Codec>
@@ -55,7 +55,7 @@ namespace dccl
                 
         /// \brief Add a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
         ///
-        /// \tparam Codec A child of DCCLFieldCodecBase
+        /// \tparam Codec A child of FieldCodecBase
         /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
         template<class Codec>
@@ -68,14 +68,14 @@ namespace dccl
                 
         /// \brief Add a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
         ///
-        /// \tparam Codec A child of DCCLFieldCodecBase
+        /// \tparam Codec A child of FieldCodecBase
         /// \tparam type The google::protobuf::FieldDescriptor::Type enumeration that this codec works on.
         /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
         template<class Codec, google::protobuf::FieldDescriptor::Type type>
             static void add(const std::string& name);
 
         /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
-        static boost::shared_ptr<DCCLFieldCodecBase> find(
+        static boost::shared_ptr<FieldCodecBase> find(
             const google::protobuf::FieldDescriptor* field)
         {
             std::string name = __find_codec(field);
@@ -90,7 +90,7 @@ namespace dccl
         ///
         /// \param desc Message descriptor to find codec for
         /// \param name Codec name (used for embedded messages to prefer the codec listed as a field option). Omit for finding the codec of a base message (one that is not embedded).
-        static boost::shared_ptr<DCCLFieldCodecBase> find(
+        static boost::shared_ptr<FieldCodecBase> find(
             const google::protobuf::Descriptor* desc,
             std::string name = "")
         {
@@ -101,7 +101,7 @@ namespace dccl
                           name, desc->full_name());
         }
 
-        static boost::shared_ptr<DCCLFieldCodecBase> find(
+        static boost::shared_ptr<FieldCodecBase> find(
             google::protobuf::FieldDescriptor::Type type,
             std::string name)
         {
@@ -111,14 +111,14 @@ namespace dccl
         
         
       private:
-        DCCLFieldCodecManager() { }
-        ~DCCLFieldCodecManager() { }
-        DCCLFieldCodecManager(const DCCLFieldCodecManager&);
-        DCCLFieldCodecManager& operator= (const DCCLFieldCodecManager&);
+        FieldCodecManager() { }
+        ~FieldCodecManager() { }
+        FieldCodecManager(const FieldCodecManager&);
+        FieldCodecManager& operator= (const FieldCodecManager&);
 
                 
             
-        static boost::shared_ptr<DCCLFieldCodecBase> __find(
+        static boost::shared_ptr<FieldCodecBase> __find(
             google::protobuf::FieldDescriptor::Type type,
             const std::string& codec_name,
             const std::string& type_name = "");
@@ -151,7 +151,7 @@ namespace dccl
         }
 
       private:
-        typedef std::map<std::string, boost::shared_ptr<DCCLFieldCodecBase> > InsideMap;
+        typedef std::map<std::string, boost::shared_ptr<FieldCodecBase> > InsideMap;
         static std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
     };
 }
@@ -163,9 +163,9 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
 boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
 >,
 void>::type 
-dccl::DCCLFieldCodecManager::add(const std::string& name)
+dccl::FieldCodecManager::add(const std::string& name)
 {
-    DCCLTypeHelper::add<typename Codec::wire_type>();
+    TypeHelper::add<typename Codec::wire_type>();
     __add<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
                  google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                  google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
@@ -178,20 +178,20 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
     boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
     >,
     void>::type
-    dccl::DCCLFieldCodecManager::add(const std::string& name)
+    dccl::FieldCodecManager::add(const std::string& name)
 {
     __add<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
 
 template<class Codec, google::protobuf::FieldDescriptor::Type type> 
-    void dccl::DCCLFieldCodecManager::add(const std::string& name) 
+    void dccl::FieldCodecManager::add(const std::string& name) 
 { 
     __add<Codec>(name, type, google::protobuf::FieldDescriptor::TypeToCppType(type));
 }
 
 
 template<typename WireType, typename FieldType, class Codec>
-    void dccl::DCCLFieldCodecManager::__add(const std::string& name)
+    void dccl::FieldCodecManager::__add(const std::string& name)
 {
     using google::protobuf::FieldDescriptor;
     const FieldDescriptor::CppType cpp_field_type = ToProtoCppType<FieldType>::as_enum();
@@ -208,14 +208,14 @@ template<typename WireType, typename FieldType, class Codec>
 }
 
 template<class Codec>
-void dccl::DCCLFieldCodecManager::__add(const std::string& name,
+void dccl::FieldCodecManager::__add(const std::string& name,
                                         google::protobuf::FieldDescriptor::Type field_type,
                                         google::protobuf::FieldDescriptor::CppType wire_type)
 {
     using google::protobuf::FieldDescriptor;    
     if(!codecs_[field_type].count(name))
     {
-        boost::shared_ptr<DCCLFieldCodecBase> new_field_codec(new Codec());
+        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
         new_field_codec->set_name(name);
         new_field_codec->set_field_type(field_type);
         new_field_codec->set_wire_type(wire_type);
@@ -225,7 +225,7 @@ void dccl::DCCLFieldCodecManager::__add(const std::string& name,
     }            
     else
     {
-        boost::shared_ptr<DCCLFieldCodecBase> new_field_codec(new Codec());
+        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
         new_field_codec->set_name(name);
         new_field_codec->set_field_type(field_type);
         new_field_codec->set_wire_type(wire_type);

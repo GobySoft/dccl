@@ -32,16 +32,16 @@ namespace dccl
         
     /// \brief if WireType == FieldType, we don't have to add any more virtual methods for converting between them.
     template <typename WireType, typename FieldType, class Enable = void> 
-        class DCCLFieldCodecSelector : public DCCLFieldCodecBase
+        class FieldCodecSelector : public FieldCodecBase
         { };
         
     // if not the same WireType and FieldType, add these extra methods to
     // handle them 
     /// \brief If WireType != FieldType, adds some more pure virtual methods to handle the type conversions (pre_encode() and post_decode()). If WireType == FieldType this class is not inherited and this pure virtual methods do not exist (and thus can be omitted in the child class).
     template <typename WireType, typename FieldType>
-        class DCCLFieldCodecSelector<WireType, FieldType,
+        class FieldCodecSelector<WireType, FieldType,
         typename boost::disable_if<boost::is_same<WireType, FieldType> >::type>
-        : public DCCLFieldCodecBase
+        : public FieldCodecBase
     {
       protected:
         /// \brief Convert from the FieldType representation (used in the Google Protobuf message) to the WireType representation (used with encode() and decode(), i.e. "on the wire").
@@ -94,13 +94,13 @@ namespace dccl
         }
     };
 
-    /// \brief Base class for static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use DCCLTypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire).
+    /// \brief Base class for static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire).
     /// \ingroup dccl_api
     ///
-    ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DCCLDefaultEnumCodec which uses DCCLDefaultNumericFieldCodec to do all the numerical encoding / decoding while DCCLDefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
+    ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DefaultEnumCodec which uses DefaultNumericFieldCodec to do all the numerical encoding / decoding while DefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
     ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
-        class DCCLTypedFieldCodec : public DCCLFieldCodecSelector<WireType, FieldType>
+        class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     {
       public:
       typedef WireType wire_type;
@@ -169,7 +169,7 @@ namespace dccl
           }
           catch(NullValueException&)
           {
-              if(DCCLFieldCodecBase::this_field())
+              if(FieldCodecBase::this_field())
                   *wire_value = boost::any();
           }              
       }
@@ -188,13 +188,13 @@ namespace dccl
     };
 
 
-    /// \brief Base class for "repeated" (multiple value) static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use DCCLTypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire). Use DCCLTypedFieldCodec if your fields are always singular ("optional" or "required"). Singular fields are default implemented in this codec by calls to the equivalent repeated function with an empty or single valued vector.
+    /// \brief Base class for "repeated" (multiple value) static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire). Use TypedFieldCodec if your fields are always singular ("optional" or "required"). Singular fields are default implemented in this codec by calls to the equivalent repeated function with an empty or single valued vector.
     /// \ingroup dccl_api
     ///
-    ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DCCLDefaultEnumCodec which uses DCCLDefaultNumericFieldCodec to do all the numerical encoding / decoding while DCCLDefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
+    ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DefaultEnumCodec which uses DefaultNumericFieldCodec to do all the numerical encoding / decoding while DefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
     ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
-        class DCCLRepeatedTypedFieldCodec : public DCCLTypedFieldCodec<WireType, FieldType>
+        class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     {
       public:
       typedef WireType wire_type;

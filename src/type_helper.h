@@ -22,8 +22,8 @@
 
 
 
-#ifndef DCCLTypeHelper20110405H
-#define DCCLTypeHelper20110405H
+#ifndef TypeHelper20110405H
+#define TypeHelper20110405H
 
 #include <map>
 
@@ -40,7 +40,7 @@ namespace dccl
 {
 
     /// \brief Provides FromProtoTypeBase and FromProtoCppTypeBase type identification helper classes for various representations of the underlying field.
-    class DCCLTypeHelper
+    class TypeHelper
     {
       public:
         static boost::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type);
@@ -62,7 +62,7 @@ namespace dccl
 
 
       private:
-        friend class DCCLFieldCodecManager;            
+        friend class FieldCodecManager;            
         template<typename ProtobufMessage>
             static void add()
         {
@@ -70,17 +70,17 @@ namespace dccl
         }
 
       private:
-        DCCLTypeHelper() { initialize(); }            
-        ~DCCLTypeHelper() { }
-        DCCLTypeHelper(const DCCLTypeHelper&);
-        DCCLTypeHelper& operator= (const DCCLTypeHelper&);
+        TypeHelper() { initialize(); }            
+        ~TypeHelper() { }
+        TypeHelper(const TypeHelper&);
+        TypeHelper& operator= (const TypeHelper&);
         void initialize();    
             
       private:
         // so we can use shared_ptr to hold the singleton
         template<typename T>
             friend void boost::checked_delete(T*);
-        static boost::shared_ptr<DCCLTypeHelper> inst_;
+        static boost::shared_ptr<TypeHelper> inst_;
             
         typedef std::map<google::protobuf::FieldDescriptor::Type,
             boost::shared_ptr<FromProtoTypeBase> > TypeMap;

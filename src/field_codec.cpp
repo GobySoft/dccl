@@ -26,20 +26,20 @@
 #include "exception.h"
 #include "dccl/codec.h"
 
-dccl::MessageHandler::MessagePart dccl::DCCLFieldCodecBase::part_ =
+dccl::MessageHandler::MessagePart dccl::FieldCodecBase::part_ =
     dccl::MessageHandler::BODY;
 
-const google::protobuf::Message* dccl::DCCLFieldCodecBase::root_message_ = 0;
+const google::protobuf::Message* dccl::FieldCodecBase::root_message_ = 0;
 
 using dccl::dlog;
 using namespace dccl::logger;
 
 //
-// DCCLFieldCodecBase public
+// FieldCodecBase public
 //
-dccl::DCCLFieldCodecBase::DCCLFieldCodecBase() { }
+dccl::FieldCodecBase::FieldCodecBase() { }
             
-void dccl::DCCLFieldCodecBase::base_encode(Bitset* bits,
+void dccl::FieldCodecBase::base_encode(Bitset* bits,
                                           const google::protobuf::Message& field_value,
                                           MessageHandler::MessagePart part)
 {
@@ -49,13 +49,13 @@ void dccl::DCCLFieldCodecBase::base_encode(Bitset* bits,
     // we pass this through the FromProtoCppTypeBase to do dynamic_cast (RTII) for
     // custom message codecs so that these codecs can be written in the derived class (not google::protobuf::Message)
     field_encode(bits,
-                 DCCLTypeHelper::find(field_value.GetDescriptor())->get_value(field_value),
+                 TypeHelper::find(field_value.GetDescriptor())->get_value(field_value),
                  0);
 
     root_message_ = 0;
 }
 
-void dccl::DCCLFieldCodecBase::field_encode(Bitset* bits,
+void dccl::FieldCodecBase::field_encode(Bitset* bits,
                                           const boost::any& field_value,
                                           const google::protobuf::FieldDescriptor* field)
 {
@@ -72,7 +72,7 @@ void dccl::DCCLFieldCodecBase::field_encode(Bitset* bits,
     bits->append(new_bits);
 }
 
-void dccl::DCCLFieldCodecBase::field_encode_repeated(Bitset* bits,
+void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
                                                    const std::vector<boost::any>& field_values,
                                                    const google::protobuf::FieldDescriptor* field)
 {
@@ -87,7 +87,7 @@ void dccl::DCCLFieldCodecBase::field_encode_repeated(Bitset* bits,
 }
 
             
-void dccl::DCCLFieldCodecBase::base_size(unsigned* bit_size,
+void dccl::FieldCodecBase::base_size(unsigned* bit_size,
                                         const google::protobuf::Message& msg,
                                         MessageHandler::MessagePart part)
 {
@@ -100,7 +100,7 @@ void dccl::DCCLFieldCodecBase::base_size(unsigned* bit_size,
     root_message_ = 0;
 }
 
-void dccl::DCCLFieldCodecBase::field_size(unsigned* bit_size,
+void dccl::FieldCodecBase::field_size(unsigned* bit_size,
                                         const boost::any& field_value,
                                         const google::protobuf::FieldDescriptor* field)
 {
@@ -112,7 +112,7 @@ void dccl::DCCLFieldCodecBase::field_size(unsigned* bit_size,
     *bit_size += any_size(wire_value);
 }
 
-void dccl::DCCLFieldCodecBase::field_size_repeated(unsigned* bit_size,
+void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
                                                   const std::vector<boost::any>& field_values,
                                                   const google::protobuf::FieldDescriptor* field)
 {
@@ -127,7 +127,7 @@ void dccl::DCCLFieldCodecBase::field_size_repeated(unsigned* bit_size,
 
 
 
-void dccl::DCCLFieldCodecBase::base_decode(Bitset* bits,
+void dccl::FieldCodecBase::base_decode(Bitset* bits,
                                                    google::protobuf::Message* field_value,
                                                    MessageHandler::MessagePart part)
 {
@@ -140,7 +140,7 @@ void dccl::DCCLFieldCodecBase::base_decode(Bitset* bits,
 }
 
 
-void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
+void dccl::FieldCodecBase::field_decode(Bitset* bits,
                                                    boost::any* field_value,
                                                    const google::protobuf::FieldDescriptor* field)
 {
@@ -172,7 +172,7 @@ void dccl::DCCLFieldCodecBase::field_decode(Bitset* bits,
     field_post_decode(wire_value, field_value);  
 }
 
-void dccl::DCCLFieldCodecBase::field_decode_repeated(Bitset* bits,
+void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
                                                             std::vector<boost::any>* field_values,
                                                             const google::protobuf::FieldDescriptor* field)
 {
@@ -202,7 +202,7 @@ void dccl::DCCLFieldCodecBase::field_decode_repeated(Bitset* bits,
 }
 
 
-void dccl::DCCLFieldCodecBase::base_max_size(unsigned* bit_size,
+void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
                                                          const google::protobuf::Descriptor* desc,
                                                          MessageHandler::MessagePart part)
 {
@@ -219,7 +219,7 @@ void dccl::DCCLFieldCodecBase::base_max_size(unsigned* bit_size,
     field_max_size(bit_size, static_cast<google::protobuf::FieldDescriptor*>(0));
 }
 
-void dccl::DCCLFieldCodecBase::field_max_size(unsigned* bit_size,
+void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
                                                          const google::protobuf::FieldDescriptor* field)
 {
     MessageHandler msg_handler(field);
@@ -232,7 +232,7 @@ void dccl::DCCLFieldCodecBase::field_max_size(unsigned* bit_size,
 
 
             
-void dccl::DCCLFieldCodecBase::base_min_size(unsigned* bit_size,
+void dccl::FieldCodecBase::base_min_size(unsigned* bit_size,
                                                      const google::protobuf::Descriptor* desc,
                                                      MessageHandler::MessagePart part)
 {
@@ -249,7 +249,7 @@ void dccl::DCCLFieldCodecBase::base_min_size(unsigned* bit_size,
     field_min_size(bit_size, static_cast<google::protobuf::FieldDescriptor*>(0));
 }
 
-void dccl::DCCLFieldCodecBase::field_min_size(unsigned* bit_size,
+void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
                                                          const google::protobuf::FieldDescriptor* field)
     
 {
@@ -262,7 +262,7 @@ void dccl::DCCLFieldCodecBase::field_min_size(unsigned* bit_size,
 }
 
             
-void dccl::DCCLFieldCodecBase::base_validate(const google::protobuf::Descriptor* desc,
+void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* desc,
                                                      MessageHandler::MessagePart part)
 {
     part_ = part;
@@ -278,7 +278,7 @@ void dccl::DCCLFieldCodecBase::base_validate(const google::protobuf::Descriptor*
 }
 
 
-void dccl::DCCLFieldCodecBase::field_validate(bool* b,
+void dccl::FieldCodecBase::field_validate(bool* b,
                                                      const google::protobuf::FieldDescriptor* field)
 {
     MessageHandler msg_handler(field);
@@ -289,7 +289,7 @@ void dccl::DCCLFieldCodecBase::field_validate(bool* b,
     validate();
 }
             
-void dccl::DCCLFieldCodecBase::base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessageHandler::MessagePart part)
+void dccl::FieldCodecBase::base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessageHandler::MessagePart part)
 {
     part_ = part;
 
@@ -303,7 +303,7 @@ void dccl::DCCLFieldCodecBase::base_info(std::ostream* os, const google::protobu
 }
 
 
-void dccl::DCCLFieldCodecBase::field_info(std::ostream* os,
+void dccl::FieldCodecBase::field_info(std::ostream* os,
                                                  const google::protobuf::FieldDescriptor* field)
 {
     MessageHandler msg_handler(field);
@@ -362,15 +362,15 @@ void dccl::DCCLFieldCodecBase::field_info(std::ostream* os,
 
 
 //
-// DCCLFieldCodecBase protected
+// FieldCodecBase protected
 //
 
-std::string dccl::DCCLFieldCodecBase::info()
+std::string dccl::FieldCodecBase::info()
 {
     return std::string();
 }
 
-void dccl::DCCLFieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::vector<boost::any>& wire_values)
+void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::vector<boost::any>& wire_values)
 {
     // out_bits = [field_values[2]][field_values[1]][field_values[0]]
     for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
@@ -386,7 +386,7 @@ void dccl::DCCLFieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std
 }
 
 
-void dccl::DCCLFieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
+void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
 {
     for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
     {
@@ -403,7 +403,7 @@ void dccl::DCCLFieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::v
     }
 }
 
-unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::any>& wire_values)
+unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& wire_values)
 {
     unsigned out = 0;
     for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
@@ -416,7 +416,7 @@ unsigned dccl::DCCLFieldCodecBase::any_size_repeated(const std::vector<boost::an
     return out;
 }
 
-unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
+unsigned dccl::FieldCodecBase::max_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " + this_field()->DebugString()));
@@ -424,7 +424,7 @@ unsigned dccl::DCCLFieldCodecBase::max_size_repeated()
         return max_size() * dccl_field_options().max_repeat();
 }
 
-unsigned dccl::DCCLFieldCodecBase::min_size_repeated()
+unsigned dccl::FieldCodecBase::min_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field " + this_field()->DebugString()));
@@ -432,7 +432,7 @@ unsigned dccl::DCCLFieldCodecBase::min_size_repeated()
         return min_size() * dccl_field_options().max_repeat();
 }
 
-void dccl::DCCLFieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* wire_values, const std::vector<boost::any>& field_values)
+void dccl::FieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* wire_values, const std::vector<boost::any>& field_values)
 {
     for(std::vector<boost::any>::const_iterator it = field_values.begin(),
             end = field_values.end(); it != end; ++it)
@@ -443,7 +443,7 @@ void dccl::DCCLFieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* 
     }
     
 }
-void dccl::DCCLFieldCodecBase::any_post_decode_repeated(
+void dccl::FieldCodecBase::any_post_decode_repeated(
     const std::vector<boost::any>& wire_values, std::vector<boost::any>* field_values)
 {
     for(std::vector<boost::any>::const_iterator it = wire_values.begin(),
@@ -457,6 +457,6 @@ void dccl::DCCLFieldCodecBase::any_post_decode_repeated(
 
 
 //
-// DCCLFieldCodecBase private
+// FieldCodecBase private
 //
 

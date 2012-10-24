@@ -30,7 +30,7 @@
 
 using dccl::operator<<;
 
-class MicroModemMiniPacketDCCLIDCodec : public dccl::DCCLTypedFixedFieldCodec<dccl::uint32>
+class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
 {
 private:
     dccl::Bitset encode(const dccl::uint32& wire_value);
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     {        
-	dccl::DCCLFieldCodecManager::add<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
+	dccl::FieldCodecManager::add<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
         dccl::Codec codec("mini_id_codec");
         codec.set_crypto_passphrase("309ldskjfla39");
         

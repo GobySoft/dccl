@@ -26,18 +26,18 @@
 
 #include <boost/assign.hpp>
 
-dccl::DCCLTypeHelper::TypeMap dccl::DCCLTypeHelper::type_map_;
-dccl::DCCLTypeHelper::CppTypeMap dccl::DCCLTypeHelper::cpptype_map_;
-dccl::DCCLTypeHelper::CustomMessageMap dccl::DCCLTypeHelper::custom_message_map_;
+dccl::TypeHelper::TypeMap dccl::TypeHelper::type_map_;
+dccl::TypeHelper::CppTypeMap dccl::TypeHelper::cpptype_map_;
+dccl::TypeHelper::CustomMessageMap dccl::TypeHelper::custom_message_map_;
 
 // used to construct, initialize, and delete a copy of this object
-boost::shared_ptr<dccl::DCCLTypeHelper> dccl::DCCLTypeHelper::inst_(new dccl::DCCLTypeHelper);
+boost::shared_ptr<dccl::TypeHelper> dccl::TypeHelper::inst_(new dccl::TypeHelper);
 
 //
-// DCCLTypeHelper
+// TypeHelper
 //
 
-void dccl::DCCLTypeHelper::initialize()
+void dccl::TypeHelper::initialize()
 {
     using namespace google::protobuf;    
     using boost::shared_ptr;
@@ -108,7 +108,7 @@ void dccl::DCCLTypeHelper::initialize()
 
 }
 
-boost::shared_ptr<dccl::FromProtoCppTypeBase> dccl::DCCLTypeHelper::find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name /*= ""*/)
+boost::shared_ptr<dccl::FromProtoCppTypeBase> dccl::TypeHelper::find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name /*= ""*/)
 {
     if(!type_name.empty())
     {
@@ -125,7 +125,7 @@ boost::shared_ptr<dccl::FromProtoCppTypeBase> dccl::DCCLTypeHelper::find(google:
 }
 
 
-boost::shared_ptr<dccl::FromProtoTypeBase> dccl::DCCLTypeHelper::find(google::protobuf::FieldDescriptor::Type type)
+boost::shared_ptr<dccl::FromProtoTypeBase> dccl::TypeHelper::find(google::protobuf::FieldDescriptor::Type type)
 {
     TypeMap::iterator it = type_map_.find(type);
     if(it != type_map_.end())

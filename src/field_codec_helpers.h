@@ -61,7 +61,7 @@ namespace dccl
         static MessagePart current_part() { return part_; }
             
             
-        friend class DCCLFieldCodecBase;
+        friend class FieldCodecBase;
       private:
         void __pop_desc();
         void __pop_field();

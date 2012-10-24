@@ -34,7 +34,7 @@
 using dccl::operator<<;
 using dccl::Bitset;
 
-class CustomCodec : public dccl::DCCLTypedFixedFieldCodec<CustomMsg>
+class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
 {
 private:
     unsigned size() { return (part() == dccl::MessageHandler::HEAD) ? 0 : A_SIZE + B_SIZE; }
@@ -84,15 +84,15 @@ private:
 };    
 
 class Int32RepeatedCodec :
-    public dccl::DCCLRepeatedTypedFieldCodec<dccl::int32>
+    public dccl::RepeatedTypedFieldCodec<dccl::int32>
 {
 private:
     enum { REPEAT_STORAGE_BITS = 4 };    
     enum { MAX_REPEAT_SIZE = 1 << REPEAT_STORAGE_BITS }; // 2^4
 
-    dccl::int32 max() { return DCCLFieldCodecBase::dccl_field_options().max(); }
-    dccl::int32 min() { return DCCLFieldCodecBase::dccl_field_options().min(); }
-    dccl::int32 max_repeat() { return DCCLFieldCodecBase::dccl_field_options().max_repeat(); }
+    dccl::int32 max() { return FieldCodecBase::dccl_field_options().max(); }
+    dccl::int32 min() { return FieldCodecBase::dccl_field_options().min(); }
+    dccl::int32 max_repeat() { return FieldCodecBase::dccl_field_options().max_repeat(); }
     
     Bitset encode_repeated(const std::vector<dccl::int32>& wire_values)
         {            
@@ -158,9 +158,9 @@ private:
 
     void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_min(), "missing (dccl.field).min");
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().has_max(), "missing (dccl.field).max");
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE, "(dccl.field).max_repeat must be less than " + boost::lexical_cast<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(), "missing (dccl.field).min");
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_max(), "missing (dccl.field).max");
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE, "(dccl.field).max_repeat must be less than " + boost::lexical_cast<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
         }
 
     
@@ -172,8 +172,8 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     dccl::Codec codec;
-    dccl::DCCLFieldCodecManager::add<CustomCodec>("custom_codec");
-    dccl::DCCLFieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
+    dccl::FieldCodecManager::add<CustomCodec>("custom_codec");
+    dccl::FieldCodecManager::add<Int32RepeatedCodec>("int32_test_codec");
 
     codec.set_crypto_passphrase("my_passphrase!");
 

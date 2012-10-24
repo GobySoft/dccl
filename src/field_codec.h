@@ -44,15 +44,15 @@ namespace dccl
 {
     class Codec;
 
-    /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users will use the DCCLTypedFieldCodec or its children (e.g. DCCLTypedFixedFieldCodec) instead of directly inheriting from this class.
-    class DCCLFieldCodecBase
+    /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users will use the TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
+    class FieldCodecBase
     {
       public:
         /// \name Constructor, Destructor
         //@{
             
-        DCCLFieldCodecBase();
-        virtual ~DCCLFieldCodecBase() { }
+        FieldCodecBase();
+        virtual ~FieldCodecBase() { }
         //@}
             
         /// \name Information Methods
@@ -65,7 +65,7 @@ namespace dccl
         google::protobuf::FieldDescriptor::Type field_type() const  { return field_type_; }
         /// \brief the C++ type used "on the wire". This is the type visible <i>after</i> pre_encode and <i>before</i> post_decode functions are called.
         ///
-        /// The wire type allows codecs to make type changes (e.g. from string to integer) before reusing another codec that knows how to encode that wire type (e.g. DCCLDefaultNumericFieldCodec)
+        /// The wire type allows codecs to make type changes (e.g. from string to integer) before reusing another codec that knows how to encode that wire type (e.g. DefaultNumericFieldCodec)
         /// \return the C++ type used to encode and decode. See http://code.google.com/apis/protocolbuffers/docs/reference/cpp/google.protobuf.descriptor.html#FieldDescriptor.CppType.details
         google::protobuf::FieldDescriptor::CppType wire_type() const  { return wire_type_; }
 
@@ -169,7 +169,7 @@ namespace dccl
             
         /// \name Field functions (primitive types and embedded messages)
         // 
-        /// These are called typically by DCCLDefaultMessageCodec to start processing a new field. In this example "bar" and "baz" are fields:
+        /// These are called typically by DefaultMessageCodec to start processing a new field. In this example "bar" and "baz" are fields:
         /// \code
         /// message Foo
         /// {
@@ -395,7 +395,7 @@ namespace dccl
         virtual unsigned max_size_repeated();
         virtual unsigned min_size_repeated();
             
-        friend class DCCLFieldCodecManager;
+        friend class FieldCodecManager;
       private:
         // codec information
         void set_name(const std::string& name)
@@ -418,13 +418,13 @@ namespace dccl
 
     };
 
-    inline std::ostream& operator<<(std::ostream& os, const DCCLFieldCodecBase& field_codec )
+    inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec )
     {
         using google::protobuf::FieldDescriptor;
         return os << "[FieldCodec '" << field_codec.name() << "']: field type: "
-                  << DCCLTypeHelper::find(field_codec.field_type())->as_str()
-                  << " (" << DCCLTypeHelper::find(FieldDescriptor::TypeToCppType(field_codec.field_type()))->as_str()
-                  << ") | wire type: " << DCCLTypeHelper::find(field_codec.wire_type())->as_str();
+                  << TypeHelper::find(field_codec.field_type())->as_str()
+                  << " (" << TypeHelper::find(FieldDescriptor::TypeToCppType(field_codec.field_type()))->as_str()
+                  << ") | wire type: " << TypeHelper::find(field_codec.wire_type())->as_str();
     }
 
     inline Exception type_error(const std::string& action,

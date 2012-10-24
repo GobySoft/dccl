@@ -29,10 +29,10 @@
 using dccl::dlog;
 
 //
-// DCCLDefaultMessageCodec
+// DefaultMessageCodec
 //
 
-void dccl::DCCLDefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
+void dccl::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
 {
   if(wire_value.empty())
       *bits = Bitset(min_size());
@@ -42,7 +42,7 @@ void dccl::DCCLDefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
   
 
  
-unsigned dccl::DCCLDefaultMessageCodec::any_size(const boost::any& wire_value)
+unsigned dccl::DefaultMessageCodec::any_size(const boost::any& wire_value)
 {
     if(wire_value.empty())
         return min_size();
@@ -51,7 +51,7 @@ unsigned dccl::DCCLDefaultMessageCodec::any_size(const boost::any& wire_value)
 }
 
 
-void dccl::DCCLDefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
+void dccl::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
 {
     try
     {
@@ -69,10 +69,10 @@ void dccl::DCCLDefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             if(!check_field(field_desc))
                 continue;
 
-            boost::shared_ptr<DCCLFieldCodecBase> codec =
-                DCCLFieldCodecManager::find(field_desc);
+            boost::shared_ptr<FieldCodecBase> codec =
+                FieldCodecManager::find(field_desc);
             boost::shared_ptr<FromProtoCppTypeBase> helper =
-                DCCLTypeHelper::find(field_desc);
+                TypeHelper::find(field_desc);
 
             if(field_desc->is_repeated())
             {   
@@ -129,14 +129,14 @@ void dccl::DCCLDefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 }
 
 
-unsigned dccl::DCCLDefaultMessageCodec::max_size()
+unsigned dccl::DefaultMessageCodec::max_size()
 {
     unsigned u = 0;
     traverse_descriptor<MaxSize>(&u);
     return u;
 }
 
-unsigned dccl::DCCLDefaultMessageCodec::min_size()
+unsigned dccl::DefaultMessageCodec::min_size()
 {
     unsigned u = 0;
     traverse_descriptor<MinSize>(&u);
@@ -144,20 +144,20 @@ unsigned dccl::DCCLDefaultMessageCodec::min_size()
 }
 
 
-void dccl::DCCLDefaultMessageCodec::validate()
+void dccl::DefaultMessageCodec::validate()
 {
     bool b = false;
     traverse_descriptor<Validate>(&b);
 }
 
-std::string dccl::DCCLDefaultMessageCodec::info()
+std::string dccl::DefaultMessageCodec::info()
 {
     std::stringstream ss;
     traverse_descriptor<Info>(&ss);
     return ss.str();
 }
 
-bool dccl::DCCLDefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
+bool dccl::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
 {
     if(!field)
     {
@@ -173,7 +173,7 @@ bool dccl::DCCLDefaultMessageCodec::check_field(const google::protobuf::FieldDes
         else if(MessageHandler::current_part() == MessageHandler::UNKNOWN) // part not yet explicitly specified
         {
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
-               DCCLFieldCodecManager::find(field)->name() == Codec::DEFAULT_CODEC_NAME) // default message codec will expand
+               FieldCodecManager::find(field)->name() == Codec::DEFAULT_CODEC_NAME) // default message codec will expand
                 return true;
             else if((part() == MessageHandler::HEAD && !dccl_field_options.in_head())
                     || (part() == MessageHandler::BODY && dccl_field_options.in_head()))

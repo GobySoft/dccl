@@ -201,7 +201,7 @@ namespace dccl
         
         
     template<typename FieldType = Model::value_type>   
-        class DCCLArithmeticFieldCodecBase : public DCCLRepeatedTypedFieldCodec<Model::value_type, FieldType>
+        class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_type, FieldType>
     {   
       public:              
             
@@ -237,7 +237,7 @@ namespace dccl
               {
                   Model::value_type value = wire_value[value_index];
                   dlog.is(DEBUG3) &&
-                      dlog << "(DCCLArithmeticFieldCodec) value is : " << value << std::endl;
+                      dlog << "(ArithmeticFieldCodec) value is : " << value << std::endl;
                           
                   symbol = model.value_to_symbol(value);
               }
@@ -248,7 +248,7 @@ namespace dccl
               {
                           
                   dlog.is(DEBUG2) &&
-                      dlog << "(DCCLArithmeticFieldCodec) out of range symbol, but no frequency given; ending encoding" << std::endl;
+                      dlog << "(ArithmeticFieldCodec) out of range symbol, but no frequency given; ending encoding" << std::endl;
                       
                   symbol = Model::EOF_SYMBOL;                      
               }
@@ -258,16 +258,16 @@ namespace dccl
                  model.user_model().eof_frequency() == 0)
               {
                   dlog.is(DEBUG2) &&
-                      dlog << "(DCCLArithmeticFieldCodec) end of file, but no frequency given; filling with most probable symbol" << std::endl;
+                      dlog << "(ArithmeticFieldCodec) end of file, but no frequency given; filling with most probable symbol" << std::endl;
                   symbol = *std::max_element(model.user_model().frequency().begin(), model.user_model().frequency().end());
               }
 
                       
               dlog.is(DEBUG3) &&
-                  dlog << "(DCCLArithmeticFieldCodec) symbol is : " << symbol << std::endl;
+                  dlog << "(ArithmeticFieldCodec) symbol is : " << symbol << std::endl;
 
               dlog.is(DEBUG3) &&
-                  dlog << "(DCCLArithmeticFieldCodec) current interval: [" << (double)low / TOP_VALUE  << ","
+                  dlog << "(ArithmeticFieldCodec) current interval: [" << (double)low / TOP_VALUE  << ","
                        << (double)high / TOP_VALUE << ")" << std::endl;
                       
                       
@@ -277,26 +277,26 @@ namespace dccl
                   model.symbol_to_cumulative_freq(symbol, Model::ENCODER);
 
               dlog.is(DEBUG3) &&
-                  dlog << "(DCCLArithmeticFieldCodec) input symbol (" << symbol
+                  dlog << "(ArithmeticFieldCodec) input symbol (" << symbol
                        << ") cumulative freq: ["<< c_freq_range.first << "," << c_freq_range.second << ")" << std::endl;
                       
               high = low + (range*c_freq_range.second)/model.total_freq(Model::ENCODER)-1;
               low += (range*c_freq_range.first)/model.total_freq(Model::ENCODER);
                       
               dlog.is(DEBUG3) &&
-                  dlog << "(DCCLArithmeticFieldCodec) input symbol (" << symbol << ") interval: ["
+                  dlog << "(ArithmeticFieldCodec) input symbol (" << symbol << ") interval: ["
                        << (double)low / TOP_VALUE  << "," << (double)high / TOP_VALUE << ")" << std::endl;
 
 
                       
               dlog.is(DEBUG3) &&
-                  dlog << "(DCCLArithmeticFieldCodec) Q1: " << Bitset(Model::CODE_VALUE_BITS, FIRST_QTR)
+                  dlog << "(ArithmeticFieldCodec) Q1: " << Bitset(Model::CODE_VALUE_BITS, FIRST_QTR)
                        << ", Q2: " <<  Bitset(Model::CODE_VALUE_BITS, HALF)
                        << ", Q3 : " << Bitset(Model::CODE_VALUE_BITS, THIRD_QTR)
                        << ", top: " << Bitset(Model::CODE_VALUE_BITS, TOP_VALUE) << std::endl;
 
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) low:  " << Bitset(Model::CODE_VALUE_BITS, low).to_string() << std::endl;
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) high: " << Bitset(Model::CODE_VALUE_BITS, high).to_string() << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) low:  " << Bitset(Model::CODE_VALUE_BITS, low).to_string() << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) high: " << Bitset(Model::CODE_VALUE_BITS, high).to_string() << std::endl;
 
               if(update_model)
                   model.update_model(symbol, Model::ENCODER);
@@ -306,18 +306,18 @@ namespace dccl
                   if(high<HALF)
                   {
                       bit_plus_follow(&bits, &bits_to_follow, 0);
-                      dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec): completely in [0, 0.5): EXPAND" << std::endl;
+                      dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec): completely in [0, 0.5): EXPAND" << std::endl;
                   }
                   else if(low>=HALF)
                   {
                       bit_plus_follow(&bits, &bits_to_follow, 1);
                       low -= HALF;
                       high -= HALF;
-                      dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec): completely in [0.5, 1): EXPAND" << std::endl;
+                      dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec): completely in [0.5, 1): EXPAND" << std::endl;
                   }
                   else if(low>=FIRST_QTR && high < THIRD_QTR)
                   {
-                      dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec): straddle middle [0.25, 0.75): EXPAND" << std::endl;
+                      dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec): straddle middle [0.25, 0.75): EXPAND" << std::endl;
                               
                       bits_to_follow += 1;
                       low -= FIRST_QTR;
@@ -329,11 +329,11 @@ namespace dccl
                   high <<= 1;
                   high += 1;                          
 
-                  dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) low:  " << Bitset(Model::CODE_VALUE_BITS, low).to_string() << std::endl;
-                  dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) high: " << Bitset(Model::CODE_VALUE_BITS, high).to_string() << std::endl;
+                  dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) low:  " << Bitset(Model::CODE_VALUE_BITS, low).to_string() << std::endl;
+                  dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) high: " << Bitset(Model::CODE_VALUE_BITS, high).to_string() << std::endl;
 
                           
-                  dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) current interval: [" << (double)low / TOP_VALUE  << "," << (double)high / TOP_VALUE << ")" << std::endl;
+                  dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) current interval: [" << (double)low / TOP_VALUE  << "," << (double)high / TOP_VALUE << ")" << std::endl;
                           
               }
 
@@ -367,10 +367,10 @@ namespace dccl
               bit_plus_follow(&bits, &bits_to_follow, (low < FIRST_QTR) ? 0 : 1);
           }
                   
-          if(DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
+          if(FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
           {
               // bit of a hack so I can get at the exact bit field sizes
-              Model::last_bits_map[DCCLFieldCodecBase::this_descriptor()->full_name()][DCCLFieldCodecBase::this_field()->name()] = bits;
+              Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()][FieldCodecBase::this_field()->name()] = bits;
           }
 
                   
@@ -381,11 +381,11 @@ namespace dccl
       void bit_plus_follow(Bitset* bits, int* bits_to_follow, bool bit)
       {
           bits->push_back(bit);
-          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): emitted bit: " << bit << std::endl;
+          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): emitted bit: " << bit << std::endl;
                   
           while(*bits_to_follow)
           {
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): emitted bit (from follow): " << !bit << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): emitted bit (from follow): " << !bit << std::endl;
 
               bits->push_back(!bit);
               (*bits_to_follow) -= 1;
@@ -415,7 +415,7 @@ namespace dccl
                   value |= (static_cast<uint64>((*bits)[bits->size()-(i-bit_stream_offset)-1]) << i);
           }
 
-          dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec): starting value: " << Bitset(Model::CODE_VALUE_BITS, value).to_string() << std::endl;
+          dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec): starting value: " << Bitset(Model::CODE_VALUE_BITS, value).to_string() << std::endl;
                               
                   
                   
@@ -425,13 +425,13 @@ namespace dccl
 
               Model::symbol_type symbol = bits_to_symbol(bits, value, bit_stream_offset, low, range);
                       
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) symbol is: " << symbol << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) symbol is: " << symbol << std::endl;
                       
                       
               std::pair<Model::freq_type, Model::freq_type> c_freq_range =
                   model.symbol_to_cumulative_freq(symbol, Model::DECODER);
 
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) input symbol (" << symbol << ") cumulative freq: ["<< c_freq_range.first << "," << c_freq_range.second << ")" << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) input symbol (" << symbol << ") cumulative freq: ["<< c_freq_range.first << "," << c_freq_range.second << ")" << std::endl;
                       
               high = low + (range*c_freq_range.second)/model.total_freq(Model::DECODER)-1;
               low += (range*c_freq_range.first)/model.total_freq(Model::DECODER);
@@ -443,7 +443,7 @@ namespace dccl
 
               values.push_back(model.symbol_to_value(symbol));
 
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) value is: " << values.back() << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) value is: " << values.back() << std::endl;
 
                       
               for(;;)
@@ -477,13 +477,13 @@ namespace dccl
           }
 
           // for debugging / testing
-          if(DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
+          if(FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
           {
               // must consume same bits as encoded makes
-              Bitset in = Model::last_bits_map[DCCLFieldCodecBase::this_descriptor()->full_name()][DCCLFieldCodecBase::this_field()->name()];
+              Bitset in = Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()][FieldCodecBase::this_field()->name()];
                       
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) bits used is (" << bits->size() << "):     " << *bits << std::endl;
-              dlog.is(DEBUG3) && dlog << "(DCCLArithmeticFieldCodec) bits original is (" << in.size() << "): " << in << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) bits used is (" << bits->size() << "):     " << *bits << std::endl;
+              dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) bits original is (" << in.size() << "): " << in << std::endl;
 
               assert(in == *bits);
           }
@@ -520,14 +520,14 @@ namespace dccl
           // full of least probable symbols
           unsigned size_least_probable = std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(lowest_frequency)));
                   
-          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec) size_least_probable: " << size_least_probable << std::endl;
+          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_least_probable: " << size_least_probable << std::endl;
 
                   
           Model::freq_type eof_freq = model.user_model().eof_frequency();                  
           // almost full of least probable symbols plus EOF
           unsigned size_least_probable_plus_eof = (eof_freq != 0 ) ? std::ceil(max_repeat()*log2(model.total_freq(Model::ENCODER))-(max_repeat()-1)*log2(lowest_frequency)-log2(eof_freq)) : 0;
 
-          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec) size_least_probable_plus_eof: " << size_least_probable_plus_eof << std::endl;
+          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_least_probable_plus_eof: " << size_least_probable_plus_eof << std::endl;
 
           return std::max(size_least_probable_plus_eof, size_least_probable) + 1;
       }
@@ -552,7 +552,7 @@ namespace dccl
           // just EOF
           unsigned size_empty = (eof_freq != 0) ? std::ceil(log2(model.total_freq(Model::ENCODER))-log2(eof_freq)) : std::numeric_limits<unsigned>::max();
                   
-          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec) size_empty: " << size_empty << std::endl;
+          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_empty: " << size_empty << std::endl;
                   
           // full with most probable symbol
           Model::value_type highest_frequency = std::max(out_of_range_freq,
@@ -560,24 +560,24 @@ namespace dccl
                   
           unsigned size_most_probable = std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(highest_frequency)));
 
-          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec) size_most_probable: " << size_most_probable << std::endl;
+          dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_most_probable: " << size_most_probable << std::endl;
                   
           return std::min(size_empty, size_most_probable);
       }
           
       void validate()
       {
-          DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().HasExtension(arithmetic),
+          FieldCodecBase::require(FieldCodecBase::dccl_field_options().HasExtension(arithmetic),
                                       "missing (dccl.field).arithmetic");
 
-          std::string model_name = DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
+          std::string model_name = FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
           try
           {
               ModelManager::find(model_name);
           }
           catch(Exception& e)
           {
-              DCCLFieldCodecBase::require(false, "no such (dccl.field).arithmetic.model called \"" + model_name + "\" loaded.");
+              FieldCodecBase::require(false, "no such (dccl.field).arithmetic.model called \"" + model_name + "\" loaded.");
           }
       }
 
@@ -599,18 +599,18 @@ namespace dccl
                   value;
                       
                       
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): value range: [" << Bitset(Model::CODE_VALUE_BITS, value) << "," << Bitset(Model::CODE_VALUE_BITS, value_high) << ")" << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): value range: [" << Bitset(Model::CODE_VALUE_BITS, value) << "," << Bitset(Model::CODE_VALUE_BITS, value_high) << ")" << std::endl;
                       
                       
               Model::freq_type cumulative_freq = ((value-low+1)*model.total_freq(Model::DECODER)-1)/range;
               Model::freq_type cumulative_freq_high = ((value_high-low+1)*model.total_freq(Model::DECODER)-1)/range;
                       
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): c_freq: " << cumulative_freq << ", c_freq_high: " << cumulative_freq_high << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): c_freq: " << cumulative_freq << ", c_freq_high: " << cumulative_freq_high << std::endl;
 
                       
               std::pair<Model::symbol_type, Model::symbol_type> symbol_pair = model.cumulative_freq_to_symbol(std::make_pair(cumulative_freq, cumulative_freq_high), Model::DECODER);
 
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): symbol: " << symbol_pair.first << ", " << symbol_pair.second << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): symbol: " << symbol_pair.first << ", " << symbol_pair.second << std::endl;
 
                       
               if(symbol_pair.first == symbol_pair.second)
@@ -619,12 +619,12 @@ namespace dccl
               // add another bit to disambiguate
               bits->get_more_bits(1);
 
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): bits: " << *bits << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): bits: " << *bits << std::endl;
 
               --bit_stream_offset;
               value |= static_cast<uint64>(bits->back()) << bit_stream_offset;
 
-              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(DCCLArithmeticFieldCodec): ambiguous (symbol could be " << symbol_pair.first << " or " << symbol_pair.second << ")" << std::endl;
+              dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec): ambiguous (symbol could be " << symbol_pair.first << " or " << symbol_pair.second << ")" << std::endl;
                       
           }
                   
@@ -637,12 +637,12 @@ namespace dccl
               
       dccl::int32 max_repeat()
       {
-          return DCCLFieldCodecBase::this_field()->is_repeated() ? DCCLFieldCodecBase::dccl_field_options().max_repeat() : 1;
+          return FieldCodecBase::this_field()->is_repeated() ? FieldCodecBase::dccl_field_options().max_repeat() : 1;
       }
 
       Model& current_model()
       {
-          std::string name = DCCLFieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
+          std::string name = FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
           return ModelManager::find(name);
       }
               
@@ -652,13 +652,13 @@ namespace dccl
     };
 
     // constant integer definitions
-    template<typename FieldType> const uint64 DCCLArithmeticFieldCodecBase<FieldType>::TOP_VALUE; 
-    template<typename FieldType> const uint64 DCCLArithmeticFieldCodecBase<FieldType>::FIRST_QTR;
-    template<typename FieldType> const uint64 DCCLArithmeticFieldCodecBase<FieldType>::HALF;
-    template<typename FieldType> const uint64 DCCLArithmeticFieldCodecBase<FieldType>::THIRD_QTR;
+    template<typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::TOP_VALUE; 
+    template<typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::FIRST_QTR;
+    template<typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::HALF;
+    template<typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::THIRD_QTR;
         
     template<typename FieldType>   
-        class DCCLArithmeticFieldCodec : public DCCLArithmeticFieldCodecBase<FieldType>
+        class ArithmeticFieldCodec : public ArithmeticFieldCodecBase<FieldType>
     {
         Model::value_type pre_encode(const FieldType& field_value)
         { return static_cast<Model::value_type>(field_value); }
@@ -669,7 +669,7 @@ namespace dccl
 
         
     template <>
-        class DCCLArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> : public DCCLArithmeticFieldCodecBase<const google::protobuf::EnumValueDescriptor*>
+        class ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> : public ArithmeticFieldCodecBase<const google::protobuf::EnumValueDescriptor*>
     {
       public:
         Model::value_type pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
@@ -677,7 +677,7 @@ namespace dccl
             
         const google::protobuf::EnumValueDescriptor* post_decode(const Model::value_type& wire_value)
         {
-            const google::protobuf::EnumDescriptor* e = DCCLFieldCodecBase::this_field()->enum_type();
+            const google::protobuf::EnumDescriptor* e = FieldCodecBase::this_field()->enum_type();
             const google::protobuf::EnumValueDescriptor* return_value = e->FindValueByNumber(wire_value);
                 
             if(return_value)

@@ -33,7 +33,7 @@
 namespace dccl
 {
     /// \brief Provides the default codec for encoding a base Google Protobuf message or an embedded message by calling the appropriate field codecs for every field.
-    class DCCLDefaultMessageCodec : public DCCLFieldCodecBase
+    class DefaultMessageCodec : public FieldCodecBase
     {
       private:
             
@@ -50,7 +50,7 @@ namespace dccl
 
         struct Size
         {
-            static void repeated(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void repeated(boost::shared_ptr<FieldCodecBase> codec,
                                  unsigned* return_value,
                                  const std::vector<boost::any>& field_values,
                                  const google::protobuf::FieldDescriptor* field_desc)
@@ -58,7 +58,7 @@ namespace dccl
                     codec->field_size_repeated(return_value, field_values, field_desc);
                 }
                 
-            static void single(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void single(boost::shared_ptr<FieldCodecBase> codec,
                                unsigned* return_value,
                                const boost::any& field_value,
                                const google::protobuf::FieldDescriptor* field_desc)
@@ -70,7 +70,7 @@ namespace dccl
             
         struct Encoder
         {
-            static void repeated(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void repeated(boost::shared_ptr<FieldCodecBase> codec,
                                  Bitset* return_value,
                                  const std::vector<boost::any>& field_values,
                                  const google::protobuf::FieldDescriptor* field_desc)
@@ -78,7 +78,7 @@ namespace dccl
                     codec->field_encode_repeated(return_value, field_values, field_desc);
                 }
                 
-            static void single(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void single(boost::shared_ptr<FieldCodecBase> codec,
                                Bitset* return_value,
                                const boost::any& field_value,
                                const google::protobuf::FieldDescriptor* field_desc)
@@ -89,7 +89,7 @@ namespace dccl
 
         struct MaxSize
         {
-            static void field(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void field(boost::shared_ptr<FieldCodecBase> codec,
                               unsigned* return_value,
                               const google::protobuf::FieldDescriptor* field_desc)
                 {
@@ -99,7 +99,7 @@ namespace dccl
 
         struct MinSize
         {
-            static void field(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void field(boost::shared_ptr<FieldCodecBase> codec,
                               unsigned* return_value,
                               const google::protobuf::FieldDescriptor* field_desc)
                 {
@@ -110,7 +110,7 @@ namespace dccl
             
         struct Validate
         {
-            static void field(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void field(boost::shared_ptr<FieldCodecBase> codec,
                               bool* return_value,
                               const google::protobuf::FieldDescriptor* field_desc)
                 {
@@ -120,7 +120,7 @@ namespace dccl
 
         struct Info
         {
-            static void field(boost::shared_ptr<DCCLFieldCodecBase> codec,
+            static void field(boost::shared_ptr<FieldCodecBase> codec,
                               std::stringstream* return_value,
                               const google::protobuf::FieldDescriptor* field_desc)
                 {
@@ -133,7 +133,7 @@ namespace dccl
             void traverse_descriptor(ReturnType* return_value)
         {
             const google::protobuf::Descriptor* desc =
-                DCCLFieldCodecBase::this_descriptor();
+                FieldCodecBase::this_descriptor();
             for(int i = 0, n = desc->field_count(); i < n; ++i)
             {
                 const google::protobuf::FieldDescriptor* field_desc = desc->field(i);
@@ -141,7 +141,7 @@ namespace dccl
                 if(!check_field(field_desc))
                     continue;
 
-                Action::field(DCCLFieldCodecManager::find(field_desc),
+                Action::field(FieldCodecManager::find(field_desc),
                               return_value, field_desc);                    
             }
         }
@@ -164,10 +164,10 @@ namespace dccl
                     if(!check_field(field_desc))
                         continue;
            
-                    boost::shared_ptr<DCCLFieldCodecBase> codec =
-                        DCCLFieldCodecManager::find(field_desc);
+                    boost::shared_ptr<FieldCodecBase> codec =
+                        FieldCodecManager::find(field_desc);
                     boost::shared_ptr<FromProtoCppTypeBase> helper =
-                        DCCLTypeHelper::find(field_desc);
+                        TypeHelper::find(field_desc);
             
             
                     if(field_desc->is_repeated())
@@ -209,10 +209,10 @@ namespace dccl
                     if(!check_field(field_desc))
                         continue;
            
-                    boost::shared_ptr<DCCLFieldCodecBase> codec =
-                        DCCLFieldCodecManager::find(field_desc);
+                    boost::shared_ptr<FieldCodecBase> codec =
+                        FieldCodecManager::find(field_desc);
                     boost::shared_ptr<FromProtoCppTypeBase> helper =
-                        DCCLTypeHelper::find(field_desc);
+                        TypeHelper::find(field_desc);
             
             
                     if(field_desc->is_repeated())

@@ -38,19 +38,19 @@ extern "C"
     {
         using namespace dccl;
         
-        DCCLFieldCodecManager::add<LegacyCCLLatLonCompressedCodec>("_ccl_latloncompressed");
-        DCCLFieldCodecManager::add<LegacyCCLFixAgeCodec>("_ccl_fix_age");
-        DCCLFieldCodecManager::add<LegacyCCLTimeDateCodec>("_ccl_time_date");
-        DCCLFieldCodecManager::add<LegacyCCLHeadingCodec>("_ccl_heading");
-        DCCLFieldCodecManager::add<LegacyCCLDepthCodec>("_ccl_depth");
-        DCCLFieldCodecManager::add<LegacyCCLVelocityCodec>("_ccl_velocity");
-        DCCLFieldCodecManager::add<LegacyCCLWattsCodec>("_ccl_watts");
-        DCCLFieldCodecManager::add<LegacyCCLGFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-        DCCLFieldCodecManager::add<LegacyCCLSpeedCodec>("_ccl_speed");
-        DCCLFieldCodecManager::add<LegacyCCLHiResAltitudeCodec>("_ccl_hires_altitude");
-        DCCLFieldCodecManager::add<LegacyCCLTemperatureCodec>("_ccl_temperature");
-        DCCLFieldCodecManager::add<LegacyCCLSalinityCodec>("_ccl_salinity");
-        DCCLFieldCodecManager::add<LegacyCCLSoundSpeedCodec>("_ccl_sound_speed");
+        FieldCodecManager::add<LegacyCCLLatLonCompressedCodec>("_ccl_latloncompressed");
+        FieldCodecManager::add<LegacyCCLFixAgeCodec>("_ccl_fix_age");
+        FieldCodecManager::add<LegacyCCLTimeDateCodec>("_ccl_time_date");
+        FieldCodecManager::add<LegacyCCLHeadingCodec>("_ccl_heading");
+        FieldCodecManager::add<LegacyCCLDepthCodec>("_ccl_depth");
+        FieldCodecManager::add<LegacyCCLVelocityCodec>("_ccl_velocity");
+        FieldCodecManager::add<LegacyCCLWattsCodec>("_ccl_watts");
+        FieldCodecManager::add<LegacyCCLGFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        FieldCodecManager::add<LegacyCCLSpeedCodec>("_ccl_speed");
+        FieldCodecManager::add<LegacyCCLHiResAltitudeCodec>("_ccl_hires_altitude");
+        FieldCodecManager::add<LegacyCCLTemperatureCodec>("_ccl_temperature");
+        FieldCodecManager::add<LegacyCCLSalinityCodec>("_ccl_salinity");
+        FieldCodecManager::add<LegacyCCLSoundSpeedCodec>("_ccl_sound_speed");
         
         dccl->load<dccl::protobuf::CCLMDATEmpty>();
         dccl->load<dccl::protobuf::CCLMDATRedirect>();
@@ -192,10 +192,10 @@ float dccl::LegacyCCLVelocityCodec::decode(Bitset* bits)
 //
 dccl::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
 {
-    const google::protobuf::Message* root = DCCLFieldCodecBase::root_message();
+    const google::protobuf::Message* root = FieldCodecBase::root_message();
     const google::protobuf::FieldDescriptor* thrust_mode_field_desc =
         root->GetDescriptor()->FindFieldByNumber(
-            DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).thrust_mode_tag());
+            FieldCodecBase::dccl_field_options().GetExtension(ccl).thrust_mode_tag());
 
     switch(root->GetReflection()->GetEnum(*root, thrust_mode_field_desc)->number())
     {
@@ -210,10 +210,10 @@ dccl::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
 
 float dccl::LegacyCCLSpeedCodec::decode(Bitset* bits)
 {
-    const google::protobuf::Message* root = DCCLFieldCodecBase::root_message();
+    const google::protobuf::Message* root = FieldCodecBase::root_message();
     const google::protobuf::FieldDescriptor* thrust_mode_field_desc =
         root->GetDescriptor()->FindFieldByNumber(
-            DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).thrust_mode_tag());
+            FieldCodecBase::dccl_field_options().GetExtension(ccl).thrust_mode_tag());
 
     switch(root->GetReflection()->GetEnum(*root, thrust_mode_field_desc)->number())
     {

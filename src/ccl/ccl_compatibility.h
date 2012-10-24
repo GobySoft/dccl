@@ -39,7 +39,7 @@ namespace dccl
 {
     const unsigned char DCCL_CCL_HEADER = 32;
 
-    class LegacyCCLIdentifierCodec : public DCCLDefaultIdentifierCodec
+    class LegacyCCLIdentifierCodec : public DefaultIdentifierCodec
     {
       private:
         dccl::Bitset encode()
@@ -55,7 +55,7 @@ namespace dccl
             else
             {
                 // DCCL message
-                return dccl::DCCLDefaultIdentifierCodec::encode(wire_value).prepend(
+                return dccl::DefaultIdentifierCodec::encode(wire_value).prepend(
                     dccl::Bitset(dccl::BITS_IN_BYTE, dccl::DCCL_CCL_HEADER));
             }
                 
@@ -68,9 +68,9 @@ namespace dccl
             if(ccl_id == dccl::DCCL_CCL_HEADER)
             {
                 // DCCL message
-                bits->get_more_bits(dccl::DCCLDefaultIdentifierCodec::min_size());
+                bits->get_more_bits(dccl::DefaultIdentifierCodec::min_size());
                 (*bits) >>= dccl::BITS_IN_BYTE;
-                return dccl::DCCLDefaultIdentifierCodec::decode(bits);
+                return dccl::DefaultIdentifierCodec::decode(bits);
             }
             else
             {
@@ -92,12 +92,12 @@ namespace dccl
             else
             {
                 return dccl::BITS_IN_BYTE +
-                    dccl::DCCLDefaultIdentifierCodec::size(field_value);
+                    dccl::DefaultIdentifierCodec::size(field_value);
             }
         }
             
         unsigned max_size()
-        { return dccl::BITS_IN_BYTE + dccl::DCCLDefaultIdentifierCodec::max_size(); }
+        { return dccl::BITS_IN_BYTE + dccl::DefaultIdentifierCodec::max_size(); }
 
         unsigned min_size()
         { return dccl::BITS_IN_BYTE; }
@@ -107,7 +107,7 @@ namespace dccl
         enum { CCL_DCCL_ID_PREFIX = 0x0CC10000 };
     };
 
-    class LegacyCCLLatLonCompressedCodec : public dccl::DCCLTypedFixedFieldCodec<double>
+    class LegacyCCLLatLonCompressedCodec : public dccl::TypedFixedFieldCodec<double>
     {
       private:
         dccl::Bitset encode();
@@ -117,7 +117,7 @@ namespace dccl
         enum { LATLON_COMPRESSED_BYTE_SIZE = 3 };            
     };
 
-    class LegacyCCLFixAgeCodec : public dccl::DCCLDefaultNumericFieldCodec<dccl::uint32>
+    class LegacyCCLFixAgeCodec : public dccl::DefaultNumericFieldCodec<dccl::uint32>
     {
       private:
         dccl::Bitset encode()
@@ -127,14 +127,14 @@ namespace dccl
             
         dccl::Bitset encode(const dccl::uint32& wire_value)
         {
-            return DCCLDefaultNumericFieldCodec<dccl::uint32>::encode(
+            return DefaultNumericFieldCodec<dccl::uint32>::encode(
                 std::min<unsigned char>(max(), wire_value / SCALE_FACTOR));
         }
             
         dccl::uint32 decode(dccl::Bitset* bits)
         {
             return SCALE_FACTOR *
-                DCCLDefaultNumericFieldCodec<dccl::uint32>::decode(bits);
+                DefaultNumericFieldCodec<dccl::uint32>::decode(bits);
         }
                         
         double max() { return (1 << dccl::BITS_IN_BYTE) - 1; }
@@ -146,7 +146,7 @@ namespace dccl
     };
         
             
-    class LegacyCCLTimeDateCodec : public dccl::DCCLTypedFixedFieldCodec<dccl::uint64>
+    class LegacyCCLTimeDateCodec : public dccl::TypedFixedFieldCodec<dccl::uint64>
     {
       public:
         static dccl::uint64 to_uint64_time(const boost::posix_time::ptime& time_date);
@@ -163,7 +163,7 @@ namespace dccl
             
     };
 
-    class LegacyCCLHeadingCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLHeadingCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -173,7 +173,7 @@ namespace dccl
     };
 
 
-    class LegacyCCLHiResAltitudeCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLHiResAltitudeCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -188,7 +188,7 @@ namespace dccl
     };
 
         
-    class LegacyCCLDepthCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLDepthCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -196,17 +196,17 @@ namespace dccl
         float decode(dccl::Bitset* bits);
         unsigned size()
         {
-            return DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).bit_size();
+            return FieldCodecBase::dccl_field_options().GetExtension(ccl).bit_size();
         }
             
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_bit_size(), "missing (dccl.field).ccl.bit_size");
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().GetExtension(ccl).has_bit_size(), "missing (dccl.field).ccl.bit_size");
         }
             
     };
 
-    class LegacyCCLVelocityCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLVelocityCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -215,7 +215,7 @@ namespace dccl
         unsigned size() { return dccl::BITS_IN_BYTE; }
     };
 
-    class LegacyCCLSpeedCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLSpeedCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -225,13 +225,13 @@ namespace dccl
 
         void validate()
         {
-            DCCLFieldCodecBase::require(DCCLFieldCodecBase::dccl_field_options().GetExtension(ccl).has_thrust_mode_tag(), "missing (dccl.field).ccl.thrust_mode_tag");
+            FieldCodecBase::require(FieldCodecBase::dccl_field_options().GetExtension(ccl).has_thrust_mode_tag(), "missing (dccl.field).ccl.thrust_mode_tag");
         }
     };
 
 
         
-    class LegacyCCLWattsCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLWattsCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -240,7 +240,7 @@ namespace dccl
         unsigned size() { return dccl::BITS_IN_BYTE; }
     };
 
-    class LegacyCCLGFIPitchOilCodec : public dccl::DCCLTypedFixedFieldCodec<protobuf::CCLMDATState::GFIPitchOil>
+    class LegacyCCLGFIPitchOilCodec : public dccl::TypedFixedFieldCodec<protobuf::CCLMDATState::GFIPitchOil>
     {
       private:
         dccl::Bitset encode() { return encode(protobuf::CCLMDATState::GFIPitchOil()); }
@@ -251,7 +251,7 @@ namespace dccl
                         
     };
 
-    class LegacyCCLSalinityCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLSalinityCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -260,7 +260,7 @@ namespace dccl
         unsigned size() { return dccl::BITS_IN_BYTE; }
     };
 
-    class LegacyCCLTemperatureCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLTemperatureCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }
@@ -269,7 +269,7 @@ namespace dccl
         unsigned size() { return dccl::BITS_IN_BYTE; }
     };
 
-    class LegacyCCLSoundSpeedCodec : public dccl::DCCLTypedFixedFieldCodec<float>
+    class LegacyCCLSoundSpeedCodec : public dccl::TypedFixedFieldCodec<float>
     {
       private:
         dccl::Bitset encode() { return encode(0); }

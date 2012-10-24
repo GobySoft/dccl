@@ -50,7 +50,7 @@
 /// Objects pertaining to acoustic communications (acomms)
 namespace dccl
 {
-    class DCCLFieldCodec;
+    class FieldCodec;
   
     /// \class Codec dccl/dccl.h dccl/dccl.h
     /// \brief provides an API to the Dynamic CCL Codec.
@@ -254,9 +254,9 @@ namespace dccl
 
         void set_default_codecs();
 
-        boost::shared_ptr<DCCLFieldCodecBase> id_codec() const
+        boost::shared_ptr<FieldCodecBase> id_codec() const
         {
-            return DCCLFieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
+            return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
                                                id_codec_);
         }
         
