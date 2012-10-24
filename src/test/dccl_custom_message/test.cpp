@@ -37,12 +37,12 @@ using dccl::Bitset;
 class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
 {
 private:
-    unsigned size() { return (part() == dccl::MessageHandler::HEAD) ? 0 : A_SIZE + B_SIZE; }
+    unsigned size() { return (part() == dccl::MessageStack::HEAD) ? 0 : A_SIZE + B_SIZE; }
     Bitset encode() { return Bitset(size()); }
     
     Bitset encode(const CustomMsg& msg)
         {
-            if(part() == dccl::MessageHandler::HEAD)
+            if(part() == dccl::MessageStack::HEAD)
             { return encode(); }
             else
             {
@@ -59,7 +59,7 @@ private:
     
     CustomMsg decode(Bitset* bits)
         {
-            if(part() == dccl::MessageHandler::HEAD)
+            if(part() == dccl::MessageStack::HEAD)
             { throw(dccl::NullValueException()); }
             else
             {

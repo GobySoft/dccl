@@ -30,12 +30,12 @@
 namespace dccl
 {
     //RAII handler for the current Message recursion stack
-    class MessageHandler
+    class MessageStack
     {
       public:
-        MessageHandler(const google::protobuf::FieldDescriptor* field = 0);
+        MessageStack(const google::protobuf::FieldDescriptor* field = 0);
                 
-        ~MessageHandler()
+        ~MessageStack()
         {
             for(int i = 0; i < descriptors_pushed_; ++i)
                 __pop_desc();
@@ -44,8 +44,9 @@ namespace dccl
                 __pop_field();
 
             if(desc_.empty())
-                part_ = UNKNOWN;
-                
+            {
+                current_part_ = UNKNOWN;
+            }    
         }
 
         enum MessagePart { HEAD, BODY, UNKNOWN };
@@ -58,8 +59,7 @@ namespace dccl
         void push(const google::protobuf::Descriptor* desc);
         void push(const google::protobuf::FieldDescriptor* field);
 
-        static MessagePart current_part() { return part_; }
-            
+        static MessagePart current_part() { return current_part_; }
             
         friend class FieldCodecBase;
       private:
@@ -70,7 +70,7 @@ namespace dccl
         static std::vector<const google::protobuf::FieldDescriptor*> field_;
         int descriptors_pushed_;
         int fields_pushed_;
-        static MessagePart part_;
+        static MessagePart current_part_;
     };
 }
 

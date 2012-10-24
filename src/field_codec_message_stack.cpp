@@ -22,44 +22,44 @@
 
 
 
-#include "field_codec_helpers.h"
+#include "field_codec_message_stack.h"
 #include "field_codec.h"
 
-std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageHandler::field_;
-std::vector<const google::protobuf::Descriptor*> dccl::MessageHandler::desc_;
-dccl::MessageHandler::MessagePart dccl::MessageHandler::part_ = dccl::MessageHandler::UNKNOWN;
+std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageStack::field_;
+std::vector<const google::protobuf::Descriptor*> dccl::MessageStack::desc_;
+dccl::MessageStack::MessagePart dccl::MessageStack::current_part_ = dccl::MessageStack::UNKNOWN;
 
 //
-// MessageHandler
+// MessageStack
 //
 
-void dccl::MessageHandler::push(const google::protobuf::Descriptor* desc)
+void dccl::MessageStack::push(const google::protobuf::Descriptor* desc)
  
 {
     desc_.push_back(desc);
     ++descriptors_pushed_;
 }
 
-void dccl::MessageHandler::push(const google::protobuf::FieldDescriptor* field)
+void dccl::MessageStack::push(const google::protobuf::FieldDescriptor* field)
 {
     field_.push_back(field);
     ++fields_pushed_;
 }
 
 
-void dccl::MessageHandler::__pop_desc()
+void dccl::MessageStack::__pop_desc()
 {
     if(!desc_.empty())
         desc_.pop_back();
 }
 
-void dccl::MessageHandler::__pop_field()
+void dccl::MessageStack::__pop_field()
 {
     if(!field_.empty())
         field_.pop_back();
 }
 
-dccl::MessageHandler::MessageHandler(const google::protobuf::FieldDescriptor* field)
+dccl::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
     : descriptors_pushed_(0),
       fields_pushed_(0)
 {
@@ -69,7 +69,7 @@ dccl::MessageHandler::MessageHandler(const google::protobuf::FieldDescriptor* fi
         {
             // if explicitly set, set part (HEAD or BODY) of message for all children of this message
             if(field->options().GetExtension(dccl::field).has_in_head())
-                part_ = field->options().GetExtension(dccl::field).in_head() ? HEAD : BODY;
+                current_part_ = field->options().GetExtension(dccl::field).in_head() ? HEAD : BODY;
             
             push(field->message_type());
         }

@@ -9,7 +9,7 @@ add_library(dccl
   logger.cpp
   codec.cpp
   field_codec.cpp
-  field_codec_helpers.cpp
+  field_codec_message_stack.cpp
   field_codec_default.cpp
   field_codec_default_message.cpp
   field_codec_manager.cpp
