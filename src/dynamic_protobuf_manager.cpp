@@ -81,10 +81,7 @@ void dccl::DynamicProtobufManager::DLogMultiFileErrorCollector::AddError(const s
     std::stringstream ss;
     ss << "File: " << filename
        << " has error (line: " << line << ", column: "
-       << column << ")";
-    
-    dccl::dlog.is(dccl::logger::WARN) &&
-        dccl::dlog << ss.str() << ": " << message << std::endl;
+       << column << "):" << message;
 
     throw(dccl::Exception(ss.str()));
 
