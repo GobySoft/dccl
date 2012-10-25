@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     timeval t;
     gettimeofday(&t, 0);
-    dccl::int64 now = 1000000 * t.tv_sec;
+    dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
     
     msg_in1.mutable_header()->set_time(now);
     msg_in1.mutable_header()->set_source_platform(1);
