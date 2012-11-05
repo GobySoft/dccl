@@ -63,11 +63,11 @@ dccl::DynamicProtobufManager::load_from_proto_file(const std::string& proto_file
                 
                 
 #if BOOST_FILESYSTEM_VERSION == 3
-    namespace bf = boost::filesystem3;
+    namespace boostfile = boost::filesystem3;
 #else
-    namespace bf = boost::filesystem;
+    namespace boostfile = boost::filesystem;
 #endif
-    bf::path proto_file_path = bf::complete(proto_file);
+    boostfile::path proto_file_path = boostfile::complete(proto_file);
     proto_file_path.normalize();
 
     return user_descriptor_pool().FindFileByName(proto_file_path.string());
