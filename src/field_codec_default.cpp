@@ -92,7 +92,7 @@ unsigned dccl::DefaultIdentifierCodec::size(const uint32& id)
 unsigned dccl::DefaultIdentifierCodec::this_size(const uint32& id)
 {
     if(id < 0 || id > TWO_BYTE_MAX_ID)
-        throw(Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") is less than 0 or exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
+        throw Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") is less than 0 or exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID)));
     
     return (id <= ONE_BYTE_MAX_ID) ?
         SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
@@ -141,7 +141,7 @@ bool dccl::DefaultBoolCodec::decode(Bitset* bits)
     }
     else
     {
-        throw(NullValueException());
+        throw NullValueException();
     }
 }
 
@@ -224,7 +224,7 @@ std::string dccl::DefaultStringCodec::decode(Bitset* bits)
     }
     else
     {
-        throw(NullValueException());
+        throw NullValueException();
     }
     
 }
@@ -312,7 +312,7 @@ std::string dccl::DefaultBytesCodec::decode(Bitset* bits)
         }
         else
         {
-            throw(NullValueException());
+            throw NullValueException();
         }
     }
     else
@@ -356,7 +356,7 @@ const google::protobuf::EnumValueDescriptor* dccl::DefaultEnumCodec::post_decode
     if(return_value)
         return return_value;
     else
-        throw(NullValueException());
+        throw NullValueException();
 }
 
 
