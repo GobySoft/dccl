@@ -684,7 +684,7 @@ namespace dccl
             if(return_value)
                 return return_value;
             else
-                throw(NullValueException());
+                throw NullValueException();
         }
 
     };

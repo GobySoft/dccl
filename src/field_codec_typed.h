@@ -29,6 +29,8 @@
 
 namespace dccl
 {
+
+    template <int> struct dummy { dummy(int) {} };
         
     /// \brief if WireType == FieldType, we don't have to add any more virtual methods for converting between them.
     template <typename WireType, typename FieldType, class Enable = void> 
@@ -160,7 +162,7 @@ namespace dccl
 
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<0> dummy = 0)
       {
           try
           {
@@ -176,7 +178,7 @@ namespace dccl
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<1> dummy = 0)
       {
           try
           { *wire_value = decode(bits); }
@@ -282,7 +284,7 @@ namespace dccl
 
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<0> dummy = 0)
       {
           std::vector<WireType> decoded_msgs = decode_repeated(repeated_bits);
           wire_values->resize(decoded_msgs.size(), WireType());
@@ -296,7 +298,7 @@ namespace dccl
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<1> dummy = 0)
       {
           std::vector<WireType> decoded = decode_repeated(repeated_bits);
           wire_values->resize(decoded.size(), WireType());

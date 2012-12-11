@@ -31,6 +31,8 @@
 
 namespace dccl
 {
+    // See Bug #1089061, and Boost MPL Documentation section 3.4 (compiler workarounds)
+    template <int> struct dummy_fcm { dummy_fcm(int) {} };
 
     /// \todo (tes) Make sanity check for newly added FieldCodecs
     class FieldCodecManager
@@ -51,7 +53,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
             >,
             void>::type 
-            static add(const std::string& name);
+            static add(const std::string& name, dummy_fcm<0> dummy_fcm = 0);
                 
         /// \brief Add a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
         ///
@@ -64,7 +66,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message,typename Codec::wire_type> >
             >,
             void>::type
-            static add(const std::string& name);
+            static add(const std::string& name, dummy_fcm<1> dummy_fcm = 0);
                 
         /// \brief Add a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
         ///
@@ -163,7 +165,7 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
 boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
 >,
 void>::type 
-dccl::FieldCodecManager::add(const std::string& name)
+dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<0> dummy_fcm)
 {
     TypeHelper::add<typename Codec::wire_type>();
     __add<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
@@ -178,7 +180,7 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
     boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
     >,
     void>::type
-    dccl::FieldCodecManager::add(const std::string& name)
+    dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<1> dummy_fcm)
 {
     __add<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
