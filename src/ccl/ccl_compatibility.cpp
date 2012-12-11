@@ -118,9 +118,10 @@ dccl::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
 
     // \todo chrismurf FIX ME! with timegm
     // assume current year
+    int year = boost::gregorian::day_clock::universal_day().year();
+
     boost::posix_time::ptime time_date(
-        boost::gregorian::date(boost::gregorian::day_clock::universal_day().year(),
-                               mon, day), 
+        boost::gregorian::date(year, mon, day), 
         boost::posix_time::time_duration(hour,min,sec));
 
     return to_uint64_time(time_date);
