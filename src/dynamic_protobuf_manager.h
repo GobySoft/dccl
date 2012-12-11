@@ -90,8 +90,13 @@ namespace dccl
             get_instance()->enable_disk_source_database();
         }
 
+        /** It is critical that the argument be the absolute, canonical path to the file.
+         * This could be achieved, e.g., by using Boost filesystem as follows...
+         * boost::filesystem::path abs_path = boost::filesystem::complete(rel_path);
+         * abs_path.normalize();
+         */
         static const google::protobuf::FileDescriptor*
-            load_from_proto_file(const std::string& proto_file);
+            load_from_proto_file(const std::string& protofile_absolute_path);
 
 
         static void add_include_path(const std::string& path)

@@ -97,7 +97,7 @@ configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 
 ## boost
-find_package(Boost 1.40.0 COMPONENTS filesystem system)
+find_package(Boost 1.40.0)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(ProtobufDCCL REQUIRED)

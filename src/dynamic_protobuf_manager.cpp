@@ -27,9 +27,6 @@
 #include "logger.h"
 #include "exception.h"
 
-#include <boost/filesystem.hpp>
-
-
 boost::shared_ptr<dccl::DynamicProtobufManager> dccl::DynamicProtobufManager::inst_;
 
 const google::protobuf::FileDescriptor* dccl::DynamicProtobufManager::add_protobuf_file(const google::protobuf::FileDescriptorProto& proto)
@@ -55,22 +52,19 @@ void dccl::DynamicProtobufManager::enable_disk_source_database()
     add_database(source_database_);
 }
 
+
+/** It is critical that the argument be the absolute, canonical path to the file.
+ * This could be achieved, e.g., by using Boost filesystem as follows...
+ * boost::filesystem::path abs_path = boost::filesystem::complete(rel_path);
+ * abs_path.normalize();
+ */
 const google::protobuf::FileDescriptor*
-dccl::DynamicProtobufManager::load_from_proto_file(const std::string& proto_file)
+dccl::DynamicProtobufManager::load_from_proto_file(const std::string& protofile_absolute_path)
 {
     if(!get_instance()->source_database_)
         throw(std::runtime_error("Must called enable_compilation() before loading proto files directly"));
-                
-                
-#if BOOST_FILESYSTEM_VERSION == 3
-    namespace boostfile = boost::filesystem3;
-#else
-    namespace boostfile = boost::filesystem;
-#endif
-    boostfile::path proto_file_path = boostfile::complete(proto_file);
-    proto_file_path.normalize();
 
-    return user_descriptor_pool().FindFileByName(proto_file_path.string());
+    return user_descriptor_pool().FindFileByName(protofile_absolute_path);
 }
 
 
