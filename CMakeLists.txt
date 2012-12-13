@@ -109,6 +109,10 @@ find_package(Threads)
 # shared library suffix
 add_definitions(-DSHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
+# work around OLD compilers and systems (like gcc3.3 ...) where reentrancy matters to boost::signals2.  Dccl Bug #1090022.
+add_definitions(-D_REENTRANT)
+add_definitions(-pthread)
+
 # optional
 ## cryptopp
 find_package(Cryptopp QUIET)
