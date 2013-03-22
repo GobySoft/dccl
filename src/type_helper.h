@@ -28,11 +28,6 @@
 #include <map>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/mpl/logical.hpp>
 
 #include "protobuf_cpp_type_helpers.h"
 

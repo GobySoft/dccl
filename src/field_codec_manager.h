@@ -25,6 +25,12 @@
 #ifndef FieldCodecManager20110405H
 #define FieldCodecManager20110405H
 
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/not.hpp>
+#include <boost/mpl/logical.hpp>
+
 #include "type_helper.h"
 #include "field_codec.h"
 #include "dccl/logger.h"
