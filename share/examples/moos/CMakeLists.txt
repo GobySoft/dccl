@@ -1,1 +1,0 @@
-add_subdirectory(gobyexample_protobuf)
