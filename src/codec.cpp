@@ -20,8 +20,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
 #include <algorithm>
 
 #include <dlfcn.h> // for shared library loading
@@ -164,7 +162,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
             
             dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
 
-            *bytes =  head_bytes + body_bytes;
+            *bytes += head_bytes + body_bytes;
 
         }
         else
