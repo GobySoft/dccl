@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -57,15 +57,31 @@ extern "C"
 
 dccl::Model::symbol_type dccl::Model::value_to_symbol(value_type value) const
 {
+    if(value < *user_model_.value_bound().begin() || value > *(user_model_.value_bound().end()-1))
+        return Model::OUT_OF_RANGE_SYMBOL;
     
-    symbol_type symbol =
+
+    google::protobuf::RepeatedField<double>::const_iterator upper_it =
         std::upper_bound(user_model_.value_bound().begin(),
                          user_model_.value_bound().end(),
-                         value) - 1 - user_model_.value_bound().begin();
+                         value);
 
-    return (symbol < 0 || symbol >= user_model_.frequency_size()) ?
-        Model::OUT_OF_RANGE_SYMBOL :
-        symbol;
+        
+    google::protobuf::RepeatedField<double>::const_iterator lower_it = 
+        (upper_it == user_model_.value_bound().begin()) ? upper_it : upper_it - 1;
+        
+    double lower_diff = std::abs((*lower_it)*(*lower_it) - value*value);
+    double upper_diff = std::abs((*upper_it)*(*upper_it) - value*value);
+
+//    std::cout << "value: " << value << std::endl;
+//    std::cout << "lower_value: " << *lower_it << std::endl;
+//    std::cout << "upper_value: " << *upper_it << std::endl;
+    
+    symbol_type symbol = ((lower_diff < upper_diff) ? lower_it : upper_it)
+        - user_model_.value_bound().begin();
+
+    
+    return symbol;
                           
 }
               

@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -100,7 +100,7 @@ void dccl::Codec::set_default_codecs()
 }
 
 
-void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg)
+void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only /* = false */)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -108,60 +108,70 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
 
     try
     {
-        if(!msg.IsInitialized())
+        if(!msg.IsInitialized() && !header_only)
             throw(Exception("Message is not properly initialized. All `required` fields must be set."));
         
         if(!id2desc_.count(id(desc)))
-            throw(Exception("Message id " +
-                                boost::lexical_cast<std::string>(id(desc))+
-                                " has not been loaded. Call load() before encoding this type."));
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been validated. Call validate() before encoding this type."));
     
         
-        //fixed header
-        Bitset head_bits;
-        id_codec()->field_encode(&head_bits, id(desc), 0);
-        
-        Bitset body_bits;
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
         boost::shared_ptr<FromProtoCppTypeBase> helper = TypeHelper::find(desc);
 
         if(codec)
         {
-            MessageStack msg_handler;
-            msg_handler.push(msg.GetDescriptor());
+            //fixed header
+            Bitset head_bits;
+            id_codec()->field_encode(&head_bits, id(desc), 0);
+            
+            MessageStack msg_stack;
+            msg_stack.push(msg.GetDescriptor());
             codec->base_encode(&head_bits, msg, MessageStack::HEAD);
-            codec->base_encode(&body_bits, msg, MessageStack::BODY);
+
+            std::string body_bytes;
+            
+            // given header of not even byte size (e.g. 01011), make even byte size (e.g. 00001011)
+            unsigned head_byte_size = ceil_bits2bytes(head_bits.size());
+            unsigned head_bits_diff = head_byte_size * BITS_IN_BYTE - (head_bits.size());
+            head_bits.resize(head_bits.size() + head_bits_diff);
+            
+            std::string head_bytes = head_bits.to_byte_string();
+        
+            dlog.is(DEBUG2) && dlog << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size() << ")" << std::endl;
+            dlog.is(DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
+            dlog.is(DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;        
+
+
+            if(header_only)
+            {
+                dlog.is(DEBUG2) && dlog << "as requested, skipping encoding and encrypting body." << std::endl;
+            }
+            else
+            {
+                Bitset body_bits;
+                codec->base_encode(&body_bits, msg, MessageStack::BODY);
+                body_bytes = body_bits.to_byte_string();
+                dlog.is(DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
+                dlog.is(DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                dlog.is(DEBUG2) && dlog << "Body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
+
+                if(!crypto_key_.empty() && !skip_crypto_ids_.count(id(desc)))
+                    encrypt(&body_bytes, head_bytes);
+
+                dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+            }
+            
+            dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
+
+            *bytes =  head_bytes + body_bytes;
+
         }
         else
         {
             throw(Exception("Failed to find (dccl.msg).codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
         
-        // given header of not even byte size (e.g. 01011), make even byte size (e.g. 00001011)
-        unsigned head_byte_size = ceil_bits2bytes(head_bits.size());
-        unsigned head_bits_diff = head_byte_size * BITS_IN_BYTE - (head_bits.size());
-        head_bits.resize(head_bits.size() + head_bits_diff);
-
-        std::string head_bytes = head_bits.to_byte_string();
-        std::string body_bytes = body_bits.to_byte_string();
-
-        dlog.is(dccl::logger::DEBUG2) && dlog << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size()
-                                << "), body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
-        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
-        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
-        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
-        dlog.is(dccl::logger::DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
-        
-        if(!crypto_key_.empty())
-            encrypt(&body_bytes, head_bytes);
-
-        dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
-
-
-        dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
-
-        *bytes +=  head_bytes + body_bytes;
     }
     catch(std::exception& e)
     {
@@ -173,6 +183,8 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         throw(Exception(ss.str()));
     }
 }
+
+
 
 unsigned dccl::Codec::id(const std::string& bytes)
 {
@@ -203,81 +215,87 @@ void dccl::Codec::decode(std::string* bytes, google::protobuf::Message* msg)
     bytes->erase(0, last_size);
 }
 
-void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* msg)
+void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* msg, bool header_only /* = false */)
 {
     try
     {
         unsigned this_id = id(bytes);
 
-        dlog.is(DEBUG1) && dlog << "Began decoding message of id: " << this_id << std::endl;
+        dlog.is(DEBUG1) && dlog  << "Began decoding message of id: " << this_id << std::endl;
         
         if(!id2desc_.count(this_id))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
-        dlog.is(DEBUG1) && dlog << "Type name: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog  << "Type name: " << desc->full_name() << std::endl;
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
         boost::shared_ptr<FromProtoCppTypeBase> helper = TypeHelper::find(desc);
-
-        
-        unsigned head_size_bits, body_size_bits;
-        codec->base_max_size(&head_size_bits, desc, MessageStack::HEAD);
-        codec->base_max_size(&body_size_bits, desc, MessageStack::BODY);
-
-        unsigned id_bits = 0;
-        id_codec()->field_size(&id_bits, this_id, 0);
-        head_size_bits += id_bits;
-        
-        unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
-        unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
-    
-        dlog.is(DEBUG2) && dlog << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
-                                << "), max body bytes (bits): " << body_size_bytes << "(" << body_size_bits << ")" <<  std::endl;
-
-        std::string head_bytes = bytes.substr(0, head_size_bytes);
-        std::string body_bytes = bytes.substr(head_size_bytes);
-
-
-        dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
-
-
-        if(!crypto_key_.empty())
-            decrypt(&body_bytes, head_bytes);
-
-        dlog.is(DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
-        dlog.is(DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
-
-        
-        Bitset head_bits, body_bits;
-        head_bits.from_byte_string(head_bytes);
-        body_bits.from_byte_string(body_bytes);
-    
-        dlog.is(DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
-        dlog.is(DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
-
-        // shift off ID bits
-        head_bits >>= id_bits;
-
-        dlog.is(DEBUG3) && dlog << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
         
         if(codec)
         {
-            MessageStack msg_handler;
-            msg_handler.push(msg->GetDescriptor());
+            unsigned head_size_bits;
+            unsigned body_size_bits;
+            codec->base_max_size(&head_size_bits, desc, MessageStack::HEAD);
+            codec->base_max_size(&body_size_bits, desc, MessageStack::BODY);
+            unsigned id_size;
+            id_codec()->field_size(&id_size, this_id, 0);
+            head_size_bits += id_size;
+        
+            unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
+            unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
+    
+            dlog.is(DEBUG2) && dlog  << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
+                                    << "), max body bytes (bits): " << body_size_bytes << "(" << body_size_bits << ")" <<  std::endl;
+
+            std::string head_bytes = bytes.substr(0, head_size_bytes);
+            dlog.is(DEBUG3) && dlog  << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
+            
+            Bitset head_bits;
+            head_bits.from_byte_string(head_bytes);    
+            dlog.is(DEBUG3) && dlog  << "Unencrypted Head (bin): " << head_bits << std::endl;
+
+            // shift off ID bits
+            head_bits >>= id_size;
+
+            dlog.is(DEBUG3) && dlog  << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
+
+            MessageStack msg_stack;
+            msg_stack.push(msg->GetDescriptor());
             
             codec->base_decode(&head_bits, msg, MessageStack::HEAD);
-            dlog.is(DEBUG2) && dlog << "after header decode, message is: " << *msg << std::endl;
-            codec->base_decode(&body_bits, msg, MessageStack::BODY);
-            dlog.is(DEBUG2) && dlog << "after header & body decode, message is: " << *msg << std::endl;
+            dlog.is(DEBUG2) && dlog  << "after header decode, message is: " << *msg << std::endl;
+
+
+            if(header_only)
+            {
+                dlog.is(DEBUG2) && dlog  << "as requested, skipping decrypting and decoding body." << std::endl;
+            }
+            else
+            {
+                std::string body_bytes = bytes.substr(head_size_bytes);
+                dlog.is(DEBUG3) && dlog  << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                
+                if(!crypto_key_.empty() && !skip_crypto_ids_.count(this_id))
+                    decrypt(&body_bytes, head_bytes);
+                
+                dlog.is(DEBUG3) && dlog  << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                
+                Bitset body_bits;
+                body_bits.from_byte_string(body_bytes);
+                dlog.is(DEBUG3) && dlog  << "Unencrypted Body (bin): " << body_bits << std::endl;
+                
+                codec->base_decode(&body_bits, msg, MessageStack::BODY);
+                dlog.is(DEBUG2) && dlog  << "after header & body decode, message is: " << *msg << std::endl;
+            }
         }
         else
         {
             throw(Exception("Failed to find (dccl.msg).codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
 
-        dlog.is(DEBUG1) && dlog << "Successfully decoded message of type: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1) && dlog  << "Successfully decoded message of type: " << desc->full_name() << std::endl;
     }
     catch(std::exception& e)
     {
@@ -322,7 +340,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
         codec->base_validate(desc, MessageStack::BODY);
 
         if(id2desc_.count(dccl_id) && desc != id2desc_.find(dccl_id)->second)
-            throw(Exception("`dccl.id` " + boost::lexical_cast<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + boost::lexical_cast<std::string>(id2desc_.find(dccl_id)->second)));
+            throw(Exception("`dccl id` " + boost::lexical_cast<std::string>(dccl_id) + " is already in use by Message " + id2desc_.find(dccl_id)->second->full_name() + ": " + boost::lexical_cast<std::string>(id2desc_.find(dccl_id)->second)));
         else
             id2desc_.insert(std::make_pair(id(desc), desc));
 
@@ -469,11 +487,12 @@ void dccl::Codec::load_library(void* dl_handle)
 }
 
 
-
-void dccl::Codec::set_crypto_passphrase(const std::string& passphrase)
+void dccl::Codec::set_crypto_passphrase(const std::string& passphrase, const std::set<unsigned>& do_not_encrypt_ids_ /*= std::set<unsigned>()*/)
 {
     if(!crypto_key_.empty())
         crypto_key_.clear();
+    skip_crypto_ids_.clear();
+
 #ifdef HAS_CRYPTOPP
     using namespace CryptoPP;
     
@@ -482,9 +501,10 @@ void dccl::Codec::set_crypto_passphrase(const std::string& passphrase)
     
     dlog.is(DEBUG1) && dlog << "Cryptography enabled with given passphrase" << std::endl;
 #else
-    dlog.is(DEBUG1) && dlog << "Cryptography disabled because Goby was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
+    dlog.is(DEBUG1) && dlog << "Cryptography disabled because DCCL was compiled without support of Crypto++. Install Crypto++ and recompile to enable cryptography." << std::endl;
 #endif
 
+    skip_crypto_ids_ = do_not_encrypt_ids_;
 }
 
 void dccl::Codec::info_all(std::ostream* os) const

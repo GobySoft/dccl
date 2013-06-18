@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -91,8 +91,8 @@ unsigned dccl::DefaultIdentifierCodec::size(const uint32& id)
 
 unsigned dccl::DefaultIdentifierCodec::this_size(const uint32& id)
 {
-    if(id < 0 || id > TWO_BYTE_MAX_ID)
-        throw Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") is less than 0 or exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID)));
+    if(id > TWO_BYTE_MAX_ID)
+        throw(Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
     
     return (id <= ONE_BYTE_MAX_ID) ?
         SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
@@ -209,7 +209,7 @@ std::string dccl::DefaultStringCodec::decode(Bitset* bits)
         
         dccl::dlog.is(DEBUG2) && dccl::dlog << "Length of string is = " << value_length << std::endl;
         
-        dccl::dlog.is(DEBUG2) && dccl::dlog << "bits before get_more_bits " << bits << std::endl;    
+        dccl::dlog.is(DEBUG2) && dccl::dlog << "bits before get_more_bits " << *bits << std::endl;    
 
         // grabs more bits to add to the MSBs of `bits`
         bits->get_more_bits(value_length*BITS_IN_BYTE);
@@ -351,10 +351,12 @@ dccl::int32 dccl::DefaultEnumCodec::pre_encode(const google::protobuf::EnumValue
 const google::protobuf::EnumValueDescriptor* dccl::DefaultEnumCodec::post_decode(const dccl::int32& wire_value)
 {
     const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
-    const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
 
-    if(return_value)
+    if(wire_value < e->value_count())
+    {
+        const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
         return return_value;
+    }
     else
         throw NullValueException();
 }

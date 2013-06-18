@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -40,8 +40,8 @@ using namespace dccl::logger;
 dccl::FieldCodecBase::FieldCodecBase() { }
             
 void dccl::FieldCodecBase::base_encode(Bitset* bits,
-                                          const google::protobuf::Message& field_value,
-                                          MessageStack::MessagePart part)
+                                       const google::protobuf::Message& field_value,
+                                       MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part, &field_value);
 
@@ -54,8 +54,8 @@ void dccl::FieldCodecBase::base_encode(Bitset* bits,
 }
 
 void dccl::FieldCodecBase::field_encode(Bitset* bits,
-                                          const boost::any& field_value,
-                                          const google::protobuf::FieldDescriptor* field)
+                                        const boost::any& field_value,
+                                        const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 
@@ -71,8 +71,8 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits,
 }
 
 void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
-                                                   const std::vector<boost::any>& field_values,
-                                                   const google::protobuf::FieldDescriptor* field)
+                                                 const std::vector<boost::any>& field_values,
+                                                 const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 
@@ -86,8 +86,8 @@ void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
 
             
 void dccl::FieldCodecBase::base_size(unsigned* bit_size,
-                                        const google::protobuf::Message& msg,
-                                        MessageStack::MessagePart part)
+                                     const google::protobuf::Message& msg,
+                                     MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part, &msg);
 
@@ -98,8 +98,8 @@ void dccl::FieldCodecBase::base_size(unsigned* bit_size,
 }
 
 void dccl::FieldCodecBase::field_size(unsigned* bit_size,
-                                        const boost::any& field_value,
-                                        const google::protobuf::FieldDescriptor* field)
+                                      const boost::any& field_value,
+                                      const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 
@@ -110,8 +110,8 @@ void dccl::FieldCodecBase::field_size(unsigned* bit_size,
 }
 
 void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
-                                                  const std::vector<boost::any>& field_values,
-                                                  const google::protobuf::FieldDescriptor* field)
+                                               const std::vector<boost::any>& field_values,
+                                               const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 
@@ -125,8 +125,8 @@ void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
 
 
 void dccl::FieldCodecBase::base_decode(Bitset* bits,
-                                                   google::protobuf::Message* field_value,
-                                                   MessageStack::MessagePart part)
+                                       google::protobuf::Message* field_value,
+                                       MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part, field_value);
     boost::any value(field_value);
@@ -135,8 +135,8 @@ void dccl::FieldCodecBase::base_decode(Bitset* bits,
 
 
 void dccl::FieldCodecBase::field_decode(Bitset* bits,
-                                                   boost::any* field_value,
-                                                   const google::protobuf::FieldDescriptor* field)
+                                        boost::any* field_value,
+                                        const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
     
@@ -167,8 +167,8 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits,
 }
 
 void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
-                                                            std::vector<boost::any>* field_values,
-                                                            const google::protobuf::FieldDescriptor* field)
+                                                 std::vector<boost::any>* field_values,
+                                                 const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
     
@@ -197,8 +197,8 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
 
 
 void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
-                                                         const google::protobuf::Descriptor* desc,
-                                                         MessageStack::MessagePart part)
+                                         const google::protobuf::Descriptor* desc,
+                                         MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part);
     *bit_size = 0;
@@ -213,7 +213,7 @@ void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
 }
 
 void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
-                                                         const google::protobuf::FieldDescriptor* field)
+                                          const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
     
@@ -226,8 +226,8 @@ void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
 
             
 void dccl::FieldCodecBase::base_min_size(unsigned* bit_size,
-                                                     const google::protobuf::Descriptor* desc,
-                                                     MessageStack::MessagePart part)
+                                         const google::protobuf::Descriptor* desc,
+                                         MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part);
 
@@ -243,7 +243,7 @@ void dccl::FieldCodecBase::base_min_size(unsigned* bit_size,
 }
 
 void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
-                                                         const google::protobuf::FieldDescriptor* field)
+                                          const google::protobuf::FieldDescriptor* field)
     
 {
     MessageStack msg_handler(field);
@@ -256,7 +256,7 @@ void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
 
             
 void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* desc,
-                                                     MessageStack::MessagePart part)
+                                         MessageStack::MessagePart part)
 {
     BaseRAII scoped_globals(part);
 
@@ -272,7 +272,7 @@ void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* des
 
 
 void dccl::FieldCodecBase::field_validate(bool* b,
-                                                     const google::protobuf::FieldDescriptor* field)
+                                          const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 
@@ -297,7 +297,7 @@ void dccl::FieldCodecBase::base_info(std::ostream* os, const google::protobuf::D
 
 
 void dccl::FieldCodecBase::field_info(std::ostream* os,
-                                                 const google::protobuf::FieldDescriptor* field)
+                                      const google::protobuf::FieldDescriptor* field)
 {
     MessageStack msg_handler(field);
 

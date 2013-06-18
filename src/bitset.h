@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -175,7 +175,7 @@ namespace dccl
         unsigned long to_ulong() const
         {
             if(size() > static_cast<size_type>(std::numeric_limits<unsigned long>::digits))
-                throw(dccl::Exception("Type `unsigned long` cannot represent current bitset (this->size() > std::numeric_limits<unsigned long>::digits)"));                
+                throw(Exception("Type `unsigned long` cannot represent current bitset (this->size() > std::numeric_limits<unsigned long>::digits)"));                
 
             unsigned long out = 0;
             for(int i = 0, n = size(); i < n; ++i)
@@ -265,14 +265,15 @@ namespace dccl
         
     inline bool operator<(const Bitset& a, const Bitset& b)
     {
-        for(Bitset::size_type i = (std::max(a.size(), b.size()) - 1); i >= 0; --i)
+        for(int i = (std::max(a.size(), b.size()) - 1); i >= 0; --i)
         {
-            bool a_bit = (i < a.size()) ? a[i] : 0;
-            bool b_bit = (i < b.size()) ? b[i] : 0;
+            bool a_bit = (i < static_cast<int>(a.size())) ? a[i] : 0;
+            bool b_bit = (i < static_cast<int>(b.size())) ? b[i] : 0;
                 
             if(a_bit > b_bit) return false;
             else if(a_bit < b_bit) return true;
         }
+        return false;
     }                
         
     inline Bitset operator&(const Bitset& b1, const Bitset& b2)
