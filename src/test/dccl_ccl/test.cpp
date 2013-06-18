@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -117,8 +117,13 @@ int main(int argc, char* argv[])
         assert(double_cmp(state_in.depth(), state_out.depth(), 1));
         assert(state_in.mission_mode() == state_out.mission_mode());
         
+ 
+    // test the dynamically generated message
+        boost::shared_ptr<google::protobuf::Message> state_in_2 = dccl::DynamicProtobufManager::new_protobuf_message(dccl::protobuf::CCLMDATState::descriptor());
+        state_in_2->CopyFrom(state_in);
+        
         std::string state_encoded;
-        codec.encode(&state_encoded, state_in);
+        codec.encode(&state_encoded, *state_in_2);
         
         dccl::protobuf::CCLMDATState state_out_2;
         codec.decode(state_encoded, &state_out_2);

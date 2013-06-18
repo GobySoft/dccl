@@ -1,4 +1,4 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -21,7 +21,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 // tests all protobuf types with _default codecs, repeat and non repeat
 
 #include <fstream>
@@ -32,15 +31,14 @@
 #include "test.pb.h"
 #include "dccl/binary.h"
 
-using dccl::operator<<;
+void decode_check(const std::string& encoded);
+dccl::Codec codec;
+TestMsg msg_in;
 
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
-    dccl::Codec codec;
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
 
-    TestMsg msg_in;
     int i = 0;
     msg_in.set_double_default_optional(++i + 0.1);
     msg_in.set_float_default_optional(++i + 0.2);
@@ -136,20 +134,42 @@ int main(int argc, char* argv[])
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
+    decode_check(bytes);
 
-    TestMsg msg_out;
-    codec.decode(bytes, &msg_out);
-    
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    // make sure DCCL defaults stay wire compatible
+    decode_check(dccl::hex_decode("047f277b9628060000b95660c0b0188000d8c0132858800008000dc2c4c6626466024488cca8ee324bd05c3f23af0000ad9112a09509788013e0820b18e0005ed0204c6c2c4666062042644675975982c65235f10a00ad718a5801000000905f27121600000000a0170050640300309201001a0b00007d320a0000a61a0070b20100a81b00d09c6f0000a0401026361643102636160300f0dfbd5b2280ea2e330f3da59a2100aabfa55a000000000000000000000000"));
 
-
-    // truncate to "max_length" as codec should do
-    msg_in.set_string_default_repeat(0,"abc1");
-    msg_in.set_string_default_repeat(1,"abc1");
-
-    
-    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    // run a bunch of tests with random strings
+    std::string random = bytes;
+    for(unsigned i = 0; i < 10; ++i)
+    {    
+        random[(rand() % (bytes.size()-1)+1)] = rand() % 256;
+        std::cout << "Using junk bytes: " << dccl::hex_encode(random) << std::endl;
+        
+        try
+        {
+            TestMsg msg_out;
+            codec.decode(random, &msg_out);
+        }
+        catch(dccl::Exception&)
+        {
+        }
+    }
     
     std::cout << "all tests passed" << std::endl;
 }
 
+
+void decode_check(const std::string& encoded)
+{
+    TestMsg msg_out;
+    codec.decode(encoded, &msg_out);
+    
+    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+
+    // truncate to "max_length" as codec should do
+    msg_in.set_string_default_repeat(0,"abc1");
+    msg_in.set_string_default_repeat(1,"abc1");
+    
+    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+}
