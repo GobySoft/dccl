@@ -239,8 +239,8 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
             unsigned body_size_bits;
             codec->base_max_size(&head_size_bits, desc, MessageStack::HEAD);
             codec->base_max_size(&body_size_bits, desc, MessageStack::BODY);
-            unsigned id_size;
-            id_codec()->field_size(&id_size, this_id, 0);
+            unsigned id_size = 0;
+            id_codec()->field_size(&id_size, this_id, 0);            
             head_size_bits += id_size;
         
             unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
