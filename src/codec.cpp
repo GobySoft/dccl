@@ -384,8 +384,10 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
     return head_size_bytes + body_size_bytes;
 }
 
-void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* os) const
+void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */ ) const
 {
+    std::ostream* os = (param_os) ? param_os : &dlog;
+    
     try
     {   
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
@@ -505,8 +507,10 @@ void dccl::Codec::set_crypto_passphrase(const std::string& passphrase, const std
     skip_crypto_ids_ = do_not_encrypt_ids_;
 }
 
-void dccl::Codec::info_all(std::ostream* os) const
+void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 {
+    std::ostream* os = (param_os) ? param_os : &dlog;
+
     *os << "=== Begin Codec ===" << "\n";
     *os << id2desc_.size() << " messages loaded.\n";            
             

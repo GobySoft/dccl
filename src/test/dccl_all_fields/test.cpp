@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
         em_msg->mutable_msg()->set_val(++i);
     }
     
-    codec.info(msg_in.GetDescriptor(), &std::cout);    
+    codec.info(msg_in.GetDescriptor());
 
     std::ofstream fout("/tmp/testmessage.pb");
     msg_in.SerializeToOstream(&fout);
