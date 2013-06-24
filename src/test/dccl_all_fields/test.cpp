@@ -37,7 +37,7 @@ TestMsg msg_in;
 
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     int i = 0;
     msg_in.set_double_default_optional(++i + 0.1);

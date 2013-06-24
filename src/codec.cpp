@@ -102,7 +102,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    dlog.is(DEBUG1) && dlog << "Began encoding message of type: " << desc->full_name() << std::endl;    
+    dlog.is(DEBUG1, ENCODE) && dlog << "Began encoding message of type: " << desc->full_name() << std::endl;    
 
     try
     {
@@ -136,31 +136,31 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
             
             std::string head_bytes = head_bits.to_byte_string();
         
-            dlog.is(DEBUG2) && dlog << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size() << ")" << std::endl;
-            dlog.is(DEBUG3) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
-            dlog.is(DEBUG3) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;        
+            dlog.is(DEBUG2, ENCODE) && dlog << "Head bytes (bits): " << head_bytes.size() << "(" << head_bits.size() << ")" << std::endl;
+            dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Head (bin): " << head_bits << std::endl;
+            dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;        
 
 
             if(header_only)
             {
-                dlog.is(DEBUG2) && dlog << "as requested, skipping encoding and encrypting body." << std::endl;
+                dlog.is(DEBUG2, ENCODE) && dlog << "as requested, skipping encoding and encrypting body." << std::endl;
             }
             else
             {
                 Bitset body_bits;
                 codec->base_encode(&body_bits, msg, MessageStack::BODY);
                 body_bytes = body_bits.to_byte_string();
-                dlog.is(DEBUG3) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
-                dlog.is(DEBUG3) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
-                dlog.is(DEBUG2) && dlog << "Body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
+                dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;
+                dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                dlog.is(DEBUG2, ENCODE) && dlog << "Body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
 
                 if(!crypto_key_.empty() && !skip_crypto_ids_.count(id(desc)))
                     encrypt(&body_bytes, head_bytes);
 
-                dlog.is(DEBUG3) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                dlog.is(DEBUG3, ENCODE) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
             }
             
-            dlog.is(DEBUG1) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
+            dlog.is(DEBUG1, ENCODE) && dlog << "Successfully encoded message of type: " << desc->full_name() << std::endl;
 
             *bytes += head_bytes + body_bytes;
 
@@ -177,7 +177,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         
         ss << "Message " << desc->full_name() << " failed to encode. Reason: " << e.what();
 
-        dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
+        dlog.is(DEBUG1, ENCODE) && dlog << ss.str() << std::endl;  
         throw(Exception(ss.str()));
     }
 }
@@ -219,14 +219,14 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
     {
         unsigned this_id = id(bytes);
 
-        dlog.is(DEBUG1) && dlog  << "Began decoding message of id: " << this_id << std::endl;
+        dlog.is(DEBUG1, DECODE) && dlog  << "Began decoding message of id: " << this_id << std::endl;
         
         if(!id2desc_.count(this_id))
             throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
 
         const Descriptor* desc = msg->GetDescriptor();
         
-        dlog.is(DEBUG1) && dlog  << "Type name: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1, DECODE) && dlog  << "Type name: " << desc->full_name() << std::endl;
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
         boost::shared_ptr<FromProtoCppTypeBase> helper = TypeHelper::find(desc);
@@ -244,48 +244,48 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
             unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
             unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
     
-            dlog.is(DEBUG2) && dlog  << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
+            dlog.is(DEBUG2, DECODE) && dlog  << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
                                     << "), max body bytes (bits): " << body_size_bytes << "(" << body_size_bits << ")" <<  std::endl;
 
             std::string head_bytes = bytes.substr(0, head_size_bytes);
-            dlog.is(DEBUG3) && dlog  << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
+            dlog.is(DEBUG3, DECODE) && dlog  << "Unencrypted Head (hex): " << hex_encode(head_bytes) << std::endl;
             
             Bitset head_bits;
             head_bits.from_byte_string(head_bytes);    
-            dlog.is(DEBUG3) && dlog  << "Unencrypted Head (bin): " << head_bits << std::endl;
+            dlog.is(DEBUG3, DECODE) && dlog  << "Unencrypted Head (bin): " << head_bits << std::endl;
 
             // shift off ID bits
             head_bits >>= id_size;
 
-            dlog.is(DEBUG3) && dlog  << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
+            dlog.is(DEBUG3, DECODE) && dlog  << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
 
             MessageStack msg_stack;
             msg_stack.push(msg->GetDescriptor());
             
             codec->base_decode(&head_bits, msg, MessageStack::HEAD);
-            dlog.is(DEBUG2) && dlog  << "after header decode, message is: " << *msg << std::endl;
+            dlog.is(DEBUG2, DECODE) && dlog  << "after header decode, message is: " << *msg << std::endl;
 
 
             if(header_only)
             {
-                dlog.is(DEBUG2) && dlog  << "as requested, skipping decrypting and decoding body." << std::endl;
+                dlog.is(DEBUG2, DECODE) && dlog  << "as requested, skipping decrypting and decoding body." << std::endl;
             }
             else
             {
                 std::string body_bytes = bytes.substr(head_size_bytes);
-                dlog.is(DEBUG3) && dlog  << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                dlog.is(DEBUG3, DECODE) && dlog  << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
                 
                 if(!crypto_key_.empty() && !skip_crypto_ids_.count(this_id))
                     decrypt(&body_bytes, head_bytes);
                 
-                dlog.is(DEBUG3) && dlog  << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
+                dlog.is(DEBUG3, DECODE) && dlog  << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
                 
                 Bitset body_bits;
                 body_bits.from_byte_string(body_bytes);
-                dlog.is(DEBUG3) && dlog  << "Unencrypted Body (bin): " << body_bits << std::endl;
+                dlog.is(DEBUG3, DECODE) && dlog  << "Unencrypted Body (bin): " << body_bits << std::endl;
                 
                 codec->base_decode(&body_bits, msg, MessageStack::BODY);
-                dlog.is(DEBUG2) && dlog  << "after header & body decode, message is: " << *msg << std::endl;
+                dlog.is(DEBUG2, DECODE) && dlog  << "after header & body decode, message is: " << *msg << std::endl;
             }
         }
         else
@@ -293,7 +293,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
             throw(Exception("Failed to find (dccl.msg).codec `" + desc->options().GetExtension(dccl::msg).codec() + "`"));
         }
 
-        dlog.is(DEBUG1) && dlog  << "Successfully decoded message of type: " << desc->full_name() << std::endl;
+        dlog.is(DEBUG1, DECODE) && dlog  << "Successfully decoded message of type: " << desc->full_name() << std::endl;
     }
     catch(std::exception& e)
     {
@@ -301,7 +301,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
         
         ss << "Message " << hex_encode(bytes) <<  " failed to decode. Reason: " << e.what() << std::endl;
 
-        dlog.is(DEBUG1) && dlog << ss.str() << std::endl;  
+        dlog.is(DEBUG1, DECODE) && dlog << ss.str() << std::endl;  
         throw(Exception(ss.str()));
     }    
 
