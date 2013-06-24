@@ -50,9 +50,13 @@ int main(int argc, char* argv[])
     dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
     
     msg_in1.mutable_header()->set_time(now);
+    msg_in1.mutable_header()->set_time_signed(now);
+    msg_in1.mutable_header()->set_time_double(now / 1000000);
+
     msg_in1.mutable_header()->set_source_platform(1);
     msg_in1.mutable_header()->set_dest_platform(3);
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
+    msg_in1.set_const_int(3); 
     
     codec.info(msg_in1.GetDescriptor(), &std::cout);    
     std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;

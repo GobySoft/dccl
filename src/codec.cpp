@@ -90,9 +90,17 @@ void dccl::Codec::set_default_codecs()
         FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
         
         FieldCodecManager::add<TimeCodec<uint64> >("_time");
+        FieldCodecManager::add<TimeCodec<int64> >("_time");
         FieldCodecManager::add<TimeCodec<double> >("_time");
         
         FieldCodecManager::add<StaticCodec<std::string> >("_static");
+        FieldCodecManager::add<StaticCodec<double> >("_static");
+        FieldCodecManager::add<StaticCodec<float> >("_static");
+        FieldCodecManager::add<StaticCodec<int32> >("_static");
+        FieldCodecManager::add<StaticCodec<int64> >("_static");
+        FieldCodecManager::add<StaticCodec<uint32> >("_static");
+        FieldCodecManager::add<StaticCodec<uint64> >("_static");
+
         defaults_loaded = true;
     }
 }
