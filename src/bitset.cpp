@@ -29,19 +29,12 @@ using namespace dccl::logger;
 dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
                                                            bool final_child)
 {
-//    dlog.is(DEBUG2) && dlog  << group(Codec::dlog_decode_group()) << "Asked to relinquish " << num_bits << " from " << this << ": " << *this << std::endl;
-
     if(final_child || this->size() < num_bits)
     {
         size_type num_parent_bits = (final_child) ? num_bits : num_bits - this->size();
-//        dlog.is(DEBUG2) && dlog  << group(Codec::dlog_decode_group()) << "Need to get " << num_parent_bits << " from parent" << std::endl;
-
         if(parent_)
         {
             Bitset parent_bits = parent_->relinquish_bits(num_parent_bits, false);
-            
-//            dlog.is(DEBUG2) && dlog  << group(Codec::dlog_decode_group()) << "parent_bits: " << parent_bits << std::endl;
-            
             append(parent_bits);
         }
     }
@@ -52,7 +45,7 @@ dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
         for(size_type i = 0; i < num_bits; ++i)
         {
             if(this->empty())
-                throw(dccl::Exception("Cannot get_more_bits - no more bits to get!"));
+                throw(dccl::Exception("Cannot relinquish_bits - no more bits to give up! Check that all field codecs are always producing (encode) and consuming (decode) the exact same number of bits."));
             
             out.push_back(this->front());
             this->pop_front();

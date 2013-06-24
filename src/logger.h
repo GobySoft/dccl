@@ -56,14 +56,6 @@ namespace dccl {
      LogBuffer() : verbosity_(logger::INFO), buffer_(1) { }
      ~LogBuffer() { }
 
-     /// virtual inherited from std::streambuf.
-     /// Called when std::endl or std::flush is inserted into the stream
-     int sync();
-
-     /// virtual inherited from std::streambuf. Called when something is inserted into the stream
-     /// Called when std::endl or std::flush is inserted into the stream
-     int overflow(int c = EOF);
-     
      /// connect a signal to a slot (function pointer or similar)
      template <typename Slot>
      void connect(int verbosity_mask, Slot slot) {
@@ -100,6 +92,15 @@ namespace dccl {
 
      
  private:
+     /// virtual inherited from std::streambuf.
+     /// Called when std::endl or std::flush is inserted into the stream
+     int sync();
+
+     /// virtual inherited from std::streambuf. Called when something is inserted into the stream
+     /// Called when std::endl or std::flush is inserted into the stream
+     int overflow(int c = EOF);
+     
+
      void display(const std::string& s) {
          if(verbosity_ & logger::WARN) warn_signal(s, logger::WARN);
          if(verbosity_ & logger::INFO) info_signal(s, logger::INFO);
@@ -107,8 +108,6 @@ namespace dccl {
          if(verbosity_ & logger::DEBUG2) debug2_signal(s, logger::DEBUG2);
          if(verbosity_ & logger::DEBUG3) debug3_signal(s, logger::DEBUG3);
      }
-     
-     
 
    private:
      logger::Verbosity verbosity_;

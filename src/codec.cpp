@@ -387,49 +387,52 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
 void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */ ) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
-    
-    try
-    {   
-        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
-        unsigned config_head_bit_size, body_bit_size;
-        codec->base_max_size(&config_head_bit_size, desc, MessageStack::HEAD);
-        codec->base_max_size(&body_bit_size, desc, MessageStack::BODY);
-
-        unsigned dccl_id = id(desc);
-        unsigned id_bit_size = 0;
-        id_codec()->field_size(&id_bit_size, dccl_id, 0);
-    
-        const unsigned bit_size = id_bit_size + config_head_bit_size + body_bit_size;
-
-        
-        const unsigned byte_size = ceil_bits2bytes(config_head_bit_size + id_bit_size) + ceil_bits2bytes(body_bit_size);
-        
-        const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
-        const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
-        
-        *os << "= Begin " << desc->full_name() << " =\n"
-            << "Actual maximum size of message: " << byte_size << " bytes / "
-            << byte_size*BITS_IN_BYTE  << " bits [dccl.id head: " << id_bit_size
-            << ", user head: " << config_head_bit_size << ", body: "
-            << body_bit_size << ", padding: " << byte_size * BITS_IN_BYTE - bit_size << "]\n"
-            << "Allowed maximum size of message: " << allowed_byte_size << " bytes / "
-            << allowed_bit_size << " bits\n";
-
-        *os << "== Begin Header ==" << std::endl;
-        codec->base_info(os, desc, MessageStack::HEAD);
-        *os << "== End Header ==" << std::endl;
-        *os << "== Begin Body ==" << std::endl;
-        codec->base_info(os, desc, MessageStack::BODY);
-        *os << "== End Body ==" << std::endl;
-        
-        *os << "= End " << desc->full_name() << " =" << std::endl;
-    }
-    catch(Exception& e)
+    if(param_os || dlog.is(INFO))
     {
-        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
-    }
+        try
+        {   
+            boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+
+            unsigned config_head_bit_size, body_bit_size;
+            codec->base_max_size(&config_head_bit_size, desc, MessageStack::HEAD);
+            codec->base_max_size(&body_bit_size, desc, MessageStack::BODY);
+
+            unsigned dccl_id = id(desc);
+            unsigned id_bit_size = 0;
+            id_codec()->field_size(&id_bit_size, dccl_id, 0);
+    
+            const unsigned bit_size = id_bit_size + config_head_bit_size + body_bit_size;
+
         
+            const unsigned byte_size = ceil_bits2bytes(config_head_bit_size + id_bit_size) + ceil_bits2bytes(body_bit_size);
+        
+            const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
+            const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
+        
+            *os << "= Begin " << desc->full_name() << " =\n"
+                << "Actual maximum size of message: " << byte_size << " bytes / "
+                << byte_size*BITS_IN_BYTE  << " bits [dccl.id head: " << id_bit_size
+                << ", user head: " << config_head_bit_size << ", body: "
+                << body_bit_size << ", padding: " << byte_size * BITS_IN_BYTE - bit_size << "]\n"
+                << "Allowed maximum size of message: " << allowed_byte_size << " bytes / "
+                << allowed_bit_size << " bits\n";
+
+            *os << "== Begin Header ==" << std::endl;
+            codec->base_info(os, desc, MessageStack::HEAD);
+            *os << "== End Header ==" << std::endl;
+            *os << "== Begin Body ==" << std::endl;
+            codec->base_info(os, desc, MessageStack::BODY);
+            *os << "== End Body ==" << std::endl;
+        
+            *os << "= End " << desc->full_name() << " =" << std::endl;
+        }
+        catch(Exception& e)
+        {
+            dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
+        }
+    }
+    
 }
 
 
@@ -511,11 +514,15 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
 
-    *os << "=== Begin Codec ===" << "\n";
-    *os << id2desc_.size() << " messages loaded.\n";            
-            
-    for(std::map<int32, const google::protobuf::Descriptor*>::const_iterator it = id2desc_.begin(), n = id2desc_.end(); it != n; ++it)
-        info(it->second, os);
-                
-    *os << "=== End Codec ===";
+    if(param_os || dlog.is(INFO))
+    {
+
+        *os << "=== Begin Codec ===" << "\n";
+        *os << id2desc_.size() << " messages loaded.\n";            
+        
+        for(std::map<int32, const google::protobuf::Descriptor*>::const_iterator it = id2desc_.begin(), n = id2desc_.end(); it != n; ++it)
+            info(it->second, os);
+        
+        *os << "=== End Codec ===";
+    }
 }
