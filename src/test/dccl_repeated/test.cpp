@@ -25,8 +25,6 @@
 // tests functionality of std::list<const google::protobuf::Message*> calls
 
 
-#include <boost/foreach.hpp>
-
 #include "dccl/codec.h"
 #include "dccl/field_codec_default.h"
 #include "dccl/binary.h"

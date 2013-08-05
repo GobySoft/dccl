@@ -297,7 +297,6 @@ namespace dccl
         return out;
     }
 
-//           inline Bitset operator-(const Bitset& b1, const Bitset& b2);
         
     inline std::ostream& operator<<(std::ostream& os, const Bitset& b)
     {

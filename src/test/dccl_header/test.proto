@@ -8,5 +8,7 @@ message GobyMessage
   
   required string telegram = 1 [(dccl.field).max_length=10]; 
   required Header header = 2;
+
+  optional int32 const_int =3 [(dccl.field).static_value="3", (dccl.field).codec="_static"];
 }
 

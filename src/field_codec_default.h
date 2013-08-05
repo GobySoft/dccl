@@ -32,7 +32,6 @@
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/lexical_cast.hpp>
@@ -117,10 +116,7 @@ namespace dccl
           WireType wire_value = value;
                 
           if(wire_value < min() || wire_value > max())
-              return Bitset(size());
-              
-              
-//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_encode_group()) << "(DefaultNumericFieldCodec) Encoding using wire value (=field value) " << wire_value << std::endl;
+              return Bitset(size());              
               
           wire_value -= min();
           wire_value *= std::pow(10.0, precision());
@@ -233,39 +229,15 @@ namespace dccl
     /// \brief Encodes time of day (second precision) 
     ///
     /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
-    template<typename TimeType>
-        class TimeCodec : public DefaultNumericFieldCodec<int32, TimeType>
-    {
-        // must use specialization
-        BOOST_STATIC_ASSERT(sizeof(TimeType) == 0);
-        
-      public:
-        int32 pre_encode(const TimeType& field_value) {
-            
-            throw Exception("Not Implemented - Use Specialization");
-        }
-
-        TimeType post_decode(const int32& wire_value) {
-            throw Exception("Not Implemented - Use Specialization");
-        }
- 
-      private:
-        void validate() { }
-
-        double max() { return SECONDS_IN_DAY; }
-        double min() { return 0; }
-        enum { SECONDS_IN_DAY = 86400 };
-    };
-    
-    template<>
-        class TimeCodec<uint64> : public DefaultNumericFieldCodec<int32, uint64>
+    template<typename TimeType, int conversion_factor>
+        class TimeCodecBase : public DefaultNumericFieldCodec<int32, TimeType>
     {
       public:
-        int32 pre_encode(const uint64& time_of_day_microseconds) {
-            return (time_of_day_microseconds / 1000000) % SECONDS_IN_DAY;
+        int32 pre_encode(const TimeType& time_of_day) {
+            return static_cast<int64>(time_of_day / conversion_factor) % SECONDS_IN_DAY;
         }
 
-        uint64 post_decode(const int32& encoded_time) {
+        TimeType post_decode(const int32& encoded_time) {
             timeval t;
             gettimeofday(&t, 0);
             int64 now = t.tv_sec;
@@ -279,9 +251,9 @@ namespace dccl
                 daystart += SECONDS_IN_DAY;
             }
 
-            return 1000000 * (daystart + encoded_time);
+            return conversion_factor * (daystart + encoded_time);
         }
- 
+
       private:
         void validate() { }
 
@@ -289,40 +261,16 @@ namespace dccl
         double min() { return 0; }
         enum { SECONDS_IN_DAY = 86400 };
     };
-
-    template<>
-        class TimeCodec<double> : public DefaultNumericFieldCodec<int32, double>
-    {
-      public:
-        int32 pre_encode(const double& time_of_day) {
-            return static_cast<int64>(time_of_day) % SECONDS_IN_DAY;
-        }
-
-        double post_decode(const int32& encoded_time) {
-            timeval t;
-            gettimeofday(&t, 0);
-            uint64 now = t.tv_sec;
-            uint64 daystart = now - (static_cast<int64>(now) % SECONDS_IN_DAY);
-            uint64 today_time = now - daystart;
-
-            if ((encoded_time - today_time) > (SECONDS_IN_DAY/2)) {
-                daystart -= SECONDS_IN_DAY;
-            } else if ((today_time - encoded_time) > (SECONDS_IN_DAY/2)) {
-                daystart += SECONDS_IN_DAY;
-            }
-
-
-            return daystart + encoded_time;
-        }
- 
-      private:
-        void validate() { }
-
-        double max() { return SECONDS_IN_DAY; }
-        double min() { return 0; }
-        enum { SECONDS_IN_DAY = 86400 };
-    };
-        
+    
+    template<typename TimeType>
+        class TimeCodec : public TimeCodecBase<TimeType, 0>
+    { BOOST_STATIC_ASSERT(sizeof(TimeCodec) == 0); };
+    
+    template<> class TimeCodec<uint64> : public TimeCodecBase<uint64, 1000000> { };
+    template<> class TimeCodec<int64> : public TimeCodecBase<int64, 1000000> { };
+    template<> class TimeCodec<double> : public TimeCodecBase<double, 1> { };
+    
+    
     /// \brief Placeholder codec that takes no space on the wire (0 bits).
     template<typename T>
         class StaticCodec : public TypedFixedFieldCodec<T>
@@ -335,8 +283,8 @@ namespace dccl
 
         T decode(Bitset* bits)
         {
-            std::string t = FieldCodecBase::dccl_field_options().static_value();
-            return boost::lexical_cast<T>(t);
+            return boost::lexical_cast<T>(
+                FieldCodecBase::dccl_field_options().static_value());
         }
             
         unsigned size()
@@ -345,6 +293,16 @@ namespace dccl
         void validate()
         {
             FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
+
+            std::string t = FieldCodecBase::dccl_field_options().static_value();
+            try
+            {
+                boost::lexical_cast<T>(t);
+            }
+            catch(boost::bad_lexical_cast&)
+            {
+                FieldCodecBase::require(false, "invalid static_value for this type.");
+            }
         }
             
     };

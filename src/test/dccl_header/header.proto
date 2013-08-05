@@ -12,6 +12,12 @@ message Header
   required uint64 time = 10 [(dccl.field).codec="_time",
                              (dccl.field).in_head=true];
 
+  optional int64 time_signed = 20 [(dccl.field).codec="_time",
+                                   (dccl.field).in_head=true];
+  optional double time_double = 21 [(dccl.field).codec="_time",
+                                    (dccl.field).in_head=true];
+  
+  
   //
   // source
   //

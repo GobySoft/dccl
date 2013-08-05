@@ -37,7 +37,7 @@ TestMsg msg_in;
 
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     int i = 0;
     msg_in.set_double_default_optional(++i + 0.1);
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
         em_msg->mutable_msg()->set_val(++i);
     }
     
-    codec.info(msg_in.GetDescriptor(), &std::cout);    
+    codec.info(msg_in.GetDescriptor());
 
     std::ofstream fout("/tmp/testmessage.pb");
     msg_in.SerializeToOstream(&fout);

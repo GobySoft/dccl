@@ -20,7 +20,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-
+#include <boost/algorithm/string.hpp> // for replace_all
 
 #include "field_codec.h"
 #include "exception.h"
@@ -60,7 +60,7 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits,
     MessageStack msg_handler(field);
 
     if(field)
-        dlog.is(DEBUG2) && dlog << "Starting encode for field: " << field->DebugString() << std::flush;
+        dlog.is(DEBUG2, ENCODE) && dlog << "Starting encode for field: " << field->DebugString() << std::flush;
 
     boost::any wire_value;
     field_pre_encode(&wire_value, field_value);
@@ -146,10 +146,10 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits,
         throw(Exception("Decode called with NULL Bitset"));    
     
     if(field)
-        dlog.is(DEBUG2) && dlog << "Starting decode for field: " << field->DebugString() << std::flush;
+        dlog.is(DEBUG2, DECODE) && dlog << "Starting decode for field: " << field->DebugString() << std::flush;
     
     if(root_message())
-        dlog.is(DEBUG3) && dlog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
+        dlog.is(DEBUG3, DECODE) && dlog <<  "Message thus far is: " << root_message()->DebugString() << std::flush;
     
     Bitset these_bits(bits);
 
@@ -157,7 +157,7 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits,
     field_min_size(&bits_to_transfer, field);
     these_bits.get_more_bits(bits_to_transfer);    
     
-    dlog.is(DEBUG2) && dlog  << "... using these bits: " << these_bits << std::endl;
+    dlog.is(DEBUG2, DECODE) && dlog  << "... using these bits: " << these_bits << std::endl;
 
     boost::any wire_value = *field_value;
     
@@ -178,7 +178,7 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
         throw(Exception("Decode called with NULL Bitset"));    
     
     if(field)
-        dlog.is(DEBUG2) && dlog  << "Starting repeated decode for field: " << field->DebugString();
+        dlog.is(DEBUG2, DECODE) && dlog  << "Starting repeated decode for field: " << field->DebugString();
     
     Bitset these_bits(bits);
     
@@ -186,7 +186,7 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
     field_min_size(&bits_to_transfer, field);
     these_bits.get_more_bits(bits_to_transfer);
     
-    dlog.is(DEBUG2) && dlog  << "using these " <<
+    dlog.is(DEBUG2, DECODE) && dlog  << "using these " <<
         these_bits.size() << " bits: " << these_bits << std::endl;
 
     std::vector<boost::any> wire_values = *field_values;
