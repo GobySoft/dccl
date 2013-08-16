@@ -234,30 +234,45 @@ namespace dccl
     {
       public:
         int32 pre_encode(const TimeType& time_of_day) {
-            return static_cast<int64>(time_of_day / conversion_factor) % SECONDS_IN_DAY;
+            int32 max_secs = static_cast<int32>(max());
+            return static_cast<int64>(time_of_day / conversion_factor) % max_secs;
         }
 
         TimeType post_decode(const int32& encoded_time) {
+            int32 max_secs = static_cast<int32>(max());
             timeval t;
             gettimeofday(&t, 0);
             int64 now = t.tv_sec;
-            int64 daystart = now - (now % SECONDS_IN_DAY);
+            int64 daystart = now - (now % max_secs);
             int64 today_time = now - daystart;
 
             // If time is more than 12 hours ahead of now, assume it's yesterday.
-            if ((encoded_time - today_time) > (SECONDS_IN_DAY/2)) {
-                daystart -= SECONDS_IN_DAY;
-            } else if ((today_time - encoded_time) > (SECONDS_IN_DAY/2)) {
-                daystart += SECONDS_IN_DAY;
+            if ((encoded_time - today_time) > (max_secs/2)) {
+                daystart -= max_secs;
+            } else if ((today_time - encoded_time) > (max_secs/2)) {
+                daystart += max_secs;
             }
 
             return conversion_factor * (daystart + encoded_time);
         }
 
       private:
-        void validate() { }
+        void validate() {
+            if (FieldCodecBase::dccl_field_options().has_max()) {
+                FieldCodecBase::require(
+                    fmod(FieldCodecBase::dccl_field_options().max(), 2) == 0,
+                    "Max number of seconds must be an even integer or empty.");
+            }
+        }
 
-        double max() { return SECONDS_IN_DAY; }
+        double max() { 
+            if (FieldCodecBase::dccl_field_options().has_max()) {
+                return FieldCodecBase::dccl_field_options().max();
+            } else {
+                return SECONDS_IN_DAY;
+            }
+        }
+
         double min() { return 0; }
         enum { SECONDS_IN_DAY = 86400 };
     };
