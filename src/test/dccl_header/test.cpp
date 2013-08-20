@@ -53,6 +53,12 @@ int main(int argc, char* argv[])
     msg_in1.mutable_header()->set_time_signed(now);
     msg_in1.mutable_header()->set_time_double(now / 1000000);
 
+    dccl::int64 past = now / 1000000.0 - 200000; // Pick a time 2+ days in the past.
+    dccl::int64 future = now / 1000000.0 + 200000; // Pick a time 2+ days in the future.
+    msg_in1.mutable_header()->set_pasttime_double(past);
+    msg_in1.mutable_header()->set_futuretime_double(future);
+
+
     msg_in1.mutable_header()->set_source_platform(1);
     msg_in1.mutable_header()->set_dest_platform(3);
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);

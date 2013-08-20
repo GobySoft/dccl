@@ -257,6 +257,8 @@ namespace dccl
         }
 
       private:
+        void validate() { }
+
         double max() { 
             return FieldCodecBase::dccl_field_options().num_days() * SECONDS_IN_DAY;
         }
