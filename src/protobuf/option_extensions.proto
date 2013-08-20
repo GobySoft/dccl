@@ -38,6 +38,9 @@ message DCCLFieldOptions
   optional double min = 5 [default = 0];
   optional double max = 6 [default = 0];
 
+  // time ("1 day" can encode times 12h before or after the receiver's time)
+  optional uint32 num_days = 7 [default = 1];
+
   // static
   optional string static_value = 8 [default = ""];
   

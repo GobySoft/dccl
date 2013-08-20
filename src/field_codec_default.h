@@ -257,20 +257,8 @@ namespace dccl
         }
 
       private:
-        void validate() {
-            if (FieldCodecBase::dccl_field_options().has_max()) {
-                FieldCodecBase::require(
-                    fmod(FieldCodecBase::dccl_field_options().max(), 2) == 0,
-                    "Max number of seconds must be an even integer or empty.");
-            }
-        }
-
         double max() { 
-            if (FieldCodecBase::dccl_field_options().has_max()) {
-                return FieldCodecBase::dccl_field_options().max();
-            } else {
-                return SECONDS_IN_DAY;
-            }
+            return FieldCodecBase::dccl_field_options().num_days() * SECONDS_IN_DAY;
         }
 
         double min() { return 0; }
