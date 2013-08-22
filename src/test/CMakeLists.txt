@@ -1,6 +1,7 @@
 # so we can run this in the Debian package build environment
 set(CMAKE_SKIP_RPATH OFF)
 
+add_subdirectory(bitset1)
 add_subdirectory(dccl_all_fields)
 add_subdirectory(dccl_custom_message)
 add_subdirectory(dccl_header)

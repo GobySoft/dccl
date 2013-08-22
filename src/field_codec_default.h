@@ -110,9 +110,9 @@ namespace dccl
                                       "(dccl.field).max must be <= maximum of this field type.");
 
           
-          // ensure value fits into unsigned long 
-          FieldCodecBase::require((std::pow(10, precision()) * (max() - min())) <= boost::numeric::bounds<unsigned long>::highest(),
-                                  "[(dccl.field).max-(dccl.field).min]*10^(dccl.field).precision must fit in an unsigned long. Please increase min, decrease max, or decrease precision.");
+          // ensure value fits into double
+          FieldCodecBase::require((precision() + std::ceil(std::log10(max() - min()))) <= std::numeric_limits<double>::digits10,
+                                  "[(dccl.field).max-(dccl.field).min]*10^(dccl.field).precision must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision.");
           
       }
       
@@ -139,12 +139,14 @@ namespace dccl
 
           wire_value = dccl::unbiased_round(wire_value, 0);
 
-          return Bitset(size(), boost::numeric_cast<unsigned long>(wire_value));
+          Bitset encoded;
+          encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
+          return encoded;
       }
           
       virtual WireType decode(Bitset* bits)
       {
-          unsigned long t = bits->to_ulong();
+          dccl::uint64 t = bits->to<dccl::uint64>();
               
           if(!FieldCodecBase::this_field()->is_required())
           {
