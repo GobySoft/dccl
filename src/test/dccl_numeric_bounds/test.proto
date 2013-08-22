@@ -1,0 +1,29 @@
+import "dccl/protobuf/option_extensions.proto";
+
+message NumericMsg
+{
+  option (dccl.msg).id = 10;
+  option (dccl.msg).max_bytes = 32;
+
+  optional double a = 1 [(dccl.field).max = 180,
+                         (dccl.field).min = -180,
+                         (dccl.field).precision = 12,
+                         (dccl.field).in_head=true];
+
+  optional double b = 2 [(dccl.field).max = 18,
+                         (dccl.field).min = -18,
+                         (dccl.field).precision = 4];
+  
+                        
+}
+
+
+message TooBigNumericMsg
+{
+  option (dccl.msg).id = 11;
+  option (dccl.msg).max_bytes = 32;
+
+  optional double a = 1 [(dccl.field).max = 180,
+                         (dccl.field).min = -180,
+                         (dccl.field).precision = 15];                        
+}
