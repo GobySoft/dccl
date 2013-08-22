@@ -58,6 +58,10 @@ int main(int argc, char* argv[])
     msg_in1.mutable_header()->set_pasttime_double(past);
     msg_in1.mutable_header()->set_futuretime_double(future);
 
+    dccl::int64 msec = t.tv_usec / 1000 * 1000;
+    msg_in1.mutable_header()->set_time_precision(now + msec);
+    msg_in1.mutable_header()->set_time_double_precision((now + msec) / 1000000.0);
+
 
     msg_in1.mutable_header()->set_source_platform(1);
     msg_in1.mutable_header()->set_dest_platform(3);

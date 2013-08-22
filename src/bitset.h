@@ -50,7 +50,7 @@ namespace dccl
                 for(int i = 0, n = std::min<size_type>(std::numeric_limits<unsigned long>::digits, size());
                     i < n; ++i)
                 {
-                    if(value & (1 << i))
+                    if(value & (1ul << i))
                         (*this)[i] = true;
                 }
             }

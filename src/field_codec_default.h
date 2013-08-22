@@ -89,7 +89,7 @@ namespace dccl
 
       virtual double precision()
       { return FieldCodecBase::dccl_field_options().precision(); }
-            
+      
       virtual void validate()
       {
           FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(),
@@ -97,14 +97,26 @@ namespace dccl
           FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_max(),
                                       "missing (dccl.field).max");
 
+          validate_numeric_bounds();
+      }
+
+      void validate_numeric_bounds()
+      {
 
           // ensure given max and min fit within WireType ranges
           FieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
                                       "(dccl.field).min must be >= minimum of this field type.");
           FieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
                                       "(dccl.field).max must be <= maximum of this field type.");
-      }
 
+          
+          // ensure value fits into unsigned long 
+          FieldCodecBase::require((std::pow(10, precision()) * (max() - min())) <= boost::numeric::bounds<unsigned long>::highest(),
+                                  "[(dccl.field).max-(dccl.field).min]*10^(dccl.field).precision must fit in an unsigned long. Please increase min, decrease max, or decrease precision.");
+          
+      }
+      
+      
       Bitset encode()
       {
           return Bitset(size());
@@ -120,12 +132,13 @@ namespace dccl
               
           wire_value -= min();
           wire_value *= std::pow(10.0, precision());
-
+          
           // "presence" value (0)
           if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
 
           wire_value = dccl::unbiased_round(wire_value, 0);
+
           return Bitset(size(), boost::numeric_cast<unsigned long>(wire_value));
       }
           
@@ -141,7 +154,8 @@ namespace dccl
               
           WireType return_value = dccl::unbiased_round(
               t / (std::pow(10.0, precision())) + min(), precision());
-              
+
+          
 //              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_decode_group()) << "(DefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
 
           return return_value;
@@ -226,20 +240,23 @@ namespace dccl
     };
         
         
-    /// \brief Encodes time of day (second precision) 
+    /// \brief Encodes time of day (default: second precision, but can be set with (dccl.field).precision extension) 
     ///
     /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
+
+    typedef double time_wire_type;
     template<typename TimeType, int conversion_factor>
-        class TimeCodecBase : public DefaultNumericFieldCodec<int32, TimeType>
+        class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
     {
       public:
-        int32 pre_encode(const TimeType& time_of_day) {
-            int32 max_secs = static_cast<int32>(max());
-            return static_cast<int64>(time_of_day / conversion_factor) % max_secs;
+        time_wire_type pre_encode(const TimeType& time_of_day) {
+            time_wire_type max_secs = max();
+            return std::fmod(time_of_day / static_cast<time_wire_type>(conversion_factor), max_secs);
         }
 
-        TimeType post_decode(const int32& encoded_time) {
-            int32 max_secs = static_cast<int32>(max());
+        TimeType post_decode(const time_wire_type& encoded_time) {
+
+            int64 max_secs = max();
             timeval t;
             gettimeofday(&t, 0);
             int64 now = t.tv_sec;
@@ -257,13 +274,29 @@ namespace dccl
         }
 
       private:
-        void validate() { }
+        void validate()
+        {
+            DefaultNumericFieldCodec<time_wire_type, TimeType>::validate_numeric_bounds();
+        }
 
         double max() { 
             return FieldCodecBase::dccl_field_options().num_days() * SECONDS_IN_DAY;
         }
 
         double min() { return 0; }
+        double precision() 
+        {
+            if(!FieldCodecBase::dccl_field_options().has_precision())
+                return 0; // default to second precision
+            else
+            {
+                return FieldCodecBase::dccl_field_options().precision() + std::log10(conversion_factor);
+            }
+            
+        }
+        
+
+      private:
         enum { SECONDS_IN_DAY = 86400 };
     };
     

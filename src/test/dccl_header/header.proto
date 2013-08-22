@@ -9,6 +9,8 @@ message Header
   //
 
   // microseconds since Unix
+
+  // second precision (default)
   required uint64 time = 10 [(dccl.field).codec="_time",
                              (dccl.field).in_head=true];
 
@@ -22,6 +24,14 @@ message Header
   optional double futuretime_double = 23 [(dccl.field).codec="_time",
                                           (dccl.field).num_days=6,
                                           (dccl.field).in_head=true];  
+
+  // microsecond precision
+  optional int64 time_precision = 24 [(dccl.field).codec="_time",
+                                      (dccl.field).in_head=true,
+                                      (dccl.field).precision=-3];
+  optional double time_double_precision = 25 [(dccl.field).codec="_time",
+                                              (dccl.field).in_head=true,
+                                              (dccl.field).precision=3];
   
   //
   // source
