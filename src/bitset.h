@@ -41,21 +41,12 @@ namespace dccl
         explicit Bitset(Bitset* parent = 0)
             : parent_(parent)
         { }
-
-            
+        
         explicit Bitset(size_type num_bits, unsigned long value = 0, Bitset* parent = 0)
             : std::deque<bool>(num_bits, false),
             parent_(parent)
-            {
-                for(int i = 0, n = std::min<size_type>(std::numeric_limits<unsigned long>::digits, size());
-                    i < n; ++i)
-                {
-                    if(value & (1 << i))
-                        (*this)[i] = true;
-                }
-            }
-
-            
+            { from(value, num_bits); }
+        
         ~Bitset() { } 
 
         // get this number of bits from the little end of the parent bitset
@@ -172,19 +163,46 @@ namespace dccl
         /* Bitset operator~() const; */
         /* size_type count() const; */
 
-        unsigned long to_ulong() const
-        {
-            if(size() > static_cast<size_type>(std::numeric_limits<unsigned long>::digits))
-                throw(Exception("Type `unsigned long` cannot represent current bitset (this->size() > std::numeric_limits<unsigned long>::digits)"));                
+        
 
-            unsigned long out = 0;
+        // sets value to contents of integer
+        template<typename IntType>
+            void from(IntType value, size_type num_bits = std::numeric_limits<IntType>::digits)
+        {
+            this->resize(num_bits);
+            for(int i = 0, n = std::min<size_type>(std::numeric_limits<IntType>::digits, size());
+                i < n; ++i)
+            {
+                if(value & (static_cast<IntType>(1) << i))
+                    (*this)[i] = true;
+            }
+        }
+
+        void from_ulong(unsigned long value, size_type num_bits = std::numeric_limits<unsigned long>::digits)
+        {
+            from<unsigned long>(value, num_bits);
+        }
+        
+        template<typename IntType>
+            IntType to() const
+        {
+            if(size() > static_cast<size_type>(std::numeric_limits<IntType>::digits))
+                throw(Exception("Type IntType cannot represent current bitset (this->size() > std::numeric_limits<IntType>::digits)"));
+
+            IntType out = 0;
             for(int i = 0, n = size(); i < n; ++i)
             {
                 if((*this)[i])
-                    out |= (1ul << i);
+                    out |= (static_cast<IntType>(1) << i);
             }
                 
             return out;
+        }
+
+        
+        unsigned long to_ulong() const
+        {
+            return to<unsigned long>();
         }
 
         std::string to_string() const

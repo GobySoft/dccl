@@ -35,67 +35,35 @@ namespace dccl
     /// \brief if WireType == FieldType, we don't have to add any more virtual methods for converting between them.
     template <typename WireType, typename FieldType, class Enable = void> 
         class FieldCodecSelector : public FieldCodecBase
-        { };
-        
-    // if not the same WireType and FieldType, add these extra methods to
-    // handle them 
-    /// \brief If WireType != FieldType, adds some more pure virtual methods to handle the type conversions (pre_encode() and post_decode()). If WireType == FieldType this class is not inherited and this pure virtual methods do not exist (and thus can be omitted in the child class).
+        {
+          protected:
+/// \brief Convert from the FieldType representation (used in the Google Protobuf message) to the WireType representation (used with encode() and decode(), i.e. "on the wire").
+          /// 
+          /// \param field_value Value to convert
+          /// \return Converted value
+          virtual WireType pre_encode(const FieldType& field_value) = 0;
+          
+          /// \brief Convert from the WireType representation (used with encode() and decode(), i.e. "on the wire") to the FieldType representation (used in the Google Protobuf message).
+          /// 
+          /// \param wire_value Value to convert
+          /// \return Converted value
+          virtual FieldType post_decode(const WireType& wire_value) = 0;
+        };
+    
     template <typename WireType, typename FieldType>
         class FieldCodecSelector<WireType, FieldType,
-        typename boost::disable_if<boost::is_same<WireType, FieldType> >::type>
+        typename boost::enable_if<boost::is_same<WireType, FieldType> >::type>
         : public FieldCodecBase
     {
       protected:
-        /// \brief Convert from the FieldType representation (used in the Google Protobuf message) to the WireType representation (used with encode() and decode(), i.e. "on the wire").
-        /// 
-        /// \param field_value Value to convert
-        /// \return Converted value
-        virtual WireType pre_encode(const FieldType& field_value) = 0;
-
-        /// \brief Convert from the WireType representation (used with encode() and decode(), i.e. "on the wire") to the FieldType representation (used in the Google Protobuf message).
-        /// 
-        /// \param wire_value Value to convert
-        /// \return Converted value
-        virtual FieldType post_decode(const WireType& wire_value) = 0;
-
-      private:
-        virtual void any_pre_encode(boost::any* wire_value,
-                                    const boost::any& field_value) 
-        {
-            try
-            {
-                if(!field_value.empty())
-                    *wire_value = pre_encode(boost::any_cast<FieldType>(field_value));
-            }
-            catch(boost::bad_any_cast&)
-            {
-                throw(type_error("pre_encode", typeid(FieldType), field_value.type()));
-            }
-            catch(NullValueException&)
-            {
-                *wire_value = boost::any();
-            }
-        }
-          
-        virtual void any_post_decode(const boost::any& wire_value,
-                                     boost::any* field_value)
-        {
-            try
-            {
-                if(!wire_value.empty())
-                    *field_value = post_decode(boost::any_cast<WireType>(wire_value));
-            }
-            catch(boost::bad_any_cast&)
-            {
-                throw(type_error("post_decode", typeid(WireType), wire_value.type()));
-            }
-            catch(NullValueException&)
-            {
-                *field_value = boost::any();
-            }
-        }
+        virtual WireType pre_encode(const FieldType& field_value)
+        { return field_value; }
+        virtual FieldType post_decode(const WireType& wire_value)
+        { return wire_value; }
     };
 
+    
+    
     /// \brief Base class for static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire).
     /// \ingroup dccl_api
     ///
@@ -160,6 +128,59 @@ namespace dccl
           any_decode_specific<WireType>(bits, wire_value);
       }
 
+
+
+      void any_pre_encode(boost::any* wire_value,
+                          const boost::any& field_value) 
+      {
+          try
+          {
+              if(!field_value.empty())
+                  *wire_value = pre_encode(boost::any_cast<FieldType>(field_value));
+          }
+          catch(boost::bad_any_cast&)
+          {
+              throw(type_error("pre_encode", typeid(FieldType), field_value.type()));
+          }
+          catch(NullValueException&)
+          {
+              *wire_value = boost::any();
+          }
+      }
+          
+      void any_post_decode(const boost::any& wire_value,
+                           boost::any* field_value)
+      {
+          any_post_decode_specific<WireType>(wire_value, field_value);
+      }
+
+
+      // we don't currently support type conversion (post_decode / pre_encode) of Message types
+      template<typename T>
+      typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<0> dummy = 0)
+      {  *field_value = wire_value; }
+      
+      template<typename T>
+      typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<1> dummy = 0)
+      {
+          try
+          {
+              if(!wire_value.empty())
+                  *field_value = post_decode(boost::any_cast<WireType>(wire_value));
+          }
+          catch(boost::bad_any_cast&)
+          {
+              throw(type_error("post_decode", typeid(WireType), wire_value.type()));
+          }
+          catch(NullValueException&)
+          {
+              *field_value = boost::any();
+          }
+      }
+
+      
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
       any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<0> dummy = 0)
@@ -185,8 +206,7 @@ namespace dccl
           catch(NullValueException&)
           { *wire_value = boost::any(); }              
       }
-
-          
+    
     };
 
 
@@ -307,7 +327,43 @@ namespace dccl
               wire_values->at(i) = decoded[i];
       }
 
-          
+      
+      void any_pre_encode(boost::any* wire_value,
+                          const boost::any& field_value) 
+      {
+          try
+          {
+              if(!field_value.empty())
+                  *wire_value = pre_encode(boost::any_cast<FieldType>(field_value));
+          }
+          catch(boost::bad_any_cast&)
+          {
+              throw(type_error("pre_encode", typeid(FieldType), field_value.type()));
+          }
+          catch(NullValueException&)
+          {
+              *wire_value = boost::any();
+          }
+      }
+      
+      void any_post_decode(const boost::any& wire_value,
+                           boost::any* field_value)
+      {
+          try
+          {
+              if(!wire_value.empty())
+                  *field_value = post_decode(boost::any_cast<WireType>(wire_value));
+          }
+          catch(boost::bad_any_cast&)
+          {
+              throw(type_error("post_decode", typeid(WireType), wire_value.type()));
+          }
+          catch(NullValueException&)
+          {
+              *field_value = boost::any();
+          }
+      }
+      
 //          void any_pre_encode_repeated(std::vector<boost::any>* wire_values,
 //                                       const std::vector<boost::any>& field_values);
           

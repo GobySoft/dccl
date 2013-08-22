@@ -9,6 +9,7 @@ add_subdirectory(dccl_default_id)
 add_subdirectory(dccl_required_optional)
 add_subdirectory(dccl_static_methods)
 add_subdirectory(dccl_custom_id)
+add_subdirectory(dccl_numeric_bounds)
 
 if(build_ccl)
   add_subdirectory(dccl_ccl)
@@ -17,5 +18,7 @@ endif()
 if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
 endif()
+
+add_subdirectory(bitset1)
 
 add_subdirectory(logger1)
