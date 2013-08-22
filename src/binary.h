@@ -29,6 +29,8 @@
 #include <cmath>
 #include <sstream>
 
+#include "dccl/common.h"
+
 namespace dccl
 {
     /// \name Binary encoding
@@ -123,32 +125,28 @@ namespace dccl
         hex_encode(in, &out);
         return out;
     }
-
-
-    
         
     /// \return ceil(log2(v))
-    inline unsigned long ceil_log2(unsigned long v)
+    inline unsigned ceil_log2(dccl::uint64 v)
     {
         // r will be one greater (ceil) if v is not a power of 2
-        unsigned long r = ((v & (v - 1)) == 0) ? 0 : 1;
+        unsigned r = ((v & (v - 1)) == 0) ? 0 : 1;
         while (v >>= 1)
             r++;
         return r;
     }
         
     inline unsigned long ceil_log2(double d)
-    { return ceil_log2(static_cast<unsigned long>(std::ceil(d))); }
+    { return ceil_log2(static_cast<dccl::uint64>(std::ceil(d))); }
 
-    inline unsigned long ceil_log2(int i)
-    { return ceil_log2(static_cast<unsigned long>(i)); }
+    inline unsigned long ceil_log2(int i) 
+    { return ceil_log2(static_cast<dccl::uint64>(i)); } 
 
-    inline unsigned long ceil_log2(long i)
-    { return ceil_log2(static_cast<unsigned long>(i)); }
-
-    inline unsigned long ceil_log2(unsigned i)
-    { return ceil_log2(static_cast<unsigned long>(i)); }
+    inline unsigned long ceil_log2(long i) 
+    { return ceil_log2(static_cast<dccl::uint64>(i)); }
     
+    inline unsigned long ceil_log2(unsigned i) 
+    { return ceil_log2(static_cast<dccl::uint64>(i)); }     
     
     inline double log2(double d)
     {
