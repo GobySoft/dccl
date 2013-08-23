@@ -136,7 +136,7 @@ namespace dccl
           try
           {
               if(!field_value.empty())
-                  *wire_value = pre_encode(boost::any_cast<FieldType>(field_value));
+                  *wire_value = this->pre_encode(boost::any_cast<FieldType>(field_value));
           }
           catch(boost::bad_any_cast&)
           {
@@ -168,7 +168,7 @@ namespace dccl
           try
           {
               if(!wire_value.empty())
-                  *field_value = post_decode(boost::any_cast<WireType>(wire_value));
+                  *field_value = this->post_decode(boost::any_cast<WireType>(wire_value));
           }
           catch(boost::bad_any_cast&)
           {
@@ -334,7 +334,7 @@ namespace dccl
           try
           {
               if(!field_value.empty())
-                  *wire_value = pre_encode(boost::any_cast<FieldType>(field_value));
+                  *wire_value = this->pre_encode(boost::any_cast<FieldType>(field_value));
           }
           catch(boost::bad_any_cast&)
           {
@@ -352,7 +352,7 @@ namespace dccl
           try
           {
               if(!wire_value.empty())
-                  *field_value = post_decode(boost::any_cast<WireType>(wire_value));
+                  *field_value = this->post_decode(boost::any_cast<WireType>(wire_value));
           }
           catch(boost::bad_any_cast&)
           {
