@@ -122,13 +122,13 @@ namespace dccl
       private:
         dccl::Bitset encode()
         {
-            return encode(max());
+            return encode((dccl::uint32)max());
         }
             
         dccl::Bitset encode(const dccl::uint32& wire_value)
         {
             return DefaultNumericFieldCodec<dccl::uint32>::encode(
-                std::min<unsigned char>(max(), wire_value / SCALE_FACTOR));
+                (dccl::uint32)std::min<unsigned char>((dccl::uint32)max(), wire_value / SCALE_FACTOR));
         }
             
         dccl::uint32 decode(dccl::Bitset* bits)

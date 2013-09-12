@@ -32,7 +32,7 @@ dccl::TypeHelper::CustomMessageMap dccl::TypeHelper::custom_message_map_;
 boost::shared_ptr<dccl::TypeHelper> dccl::TypeHelper::inst_(new dccl::TypeHelper);
 
 template<google::protobuf::FieldDescriptor::Type t>
-void insert(dccl::TypeHelper::TypeMap* type_map)
+void insertType(dccl::TypeHelper::TypeMap* type_map)
 { type_map->insert(std::make_pair(t, boost::shared_ptr<dccl::FromProtoTypeBase>(new dccl::FromProtoType<t>))); }
 
 template<google::protobuf::FieldDescriptor::CppType t>
@@ -51,24 +51,24 @@ void dccl::TypeHelper::initialize()
     
     type_map_.insert(make_pair(static_cast<FieldDescriptor::Type>(0),
                                shared_ptr<FromProtoTypeBase>(new FromProtoTypeBase)));
-    insert<FieldDescriptor::TYPE_DOUBLE>(&type_map_);
-    insert<FieldDescriptor::TYPE_FLOAT>(&type_map_);
-    insert<FieldDescriptor::TYPE_UINT64>(&type_map_);
-    insert<FieldDescriptor::TYPE_UINT32>(&type_map_);
-    insert<FieldDescriptor::TYPE_FIXED64>(&type_map_);
-    insert<FieldDescriptor::TYPE_FIXED32>(&type_map_);
-    insert<FieldDescriptor::TYPE_INT64>(&type_map_);
-    insert<FieldDescriptor::TYPE_INT32>(&type_map_);
-    insert<FieldDescriptor::TYPE_SFIXED32>(&type_map_);
-    insert<FieldDescriptor::TYPE_SFIXED64>(&type_map_);
-    insert<FieldDescriptor::TYPE_SINT32>(&type_map_);
-    insert<FieldDescriptor::TYPE_SINT64>(&type_map_);
-    insert<FieldDescriptor::TYPE_BOOL>(&type_map_);
-    insert<FieldDescriptor::TYPE_STRING>(&type_map_);
-    insert<FieldDescriptor::TYPE_BYTES>(&type_map_);
-    insert<FieldDescriptor::TYPE_MESSAGE>(&type_map_);
-    insert<FieldDescriptor::TYPE_GROUP>(&type_map_);
-    insert<FieldDescriptor::TYPE_ENUM>(&type_map_);
+    insertType<FieldDescriptor::TYPE_DOUBLE>(&type_map_);
+    insertType<FieldDescriptor::TYPE_FLOAT>(&type_map_);
+    insertType<FieldDescriptor::TYPE_UINT64>(&type_map_);
+    insertType<FieldDescriptor::TYPE_UINT32>(&type_map_);
+    insertType<FieldDescriptor::TYPE_FIXED64>(&type_map_);
+    insertType<FieldDescriptor::TYPE_FIXED32>(&type_map_);
+    insertType<FieldDescriptor::TYPE_INT64>(&type_map_);
+    insertType<FieldDescriptor::TYPE_INT32>(&type_map_);
+    insertType<FieldDescriptor::TYPE_SFIXED32>(&type_map_);
+    insertType<FieldDescriptor::TYPE_SFIXED64>(&type_map_);
+    insertType<FieldDescriptor::TYPE_SINT32>(&type_map_);
+    insertType<FieldDescriptor::TYPE_SINT64>(&type_map_);
+    insertType<FieldDescriptor::TYPE_BOOL>(&type_map_);
+    insertType<FieldDescriptor::TYPE_STRING>(&type_map_);
+    insertType<FieldDescriptor::TYPE_BYTES>(&type_map_);
+    insertType<FieldDescriptor::TYPE_MESSAGE>(&type_map_);
+    insertType<FieldDescriptor::TYPE_GROUP>(&type_map_);
+    insertType<FieldDescriptor::TYPE_ENUM>(&type_map_);
 
 
     cpptype_map_.insert(make_pair(static_cast<FieldDescriptor::CppType>(0),

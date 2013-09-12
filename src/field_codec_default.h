@@ -130,14 +130,14 @@ namespace dccl
           if(wire_value < min() || wire_value > max())
               return Bitset(size());              
               
-          wire_value -= min();
-          wire_value *= std::pow(10.0, precision());
+          wire_value -= (WireType)min();
+          wire_value *= (WireType)std::pow(10.0, precision());
           
           // "presence" value (0)
           if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
 
-          wire_value = dccl::unbiased_round(wire_value, 0);
+          wire_value = (WireType)dccl::unbiased_round(wire_value, 0);
 
           Bitset encoded;
           encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
@@ -146,15 +146,19 @@ namespace dccl
           
       virtual WireType decode(Bitset* bits)
       {
-          dccl::uint64 t = bits->to<dccl::uint64>();
-              
+          // The line below SHOULD BE:
+          // dccl::uint64 t = bits->to<dccl::uint64>();
+          // But GCC3.3 requires an explicit template modifier on the method.
+          // See, e.g., http://gcc.gnu.org/bugzilla/show_bug.cgi?id=10959
+          dccl::uint64 t = (bits->template to<dccl::uint64>)();
+
           if(!FieldCodecBase::this_field()->is_required())
           {
               if(!t) throw NullValueException();
               --t;
           }
               
-          WireType return_value = dccl::unbiased_round(
+          WireType return_value = (WireType)dccl::unbiased_round(
               t / (std::pow(10.0, precision())) + min(), precision());
 
           
@@ -258,7 +262,7 @@ namespace dccl
 
         TimeType post_decode(const time_wire_type& encoded_time) {
 
-            int64 max_secs = max();
+            int64 max_secs = (int64)max();
             timeval t;
             gettimeofday(&t, 0);
             int64 now = t.tv_sec;
@@ -272,7 +276,7 @@ namespace dccl
                 daystart += max_secs;
             }
 
-            return conversion_factor * (daystart + encoded_time);
+            return (TimeType)(conversion_factor * (daystart + encoded_time));
         }
 
       private:
@@ -292,7 +296,7 @@ namespace dccl
                 return 0; // default to second precision
             else
             {
-                return FieldCodecBase::dccl_field_options().precision() + std::log10(conversion_factor);
+                return FieldCodecBase::dccl_field_options().precision() + (double)std::log10((double)conversion_factor);
             }
             
         }

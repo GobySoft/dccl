@@ -71,7 +71,7 @@ namespace dccl
         TypeHelper& operator= (const TypeHelper&);
         void initialize();    
             
-      private:
+      public:
         // so we can use shared_ptr to hold the singleton
         template<typename T>
             friend void boost::checked_delete(T*);

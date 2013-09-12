@@ -202,7 +202,7 @@ unsigned dccl::Codec::id(const std::string& bytes)
         throw(Exception("Bytes passed (hex: " + hex_encode(bytes) + ") is too small to be a valid DCCL message"));
         
     Bitset fixed_header_bits;
-    fixed_header_bits.from_byte_string(bytes.substr(0, std::ceil(double(id_max_size) / BITS_IN_BYTE)));
+    fixed_header_bits.from_byte_string(bytes.substr(0, (size_t)std::ceil(double(id_max_size) / BITS_IN_BYTE)));
 
     Bitset these_bits(&fixed_header_bits);
     these_bits.get_more_bits(id_min_size);

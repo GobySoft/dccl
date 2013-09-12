@@ -519,14 +519,14 @@ namespace dccl
                                                         *std::min_element(model.user_model().frequency().begin(), model.user_model().frequency().end()));
                   
           // full of least probable symbols
-          unsigned size_least_probable = std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(lowest_frequency)));
+          unsigned size_least_probable = (unsigned)(std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(lowest_frequency))));
                   
           dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_least_probable: " << size_least_probable << std::endl;
 
                   
           Model::freq_type eof_freq = model.user_model().eof_frequency();                  
           // almost full of least probable symbols plus EOF
-          unsigned size_least_probable_plus_eof = (eof_freq != 0 ) ? std::ceil(max_repeat()*log2(model.total_freq(Model::ENCODER))-(max_repeat()-1)*log2(lowest_frequency)-log2(eof_freq)) : 0;
+          unsigned size_least_probable_plus_eof = (unsigned)((eof_freq != 0 ) ? std::ceil(max_repeat()*log2(model.total_freq(Model::ENCODER))-(max_repeat()-1)*log2(lowest_frequency)-log2(eof_freq)) : 0);
 
           dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_least_probable_plus_eof: " << size_least_probable_plus_eof << std::endl;
 
@@ -551,7 +551,7 @@ namespace dccl
 
           Model::freq_type eof_freq = model.user_model().eof_frequency();                  
           // just EOF
-          unsigned size_empty = (eof_freq != 0) ? std::ceil(log2(model.total_freq(Model::ENCODER))-log2(eof_freq)) : std::numeric_limits<unsigned>::max();
+          unsigned size_empty = (unsigned)((eof_freq != 0) ? std::ceil(log2(model.total_freq(Model::ENCODER))-log2(eof_freq)) : std::numeric_limits<unsigned>::max());
                   
           dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_empty: " << size_empty << std::endl;
                   
@@ -559,7 +559,7 @@ namespace dccl
           Model::value_type highest_frequency = std::max(out_of_range_freq,
                                                          *std::max_element(model.user_model().frequency().begin(), model.user_model().frequency().end()));
                   
-          unsigned size_most_probable = std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(highest_frequency)));
+          unsigned size_most_probable = (unsigned)(std::ceil(max_repeat()*(log2(model.total_freq(Model::ENCODER))-log2(highest_frequency))));
 
           dccl::dlog.is(dccl::logger::DEBUG3) && dccl::dlog << "(ArithmeticFieldCodec) size_most_probable: " << size_most_probable << std::endl;
                   
@@ -679,7 +679,7 @@ namespace dccl
         const google::protobuf::EnumValueDescriptor* post_decode(const Model::value_type& wire_value)
         {
             const google::protobuf::EnumDescriptor* e = FieldCodecBase::this_field()->enum_type();
-            const google::protobuf::EnumValueDescriptor* return_value = e->FindValueByNumber(wire_value);
+            const google::protobuf::EnumValueDescriptor* return_value = e->FindValueByNumber((int)wire_value);
                 
             if(return_value)
                 return return_value;
