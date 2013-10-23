@@ -1,0 +1,34 @@
+body {
+  font-family: 'Marcellus', serif;
+}
+
+aside {
+  text-align: center;
+  background: #eef;
+  border: 2px solid #036;
+  border-radius: 5px;
+  box-shadow: 10px 10px 10px #ddd;
+  float: right;
+  width:240px;
+  padding: 1em;
+  margin: 1em 1em 1em 1em;
+}
+
+section > h2 {
+  display: inline-block;
+  background: #cdf;
+  border: 2px solid #036;
+  border-radius: 5px;
+  padding: 0.2em 0.5em;
+  margin: 0;
+}
+
+header, footer {
+  text-align: center;
+}
+
+footer {
+  font-size: 80%;
+  font-weight: bold;
+  color: #666;
+}
