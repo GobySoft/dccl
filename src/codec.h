@@ -64,7 +64,7 @@ namespace dccl
     /// 2. Write a bit of code like this:
     /// \code
     /// dccl::Codec* dccl = dccl::Codec::get();
-    /// dccl->validate<Simple>();
+    /// dccl->load<Simple>();
     /// Simple message_out;
     /// message_out.set_telegram("Hello!");
     /// std::string bytes;

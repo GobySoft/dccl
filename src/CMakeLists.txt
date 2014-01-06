@@ -24,6 +24,10 @@ target_link_libraries(dccl ${Cryptopp_LIBRARIES} ${PROTOBUF_LIBRARIES} ${CMAKE_D
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
 
+install(TARGETS dccl EXPORT dccl-config
+   LIBRARY DESTINATION lib
+   ARCHIVE DESTINATION lib) 
+
 option(build_arithmetic "Build arithmetic coders shared library" ON)
 option(build_ccl "Build Compact Control Language (CCL) legacy support shared library" ON)
 

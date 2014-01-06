@@ -16,3 +16,8 @@ target_link_libraries(dccl_ccl_compat dccl)
 
 set_target_properties(dccl_ccl_compat 
   PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
+
+
+install(TARGETS dccl_ccl_compat EXPORT dccl-config
+   LIBRARY DESTINATION lib
+   ARCHIVE DESTINATION lib) 

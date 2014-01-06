@@ -22,8 +22,8 @@
 
 
 
-#ifndef BINARY20100713H
-#define BINARY20100713H
+#ifndef DCCLBINARY20100713H
+#define DCCLBINARY20100713H
 
 #include <iomanip>
 #include <cmath>

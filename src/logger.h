@@ -54,7 +54,7 @@ namespace dccl {
 
 
     void to_ostream(const std::string& msg, dccl::logger::Verbosity vrb,
-                           dccl::logger::Group grp, std::ostream* os);
+                    dccl::logger::Group grp, std::ostream* os, bool add_timestamp);
     
     
     class LogBuffer : public std::streambuf
@@ -155,9 +155,10 @@ namespace dccl {
         { connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2, _3)); }
 
         /// connect a verbosity to a ostream
-        void connect(int verbosity_mask, std::ostream* os)
+        void connect(int verbosity_mask, std::ostream* os,
+                     bool add_timestamp = true)
         {
-            buf_.connect(verbosity_mask, boost::bind(to_ostream, _1, _2, _3, os));
+            buf_.connect(verbosity_mask, boost::bind(to_ostream, _1, _2, _3, os, add_timestamp));
         }
      
         void disconnect(int verbosity_mask)

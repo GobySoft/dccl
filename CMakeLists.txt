@@ -62,15 +62,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dccl_BIN_DIR} CACHE PATH
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR} CACHE PATH 
   "Output directory for the static libraries (archives)" )
 
+
 ## set instructions for `make install`
 file(MAKE_DIRECTORY ${dccl_BIN_DIR})
 install(DIRECTORY ${dccl_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin 
   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 
-install(DIRECTORY ${dccl_LIB_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
+
+install(EXPORT dccl-config DESTINATION share/${PROJECTNAME}/cmake)
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
@@ -132,4 +134,8 @@ endif()
 
 ## start adding subdirectories
 add_subdirectory(src)
+
+## export a file for folks to use
+export(TARGETS dccl FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
+file(APPEND ${CMAKE_BINARY_DIR}/dccl-config.cmake "set(DCCL_INCLUDE_DIR \"${dccl_INC_DIR}\")")
 
