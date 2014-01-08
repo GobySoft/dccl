@@ -19,6 +19,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+//
+// For the 'dccl' tool: loading non-GPL shared libraries for the purpose of
+// using this tool does *not* violate the GPL license terms of DCCL.
+//
+
+
 
 #include <sstream>
 
