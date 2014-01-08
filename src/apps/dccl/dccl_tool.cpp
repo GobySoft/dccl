@@ -213,6 +213,7 @@ void decode(dccl::Codec& dccl, const Config& cfg)
             {
                 boost::trim_if(input, boost::is_any_of("\""));
 
+                
                 ByteString s;
                 google::protobuf::TextFormat::ParseFieldValueFromString("\"" + input + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
                 input = s.b();

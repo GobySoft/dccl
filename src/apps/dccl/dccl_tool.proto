@@ -1,0 +1,5 @@
+message ByteString
+{
+  required bytes b = 1;
+}
+
