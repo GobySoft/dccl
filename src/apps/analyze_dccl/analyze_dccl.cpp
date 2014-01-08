@@ -29,6 +29,8 @@
 
 int main(int argc, char* argv[])
 {
+    std::cerr << "**** analyze_dccl is deprecated. You should consider using the newer 'dccl' tool instead (dccl --analyze -f some_dccl.proto -I /path/to/proto) **** " << std::endl;
+    
     if(argc < 2)
     {
         std::cerr << "usage: analyze_dccl some_dccl.proto [include_path (0-n)]" << std::endl;

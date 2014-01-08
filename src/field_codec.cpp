@@ -301,56 +301,54 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
 {
     MessageStack msg_handler(field);
 
-    std::string indent = " ";
 
-    std::string s;
+    std::stringstream ss;
+    int depth = msg_handler.count();
     
-    if(this_field())
-    {
-        s += this_field()->DebugString();
-    }
-    else
-    {
-        s += this_descriptor()->full_name() + "\n";
-        indent = "";
-    }
+    std::string name = ((this_field()) ? boost::lexical_cast<std::string>(this_field()->number()) + ". " + this_field()->name() : this_descriptor()->full_name());
+
+    if(!this_field() || this_field()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
+        depth -= 1;
+
+    const int spaces = 8;
+    std::string indent = std::string(spaces*(depth),' ');
+    
+    const int full_width = 40;
     
     bool is_zero_size = false;
-    
-    std::string specific_info = info();
 
-    if(!specific_info.empty())
-        s += specific_info;
-
+    std::stringstream range;
     if(variable_size())
     {
         unsigned max_sz = 0, min_sz = 0;
         field_max_size(&max_sz, field);
         field_min_size(&min_sz, field);
-        if(max_sz != min_sz)
-        {
-            s += ":: min size = " + boost::lexical_cast<std::string>(min_sz) + " bit(s)\n"
-                + ":: max size = " + boost::lexical_cast<std::string>(max_sz) + " bit(s)";
-        }
-        else
-        {
-            if(!max_sz) is_zero_size = true;
-            s += ":: size = " + boost::lexical_cast<std::string>(max_sz) + " bit(s)";
-        }
+        if(!max_sz) is_zero_size = true;
+        range << min_sz << "-" <<  max_sz;
     }
     else
     {
         unsigned sz = 0;
         field_max_size(&sz, field);
         if(!sz) is_zero_size = true;
-        s += ":: size = " + boost::lexical_cast<std::string>(sz) + " bit(s)";
+        range << sz;
     }
 
-    boost::replace_all(s, "\n", "\n" + indent);    
-    s = indent + s;
+    int width = this_field() ? full_width-name.size() : full_width-name.size()+spaces;
+    ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str();
+    
+//    std::string s = ss.str();
+//    boost::replace_all(s, "\n", "\n" + indent);    
+//    s = indent + s;
 
+    
     if(!is_zero_size)
-        *os << s << "\n";
+        *os << ss.str() << "\n";
+
+    std::string specific_info = info();
+    if(!specific_info.empty())
+        *os << specific_info;
+
 }
 
 

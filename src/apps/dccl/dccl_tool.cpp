@@ -37,16 +37,20 @@ struct Config
         { }
     
     Action action;
-    std::vector<std::string> include;
-    std::vector<std::string> dlopen;
-    std::vector<std::string> message;
-    std::vector<std::string> proto_file;
+    std::set<std::string> include;
+    std::set<std::string> dlopen;
+    std::set<std::string> message;
+    std::set<std::string> proto_file;
     Format format;
 };
 
     
-        
+void analyze(dccl::Codec& dccl, const Config& cfg);
+void encode(dccl::Codec& dccl, const Config& cfg);
+void decode(dccl::Codec& dccl, const Config& cfg);
 
+        
+void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name);
 void parse_options(int argc, char* argv[], Config* cfg);
 
 int main(int argc, char* argv[])
@@ -58,50 +62,91 @@ int main(int argc, char* argv[])
 
     dccl::DynamicProtobufManager::enable_compilation();
     
-    for(int i = 0, n = cfg.include.size(); i < n; ++i)
-        dccl::DynamicProtobufManager::add_include_path(cfg.include[i]);
+    for(std::set<std::string>::const_iterator it = cfg.include.begin(),
+            end = cfg.include.end(); it != end; ++it)
+        dccl::DynamicProtobufManager::add_include_path(*it);
 
     dccl::Codec dccl;
-    for(int i = 0, n = cfg.dlopen.size(); i < n; ++i)
-        dccl.load_library(cfg.dlopen[i]);
+    for(std::set<std::string>::const_iterator it = cfg.dlopen.begin(),
+            end = cfg.dlopen.end(); it != end; ++it)
+        dccl.load_library(*it);
     
-    for(int file = 0, file_end = cfg.proto_file.size(); file < file_end; ++file)
+    for(std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
+            end = cfg.proto_file.end(); it != end; ++it)
     {
         const google::protobuf::FileDescriptor* file_desc =
-            dccl::DynamicProtobufManager::load_from_proto_file(cfg.proto_file[file]);
-        
-        if(file_desc)
+            dccl::DynamicProtobufManager::load_from_proto_file(*it);
+
+        if(!file_desc)
         {
-            std::cout << "read in: " << cfg.proto_file[file] << std::endl;
+            std::cerr << "failed to read in: " << *it << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        
+        // if no messages explicity specified, load them all.
+        if(cfg.message.empty())
+        {
             for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
             {
                 const google::protobuf::Descriptor* desc = file_desc->message_type(i);
-            
-                if(desc)
-                {
-                    try { dccl.load(desc); }
-                    catch(std::exception& e)
-                    {
-                        std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\n" << e.what() << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cerr << "No descriptor with name " <<
-                        file_desc->message_type(i)->full_name() << " found!" << std::endl;
-                    exit(1);
-                }
+                load_desc(&dccl, desc, file_desc->message_type(i)->full_name());
             }
-            std::cout << dccl << std::endl;
         }
-        else
-        {
-            std::cerr << "failed to read in: " << cfg.proto_file[file] << std::endl;
-            exit(EXIT_FAILURE);
-        }    
-    }    
+    }
+
+    // Load up all the messages
+    for(std::set<std::string>::const_iterator it = cfg.message.begin(),
+            end = cfg.message.end(); it != end; ++it)   
+    {
+        const google::protobuf::Descriptor* desc = 
+            dccl::DynamicProtobufManager::find_descriptor(*it);
+        load_desc(&dccl, desc, *it);
+    }
+
+    switch(cfg.action)
+    {
+        case ENCODE: encode(dccl, cfg); break;
+        case DECODE: decode(dccl, cfg); break;
+        case ANALYZE: analyze(dccl, cfg); break;
+        default:
+            std::cout << "No action specified (e.g. analyze, decode, encode). Try --help." << std::endl;
+            exit(EXIT_SUCCESS);
+        
+    }
 }
 
+void analyze(dccl::Codec& dccl, const Config& cfg)
+{
+    std::cout << dccl << std::endl;
+}
+
+void encode(dccl::Codec& dccl, const Config& cfg)
+{
+}
+
+void decode(dccl::Codec& dccl, const Config& cfg)
+{
+}
+
+
+
+
+void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name)
+{
+    if(desc)
+    {
+        try { dccl->load(desc); }
+        catch(std::exception& e)
+        {
+            std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\nWhy: " << e.what() << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "No descriptor with name " << name << " found! Make sure you have loaded all the necessary .proto files and/or shared libraries. Try --help." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
 
 void parse_options(int argc, char* argv[], Config* cfg)
 {
@@ -159,10 +204,10 @@ void parse_options(int argc, char* argv[], Config* cfg)
             case 'e': cfg->action = ENCODE; break;
             case 'd': cfg->action = DECODE; break;
             case 'a': cfg->action = ANALYZE; break;    
-            case 'I': cfg->include.push_back(optarg); break;
-            case 'l': cfg->dlopen.push_back(optarg); break;
-            case 'm': cfg->message.push_back(optarg); break;
-            case 'f': cfg->proto_file.push_back(optarg); break;                
+            case 'I': cfg->include.insert(optarg); break;
+            case 'l': cfg->dlopen.insert(optarg); break;
+            case 'm': cfg->message.insert(optarg); break;
+            case 'f': cfg->proto_file.insert(optarg); break;                
                 
             case 'h':
                 std::cout << "Usage of the Dynamic Compact Control Language (DCCL) tool ('dccl'): " << std::endl;
