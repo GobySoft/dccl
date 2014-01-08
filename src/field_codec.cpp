@@ -306,7 +306,10 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     int depth = msg_handler.count();
     
     std::string name = ((this_field()) ? boost::lexical_cast<std::string>(this_field()->number()) + ". " + this_field()->name() : this_descriptor()->full_name());
-
+    if(this_field() && this_field()->is_repeated())
+        name += "[" + boost::lexical_cast<std::string>(dccl_field_options().max_repeat()) + "]";
+    
+    
     if(!this_field() || this_field()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
         depth -= 1;
 

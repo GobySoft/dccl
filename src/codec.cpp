@@ -425,7 +425,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
             std::string bits_body_str = "body";
-            std::string bits_padding_str = "padding";
+            std::string bits_padding_str = "padding to full byte";
 
             const int bits_width = 40;
             const int spaces = 8;
@@ -441,7 +441,6 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
                 << "Allowed maximum size of message: " << allowed_byte_size << " bytes / "
                 << allowed_bit_size << " bits\n";
 
-            *os << "Field sizes in bits: " << std::endl;
             std::string header_str = "Header";
             std::string header_guard = std::string((full_width-header_str.size())/2, '-');
             *os << header_guard << " " << header_str << " " << header_guard << std::endl;
@@ -453,9 +452,9 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string body_guard = std::string((full_width-body_str.size())/2, '-');
             *os << body_guard << " " << body_str << " " << body_guard << std::endl;
             codec->base_info(os, desc, MessageStack::BODY);
-            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << std::endl;
+//            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << std::endl;
                     
-            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << std::endl;
+//            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << std::endl;
         }
         catch(Exception& e)
         {
@@ -554,15 +553,16 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 
     if(param_os || dlog.is(INFO))
     {
-        std::string codec_str = "Codec";
+        std::string codec_str = "Dynamic Compact Control Language (DCCL) Codec";
         std::string codec_guard = std::string((full_width-codec_str.size())/2, '|');
         *os << codec_guard << " " << codec_str << " " << codec_guard << std::endl;
         
         *os << id2desc_.size() << " messages loaded.\n";            
+        *os << "Field sizes are in bits unless otherwise noted." << std::endl;
         
         for(std::map<int32, const google::protobuf::Descriptor*>::const_iterator it = id2desc_.begin(), n = id2desc_.end(); it != n; ++it)
             info(it->second, os);
         
-        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
+//        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
     }
 }

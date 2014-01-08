@@ -22,18 +22,22 @@
 
 
 #include <google/protobuf/descriptor.h>
+#include <google/protobuf/text_format.h>
+#include <google/protobuf/descriptor.pb.h>
+
+#include <boost/algorithm/string.hpp>
 
 #include "dccl/codec.h"
 #include "dccl/cli_option.h"
 
-enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE };
-enum Format { BIN, HEX, BASE64 };
+enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
+enum Format { TEXTFORMAT, HEX, BASE64 };
 
 struct Config
 {
     Config()
         : action(NO_ACTION),
-          format(BIN)
+          format(TEXTFORMAT)
         { }
     
     Action action;
@@ -48,6 +52,7 @@ struct Config
 void analyze(dccl::Codec& dccl, const Config& cfg);
 void encode(dccl::Codec& dccl, const Config& cfg);
 void decode(dccl::Codec& dccl, const Config& cfg);
+void disp_proto(dccl::Codec& dccl, const Config& cfg);
 
         
 void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name);
@@ -108,27 +113,110 @@ int main(int argc, char* argv[])
         case ENCODE: encode(dccl, cfg); break;
         case DECODE: decode(dccl, cfg); break;
         case ANALYZE: analyze(dccl, cfg); break;
+        case DISP_PROTO: disp_proto(dccl, cfg); break;
         default:
-            std::cout << "No action specified (e.g. analyze, decode, encode). Try --help." << std::endl;
+            std::cerr << "No action specified (e.g. analyze, decode, encode). Try --help." << std::endl;
             exit(EXIT_SUCCESS);
         
     }
 }
 
+
+
 void analyze(dccl::Codec& dccl, const Config& cfg)
 {
-    std::cout << dccl << std::endl;
+    dccl.info_all(&std::cout);
 }
 
 void encode(dccl::Codec& dccl, const Config& cfg)
 {
+    if(cfg.message.size() != 1)
+    {
+        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    const google::protobuf::Descriptor* desc = 
+        dccl::DynamicProtobufManager::find_descriptor(*cfg.message.begin());
+    int dccl_id = dccl.id(desc);
+    
+    while(!std::cin.eof())
+    {
+        std::string input;
+        std::getline (std::cin, input);
+
+        boost::trim(input);
+        if(input.empty())
+            continue;
+        
+        boost::shared_ptr<google::protobuf::Message> msg = dccl::DynamicProtobufManager::new_protobuf_message(desc);
+        google::protobuf::TextFormat::ParseFromString(input, msg.get());
+
+        if(msg->IsInitialized())
+        {
+            std::string encoded;
+            dccl.encode(&encoded, *msg);
+            switch(cfg.format)
+            {
+                default:
+                case TEXTFORMAT:
+                    break;
+                case HEX:
+                    std::cout << dccl::hex_encode(encoded) << std::endl;
+                    break;
+                case BASE64:
+                    break;
+            }
+        
+        }
+    }    
 }
 
 void decode(dccl::Codec& dccl, const Config& cfg)
 {
+    if(cfg.message.size() != 1)
+    {
+        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+        
+    while(!std::cin.eof())
+    {
+        std::string input;
+        std::getline (std::cin, input);
+
+        boost::trim(input);
+        if(input.empty())
+            continue;
+        
+        switch(cfg.format)
+        {
+            default:
+            case TEXTFORMAT:
+                break;
+            case HEX:
+                input = dccl::hex_decode(input);
+                break;
+            case BASE64:
+                break;
+        }
+
+        boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(input);
+        std::cout << msg->ShortDebugString() << std::endl;
+    }    
 }
 
+void disp_proto(dccl::Codec& dccl, const Config& cfg)
+{
+   for(std::set<std::string>::const_iterator it = cfg.message.begin(),
+            end = cfg.message.end(); it != end; ++it)   
+    {    
+        const google::protobuf::Descriptor* desc = 
+            dccl::DynamicProtobufManager::find_descriptor(*it);
 
+        std::cout << desc->DebugString();
+        
+    }
+}
 
 
 void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name)
@@ -154,12 +242,13 @@ void parse_options(int argc, char* argv[], Config* cfg)
     options.push_back(dccl::Option('e', "encode", no_argument, "Encode a DCCL message to STDOUT from STDIN"));
     options.push_back(dccl::Option('d', "decode", no_argument, "Decode a DCCL message to STDOUT from STDIN"));
     options.push_back(dccl::Option('a', "analyze", no_argument, "Provides information on a given DCCL message definition (e.g. field sizes)"));
+    options.push_back(dccl::Option('p', "display_proto", no_argument, "Display the .proto definition of this message."));
     options.push_back(dccl::Option('h', "help", no_argument, "Gives help on the usage of 'dccl'"));
     options.push_back(dccl::Option('I', "proto_path", required_argument, "Add another search directory for .proto files"));
     options.push_back(dccl::Option('l', "dlopen", required_argument, "Open this shared library containing compiled DCCL messages."));
     options.push_back(dccl::Option('m', "message", required_argument, "Message name to encode, decode or analyze."));
     options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
-    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'bin' (default) is a byte string, 'hex' is ascii-encoded hexadecimal, 'base64' is ascii-encoded base 64."));
+    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'textformat' (default) is a Google Protobuf TextFormat byte string, 'hex' is ascii-encoded hexadecimal, 'base64' is ascii-encoded base 64."));
     
     std::vector<option> long_options; 
     std::string opt_string;
@@ -181,21 +270,21 @@ void parse_options(int argc, char* argv[], Config* cfg)
 
                 if(!strcmp(long_options[option_index].name, "format"))
                 {
-                    if(!strcmp(optarg, "bin"))
-                        cfg->format = BIN;
+                    if(!strcmp(optarg, "textformat"))
+                        cfg->format = TEXTFORMAT;
                     else if(!strcmp(optarg, "hex"))
                         cfg->format = HEX;
                     else if(!strcmp(optarg, "base64"))
                         cfg->format = BASE64;
                     else
                     {
-                        std::cout << "Invalid format '" << optarg << "'" << std::endl;
+                        std::cerr << "Invalid format '" << optarg << "'" << std::endl;
                         exit(EXIT_FAILURE);
                     }
                 }
                 else
                 {
-                    std::cout << "Try --help for valid options." << std::endl;
+                    std::cerr << "Try --help for valid options." << std::endl;
                     exit(EXIT_FAILURE);
                 }
                 
@@ -204,6 +293,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
             case 'e': cfg->action = ENCODE; break;
             case 'd': cfg->action = DECODE; break;
             case 'a': cfg->action = ANALYZE; break;    
+            case 'p': cfg->action = DISP_PROTO; break;    
             case 'I': cfg->include.insert(optarg); break;
             case 'l': cfg->dlopen.insert(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
@@ -217,7 +307,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
                 break;
                 
             case '?':
-                std::cout << "Try --help for valid options." << std::endl;
+                std::cerr << "Try --help for valid options." << std::endl;
                 exit(EXIT_FAILURE);
             default: exit(EXIT_FAILURE);
         }
@@ -226,10 +316,12 @@ void parse_options(int argc, char* argv[], Config* cfg)
     /* Print any remaining command line arguments (not options). */
     if (optind < argc)
     {
-        printf ("non-option ARGV-elements: ");
+        std::cerr << "Unknown arguments: \n";
         while (optind < argc)
-            printf ("%s ", argv[optind++]);
-        putchar ('\n');
+            std::cerr << argv[optind++];
+        std::cerr << std::endl;
+        std::cerr << "Try --help for valid options." << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
