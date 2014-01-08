@@ -16,7 +16,8 @@ add_library(dccl
   type_helper.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp
-  
+  b64/cencode.c
+  b64/cdecode.c
   ${PROTO_SRCS} ${PROTO_HDRS}
   )
 

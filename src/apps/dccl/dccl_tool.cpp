@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <sstream>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/text_format.h>
@@ -29,6 +30,9 @@
 
 #include "dccl/codec.h"
 #include "dccl/cli_option.h"
+#include "dccl/b64/encode.h"
+#include "dccl/b64/decode.h"
+#include "dccl_tool.pb.h"
 
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
 enum Format { TEXTFORMAT, HEX, BASE64 };
@@ -37,7 +41,7 @@ struct Config
 {
     Config()
         : action(NO_ACTION),
-          format(TEXTFORMAT)
+          format(HEX)
         { }
     
     Action action;
@@ -94,7 +98,7 @@ int main(int argc, char* argv[])
             for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
             {
                 const google::protobuf::Descriptor* desc = file_desc->message_type(i);
-                load_desc(&dccl, desc, file_desc->message_type(i)->full_name());
+                cfg.message.insert(file_desc->message_type(i)->full_name());
             }
         }
     }
@@ -159,11 +163,26 @@ void encode(dccl::Codec& dccl, const Config& cfg)
             {
                 default:
                 case TEXTFORMAT:
+                {
+                    
+                    ByteString s;
+                    s.set_b(encoded);
+                    std::string output;
+                    google::protobuf::TextFormat::PrintFieldValueToString(s, s.GetDescriptor()->FindFieldByNumber(1), -1, &output);
+
+                    std::cout << output << std::endl;
                     break;
+                }
+                
                 case HEX:
                     std::cout << dccl::hex_encode(encoded) << std::endl;
                     break;
                 case BASE64:
+                    std::stringstream instream(encoded);
+                    std::stringstream outstream;
+                    base64::encoder D;
+                    D.encode(instream, outstream);
+                    std::cout << outstream.str();
                     break;
             }
         
@@ -184,19 +203,31 @@ void decode(dccl::Codec& dccl, const Config& cfg)
         std::string input;
         std::getline (std::cin, input);
 
-        boost::trim(input);
-        if(input.empty())
+        if(boost::trim_copy(input).empty())
             continue;
         
         switch(cfg.format)
         {
             default:
             case TEXTFORMAT:
+            {
+                boost::trim_if(input, boost::is_any_of("\""));
+
+                ByteString s;
+                google::protobuf::TextFormat::ParseFieldValueFromString("\"" + input + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
+                input = s.b();
                 break;
+            }
             case HEX:
                 input = dccl::hex_decode(input);
                 break;
             case BASE64:
+                std::string in = input;
+                std::stringstream instream(input);
+                std::stringstream outstream;
+                base64::decoder D;
+		D.decode(instream, outstream);
+                input = outstream.str();
                 break;
         }
 
@@ -207,6 +238,7 @@ void decode(dccl::Codec& dccl, const Config& cfg)
 
 void disp_proto(dccl::Codec& dccl, const Config& cfg)
 {
+    std::cout << "Please note that for Google Protobuf versions < 2.5.0, the dccl extensions will not be show below, so you'll need to refer to the original .proto file." << std::endl;
    for(std::set<std::string>::const_iterator it = cfg.message.begin(),
             end = cfg.message.end(); it != end; ++it)   
     {    
@@ -248,7 +280,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
     options.push_back(dccl::Option('l', "dlopen", required_argument, "Open this shared library containing compiled DCCL messages."));
     options.push_back(dccl::Option('m', "message", required_argument, "Message name to encode, decode or analyze."));
     options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
-    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'textformat' (default) is a Google Protobuf TextFormat byte string, 'hex' is ascii-encoded hexadecimal, 'base64' is ascii-encoded base 64."));
+    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'hex' is ascii-encoded hexadecimal (default), 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
     
     std::vector<option> long_options; 
     std::string opt_string;
