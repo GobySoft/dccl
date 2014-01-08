@@ -86,7 +86,12 @@ namespace dccl
     {
       public:       
         Codec(const std::string& dccl_id_codec = "_default_id_codec");
-        virtual ~Codec() { }
+        virtual ~Codec()
+        {
+            for(std::vector<void *>::iterator it = dl_handles_.begin(),
+                    n = dl_handles_.end(); it != n; ++it)
+                dlclose(*it);
+        }
 
         /// \brief Load any codecs present in the given shared library handle
         ///
@@ -266,6 +271,8 @@ namespace dccl
         std::map<int32, const google::protobuf::Descriptor*> id2desc_;
         std::string id_codec_;
 
+        std::vector<void *> dl_handles_;
+        
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Codec& codec)

@@ -485,6 +485,14 @@ void dccl::Codec::decrypt(std::string* s, const std::string& nonce)
 #endif
 }
 
+void dccl::Codec::load_library(const std::string& library_path)
+{
+    void* handle = dlopen(library_path.c_str(), RTLD_LAZY);
+    if(handle)
+        dl_handles_.push_back(handle);
+    load_library(handle);
+}
+
 void dccl::Codec::load_library(void* dl_handle)
 {
     if(!dl_handle)
