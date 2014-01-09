@@ -1,0 +1,39 @@
+import "dccl/protobuf/option_extensions.proto";
+
+
+enum Enum1
+{
+  ENUM_A = 1;
+  ENUM_B = 2;
+  ENUM_C = 3;
+}
+
+message EmbeddedMsg1
+{
+  optional double val = 1 [(dccl.field).min=0,
+                           (dccl.field).max=126,
+                           (dccl.field).precision=3];
+  optional EmbeddedMsg2 msg = 2;
+}
+
+message EmbeddedMsg2
+{
+  optional double val = 1 [(dccl.field).min=0,
+                           (dccl.field).max=126,
+                           (dccl.field).precision=2];
+  optional Enum1 enum_default = 3;  
+}
+
+message TestMsg
+{
+  option (dccl.msg).id = 2;
+  option (dccl.msg).max_bytes = 512;
+
+  optional double d = 1 [(dccl.field).min=-100,
+                         (dccl.field).max=126,
+                         (dccl.field).precision=2,
+                         (dccl.field).codec="dccl.codec3"];
+  optional EmbeddedMsg1 msg = 2;
+
+}
+

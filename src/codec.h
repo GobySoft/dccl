@@ -85,7 +85,7 @@ namespace dccl
     class Codec
     {
       public:       
-        Codec(const std::string& dccl_id_codec = "_default_id_codec");
+        Codec(const std::string& dccl_id_codec = default_id_codec_name());
         virtual ~Codec()
         {
             for(std::vector<void *>::iterator it = dl_handles_.begin(),
@@ -238,6 +238,9 @@ namespace dccl
         /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
         template<typename GoogleProtobufMessagePointer>
             GoogleProtobufMessagePointer decode(std::string* bytes);
+      
+        static std::string default_id_codec_name()
+        { return "dccl.default.id"; }        
 
         friend class DefaultMessageCodec;
       private:
@@ -258,7 +261,8 @@ namespace dccl
         static const std::string& default_codec_name()
         {
             return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
-        }        
+        }  
+
         
       private:
         // SHA256 hash of the crypto passphrase

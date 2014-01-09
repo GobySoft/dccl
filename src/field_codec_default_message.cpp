@@ -68,8 +68,11 @@ void dccl::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
             if(!check_field(field_desc))
                 continue;
 
-            boost::shared_ptr<FieldCodecBase> codec =
+            
+            boost::shared_ptr<FieldCodecBase> codec = has_codec_group() ?
+                FieldCodecManager::find(field_desc, codec_group()) :
                 FieldCodecManager::find(field_desc);
+            
             boost::shared_ptr<FromProtoCppTypeBase> helper =
                 TypeHelper::find(field_desc);
 

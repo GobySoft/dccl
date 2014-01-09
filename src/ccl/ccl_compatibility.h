@@ -33,8 +33,6 @@ extern "C"
     void dccl3_load(dccl::Codec* dccl);
 }
 
-
-
 namespace dccl
 {
     const unsigned char DCCL_CCL_HEADER = 32;

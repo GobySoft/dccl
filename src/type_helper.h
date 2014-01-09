@@ -61,12 +61,29 @@ namespace dccl
         template<typename ProtobufMessage>
             static void add()
         {
-            custom_message_map_.insert(std::make_pair(ProtobufMessage::descriptor()->full_name(), boost::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
+            custom_message_map_.insert(std::make_pair(ProtobufMessage::descriptor()->full_name(),
+                                                      boost::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
         }
+        template<typename ProtobufMessage>
+            static void remove()
+        {
+            custom_message_map_.erase(ProtobufMessage::descriptor()->full_name());
+        }
+
+        static void reset()
+        {
+            inst_.reset();
+        }
+        
 
       private:
         TypeHelper() { initialize(); }            
-        ~TypeHelper() { }
+        ~TypeHelper()
+        {
+            type_map_.clear();
+            cpptype_map_.clear();
+            custom_message_map_.clear();
+        }
         TypeHelper(const TypeHelper&);
         TypeHelper& operator= (const TypeHelper&);
         void initialize();    
