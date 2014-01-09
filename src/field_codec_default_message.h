@@ -43,7 +43,15 @@ namespace dccl
         unsigned min_size();
         unsigned any_size(const boost::any& wire_value);
 
-            
+
+        boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
+        {
+            return has_codec_group() ?
+                FieldCodecManager::find(field_desc, codec_group()) :
+                FieldCodecManager::find(field_desc);
+        }
+        
+        
         void validate();
         std::string info();
         bool check_field(const google::protobuf::FieldDescriptor* field);
@@ -141,8 +149,7 @@ namespace dccl
                 if(!check_field(field_desc))
                     continue;
 
-                Action::field(FieldCodecManager::find(field_desc),
-                              return_value, field_desc);                    
+                Action::field(find(field_desc), return_value, field_desc);                    
             }
         }
             
@@ -164,8 +171,7 @@ namespace dccl
                     if(!check_field(field_desc))
                         continue;
            
-                    boost::shared_ptr<FieldCodecBase> codec =
-                        FieldCodecManager::find(field_desc);
+                    boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
                     boost::shared_ptr<FromProtoCppTypeBase> helper =
                         TypeHelper::find(field_desc);
             
@@ -209,8 +215,7 @@ namespace dccl
                     if(!check_field(field_desc))
                         continue;
            
-                    boost::shared_ptr<FieldCodecBase> codec =
-                        FieldCodecManager::find(field_desc);
+                    boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
                     boost::shared_ptr<FromProtoCppTypeBase> helper =
                         TypeHelper::find(field_desc);
             

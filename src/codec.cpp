@@ -420,7 +420,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string guard = std::string((full_width-desc->full_name().size())/2, '=');
+            std::string message_name = boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string guard = std::string((full_width-message_name.size())/2, '=');
 
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -431,7 +432,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const int spaces = 8;
             std::string indent = std::string(spaces,' ');
             
-            *os << guard << " " << desc->full_name() << " " << guard << "\n"
+            *os << guard << " " << message_name << " " << guard << "\n"
                 << "Actual maximum size of message: " << byte_size << " bytes / "
                 << byte_size*BITS_IN_BYTE  << " bits\n"
                 << indent << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()) << id_bit_size << "\n"

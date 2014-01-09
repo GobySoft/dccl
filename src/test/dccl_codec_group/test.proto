@@ -26,14 +26,27 @@ message EmbeddedMsg2
 
 message TestMsg
 {
-  option (dccl.msg).id = 2;
-  option (dccl.msg).max_bytes = 512;
+  option (dccl.msg).id = 1;
+  option (dccl.msg).max_bytes = 32;
 
   optional double d = 1 [(dccl.field).min=-100,
                          (dccl.field).max=126,
                          (dccl.field).precision=2,
-                         (dccl.field).codec="dccl.codec3"];
+                         (dccl.field).codec="dccl.presence_bit"];
   optional EmbeddedMsg1 msg = 2;
 
 }
 
+
+message TestMsgGroup
+{
+  option (dccl.msg).id = 2;
+  option (dccl.msg).max_bytes = 32;
+  option (dccl.msg).codec_group = "dccl.presence_bit";
+  
+  optional double d = 1 [(dccl.field).min=-100,
+                         (dccl.field).max=126,
+                         (dccl.field).precision=2];
+  optional EmbeddedMsg1 msg = 2;
+
+}

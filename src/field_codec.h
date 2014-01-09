@@ -92,18 +92,21 @@ namespace dccl
         static const google::protobuf::Descriptor* this_descriptor()
         { return !MessageStack::desc_.empty() ? MessageStack::desc_.back() : 0; }
 
+        static const google::protobuf::Descriptor* root_descriptor()
+        { return !MessageStack::desc_.empty() ? MessageStack::desc_.front() : 0; }
+        
         // currently encoded or (partially) decoded root message
         static const google::protobuf::Message* root_message()
         { return root_message_; }
 
         static bool has_codec_group()
         {
-            return root_message()->GetDescriptor()->options().GetExtension(dccl::msg).has_codec_group();
+            return root_descriptor()->options().GetExtension(dccl::msg).has_codec_group();
         }
 
         static std::string codec_group()
         {
-            return root_message()->GetDescriptor()->options().GetExtension(dccl::msg).codec_group();
+            return root_descriptor()->options().GetExtension(dccl::msg).codec_group();
         }
 
         
