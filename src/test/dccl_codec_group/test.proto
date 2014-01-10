@@ -20,7 +20,8 @@ message EmbeddedMsg2
 {
   optional double val = 1 [(dccl.field).min=0,
                            (dccl.field).max=126,
-                           (dccl.field).precision=2];
+                           (dccl.field).precision=2,
+                           (dccl.field).codec="dccl.default2"];
   optional Enum1 enum_default = 3;  
 }
 

@@ -30,6 +30,7 @@ dccl::MessageStack::MessagePart dccl::FieldCodecBase::part_ =
     dccl::MessageStack::UNKNOWN;
 
 const google::protobuf::Message* dccl::FieldCodecBase::root_message_ = 0;
+const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor_ = 0;
 
 using dccl::dlog;
 using namespace dccl::logger;
@@ -200,7 +201,7 @@ void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
                                          const google::protobuf::Descriptor* desc,
                                          MessageStack::MessagePart part)
 {
-    BaseRAII scoped_globals(part);
+    BaseRAII scoped_globals(part, desc);
     *bit_size = 0;
 
     MessageStack msg_handler;
@@ -229,7 +230,7 @@ void dccl::FieldCodecBase::base_min_size(unsigned* bit_size,
                                          const google::protobuf::Descriptor* desc,
                                          MessageStack::MessagePart part)
 {
-    BaseRAII scoped_globals(part);
+    BaseRAII scoped_globals(part, desc);
 
     *bit_size = 0;
 
@@ -258,7 +259,7 @@ void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
 void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* desc,
                                          MessageStack::MessagePart part)
 {
-    BaseRAII scoped_globals(part);
+    BaseRAII scoped_globals(part, desc);
 
     MessageStack msg_handler;
     if(desc)
@@ -284,7 +285,7 @@ void dccl::FieldCodecBase::field_validate(bool* b,
             
 void dccl::FieldCodecBase::base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessageStack::MessagePart part)
 {
-    BaseRAII scoped_globals(part);
+    BaseRAII scoped_globals(part, desc);
 
     MessageStack msg_handler;
     if(desc)

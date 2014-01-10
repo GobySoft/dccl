@@ -92,21 +92,21 @@ namespace dccl
         static const google::protobuf::Descriptor* this_descriptor()
         { return !MessageStack::desc_.empty() ? MessageStack::desc_.back() : 0; }
 
-        static const google::protobuf::Descriptor* root_descriptor()
-        { return !MessageStack::desc_.empty() ? MessageStack::desc_.front() : 0; }
-        
         // currently encoded or (partially) decoded root message
         static const google::protobuf::Message* root_message()
         { return root_message_; }
 
         static bool has_codec_group()
         {
-            return root_descriptor()->options().GetExtension(dccl::msg).has_codec_group();
+            if(root_descriptor_)
+                return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group();
+            else
+                return false;
         }
 
         static std::string codec_group()
         {
-            return root_descriptor()->options().GetExtension(dccl::msg).codec_group();
+            return root_descriptor_->options().GetExtension(dccl::msg).codec_group();
         }
 
         
@@ -427,21 +427,32 @@ namespace dccl
         struct BaseRAII
         {
             BaseRAII(MessageStack::MessagePart part,
-                     const google::protobuf::Message* root_message = 0)
+                     const google::protobuf::Descriptor* root_descriptor)
+                {
+                    FieldCodecBase::part_ = part;
+                    FieldCodecBase::root_message_ = 0;
+                    FieldCodecBase::root_descriptor_ = root_descriptor;
+                }
+
+            BaseRAII(MessageStack::MessagePart part,            
+                     const google::protobuf::Message* root_message)
                 {
                     FieldCodecBase::part_ = part;
                     FieldCodecBase::root_message_ = root_message;
+                    FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();                    
                 }
             ~BaseRAII()
                 {
                     FieldCodecBase::part_ = dccl::MessageStack::UNKNOWN;
                     FieldCodecBase::root_message_ = 0;
+                    FieldCodecBase::root_descriptor_ = 0;
                 }
         };
         
         
         static MessageStack::MessagePart part_;
         static const google::protobuf::Message* root_message_;
+        static const google::protobuf::Descriptor* root_descriptor_;
         
         std::string name_;
         google::protobuf::FieldDescriptor::Type field_type_;
