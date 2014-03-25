@@ -17,6 +17,20 @@ message NumericMsg
                         
 }
 
+message NegativePrecisionNumericMsg
+{
+  option (dccl.msg).id = 10;
+  option (dccl.msg).max_bytes = 32;
+
+  optional double a = 1 [(dccl.field).min = -20,
+                         (dccl.field).max = 20,
+                         (dccl.field).precision = -1];
+
+  optional int32 b = 2 [(dccl.field).min = -500000,
+                        (dccl.field).max = 500000,
+                        (dccl.field).precision = -3];
+}
+
 
 message TooBigNumericMsg
 {

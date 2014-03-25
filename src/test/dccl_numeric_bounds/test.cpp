@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     NumericMsg msg_in;
 
     msg_in.set_a(10.12345678);
-    msg_in.set_b(11.4);
+    msg_in.set_b(11.42106);
 
     std::string encoded;
     codec.encode(&encoded, msg_in);
@@ -61,8 +61,33 @@ int main(int argc, char* argv[])
     NumericMsg msg_out;
     codec.decode(encoded, &msg_out);
 
+    msg_in.set_b(11.4211);
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-    
+
+    // Check negative precision encoding
+    const int NUM_TESTS = 8;
+    int test_values[NUM_TESTS][4] = {
+      // a_set, a_result, b_set, b_result
+      {20, 20, -500000, -500000},
+      {0, 0, 254000, 254000},
+      {10, 10, -257000, -257000},
+      {-10, -10, -499000, -499000},
+      {-20, -20, 500000, 500000},
+      {-19, -20, 499999, 500000},
+      {6, 10, -123400, -123000},
+      {0, 0, 0, 0},
+    };
+    for (int i=0; i < NUM_TESTS; ++i) {
+        NegativePrecisionNumericMsg msg_in_neg, msg_out_neg;
+        std::string enc;
+        msg_in_neg.set_a(test_values[i][0]);
+        msg_in_neg.set_b(test_values[i][2]);
+
+        codec.encode(&enc, msg_in_neg);
+        codec.decode(enc, &msg_out_neg);
+        assert(msg_out_neg.a() == test_values[i][1]);
+        assert(msg_out_neg.b() == test_values[i][3]);
+    }    
     
     std::cout << "all tests passed" << std::endl;
 }

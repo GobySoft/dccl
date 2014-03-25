@@ -131,13 +131,17 @@ namespace dccl
               return Bitset(size());              
               
           wire_value -= (WireType)min();
-          wire_value *= (WireType)std::pow(10.0, precision());
-          
+
+          wire_value = dccl::unbiased_round(wire_value, precision());
+          if (precision() < 0) {
+              wire_value /= (WireType)std::pow(10.0, -precision());
+          } else if (precision() > 0) {
+              wire_value *= (WireType)std::pow(10.0, precision());
+          }
+
           // "presence" value (0)
           if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
-
-          wire_value = (WireType)dccl::unbiased_round(wire_value, 0);
 
           Bitset encoded;
           encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
