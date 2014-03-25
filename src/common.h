@@ -27,6 +27,11 @@
 
 #include <iostream>
 #include <cmath>
+#include <limits>
+
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/type_traits/is_floating_point.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
@@ -68,28 +73,60 @@ namespace dccl
                 << "]] " << msg.DebugString());
     }
 
+    inline bool are_same(double a, double b)
+    {
+        return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
+    }
+    
 
     /// round 'r' to 'dec' number of decimal places
     /// we want no upward bias so
     /// round 5 up if odd next to it, down if even
+    /// So both 1.35 and 1.45 rounded to precision = 1 (tenths) is 1.4
     /// \param r value to round
     /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
     /// \return r rounded
-
-    inline double unbiased_round(double r, double dec)
+    template<typename Float>
+        typename boost::enable_if<boost::is_floating_point<Float>, Float>::type unbiased_round(Float value, int precision)
     {
-        double ex = std::pow(10.0, dec);
-        double final = std::floor(r * ex);
-        double s = (r * ex) - final;
+        Float scaling = std::pow(10.0, precision);
 
-        // remainder less than 0.5 or even number next to it
-        if (s < 0.5 || (s==0.5 && !(static_cast<unsigned long>(final)&1)))
-            return final / ex;
-        else 
-            return (final+1) / ex;
+        Float intpart = 0;
+        Float remainder = std::modf(value * scaling, &intpart); // scale value up and split into int/frac components
+
+        // figure out if we need to add a value for rounding up
+        if (remainder > 0.5 || // is greater than 0.5
+            (are_same(remainder, 0.5) && ((unsigned)intpart & 1))) // is 0.5 and next place is odd
+            intpart += 1;
+
+        // scale back to original
+        return intpart / scaling;
+        
     }
+    
+    template<typename Int>
+        typename boost::enable_if<boost::is_integral<Int>, Int>::type unbiased_round(Int value, int precision)
+    {
+        if(precision >= 0)
+        {
+            // doesn't mean anything to round an integer to positive precision
+            return value;
+        }
+        else
+        {
+            Int scaling = std::pow(10.0, -precision);
+            Int remainder = value % scaling;
+            value -= remainder;
+            if(remainder > scaling/2 || // is greater than 0.5
+               (remainder == scaling / 2 && (value/scaling & 1))) // is 0.5 and next place is odd
+            {
+                value += scaling;
+            }            
 
-
+            return value;
+        }
+    }
+    
     
 }
 #endif
