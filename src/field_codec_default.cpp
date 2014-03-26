@@ -339,27 +339,3 @@ void dccl::DefaultBytesCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
 }
-
-//
-// DefaultEnumCodec
-//
-dccl::int32 dccl::DefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
-{
-    return field_value->index();
-}
-
-const google::protobuf::EnumValueDescriptor* dccl::DefaultEnumCodec::post_decode(const dccl::int32& wire_value)
-{
-    const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
-
-    if(wire_value < e->value_count())
-    {
-        const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
-        return return_value;
-    }
-    else
-        throw NullValueException();
-}
-
-
-

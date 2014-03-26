@@ -13,6 +13,8 @@ message EmbeddedMsg1
   optional double val = 1 [(dccl.field).min=0,
                            (dccl.field).max=126,
                            (dccl.field).precision=3];
+
+
   optional EmbeddedMsg2 msg = 2;
 }
 
@@ -22,6 +24,7 @@ message EmbeddedMsg2
                            (dccl.field).max=126,
                            (dccl.field).precision=2,
                            (dccl.field).codec="dccl.default2"];
+
   optional Enum1 enum_default = 3;  
 }
 
@@ -34,6 +37,15 @@ message TestMsg
                          (dccl.field).max=126,
                          (dccl.field).precision=2,
                          (dccl.field).codec="dccl.presence_bit"];
+
+  
+
+  repeated double d_repeat = 3 [(dccl.field).min=12.0,
+                                (dccl.field).max=13.6,
+                                (dccl.field).precision=1,
+                                (dccl.field).max_repeat=5,
+                                (dccl.field).codec="dccl.presence_bit"];
+  
   optional EmbeddedMsg1 msg = 2;
 
 }
@@ -48,6 +60,12 @@ message TestMsgGroup
   optional double d = 1 [(dccl.field).min=-100,
                          (dccl.field).max=126,
                          (dccl.field).precision=2];
+
+  repeated double d_repeat = 3 [(dccl.field).min=12.0,
+                                (dccl.field).max=13.6,
+                                (dccl.field).precision=1,
+                                (dccl.field).max_repeat=5];
+
   optional EmbeddedMsg1 msg = 2;
 
 }

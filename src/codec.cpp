@@ -88,7 +88,7 @@ void dccl::Codec::set_default_codecs()
         FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(default_codec_name());
         FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
         FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
-        FieldCodecManager::add<DefaultEnumCodec>(default_codec_name());
+        FieldCodecManager::add<DefaultEnumCodec<> >(default_codec_name());
         FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
         
         FieldCodecManager::add<TimeCodec<uint64> >("_time");

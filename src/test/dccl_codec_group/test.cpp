@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     dccl::FieldCodecManager::add<dccl::DefaultNumericFieldCodec<double, double, dccl::PRESENCE_BIT> >("dccl.presence_bit");
-    dccl::FieldCodecManager::add<dccl::PresenceBitEnumFieldCodec >("dccl.presence_bit");
+    dccl::FieldCodecManager::add<dccl::DefaultEnumCodec<dccl::PRESENCE_BIT> >("dccl.presence_bit");
     dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
 
     check<TestMsg>();
@@ -59,9 +59,12 @@ void check()
     Msg msg_in;
     int i = 0;
     msg_in.set_d(++i + 0.1);
+    msg_in.add_d_repeat(12.1);
+    msg_in.add_d_repeat(12.2);
+    msg_in.add_d_repeat(12.3);
+    
     msg_in.mutable_msg()->set_val(++i + 0.3);
     msg_in.mutable_msg()->mutable_msg()->set_val(++i);
-    
     codec.info(msg_in.GetDescriptor(), &std::cout);
 
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
