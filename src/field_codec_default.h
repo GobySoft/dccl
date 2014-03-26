@@ -83,7 +83,7 @@ namespace dccl
 
       virtual double max()
       { return FieldCodecBase::dccl_field_options().max(); }
-
+      
       virtual double min()
       { return FieldCodecBase::dccl_field_options().min(); }
 
@@ -125,14 +125,15 @@ namespace dccl
           
       virtual Bitset encode(const WireType& value)
       {
-          WireType wire_value = value;
-                
-          if(wire_value < min() || wire_value > max())
-              return Bitset(size());              
-              
-          wire_value -= (WireType)min();
+          // round first, before checking bounds
+          WireType wire_value = dccl::round(value, precision());
 
-          wire_value = dccl::round(wire_value, precision());
+          // check bounds, if out-of-bounds, send as zeros
+          if(wire_value < min() || wire_value > max())
+              return Bitset(size());
+          
+          wire_value -= dccl::round((WireType)min(), precision());
+
           if (precision() < 0) {
               wire_value /= (WireType)std::pow(10.0, -precision());
           } else if (precision() > 0) {
@@ -173,8 +174,8 @@ namespace dccl
 
 	  // round values again to properly handle cases where double precision
 	  // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
-          wire_value = dccl::round(wire_value + (WireType)min(),
-					    precision());          
+          wire_value = dccl::round(wire_value + dccl::round((WireType)min(), precision()),
+                                   precision());
 
           return wire_value;
       }
