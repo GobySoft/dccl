@@ -157,7 +157,7 @@ namespace dccl
                       wire_value *= (WireType)std::pow(10.0, precision());
                   }
 
-                  dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(round(wire_value));
+                  dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(dccl::round(wire_value, 0));
 
                   // "presence" value (0)
                   if(add_presence_value()) uint_value += 1;	  
