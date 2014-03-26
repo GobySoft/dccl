@@ -140,13 +140,15 @@ namespace dccl
               wire_value *= (WireType)std::pow(10.0, precision());
           }
 
+          dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(wire_value);
+
           // "presence" value (0)
           if(!FieldCodecBase::this_field()->is_required())
-              wire_value += 1;
+              uint_value += 1;
 	  
 
           Bitset encoded;
-          encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
+          encoded.from(uint_value, size());
           return encoded;
       }
           
