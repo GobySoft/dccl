@@ -132,7 +132,7 @@ namespace dccl
               
           wire_value -= (WireType)min();
 
-          wire_value = dccl::unbiased_round(wire_value, precision());
+          wire_value = dccl::round(wire_value, precision());
           if (precision() < 0) {
               wire_value /= (WireType)std::pow(10.0, -precision());
           } else if (precision() > 0) {
@@ -174,7 +174,7 @@ namespace dccl
 
 	  // round values again to properly handle cases where double precision
 	  // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
-          wire_value = dccl::unbiased_round(wire_value + (WireType)min(),
+          wire_value = dccl::round(wire_value + (WireType)min(),
 					    precision());          
 
           return wire_value;
