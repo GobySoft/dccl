@@ -93,9 +93,6 @@ namespace dccl
       Int abs(Int i) { return (i < 0) ? -i : i; }
 
     /// round 'value' to 'precision' number of decimal places
-    /// we want no upward bias so
-    /// round 5 up if odd next to it, down if even
-    /// So both 135 and 145 rounded to precision = -1 (tens) is 140
     /// \param r value to round
     /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
     /// \return r rounded
