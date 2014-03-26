@@ -143,7 +143,6 @@ namespace dccl
           if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
 	  
-	  std::cout << "wire value: " << wire_value << std::endl;
 
           Bitset encoded;
           encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());

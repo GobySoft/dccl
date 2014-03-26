@@ -54,7 +54,9 @@ int main(int argc, char* argv[])
 
     msg_in.set_a(10.12345678);
     msg_in.set_b(11.42106);
-
+    msg_in.set_u1(18446744073709500000ull);
+    msg_in.set_u2(0);
+    
     std::string encoded;
     codec.encode(&encoded, msg_in);
     

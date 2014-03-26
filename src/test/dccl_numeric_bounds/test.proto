@@ -13,7 +13,16 @@ message NumericMsg
   optional double b = 2 [(dccl.field).max = 18,
                          (dccl.field).min = -18,
                          (dccl.field).precision = 4];
-  
+
+  // max is 2^64 rounded to 1e5
+  required uint64 u1 = 3 [(dccl.field).max = 18446744073709500000,
+                          (dccl.field).min = 0,
+                          (dccl.field).precision = -5];
+
+  // max is 2^64 rounded to 1e5
+  required uint64 u2 = 4 [(dccl.field).max = 18446744073709500000,
+                          (dccl.field).min = 0,
+                          (dccl.field).precision = -5];
                         
 }
 
