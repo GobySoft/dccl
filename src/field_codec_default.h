@@ -142,6 +142,8 @@ namespace dccl
           // "presence" value (0)
           if(!FieldCodecBase::this_field()->is_required())
               wire_value += 1;
+	  
+	  std::cout << "wire value: " << wire_value << std::endl;
 
           Bitset encoded;
           encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
@@ -154,22 +156,28 @@ namespace dccl
           // dccl::uint64 t = bits->to<dccl::uint64>();
           // But GCC3.3 requires an explicit template modifier on the method.
           // See, e.g., http://gcc.gnu.org/bugzilla/show_bug.cgi?id=10959
-          dccl::uint64 t = (bits->template to<dccl::uint64>)();
+          dccl::uint64 uint_value = (bits->template to<dccl::uint64>)();
 
           if(!FieldCodecBase::this_field()->is_required())
           {
-              if(!t) throw NullValueException();
-              --t;
+              if(!uint_value) throw NullValueException();
+              --uint_value;
           }
-              
-          WireType return_value = (WireType)dccl::unbiased_round(
-              t / (std::pow(10.0, precision())) + min(), precision());
+	  
+	  WireType wire_value = (WireType)uint_value;
 
-          
-//              dccl::dlog.is(common::logger::DEBUG2) && dccl::dlog << group(Codec::dlog_decode_group()) << "(DefaultNumericFieldCodec) Decoding received wire value (=field value) " << return_value << std::endl;
+          if (precision() < 0) {
+	    wire_value *= (WireType)std::pow(10.0, -precision());
+          } else if (precision() > 0) {
+	    wire_value /= (WireType)std::pow(10.0, precision());
+          }
 
-          return return_value;
-              
+	  // round values again to properly handle cases where double precision
+	  // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
+          wire_value = dccl::unbiased_round(wire_value + (WireType)min(),
+					    precision());          
+
+          return wire_value;
       }
 
       unsigned size()

@@ -96,7 +96,7 @@ namespace dccl
 
         // figure out if we need to add a value for rounding up
         if (remainder > 0.5 || // is greater than 0.5
-            (are_same(remainder, 0.5) && ((unsigned)intpart & 1))) // is 0.5 and next place is odd
+            (are_same(remainder, 0.5) && ((unsigned)std::abs(intpart) & 1))) // is 0.5 and next place is odd
             intpart += 1;
 
         // scale back to original
@@ -104,6 +104,10 @@ namespace dccl
         
     }
     
+    // C++98 has no long long overload for abs
+    template<typename Int>
+      Int abs(Int i) { return (i < 0) ? -i : i; }
+
     template<typename Int>
         typename boost::enable_if<boost::is_integral<Int>, Int>::type unbiased_round(Int value, int precision)
     {
@@ -114,11 +118,12 @@ namespace dccl
         }
         else
         {
-            Int scaling = std::pow(10.0, -precision);
+	  Int scaling = (Int)std::pow(10.0, -precision);
             Int remainder = value % scaling;
+
             value -= remainder;
             if(remainder > scaling/2 || // is greater than 0.5
-               (remainder == scaling / 2 && (value/scaling & 1))) // is 0.5 and next place is odd
+               (remainder == scaling / 2 && (dccl::abs<Int>(value)/scaling & 1))) // is 0.5 and next place is odd
             {
                 value += scaling;
             }            

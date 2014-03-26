@@ -85,6 +85,10 @@ int main(int argc, char* argv[])
 
         codec.encode(&enc, msg_in_neg);
         codec.decode(enc, &msg_out_neg);
+	
+	std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
+	std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
+
         assert(msg_out_neg.a() == test_values[i][1]);
         assert(msg_out_neg.b() == test_values[i][3]);
     }    
