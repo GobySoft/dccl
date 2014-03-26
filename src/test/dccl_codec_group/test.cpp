@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 {
 //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::FieldCodecManager::add<dccl::PresenceBitNumericFieldCodec<double> >("dccl.presence_bit");
+    dccl::FieldCodecManager::add<dccl::DefaultNumericFieldCodec<double, double, dccl::PRESENCE_BIT> >("dccl.presence_bit");
     dccl::FieldCodecManager::add<dccl::PresenceBitEnumFieldCodec >("dccl.presence_bit");
     dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
 

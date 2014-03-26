@@ -71,13 +71,18 @@ namespace dccl
                LONG_FORM_ID_BYTES = 2 };
     };
 
-        
-
     /// \brief Provides a basic bounded arbitrary length numeric (double, float, uint32, uint64, int32, int64) encoder.
     ///
     /// Takes ceil(log2((max-min)*10^precision)+1) bits for required fields, ceil(log2((max-min)*10^precision)+2) for optional fields.
-    template<typename WireType, typename FieldType = WireType>
-        class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType>
+    enum NumericPresenceType
+    {
+        PRESENCE_VALUE, // adds an extra *bit* to encode "not present" or "out of range": good when field is often absent 
+        PRESENCE_BIT // adds an extra *value* to encode "not present" or "out of range": good when field is generally present
+    };
+    
+    
+    template<typename WireType, typename FieldType = WireType, NumericPresenceType Presence = PRESENCE_VALUE>
+        class DefaultNumericFieldCodec : public RepeatedTypedFieldCodec<WireType, FieldType>
     {
       protected:
 
@@ -89,6 +94,9 @@ namespace dccl
 
       virtual double precision()
       { return FieldCodecBase::dccl_field_options().precision(); }
+
+      virtual bool add_presence_value()
+      { return !FieldCodecBase::this_field()->is_required() && Presence == PRESENCE_VALUE; }
       
       virtual void validate()
       {
@@ -96,7 +104,10 @@ namespace dccl
                                       "missing (dccl.field).min");
           FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_max(),
                                       "missing (dccl.field).max");
-
+          
+          if(dccl::FieldCodecBase::this_field()->is_repeated())
+              dccl::FieldCodecBase::require(dccl::FieldCodecBase::dccl_field_options().has_max_repeat(), "(dccl.field).max_repeat must be set for repeated fields");
+          
           validate_numeric_bounds();
       }
 
@@ -116,78 +127,107 @@ namespace dccl
           
       }
       
-      
-      Bitset encode()
+       
+      Bitset encode_repeated(const std::vector<WireType>& wire_values)
       {
-          return Bitset(size());
-      }
-          
-          
-      virtual Bitset encode(const WireType& value)
-      {
-          // round first, before checking bounds
-          WireType wire_value = dccl::round(value, precision());
-
-          // check bounds, if out-of-bounds, send as zeros
-          if(wire_value < min() || wire_value > max())
-              return Bitset(size());
-          
-          wire_value -= dccl::round((WireType)min(), precision());
-
-          if (precision() < 0) {
-              wire_value /= (WireType)std::pow(10.0, -precision());
-          } else if (precision() > 0) {
-              wire_value *= (WireType)std::pow(10.0, precision());
-          }
-
-          dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(wire_value);
-
-          // "presence" value (0)
-          if(!FieldCodecBase::this_field()->is_required())
-              uint_value += 1;
-	  
-
-          Bitset encoded;
-          encoded.from(uint_value, size());
-          return encoded;
-      }
-          
-      virtual WireType decode(Bitset* bits)
-      {
-          // The line below SHOULD BE:
-          // dccl::uint64 t = bits->to<dccl::uint64>();
-          // But GCC3.3 requires an explicit template modifier on the method.
-          // See, e.g., http://gcc.gnu.org/bugzilla/show_bug.cgi?id=10959
-          dccl::uint64 uint_value = (bits->template to<dccl::uint64>)();
-
-          if(!FieldCodecBase::this_field()->is_required())
+          Bitset all_bits;
+          for(unsigned i = 0, n = FieldCodecBase::dccl_field_options().max_repeat(); i < n; ++i)
           {
-              if(!uint_value) throw NullValueException();
-              --uint_value;
+              if(i >= wire_values.size())
+              {
+                  all_bits.append(Bitset(single_value_size()));
+                  continue;
+              }
+              
+              // round first, before checking bounds
+              WireType wire_value = dccl::round(wire_values[i], precision());
+
+              Bitset encoded;
+              // check bounds, if out-of-bounds, send as zeros
+              if(wire_value < min() || wire_value > max())
+                  encoded = Bitset(single_value_size());
+              else
+              {
+                  wire_value -= dccl::round((WireType)min(), precision());
+
+                  if (precision() < 0) {
+                      wire_value /= (WireType)std::pow(10.0, -precision());
+                  } else if (precision() > 0) {
+                      wire_value *= (WireType)std::pow(10.0, precision());
+                  }
+
+                  dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(wire_value);
+
+                  // "presence" value (0)
+                  if(add_presence_value()) uint_value += 1;	  
+
+                  encoded.from(uint_value, single_value_size());
+              }
+              all_bits.append(encoded);
           }
-	  
-	  WireType wire_value = (WireType)uint_value;
+          return all_bits;
+      }
+      
+      
+      std::vector<WireType> decode_repeated(dccl::Bitset* all_bits)
+      {
+          std::vector<WireType> return_vec;
+          for(unsigned i = 0, n = FieldCodecBase::dccl_field_options().max_repeat(); i < n; ++i)
+          {
+              Bitset bits = *all_bits;
+              bits.resize(single_value_size());
 
-          if (precision() < 0) {
-	    wire_value *= (WireType)std::pow(10.0, -precision());
-          } else if (precision() > 0) {
-	    wire_value /= (WireType)std::pow(10.0, precision());
+              dccl::uint64 uint_value = (bits.template to<dccl::uint64>)();
+
+              std::cout << uint_value << std::endl;
+              
+              if(add_presence_value())
+              {
+                  if(!uint_value) continue;
+                  --uint_value;
+              }
+              
+              WireType wire_value = (WireType)uint_value;
+              
+              if (precision() < 0) {
+                  wire_value *= (WireType)std::pow(10.0, -precision());
+              } else if (precision() > 0) {
+                  wire_value /= (WireType)std::pow(10.0, precision());
+              }
+              
+              // round values again to properly handle cases where double precision
+              // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
+              wire_value = dccl::round(wire_value + dccl::round((WireType)min(), precision()),
+                                       precision());
+              
+              return_vec.push_back(wire_value);
+              *all_bits >>= single_value_size();
           }
+          return return_vec;
+      }
+      
 
-	  // round values again to properly handle cases where double precision
-	  // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
-          wire_value = dccl::round(wire_value + dccl::round((WireType)min(), precision()),
-                                   precision());
-
-          return wire_value;
+      unsigned size_repeated(const std::vector<WireType>& wire_values)
+      {
+          return max_size_repeated();
+      }
+      
+      unsigned max_size_repeated()
+      {
+          return single_value_size()*FieldCodecBase::dccl_field_options().max_repeat();
       }
 
-      unsigned size()
+      unsigned min_size_repeated()
+      {
+          return max_size_repeated();
+      }
+      
+      unsigned single_value_size()
       {
           // if not required field, leave one value for unspecified (always encoded as 0)
-          const unsigned NULL_VALUE = FieldCodecBase::this_field()->is_required() ? 0 : 1;
-              
-          return dccl::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
+          const unsigned NULL_VALUE = add_presence_value() ? 1 : 0;
+          
+          return dccl::ceil_log2((max()-min())*std::pow(10.0, precision()) + 1 + NULL_VALUE);
       }
             
     };

@@ -34,8 +34,7 @@ namespace dccl
 template<typename WireType, typename FieldType = WireType>
     class PresenceBitNumericFieldCodec : public dccl::RepeatedTypedFieldCodec<WireType, FieldType>
     {
-      protected:
-
+      private:
       virtual double max()
       { return dccl::FieldCodecBase::dccl_field_options().max(); }
 
@@ -47,6 +46,7 @@ template<typename WireType, typename FieldType = WireType>
             
       virtual void validate()
       {
+          
           dccl::FieldCodecBase::require(dccl::FieldCodecBase::dccl_field_options().has_min(), "missing (dccl.field).min");
           dccl::FieldCodecBase::require(dccl::FieldCodecBase::dccl_field_options().has_max(), "missing (dccl.field).max");
 
