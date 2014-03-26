@@ -145,7 +145,7 @@ namespace dccl
 	  
 
           Bitset encoded;
-          encoded.from(boost::numeric_cast<dccl::uint64>(wire_value), size());
+          encoded.from(boost::numeric_cast<dccl::uint64>(dccl::round(wire_value, 0)), size());
           return encoded;
       }
           
