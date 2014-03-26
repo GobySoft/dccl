@@ -54,7 +54,9 @@ int main(int argc, char* argv[])
 
     msg_in.set_a(10.12345678);
     msg_in.set_b(11.42106);
-
+    msg_in.set_u1(18446744073709500000ull);
+    msg_in.set_u2(0);
+    
     std::string encoded;
     codec.encode(&encoded, msg_in);
     
@@ -85,6 +87,10 @@ int main(int argc, char* argv[])
 
         codec.encode(&enc, msg_in_neg);
         codec.decode(enc, &msg_out_neg);
+	
+	std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
+	std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
+
         assert(msg_out_neg.a() == test_values[i][1]);
         assert(msg_out_neg.b() == test_values[i][3]);
     }    

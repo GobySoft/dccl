@@ -73,39 +73,31 @@ namespace dccl
                 << "]] " << msg.DebugString());
     }
 
-    inline bool are_same(double a, double b)
-    {
-        return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
-    }
+    template<typename Float>
+        Float round(Float d)
+    { return std::floor(d + 0.5); }
     
-
-    /// round 'r' to 'dec' number of decimal places
-    /// we want no upward bias so
-    /// round 5 up if odd next to it, down if even
-    /// So both 1.35 and 1.45 rounded to precision = 1 (tenths) is 1.4
+    /// round 'value' to 'precision' number of decimal places
     /// \param r value to round
     /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
     /// \return r rounded
     template<typename Float>
-        typename boost::enable_if<boost::is_floating_point<Float>, Float>::type unbiased_round(Float value, int precision)
+        typename boost::enable_if<boost::is_floating_point<Float>, Float>::type round(Float value, int precision)
     {
         Float scaling = std::pow(10.0, precision);
-
-        Float intpart = 0;
-        Float remainder = std::modf(value * scaling, &intpart); // scale value up and split into int/frac components
-
-        // figure out if we need to add a value for rounding up
-        if (remainder > 0.5 || // is greater than 0.5
-            (are_same(remainder, 0.5) && ((unsigned)intpart & 1))) // is 0.5 and next place is odd
-            intpart += 1;
-
-        // scale back to original
-        return intpart / scaling;
-        
+        return round(value*scaling)/scaling;        
     }
     
+    // C++98 has no long long overload for abs
     template<typename Int>
-        typename boost::enable_if<boost::is_integral<Int>, Int>::type unbiased_round(Int value, int precision)
+      Int abs(Int i) { return (i < 0) ? -i : i; }
+
+    /// round 'value' to 'precision' number of decimal places
+    /// \param r value to round
+    /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
+    /// \return r rounded
+    template<typename Int>
+        typename boost::enable_if<boost::is_integral<Int>, Int>::type round(Int value, int precision)
     {
         if(precision >= 0)
         {
@@ -114,14 +106,12 @@ namespace dccl
         }
         else
         {
-            Int scaling = std::pow(10.0, -precision);
+            Int scaling = (Int)std::pow(10.0, -precision);
             Int remainder = value % scaling;
+
             value -= remainder;
-            if(remainder > scaling/2 || // is greater than 0.5
-               (remainder == scaling / 2 && (value/scaling & 1))) // is 0.5 and next place is odd
-            {
+            if(remainder >= scaling/2)
                 value += scaling;
-            }            
 
             return value;
         }

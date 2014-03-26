@@ -110,8 +110,8 @@ int main(int argc, char* argv[])
         assert(double_cmp(state_in.longitude(), state_out.longitude(), 4));
         assert(state_in.fix_age() == state_out.fix_age());
         assert(state_in.time_date() == state_out.time_date());
-        assert(dccl::unbiased_round(state_in.heading(),0) ==
-               dccl::unbiased_round(state_out.heading(),0));
+        assert(dccl::round(state_in.heading(),0) ==
+               dccl::round(state_out.heading(),0));
         assert(double_cmp(state_in.depth(), state_out.depth(), 1));
         assert(state_in.mission_mode() == state_out.mission_mode());
         
