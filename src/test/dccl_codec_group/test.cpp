@@ -42,13 +42,13 @@ int main(int argc, char* argv[])
 {
 //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::FieldCodecManager::add<dccl::DefaultNumericFieldCodec<double, double, dccl::PRESENCE_BIT> >("dccl.presence_bit");
-    dccl::FieldCodecManager::add<dccl::DefaultEnumCodec<dccl::PRESENCE_BIT> >("dccl.presence_bit");
-    dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultNumericFieldCodec<double, double, dccl::v2::PRESENCE_BIT> >("dccl.presence_bit");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultEnumCodec<dccl::v2::PRESENCE_BIT> >("dccl.presence_bit");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
 
-    dccl::FieldCodecManager::add<dccl::DefaultNumericFieldCodec<double> >("dccl.default-1");
-    dccl::FieldCodecManager::add<dccl::DefaultEnumCodec<> >("dccl.default-1");
-    dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.default-1");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultNumericFieldCodec<double> >("dccl.default-1");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultEnumCodec<> >("dccl.default-1");
+    dccl::FieldCodecManager::add<dccl::v2::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.default-1");
 
     
     check<TestMsg>();

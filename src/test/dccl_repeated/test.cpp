@@ -26,7 +26,6 @@
 
 
 #include "dccl/codec.h"
-#include "dccl/field_codec_default.h"
 #include "dccl/binary.h"
 
 #include "test.pb.h"

@@ -31,7 +31,7 @@ using dccl::dlog;
 // DefaultMessageCodec
 //
 
-void dccl::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
+void dccl::v2::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
 {
   if(wire_value.empty())
       *bits = Bitset(min_size());
@@ -41,7 +41,7 @@ void dccl::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_
   
 
  
-unsigned dccl::DefaultMessageCodec::any_size(const boost::any& wire_value)
+unsigned dccl::v2::DefaultMessageCodec::any_size(const boost::any& wire_value)
 {
     if(wire_value.empty())
         return min_size();
@@ -50,7 +50,7 @@ unsigned dccl::DefaultMessageCodec::any_size(const boost::any& wire_value)
 }
 
 
-void dccl::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
+void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
 {
     try
     {
@@ -128,14 +128,14 @@ void dccl::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
 }
 
 
-unsigned dccl::DefaultMessageCodec::max_size()
+unsigned dccl::v2::DefaultMessageCodec::max_size()
 {
     unsigned u = 0;
     traverse_descriptor<MaxSize>(&u);
     return u;
 }
 
-unsigned dccl::DefaultMessageCodec::min_size()
+unsigned dccl::v2::DefaultMessageCodec::min_size()
 {
     unsigned u = 0;
     traverse_descriptor<MinSize>(&u);
@@ -143,20 +143,20 @@ unsigned dccl::DefaultMessageCodec::min_size()
 }
 
 
-void dccl::DefaultMessageCodec::validate()
+void dccl::v2::DefaultMessageCodec::validate()
 {
     bool b = false;
     traverse_descriptor<Validate>(&b);
 }
 
-std::string dccl::DefaultMessageCodec::info()
+std::string dccl::v2::DefaultMessageCodec::info()
 {
     std::stringstream ss;
     traverse_descriptor<Info>(&ss);
     return ss.str();
 }
 
-bool dccl::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
+bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
 {
     if(!field)
     {

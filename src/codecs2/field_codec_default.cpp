@@ -26,108 +26,29 @@
 #include <sstream>
 #include <algorithm>
 
-#include "field_codec_default.h"
-#include "type_helper.h"
+#include "dccl/codecs2/field_codec_default.h"
+#include "dccl/type_helper.h"
 #include "dccl/codec.h"
 
 using namespace dccl::logger;
 
 
-//
-// DefaultIdentifierCodec
-//
-
-dccl::Bitset dccl::DefaultIdentifierCodec::encode()
-{
-    return encode(0);
-}
-
-dccl::Bitset dccl::DefaultIdentifierCodec::encode(const uint32& id)
-{
-    if(id <= ONE_BYTE_MAX_ID)
-    {
-        return(dccl::Bitset(this_size(id), id) << 1);
-    }
-    else
-    {
-        dccl::Bitset return_bits(this_size(id), id);
-        return_bits <<= 1;
-        // set LSB to indicate long header form
-        return_bits.set(0, true);
-
-        
-        return return_bits;
-    }
-}
-
-dccl::uint32 dccl::DefaultIdentifierCodec::decode(Bitset* bits)
-{
-    if(bits->test(0))
-    {
-        // long header
-        // grabs more bits to add to the MSB of `bits`
-        bits->get_more_bits((LONG_FORM_ID_BYTES - SHORT_FORM_ID_BYTES)*BITS_IN_BYTE);
-        // discard identifier
-        *(bits) >>= 1;
-        return bits->to_ulong();
-    }
-    else
-    {
-        // short header
-        *(bits) >>= 1;
-        return bits->to_ulong();
-    }
-}
-
-unsigned dccl::DefaultIdentifierCodec::size()
-{
-    return this_size(0);
-}
-
-unsigned dccl::DefaultIdentifierCodec::size(const uint32& id)
-{
-    return this_size(id);
-}
-
-unsigned dccl::DefaultIdentifierCodec::this_size(const uint32& id)
-{
-    if(id > TWO_BYTE_MAX_ID)
-        throw(Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
-    
-    return (id <= ONE_BYTE_MAX_ID) ?
-        SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
-        LONG_FORM_ID_BYTES*BITS_IN_BYTE;
-}
-
-
-unsigned dccl::DefaultIdentifierCodec::max_size()
-{
-    return LONG_FORM_ID_BYTES * BITS_IN_BYTE;
-}
-
-unsigned dccl::DefaultIdentifierCodec::min_size()
-{
-    return SHORT_FORM_ID_BYTES * BITS_IN_BYTE;
-}
-
-
-        
 
 //
 // DefaultBoolCodec
 //
 
-dccl::Bitset dccl::DefaultBoolCodec::encode()
+dccl::Bitset dccl::v2::DefaultBoolCodec::encode()
 {
     return Bitset(size());
 }
 
-dccl::Bitset dccl::DefaultBoolCodec::encode(const bool& wire_value)
+dccl::Bitset dccl::v2::DefaultBoolCodec::encode(const bool& wire_value)
 {
     return Bitset(size(), this_field()->is_required() ? wire_value : wire_value + 1);
 }
 
-bool dccl::DefaultBoolCodec::decode(Bitset* bits)
+bool dccl::v2::DefaultBoolCodec::decode(Bitset* bits)
 {
     unsigned long t = bits->to_ulong();
     if(this_field()->is_required())
@@ -146,7 +67,7 @@ bool dccl::DefaultBoolCodec::decode(Bitset* bits)
 }
 
 
-unsigned dccl::DefaultBoolCodec::size()
+unsigned dccl::v2::DefaultBoolCodec::size()
 {    
     // true and false
     const unsigned BOOL_VALUES = 2;
@@ -156,19 +77,19 @@ unsigned dccl::DefaultBoolCodec::size()
     return dccl::ceil_log2(BOOL_VALUES + NULL_VALUE);
 }
 
-void dccl::DefaultBoolCodec::validate()
+void dccl::v2::DefaultBoolCodec::validate()
 { }
 
 //
 // DefaultStringCodec
 //
 
-dccl::Bitset dccl::DefaultStringCodec::encode()
+dccl::Bitset dccl::v2::DefaultStringCodec::encode()
 {
     return Bitset(min_size());
 }
 
-dccl::Bitset dccl::DefaultStringCodec::encode(const std::string& wire_value)
+dccl::Bitset dccl::v2::DefaultStringCodec::encode(const std::string& wire_value)
 {
     std::string s = wire_value;
     if(s.size() > dccl_field_options().max_length())
@@ -198,7 +119,7 @@ dccl::Bitset dccl::DefaultStringCodec::encode(const std::string& wire_value)
     return length_bits;
 }
 
-std::string dccl::DefaultStringCodec::decode(Bitset* bits)
+std::string dccl::v2::DefaultStringCodec::decode(Bitset* bits)
 {
     unsigned value_length = bits->to_ulong();
     
@@ -229,30 +150,30 @@ std::string dccl::DefaultStringCodec::decode(Bitset* bits)
     
 }
 
-unsigned dccl::DefaultStringCodec::size()
+unsigned dccl::v2::DefaultStringCodec::size()
 {
     return min_size();
 }
 
-unsigned dccl::DefaultStringCodec::size(const std::string& wire_value)
+unsigned dccl::v2::DefaultStringCodec::size(const std::string& wire_value)
 {
     return std::min(min_size() + static_cast<unsigned>(wire_value.length()*BITS_IN_BYTE), max_size());
 }
 
 
-unsigned dccl::DefaultStringCodec::max_size()
+unsigned dccl::v2::DefaultStringCodec::max_size()
 {
     // string length + actual string
     return min_size() + dccl_field_options().max_length() * BITS_IN_BYTE;
 }
 
-unsigned dccl::DefaultStringCodec::min_size()
+unsigned dccl::v2::DefaultStringCodec::min_size()
 {
     return dccl::ceil_log2(MAX_STRING_LENGTH+1);
 }
 
 
-void dccl::DefaultStringCodec::validate()
+void dccl::v2::DefaultStringCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
@@ -262,13 +183,13 @@ void dccl::DefaultStringCodec::validate()
 //
 // DefaultBytesCodec
 //
-dccl::Bitset dccl::DefaultBytesCodec::encode()
+dccl::Bitset dccl::v2::DefaultBytesCodec::encode()
 {
     return Bitset(min_size(), 0);
 }
 
 
-dccl::Bitset dccl::DefaultBytesCodec::encode(const std::string& wire_value)
+dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
 {
     Bitset bits;
     bits.from_byte_string(wire_value);
@@ -283,19 +204,19 @@ dccl::Bitset dccl::DefaultBytesCodec::encode(const std::string& wire_value)
     return bits;
 }
 
-unsigned dccl::DefaultBytesCodec::size()
+unsigned dccl::v2::DefaultBytesCodec::size()
 {
     return min_size();    
 }
 
 
-unsigned dccl::DefaultBytesCodec::size(const std::string& wire_value)
+unsigned dccl::v2::DefaultBytesCodec::size(const std::string& wire_value)
 {
     return max_size();
 }
 
 
-std::string dccl::DefaultBytesCodec::decode(Bitset* bits)
+std::string dccl::v2::DefaultBytesCodec::decode(Bitset* bits)
 {
     if(!this_field()->is_required())
     {
@@ -321,13 +242,13 @@ std::string dccl::DefaultBytesCodec::decode(Bitset* bits)
     }
 }
 
-unsigned dccl::DefaultBytesCodec::max_size()
+unsigned dccl::v2::DefaultBytesCodec::max_size()
 {
     return dccl_field_options().max_length() * BITS_IN_BYTE +
         (this_field()->is_required() ? 0 : 1); // presence bit?
 }
 
-unsigned dccl::DefaultBytesCodec::min_size()
+unsigned dccl::v2::DefaultBytesCodec::min_size()
 {
     if(this_field()->is_required())
         return max_size();
@@ -335,7 +256,7 @@ unsigned dccl::DefaultBytesCodec::min_size()
         return 1; // presence bit
 }
 
-void dccl::DefaultBytesCodec::validate()
+void dccl::v2::DefaultBytesCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
 }

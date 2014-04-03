@@ -43,7 +43,8 @@
 #include "exception.h"
 #include "field_codec.h"
 #include "field_codec_fixed.h"
-#include "field_codec_default.h"
+
+#include "codecs2/field_codec_default.h"
 #include "type_helper.h"
 #include "field_codec_manager.h"
  
@@ -242,7 +243,7 @@ namespace dccl
         static std::string default_id_codec_name()
         { return "dccl.default.id"; }        
 
-        friend class DefaultMessageCodec;
+        friend class v2::DefaultMessageCodec;
       private:
         Codec(const Codec&);
         Codec& operator= (const Codec&);

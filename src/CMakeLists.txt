@@ -10,9 +10,10 @@ add_library(dccl
   codec.cpp
   field_codec.cpp
   field_codec_message_stack.cpp
-  field_codec_default.cpp
-  field_codec_default_message.cpp
   field_codec_manager.cpp
+  field_codec_id.cpp
+  codecs2/field_codec_default.cpp
+  codecs2/field_codec_default_message.cpp
   type_helper.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp

@@ -24,7 +24,8 @@
 #ifndef DCCLCCLCOMPATIBILITY20120426H
 #define DCCLCCLCOMPATIBILITY20120426H
 
-#include "dccl/field_codec_default.h"
+#include "dccl/codecs2/field_codec_default.h"
+#include "dccl/field_codec_id.h"
 #include "dccl/ccl/protobuf/ccl.pb.h"
 #include "dccl/ccl/protobuf/ccl_extensions.pb.h"
 
@@ -115,7 +116,7 @@ namespace dccl
         enum { LATLON_COMPRESSED_BYTE_SIZE = 3 };            
     };
 
-    class LegacyCCLFixAgeCodec : public dccl::DefaultNumericFieldCodec<dccl::uint32>
+    class LegacyCCLFixAgeCodec : public dccl::v2::DefaultNumericFieldCodec<dccl::uint32>
     {
       private:
         dccl::Bitset encode()

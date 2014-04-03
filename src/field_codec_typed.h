@@ -25,6 +25,9 @@
 #ifndef DCCLFIELDCODECTYPED20120312H
 #define DCCLFIELDCODECTYPED20120312H
 
+
+#include <boost/type_traits.hpp>
+
 #include "field_codec.h"
 
 namespace dccl

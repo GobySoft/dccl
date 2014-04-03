@@ -39,7 +39,8 @@
 #endif // HAS_CRYPTOPP
 
 #include "dccl/codec.h"
-#include "field_codec_default.h"
+#include "dccl/codecs2/field_codec_default.h"
+#include "dccl/field_codec_id.h"
 
 #include "dccl/protobuf/option_extensions.pb.h"
 
@@ -79,30 +80,46 @@ void dccl::Codec::set_default_codecs()
     {
         using google::protobuf::FieldDescriptor;
 
-        FieldCodecManager::add<DefaultNumericFieldCodec<double> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<float> >(default_codec_name());
-        FieldCodecManager::add<DefaultBoolCodec>(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<int32> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<int64> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<uint32> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(default_codec_name());
-        FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
-        FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
-        FieldCodecManager::add<DefaultEnumCodec<> >(default_codec_name());
-        FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
-        
-        FieldCodecManager::add<TimeCodec<uint64> >("_time");
-        FieldCodecManager::add<TimeCodec<int64> >("_time");
-        FieldCodecManager::add<TimeCodec<double> >("_time");
-        
-        FieldCodecManager::add<StaticCodec<std::string> >("_static");
-        FieldCodecManager::add<StaticCodec<double> >("_static");
-        FieldCodecManager::add<StaticCodec<float> >("_static");
-        FieldCodecManager::add<StaticCodec<int32> >("_static");
-        FieldCodecManager::add<StaticCodec<int64> >("_static");
-        FieldCodecManager::add<StaticCodec<uint32> >("_static");
-        FieldCodecManager::add<StaticCodec<uint64> >("_static");
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<double> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<float> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultBoolCodec>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int32> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int64> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint32> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint64> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultEnumCodec<> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
 
+        FieldCodecManager::add<v2::TimeCodec<uint64> >("dccl.time");
+        FieldCodecManager::add<v2::TimeCodec<int64> >("dccl.time");
+        FieldCodecManager::add<v2::TimeCodec<double> >("dccl.time");
+
+        FieldCodecManager::add<v2::StaticCodec<std::string> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<double> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<float> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<int32> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<int64> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<uint32> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<uint64> >("dccl.static");
+
+
+        
+        // for backwards compatibility
+        FieldCodecManager::add<v2::TimeCodec<uint64> >("_time");
+        FieldCodecManager::add<v2::TimeCodec<int64> >("_time");
+        FieldCodecManager::add<v2::TimeCodec<double> >("_time");
+
+        FieldCodecManager::add<v2::StaticCodec<std::string> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<double> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<float> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<int32> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<int64> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<uint32> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<uint64> >("_static");
+        
+        
         defaults_loaded = true;
     }
 }
