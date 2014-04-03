@@ -27,6 +27,7 @@
 #include "dccl/codec.h"
 #include "test.pb.h"
 
+#include <sys/time.h>
 
 #include "dccl/binary.h"
 

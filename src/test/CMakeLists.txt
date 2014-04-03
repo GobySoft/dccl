@@ -20,6 +20,8 @@ if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
 endif()
 
+add_subdirectory(dccl_v2_all_fields)
+
 add_subdirectory(bitset1)
 
 add_subdirectory(logger1)

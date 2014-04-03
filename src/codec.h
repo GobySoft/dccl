@@ -44,7 +44,8 @@
 #include "field_codec.h"
 #include "field_codec_fixed.h"
 
-#include "codecs2/field_codec_default.h"
+#include "codecs2/field_codec_default_message.h"
+#include "codecs3/field_codec_default_message.h"
 #include "type_helper.h"
 #include "field_codec_manager.h"
  
@@ -244,6 +245,7 @@ namespace dccl
         { return "dccl.default.id"; }        
 
         friend class v2::DefaultMessageCodec;
+        //friend class v3::DefaultMessageCodec;
       private:
         Codec(const Codec&);
         Codec& operator= (const Codec&);

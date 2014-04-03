@@ -40,6 +40,7 @@
 
 #include "dccl/codec.h"
 #include "dccl/codecs2/field_codec_default.h"
+#include "dccl/codecs3/field_codec_default.h"
 #include "dccl/field_codec_id.h"
 
 #include "dccl/protobuf/option_extensions.pb.h"
@@ -79,7 +80,8 @@ void dccl::Codec::set_default_codecs()
     if(!defaults_loaded)
     {
         using google::protobuf::FieldDescriptor;
-
+        
+        // version 2
         FieldCodecManager::add<v2::DefaultNumericFieldCodec<double> >(default_codec_name());
         FieldCodecManager::add<v2::DefaultNumericFieldCodec<float> >(default_codec_name());
         FieldCodecManager::add<v2::DefaultBoolCodec>(default_codec_name());
@@ -92,19 +94,30 @@ void dccl::Codec::set_default_codecs()
         FieldCodecManager::add<v2::DefaultEnumCodec<> >(default_codec_name());
         FieldCodecManager::add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
 
-        FieldCodecManager::add<v2::TimeCodec<uint64> >("dccl.time");
-        FieldCodecManager::add<v2::TimeCodec<int64> >("dccl.time");
-        FieldCodecManager::add<v2::TimeCodec<double> >("dccl.time");
+        FieldCodecManager::add<v2::TimeCodec<uint64> >("dccl.time2");
+        FieldCodecManager::add<v2::TimeCodec<int64> >("dccl.time2");
+        FieldCodecManager::add<v2::TimeCodec<double> >("dccl.time2");
 
-        FieldCodecManager::add<v2::StaticCodec<std::string> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<double> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<float> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<int32> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<int64> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<uint32> >("dccl.static");
-        FieldCodecManager::add<v2::StaticCodec<uint64> >("dccl.static");
+        FieldCodecManager::add<v2::StaticCodec<std::string> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<double> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<float> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<int32> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<int64> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<uint32> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<uint64> >("dccl.static2");
 
-
+        // version 3
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<double> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<float> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultBoolCodec>("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int32> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int64> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint32> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint64> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>("dccl.default3");
+        FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.default3");
+        FieldCodecManager::add<v3::DefaultEnumCodec<> >("dccl.default3");
+        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>("dccl.default3");
         
         // for backwards compatibility
         FieldCodecManager::add<v2::TimeCodec<uint64> >("_time");
