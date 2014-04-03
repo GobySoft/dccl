@@ -29,6 +29,7 @@
 #include <string>
 
 #include <boost/any.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -99,14 +100,25 @@ namespace dccl
         static bool has_codec_group()
         {
             if(root_descriptor_)
-                return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group();
+            {
+                return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group() ||
+                    root_descriptor_->options().GetExtension(dccl::msg).has_codec_version();
+            }
             else
                 return false;
         }
 
+        static std::string codec_group(const google::protobuf::Descriptor* desc)
+        {
+            if(desc->options().GetExtension(dccl::msg).has_codec_group())
+                return desc->options().GetExtension(dccl::msg).codec_group();
+            else
+                return std::string("dccl.default" + boost::lexical_cast<std::string>(desc->options().GetExtension(dccl::msg).codec_version()));
+        }
+
         static std::string codec_group()
         {
-            return root_descriptor_->options().GetExtension(dccl::msg).codec_group();
+            return codec_group(root_descriptor_);
         }
 
         

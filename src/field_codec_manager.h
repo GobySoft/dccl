@@ -146,7 +146,7 @@ namespace dccl
                 if(desc->options().GetExtension(dccl::msg).has_codec())
                     name = desc->options().GetExtension(dccl::msg).codec();
                 else
-                    name = desc->options().GetExtension(dccl::msg).codec_group();
+                    name = FieldCodecBase::codec_group(desc);
             }
             
             return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE,

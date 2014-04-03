@@ -46,8 +46,14 @@ int main(int argc, char* argv[])
     dccl::FieldCodecManager::add<dccl::DefaultEnumCodec<dccl::PRESENCE_BIT> >("dccl.presence_bit");
     dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
 
+    dccl::FieldCodecManager::add<dccl::DefaultNumericFieldCodec<double> >("dccl.default-1");
+    dccl::FieldCodecManager::add<dccl::DefaultEnumCodec<> >("dccl.default-1");
+    dccl::FieldCodecManager::add<dccl::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.default-1");
+
+    
     check<TestMsg>();
     check<TestMsgGroup>();
+    check<TestMsgVersion>();
     
     std::cout << "all tests passed" << std::endl;
 }
