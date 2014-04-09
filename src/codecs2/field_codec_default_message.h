@@ -197,53 +197,6 @@ namespace dccl
                 }
                 
             }
-
-            template<typename Action, typename ReturnType>
-                ReturnType traverse_mutable_message(const boost::any& wire_value)
-            {
-                try
-                {
-                    ReturnType return_value = ReturnType();
-       
-                    const google::protobuf::Message* msg = boost::any_cast<const google::protobuf::Message*>(wire_value);
-                    const google::protobuf::Descriptor* desc = msg->GetDescriptor();
-                    const google::protobuf::Reflection* refl = msg->GetReflection();
-                    for(int i = 0, n = desc->field_count(); i < n; ++i)
-                    {       
-                        const google::protobuf::FieldDescriptor* field_desc = desc->field(i);
-
-                        if(!check_field(field_desc))
-                            continue;
-           
-                        boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-                        boost::shared_ptr<FromProtoCppTypeBase> helper =
-                            TypeHelper::find(field_desc);
-            
-            
-                        if(field_desc->is_repeated())
-                        {
-                            std::vector<boost::any> field_values;
-                            for(int j = 0, m = refl->FieldSize(*msg, field_desc); j < m; ++j)
-                                field_values.push_back(helper->get_repeated_value(field_desc, *msg, j));
-                            
-                            Action::repeated(codec, &return_value, field_values, field_desc);
-                        }
-                        else
-                        {
-                            Action::single(codec, &return_value, helper->get_value(field_desc, *msg), field_desc);
-                        }
-                    }
-                    return return_value;
-                }
-                catch(boost::bad_any_cast& e)
-                {
-                    throw(Exception("Bad type given to traverse, expecting const google::protobuf::Message*"));
-                }
-                
-            }
-
-            
-
         };
 
     }
