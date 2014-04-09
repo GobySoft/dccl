@@ -108,13 +108,7 @@ namespace dccl
                 return false;
         }
 
-        static std::string codec_group(const google::protobuf::Descriptor* desc)
-        {
-            if(desc->options().GetExtension(dccl::msg).has_codec_group())
-                return desc->options().GetExtension(dccl::msg).codec_group();
-            else
-                return std::string("dccl.default" + boost::lexical_cast<std::string>(desc->options().GetExtension(dccl::msg).codec_version()));
-        }
+        static std::string codec_group(const google::protobuf::Descriptor* desc);
 
         static std::string codec_group()
         {

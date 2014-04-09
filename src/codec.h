@@ -244,6 +244,20 @@ namespace dccl
         static std::string default_id_codec_name()
         { return "dccl.default.id"; }        
 
+        
+        static std::string default_codec_name(int version = 2)
+        {
+            switch(version)
+            {
+                case 2:
+                    return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
+                default:
+                    return "dccl.default" + boost::lexical_cast<std::string>(version);
+            }
+            
+        }
+
+        
         friend class v2::DefaultMessageCodec;
         //friend class v3::DefaultMessageCodec;
       private:
@@ -260,12 +274,6 @@ namespace dccl
             return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
                                            id_codec_);
         }
-        
-        static const std::string& default_codec_name()
-        {
-            return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
-        }  
-
         
       private:
         // SHA256 hash of the crypto passphrase

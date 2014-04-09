@@ -107,17 +107,17 @@ void dccl::Codec::set_default_codecs()
         FieldCodecManager::add<v2::StaticCodec<uint64> >("dccl.static2");
 
         // version 3
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<double> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<float> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultBoolCodec>("dccl.default3");
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int32> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int64> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint32> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint64> >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>("dccl.default3");
-        FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.default3");
-        FieldCodecManager::add<v3::DefaultEnumCodec >("dccl.default3");
-        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>("dccl.default3");
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<double> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<float> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultBoolCodec>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int32> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int64> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint32> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint64> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultEnumCodec >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
         
         // for backwards compatibility
         FieldCodecManager::add<v2::TimeCodec<uint64> >("_time");

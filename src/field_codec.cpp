@@ -355,6 +355,14 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
 
 }
 
+std::string dccl::FieldCodecBase::codec_group(const google::protobuf::Descriptor* desc)
+{
+    if(desc->options().GetExtension(dccl::msg).has_codec_group())
+        return desc->options().GetExtension(dccl::msg).codec_group();
+    else
+        return Codec::default_codec_name(desc->options().GetExtension(dccl::msg).codec_version());
+}
+
 
 //
 // FieldCodecBase protected
