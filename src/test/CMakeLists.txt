@@ -11,6 +11,7 @@ add_subdirectory(dccl_static_methods)
 add_subdirectory(dccl_custom_id)
 add_subdirectory(dccl_numeric_bounds)
 add_subdirectory(dccl_codec_group)
+add_subdirectory(dccl_message_fix)
 
 if(build_ccl)
   add_subdirectory(dccl_ccl)

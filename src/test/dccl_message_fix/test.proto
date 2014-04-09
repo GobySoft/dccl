@@ -1,0 +1,30 @@
+import "dccl/protobuf/option_extensions.proto";
+
+message EmbeddedMsgOptional
+{
+  optional double val = 1 [(dccl.field).min=0,
+                           (dccl.field).max=126,
+                           (dccl.field).precision=3];
+}
+
+message EmbeddedMsgRequired
+{
+  required double val = 1 [(dccl.field).min=0,
+                           (dccl.field).max=126,
+                           (dccl.field).precision=3];
+}
+
+message TestMsg
+{
+  option (dccl.msg).id = 1;
+  option (dccl.msg).max_bytes = 32;
+  
+  optional EmbeddedMsgOptional msg1 = 1;
+  repeated EmbeddedMsgOptional msg1_repeat = 3 [(dccl.field).max_repeat=5];
+
+  // in DCCL v2, these will always be set upon receipt since it has required children. This test validates the fix in v3
+  optional EmbeddedMsgRequired msg2 = 2;
+  repeated EmbeddedMsgRequired msg2_repeat = 4 [(dccl.field).max_repeat=5];
+
+}
+
