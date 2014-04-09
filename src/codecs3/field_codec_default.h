@@ -34,14 +34,13 @@ namespace dccl
     namespace v3
     {
 	// all these are the same as version 2
-        template<typename WireType, typename FieldType = WireType, v2::NumericPresenceType presence = v2::PRESENCE_VALUE>
-            class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, FieldType, presence> { };
+        template<typename WireType, typename FieldType = WireType>
+            class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, FieldType> { };
 
 	typedef v2::DefaultBoolCodec DefaultBoolCodec;
 	typedef v2::DefaultStringCodec DefaultStringCodec;
 	typedef v2::DefaultBytesCodec DefaultBytesCodec;
-
-        template <v2::NumericPresenceType presence = v2::PRESENCE_VALUE> class DefaultEnumCodec : public v2::DefaultEnumCodec<presence> { };       
+        typedef v2::DefaultEnumCodec DefaultEnumCodec;
 
         
         template<typename TimeType>
