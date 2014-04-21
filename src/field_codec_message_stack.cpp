@@ -27,7 +27,7 @@
 
 std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageStack::field_;
 std::vector<const google::protobuf::Descriptor*> dccl::MessageStack::desc_;
-dccl::MessageStack::MessagePart dccl::MessageStack::current_part_ = dccl::MessageStack::UNKNOWN;
+std::vector<dccl::MessageStack::MessagePart> dccl::MessageStack::parts_;
 
 //
 // MessageStack
@@ -46,6 +46,12 @@ void dccl::MessageStack::push(const google::protobuf::FieldDescriptor* field)
     ++fields_pushed_;
 }
 
+void dccl::MessageStack::push(MessagePart part)
+{
+    parts_.push_back(part);
+    ++parts_pushed_;
+}
+
 
 void dccl::MessageStack::__pop_desc()
 {
@@ -59,17 +65,34 @@ void dccl::MessageStack::__pop_field()
         field_.pop_back();
 }
 
+void dccl::MessageStack::__pop_parts()
+{
+    if(!parts_.empty())
+        parts_.pop_back();
+}
+
+
 dccl::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
     : descriptors_pushed_(0),
-      fields_pushed_(0)
+      fields_pushed_(0),
+      parts_pushed_(0)
 {
     if(field)
     {
         if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
         {
-            // if explicitly set, set part (HEAD or BODY) of message for all children of this message
+            MessagePart part = UNKNOWN;
             if(field->options().GetExtension(dccl::field).has_in_head())
-                current_part_ = field->options().GetExtension(dccl::field).in_head() ? HEAD : BODY;
+            {
+                // if explicitly set, set part (HEAD or BODY) of message for all children of this message
+                part = field->options().GetExtension(dccl::field).in_head() ? HEAD : BODY;
+            }
+            else
+            {
+                // use the parent's current part
+                part = current_part();
+            }
+            push(part);
             
             push(field->message_type());
         }
@@ -78,3 +101,14 @@ dccl::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
     
 }
 
+dccl::MessageStack::~MessageStack()
+{
+    for(int i = 0; i < fields_pushed_; ++i)
+        __pop_field();
+
+    for(int i = 0; i < descriptors_pushed_; ++i)
+        __pop_desc();
+
+    for(int i = 0; i < parts_pushed_; ++i)
+        __pop_parts();    
+}

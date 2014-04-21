@@ -124,8 +124,7 @@ message TestMsg
                                              (dccl.field).max_repeat=4];
   repeated uint32 uint32_default_repeat = 105 [(dccl.field).min=0,
                                                (dccl.field).max=100,
-                                               (dccl.field).max_repeat=4,
-                                               (dccl.field).in_head=true];
+                                               (dccl.field).max_repeat=4];
   repeated uint64 uint64_default_repeat = 106 [(dccl.field).min=0,
                                                (dccl.field).max=100,
                                                (dccl.field).max_repeat=4];

@@ -40,6 +40,7 @@
 #include "dccl/protobuf/option_extensions.pb.h"
 #include "type_helper.h"
 #include "field_codec_message_stack.h"
+#include "dccl/binary.h"
 
 namespace dccl
 {
@@ -111,11 +112,10 @@ namespace dccl
         static std::string codec_group(const google::protobuf::Descriptor* desc);
 
         static std::string codec_group()
-        {
-            return codec_group(root_descriptor_);
-        }
+        { return codec_group(root_descriptor_); }
 
-        
+        static int codec_version()
+        { return root_descriptor_->options().GetExtension(dccl::msg).codec_version(); }
             
         /// \brief the part of the message currently being encoded (head or body).
         static MessageStack::MessagePart part() { return part_; }
@@ -400,7 +400,6 @@ namespace dccl
         ///
         /// \return Minimum size of this field (in bits).
         virtual unsigned min_size() = 0;
-            
 
         virtual void any_encode_repeated(Bitset* bits, const std::vector<boost::any>& wire_values);
         virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* field_values);
@@ -425,8 +424,17 @@ namespace dccl
         void set_wire_type(google::protobuf::FieldDescriptor::CppType type)
         { wire_type_ = type; }
 
-        bool variable_size() { return max_size() != min_size(); }            
-            
+        bool variable_size()
+        {
+            if(this_field() && this_field()->is_repeated())
+                return max_size_repeated() != min_size_repeated();
+            else
+                return max_size() != min_size();
+        }            
+
+        int repeated_vector_field_size(int max_repeat)
+        { return dccl::ceil_log2(max_repeat+1); }
+        
       private:
         // sets global statics relating the current message begin processed
         // and unsets them on destruction

@@ -192,7 +192,8 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
 
     std::vector<boost::any> wire_values = *field_values;
     any_decode_repeated(&these_bits, &wire_values);
-    
+
+    field_values->clear();
     field_post_decode_repeated(wire_values, field_values);
 }
 
@@ -376,7 +377,18 @@ std::string dccl::FieldCodecBase::info()
 void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::vector<boost::any>& wire_values)
 {
     // out_bits = [field_values[2]][field_values[1]][field_values[0]]
-    for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
+
+    unsigned wire_vector_size = dccl_field_options().max_repeat();
+
+    // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat
+    if(codec_version() > 2)
+    {
+        wire_vector_size = std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());    
+        Bitset size_bits(repeated_vector_field_size(dccl_field_options().max_repeat()), wire_values.size());
+        bits->append(size_bits);
+    }    
+
+    for(unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
         Bitset new_bits;
         if(i < wire_values.size())
@@ -389,27 +401,39 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::ve
 }
 
 
+
 void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
 {
-    for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
+    unsigned wire_vector_size = dccl_field_options().max_repeat();    
+    if(codec_version() > 2)
+    {
+        Bitset size_bits(repeated_bits);        
+        size_bits.get_more_bits(repeated_vector_field_size(dccl_field_options().max_repeat()));
+
+        wire_vector_size = size_bits.to_ulong();
+    }
+    wire_values->resize(wire_vector_size);
+    
+    for(unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
         Bitset these_bits(repeated_bits);        
-        these_bits.get_more_bits(min_size());
-        
-        boost::any value;
-        
-        if(wire_values->size() > i)
-            value = (*wire_values)[i];
-        
-        any_decode(&these_bits, &value);
-        wire_values->push_back(value);
+        these_bits.get_more_bits(min_size());        
+        any_decode(&these_bits, &(*wire_values)[i]);
     }
 }
 
 unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& wire_values)
 {
     unsigned out = 0;
-    for(unsigned i = 0, n = dccl_field_options().max_repeat(); i < n; ++i)
+    unsigned wire_vector_size = dccl_field_options().max_repeat();
+
+    if(codec_version() > 2)
+    {
+        wire_vector_size = std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());    
+        out += repeated_vector_field_size(dccl_field_options().max_repeat());
+    }    
+
+    for(unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
         if(i < wire_values.size())
             out += any_size(wire_values[i]);
@@ -423,6 +447,8 @@ unsigned dccl::FieldCodecBase::max_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " + this_field()->DebugString()));
+    else if(codec_version() > 2)
+        return repeated_vector_field_size(dccl_field_options().max_repeat()) + max_size() * dccl_field_options().max_repeat();
     else
         return max_size() * dccl_field_options().max_repeat();
 }
@@ -431,6 +457,8 @@ unsigned dccl::FieldCodecBase::min_size_repeated()
 {    
     if(!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field " + this_field()->DebugString()));
+    else if(codec_version() > 2)
+        return repeated_vector_field_size(dccl_field_options().max_repeat());    
     else
         return min_size() * dccl_field_options().max_repeat();
 }

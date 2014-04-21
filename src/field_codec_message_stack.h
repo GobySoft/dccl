@@ -35,19 +35,7 @@ namespace dccl
       public:
         MessageStack(const google::protobuf::FieldDescriptor* field = 0);
                 
-        ~MessageStack()
-        {
-            for(int i = 0; i < descriptors_pushed_; ++i)
-                __pop_desc();
-                    
-            for(int i = 0; i < fields_pushed_; ++i)
-                __pop_field();
-
-            if(desc_.empty())
-            {
-                current_part_ = UNKNOWN;
-            }    
-        }
+        ~MessageStack();
 
         enum MessagePart { HEAD, BODY, UNKNOWN };
             
@@ -58,19 +46,22 @@ namespace dccl
 
         void push(const google::protobuf::Descriptor* desc);
         void push(const google::protobuf::FieldDescriptor* field);
+        void push(MessagePart part);
 
-        static MessagePart current_part() { return current_part_; }
-            
+        static MessagePart current_part() { return parts_.empty() ? UNKNOWN : parts_.back(); }
+        
         friend class FieldCodecBase;
       private:
         void __pop_desc();
         void __pop_field();
+        void __pop_parts();
                 
         static std::vector<const google::protobuf::Descriptor*> desc_;
         static std::vector<const google::protobuf::FieldDescriptor*> field_;
+        static std::vector<MessagePart> parts_;
         int descriptors_pushed_;
         int fields_pushed_;
-        static MessagePart current_part_;
+        int parts_pushed_;
     };
 }
 

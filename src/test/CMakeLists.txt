@@ -22,6 +22,7 @@ if(build_arithmetic)
 endif()
 
 add_subdirectory(dccl_v2_all_fields)
+add_subdirectory(dccl_v2_header)
 
 add_subdirectory(bitset1)
 

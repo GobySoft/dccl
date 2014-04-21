@@ -18,6 +18,7 @@ message TestMsg
 {
   option (dccl.msg).id = 1;
   option (dccl.msg).max_bytes = 32;
+  option (dccl.msg).codec_version = 3;
   
   optional EmbeddedMsgOptional msg1 = 1;
   repeated EmbeddedMsgOptional msg1_repeat = 3 [(dccl.field).max_repeat=5];
