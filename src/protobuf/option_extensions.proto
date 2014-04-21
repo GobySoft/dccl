@@ -60,8 +60,8 @@ message DCCLFieldOptions
 
 message DCCLMessageOptions
 {
-  required int32 id = 1;
-  required uint32 max_bytes = 2;
+  optional int32 id = 1;
+  optional uint32 max_bytes = 2;
 
   optional string codec = 3 [default = "dccl.default2"];
 

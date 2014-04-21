@@ -3,6 +3,8 @@ import "dccl/protobuf/option_extensions.proto";
 
 message EmbeddedMsg1
 {
+  option (dccl.msg).codec="dccl.default3";
+  
   optional double val = 1 [(dccl.field).min=0,
                            (dccl.field).max=100,
                            (dccl.field).precision=3];
@@ -25,8 +27,11 @@ message TestMsg
   option (dccl.msg).max_bytes = 32;
   option (dccl.msg).codec_version = 3;
   
-  optional double d = 1 [(dccl.field).codec="test.grouptest"];
-
+  optional double d = 1 [(dccl.field).min=-100,
+                         (dccl.field).max=126,
+                         (dccl.field).precision=1,
+                         (dccl.field).codec="dccl.default3"];
+  
   
 
   repeated double d_repeat = 3 [(dccl.field).max_repeat=5,
@@ -41,7 +46,11 @@ message TestMsgGroup
   option (dccl.msg).codec_group = "test.grouptest";
   option (dccl.msg).codec_version = 3; 
   
-  optional double d = 1;
+  optional double d = 1 [(dccl.field).min=-100,
+                         (dccl.field).max=126,
+                         (dccl.field).precision=1,
+                         (dccl.field).codec="dccl.default3"];
+  
   repeated double d_repeat = 3 [(dccl.field).max_repeat=5];
   optional EmbeddedMsg1 msg = 2;
 
