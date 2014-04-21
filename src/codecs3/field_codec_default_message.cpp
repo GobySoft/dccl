@@ -156,7 +156,6 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     }
     catch(boost::bad_any_cast& e)
     {
-        std::cout << (this_field() ? this_field()->DebugString() : "0") << std::endl;
         throw(Exception("Bad type given to traverse mutable, expecting google::protobuf::Message*, got " + std::string(wire_value->type().name())));
     }
 

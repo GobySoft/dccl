@@ -1,17 +1,10 @@
 import "dccl/protobuf/option_extensions.proto";
 
 
-enum Enum1
-{
-  ENUM_A = 1;
-  ENUM_B = 2;
-  ENUM_C = 3;
-}
-
 message EmbeddedMsg1
 {
   optional double val = 1 [(dccl.field).min=0,
-                           (dccl.field).max=126,
+                           (dccl.field).max=100,
                            (dccl.field).precision=3];
 
 
@@ -21,51 +14,35 @@ message EmbeddedMsg1
 message EmbeddedMsg2
 {
   optional double val = 1 [(dccl.field).min=0,
-                           (dccl.field).max=126,
-                           (dccl.field).precision=2,
-                           (dccl.field).codec="dccl.default2"];
+                           (dccl.field).max=100,
+                           (dccl.field).precision=2];
 
-  optional Enum1 enum_default = 3;  
 }
 
 message TestMsg
 {
   option (dccl.msg).id = 1;
   option (dccl.msg).max_bytes = 32;
-
-  optional double d = 1 [(dccl.field).min=-100,
-                         (dccl.field).max=126,
-                         (dccl.field).precision=2,
-                         (dccl.field).codec="dccl.presence_bit"];
+  option (dccl.msg).codec_version = 3;
+  
+  optional double d = 1 [(dccl.field).codec="test.grouptest"];
 
   
 
-  repeated double d_repeat = 3 [(dccl.field).min=12.0,
-                                (dccl.field).max=13.6,
-                                (dccl.field).precision=1,
-                                (dccl.field).max_repeat=5,
-                                (dccl.field).codec="dccl.presence_bit"];
-  
+  repeated double d_repeat = 3 [(dccl.field).max_repeat=5,
+                                (dccl.field).codec="test.grouptest"];
   optional EmbeddedMsg1 msg = 2;
-
 }
-
 
 message TestMsgGroup
 {
   option (dccl.msg).id = 2;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_group = "dccl.presence_bit";
+  option (dccl.msg).codec_group = "test.grouptest";
+  option (dccl.msg).codec_version = 3; 
   
-  optional double d = 1 [(dccl.field).min=-100,
-                         (dccl.field).max=126,
-                         (dccl.field).precision=2];
-
-  repeated double d_repeat = 3 [(dccl.field).min=12.0,
-                                (dccl.field).max=13.6,
-                                (dccl.field).precision=1,
-                                (dccl.field).max_repeat=5];
-
+  optional double d = 1;
+  repeated double d_repeat = 3 [(dccl.field).max_repeat=5];
   optional EmbeddedMsg1 msg = 2;
 
 }
@@ -75,7 +52,7 @@ message TestMsgVersion
 {
   option (dccl.msg).id = 3;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = -1; // no such real version, but useful for testing
+  option (dccl.msg).codec_version = 2; 
   
   optional double d = 1 [(dccl.field).min=-100,
                          (dccl.field).max=126,

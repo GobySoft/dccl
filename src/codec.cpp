@@ -491,6 +491,9 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
         {
             dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
         }
+
+        os->flush();
+        
     }
     
 }
@@ -596,4 +599,5 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
         
 //        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
     }
+
 }

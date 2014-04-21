@@ -28,40 +28,47 @@
 #include <google/protobuf/descriptor.pb.h>
 
 #include "dccl/codec.h"
-#include "dccl/codecs2/field_codec_default.h"
+#include "dccl/codecs3/field_codec_default.h"
 
 #include "test.pb.h"
 #include "dccl/binary.h"
 
 template <typename Msg>
-void check();
+void check(double val, bool should_pass);
 dccl::Codec codec;
 TestMsg msg_in;
 TestMsgGroup msg_group_in;
+
+class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
+{
+    double max() { return 100; }
+    double min() { return -100; }
+    double precision() { return 1; }
+    void validate() { }    
+};
+
+    
+
 
 int main(int argc, char* argv[])
 {
 //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::FieldCodecManager::add<dccl::v2::DefaultNumericFieldCodec<double, double, dccl::v2::PRESENCE_BIT> >("dccl.presence_bit");
-    dccl::FieldCodecManager::add<dccl::v2::DefaultEnumCodec<dccl::v2::PRESENCE_BIT> >("dccl.presence_bit");
-    dccl::FieldCodecManager::add<dccl::v2::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.presence_bit");
-
-    dccl::FieldCodecManager::add<dccl::v2::DefaultNumericFieldCodec<double> >("dccl.default-1");
-    dccl::FieldCodecManager::add<dccl::v2::DefaultEnumCodec<> >("dccl.default-1");
-    dccl::FieldCodecManager::add<dccl::v2::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("dccl.default-1");
-
+    dccl::FieldCodecManager::add<TestCodec>("test.grouptest");
+    dccl::FieldCodecManager::add<dccl::v3::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("test.grouptest");
     
-    check<TestMsg>();
-    check<TestMsgGroup>();
-    check<TestMsgVersion>();
+    check<TestMsg>(50, true);
+    check<TestMsg>(-50, false);
+    check<TestMsgGroup>(50, true);
+    check<TestMsgGroup>(-50, true);
+    check<TestMsgVersion>(50, true);
     
     std::cout << "all tests passed" << std::endl;
 }
 
 
 template <typename Msg>
-void check()
+void check(double val, bool should_pass)
 {
     Msg msg_in;
     int i = 0;
@@ -70,8 +77,8 @@ void check()
     msg_in.add_d_repeat(12.2);
     msg_in.add_d_repeat(12.3);
     
-    msg_in.mutable_msg()->set_val(++i + 0.3);
-    msg_in.mutable_msg()->mutable_msg()->set_val(++i);
+    msg_in.mutable_msg()->set_val(val);
+    msg_in.mutable_msg()->mutable_msg()->set_val(val);
     codec.info(msg_in.GetDescriptor(), &std::cout);
 
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
@@ -89,6 +96,9 @@ void check()
     codec.decode(bytes, &msg_out);
     
     std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
-    
-    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+
+    if(should_pass)
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    else
+        assert(msg_in.SerializeAsString() != msg_out.SerializeAsString());
 }
