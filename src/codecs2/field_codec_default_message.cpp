@@ -33,10 +33,10 @@ using dccl::dlog;
 
 void dccl::v2::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
 {
-  if(wire_value.empty())
-      *bits = Bitset(min_size());
-  else
-      *bits = traverse_const_message<Encoder, Bitset>(wire_value);
+    if(wire_value.empty())
+        *bits = Bitset(min_size());
+    else
+        *bits = traverse_const_message<Encoder, Bitset>(wire_value);
 }
   
 
@@ -172,7 +172,7 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         else if(MessageStack::current_part() == MessageStack::UNKNOWN) // part not yet explicitly specified
         {
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
-               FieldCodecManager::find(field)->name() == Codec::default_codec_name()) // default message codec will expand
+               find(field)->name() == Codec::default_codec_name()) // default message codec will expand
                 return true;
             else if((part() == MessageStack::HEAD && !dccl_field_options.in_head())
                     || (part() == MessageStack::BODY && dccl_field_options.in_head()))

@@ -120,10 +120,10 @@ namespace dccl
         /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
         static boost::shared_ptr<FieldCodecBase> find(
             const google::protobuf::FieldDescriptor* field,
-            bool has_codec_group = false,
-            const std::string& codec_group = "")
+            bool has_codec_group,
+            const std::string& codec_group)
         {
-            std::string name = __find_codec(field, has_codec_group, codec_group);
+            std::string name = __find_codec(field, has_codec_group, codec_group);            
             
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 return find(field->message_type(), name);
@@ -211,7 +211,7 @@ namespace dccl
             if(dccl_field_options.has_codec())
                 return dccl_field_options.codec();                
             // then, the codec embedded in the message option extension
-            else if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
+            else if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE && field->message_type()->options().GetExtension(dccl::msg).has_codec())
                 return field->message_type()->options().GetExtension(dccl::msg).codec();
             // then the overarching codec group
             else if(has_codec_group)

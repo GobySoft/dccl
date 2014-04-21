@@ -1,3 +1,4 @@
+
 // Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
 //                     Massachusetts Institute of Technology (2007-)
 //                     Woods Hole Oceanographic Institution (2007-)
@@ -51,7 +52,10 @@ namespace dccl
                 return FieldCodecManager::find(field_desc, has_codec_group(), codec_group());
             }
         
-        
+            bool is_optional()
+            { return this_field() && this_field()->is_optional(); }
+            
+            
             void validate();
             std::string info();
             bool check_field(const google::protobuf::FieldDescriptor* field);

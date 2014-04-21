@@ -32,11 +32,19 @@ using dccl::dlog;
 //
 
 void dccl::v3::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
-{
-  if(wire_value.empty())
-      *bits = Bitset(min_size());
-  else
-      *bits = traverse_const_message<Encoder, Bitset>(wire_value);
+{    
+    if(wire_value.empty())
+    {
+        *bits = Bitset(min_size());
+    }
+    else
+    {
+        *bits = traverse_const_message<Encoder, Bitset>(wire_value);
+        
+        if(is_optional())
+            bits->push_front(true); // presence bit
+        
+    }  
 }
   
 
@@ -44,9 +52,20 @@ void dccl::v3::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
 unsigned dccl::v3::DefaultMessageCodec::any_size(const boost::any& wire_value)
 {
     if(wire_value.empty())
+    {
         return min_size();
+    }
     else
-        return traverse_const_message<Size, unsigned>(wire_value);
+    {
+        unsigned size = traverse_const_message<Size, unsigned>(wire_value);
+        if(is_optional())
+        {
+            const unsigned presence_bit = 1;
+            size += presence_bit;
+        }
+        
+        return size;
+    }
 }
 
 
@@ -56,6 +75,19 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     {
         
         google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);
+
+        if(is_optional())      
+        {
+            if(!bits->to_ulong())
+            {
+                *wire_value = boost::any();
+                return;
+            }
+            else
+            {
+                bits->pop_front(); // presence bit
+            }
+        }        
         
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();
         const google::protobuf::Reflection* refl = msg->GetReflection();
@@ -124,6 +156,7 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     }
     catch(boost::bad_any_cast& e)
     {
+        std::cout << (this_field() ? this_field()->DebugString() : "0") << std::endl;
         throw(Exception("Bad type given to traverse mutable, expecting google::protobuf::Message*, got " + std::string(wire_value->type().name())));
     }
 
@@ -134,14 +167,29 @@ unsigned dccl::v3::DefaultMessageCodec::max_size()
 {
     unsigned u = 0;
     traverse_descriptor<MaxSize>(&u);
+
+    if(is_optional())
+    {
+        const unsigned presence_bit = 1;
+        u += presence_bit;
+    }
+    
     return u;
 }
 
 unsigned dccl::v3::DefaultMessageCodec::min_size()
 {
-    unsigned u = 0;
-    traverse_descriptor<MinSize>(&u);
-    return u;
+    if(is_optional())
+    {
+        const unsigned presence_bit = 1;
+        return presence_bit;
+    }
+    else
+    {
+        unsigned u = 0;
+        traverse_descriptor<MinSize>(&u);
+        return u;
+    }
 }
 
 

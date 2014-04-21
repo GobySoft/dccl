@@ -404,6 +404,7 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::ve
 
 void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
 {
+
     unsigned wire_vector_size = dccl_field_options().max_repeat();    
     if(codec_version() > 2)
     {
@@ -412,6 +413,10 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vecto
 
         wire_vector_size = size_bits.to_ulong();
     }
+
+    if(this_field())
+        std::cout << this_field()->DebugString() << "Wire values size: " << wire_values->size() << ", wire_vector_size: " << wire_vector_size << std::endl;
+
     wire_values->resize(wire_vector_size);
     
     for(unsigned i = 0, n = wire_vector_size; i < n; ++i)
