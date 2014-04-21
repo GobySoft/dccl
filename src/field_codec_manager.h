@@ -182,7 +182,7 @@ namespace dccl
             
         static std::string __mangle_name(const std::string& codec_name,
                                          const std::string& type_name) 
-        { return type_name.empty() ? codec_name : codec_name + "@@" + type_name; }
+        { return type_name.empty() ? codec_name : codec_name + "[" + type_name + "]"; }
                 
 
         template<typename WireType, typename FieldType, class Codec> 
