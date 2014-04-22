@@ -181,6 +181,7 @@ void encode(dccl::Codec& dccl, Config& cfg)
         std::cerr << "No more than one DCCL message can be specified with -m or --message for encoding." << std::endl;
         exit(EXIT_FAILURE);
     }
+    std::string command_line_name = *cfg.message.begin();
     
     while(!std::cin.eof())
     {
@@ -224,7 +225,7 @@ void encode(dccl::Codec& dccl, Config& cfg)
                 exit(EXIT_FAILURE);
             }
                 
-            name = *cfg.message.begin();
+            name = command_line_name;
         }
         
         const google::protobuf::Descriptor* desc = dccl::DynamicProtobufManager::find_descriptor(name);
