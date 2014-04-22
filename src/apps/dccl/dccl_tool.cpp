@@ -1,8 +1,7 @@
-// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
-//                     Massachusetts Institute of Technology (2007-)
-//                     Woods Hole Oceanographic Institution (2007-)
+// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
+//                     GobySoft, LLC (2013-)
+//                     Massachusetts Institute of Technology (2007-2014)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
-// 
 //
 // This file is part of the Dynamic Compact Control Language Applications
 // ("DCCL").
