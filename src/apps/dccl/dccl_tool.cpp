@@ -51,7 +51,8 @@ struct Config
         : action(NO_ACTION),
           format(BINARY),
           id_codec(dccl::Codec::default_id_codec_name()),
-          verbose(false)
+          verbose(false),
+          omit_prefix(false)
         { }
     
     Action action;
@@ -62,12 +63,12 @@ struct Config
     Format format;
     std::string id_codec;
     bool verbose;
-    
+    bool omit_prefix;
 };
 
     
 void analyze(dccl::Codec& dccl, const Config& cfg);
-void encode(dccl::Codec& dccl, const Config& cfg);
+void encode(dccl::Codec& dccl, Config& cfg);
 void decode(dccl::Codec& dccl, const Config& cfg);
 void disp_proto(dccl::Codec& dccl, const Config& cfg);
 
@@ -114,7 +115,8 @@ int main(int argc, char* argv[])
         for(std::vector<void *>::iterator it = dl_handles.begin(),
                 n = dl_handles.end(); it != n; ++it)
             dccl.load_library(*it);
-    
+
+        bool no_messages_specified = cfg.message.empty();
         for(std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
                 end = cfg.proto_file.end(); it != end; ++it)
         {
@@ -127,8 +129,8 @@ int main(int argc, char* argv[])
                 exit(EXIT_FAILURE);
             }
         
-            // if no messages explicity specified, load them all.
-            if(cfg.message.empty())
+            // if no messages explicitly specified, load them all.
+            if(no_messages_specified && cfg.action != ENCODE)
             {
                 for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
                 {
@@ -172,15 +174,13 @@ void analyze(dccl::Codec& dccl, const Config& cfg)
     dccl.info_all(&std::cout);
 }
 
-void encode(dccl::Codec& dccl, const Config& cfg)
+void encode(dccl::Codec& dccl, Config& cfg)
 {
-    if(cfg.message.size() != 1)
+    if(cfg.message.size() > 1)
     {
-        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
+        std::cerr << "No more than one DCCL message can be specified with -m or --message for encoding." << std::endl;
         exit(EXIT_FAILURE);
     }
-    const google::protobuf::Descriptor* desc = 
-        dccl::DynamicProtobufManager::find_descriptor(*cfg.message.begin());    
     
     while(!std::cin.eof())
     {
@@ -190,6 +190,50 @@ void encode(dccl::Codec& dccl, const Config& cfg)
         boost::trim(input);
         if(input.empty())
             continue;
+
+        std::string name;
+        if(input[0] == '|')
+        {
+            std::string::size_type close_bracket_pos = input.find('|', 1);
+            if(close_bracket_pos == std::string::npos)
+            {
+                std::cerr << "Incorrectly formatted input: expected '|'" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            name = input.substr(1, close_bracket_pos-1);
+            if(cfg.message.find(name) == cfg.message.end())
+            {
+                const google::protobuf::Descriptor* desc = 
+                    dccl::DynamicProtobufManager::find_descriptor(name);
+                load_desc(&dccl, desc, name);
+                cfg.message.insert(name);
+            }
+            
+            
+            if(input.size() > close_bracket_pos+1)
+                input = input.substr(close_bracket_pos+1);
+            else
+                input.clear();
+        }
+        else
+        {
+            if(cfg.message.size() == 0)
+            {
+                std::cerr << "Message name not given with -m or in the input (i.e. '[Name] field1: value field2: value')." << std::endl;
+                exit(EXIT_FAILURE);
+            }
+                
+            name = *cfg.message.begin();
+        }
+        
+        const google::protobuf::Descriptor* desc = dccl::DynamicProtobufManager::find_descriptor(name);
+        if(desc == 0)
+        {
+            std::cerr << "No descriptor with name " << name << " found! Make sure you have loaded all the necessary .proto files and/or shared libraries. Also make sure you specified the fully qualified name including the package, if any (e.g. 'goby.acomms.protobuf.NetworkAck', not just 'NetworkAck')." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        
         
         boost::shared_ptr<google::protobuf::Message> msg = dccl::DynamicProtobufManager::new_protobuf_message(desc);
         google::protobuf::TextFormat::ParseFromString(input, msg.get());
@@ -289,6 +333,8 @@ void decode(dccl::Codec& dccl, const Config& cfg)
     while(!input.empty())
     {
         boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(&input);
+        if(!cfg.omit_prefix)
+            std::cout << "|" << msg->GetDescriptor()->full_name() << "| ";
         std::cout << msg->ShortDebugString() << std::endl;
     }
 }
@@ -339,6 +385,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
     options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
     options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'bin' (default) is raw binary, 'hex' is ascii-encoded hexadecimal, 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
     options.push_back(dccl::Option('v', "verbose", no_argument, "Display extra debugging information."));
+    options.push_back(dccl::Option('o', "omit_prefix", no_argument, "Omit the DCCL type name prefix from the output of decode."));
     options.push_back(dccl::Option('i', "id_codec", required_argument, "(Advanced) name for a nonstandard DCCL ID codec to use"));
     
     std::vector<option> long_options; 
@@ -393,6 +440,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
             case 'f': cfg->proto_file.insert(optarg); break;                
             case 'i': cfg->id_codec = optarg; break;                
             case 'v': cfg->verbose = true; break;                
+            case 'o': cfg->omit_prefix = true; break;                
                 
             case 'h':
                 std::cout << "Usage of the Dynamic Compact Control Language (DCCL) tool ('dccl'): " << std::endl;
