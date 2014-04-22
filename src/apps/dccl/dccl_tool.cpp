@@ -27,6 +27,8 @@
 
 
 #include <sstream>
+#include <fstream>
+
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/text_format.h>
@@ -41,13 +43,13 @@
 #include "dccl_tool.pb.h"
 
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
-enum Format { TEXTFORMAT, HEX, BASE64 };
+enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
 
 struct Config
 {
     Config()
         : action(NO_ACTION),
-          format(HEX),
+          format(BINARY),
           id_codec(dccl::Codec::default_id_codec_name()),
           verbose(false)
         { }
@@ -199,6 +201,13 @@ void encode(dccl::Codec& dccl, const Config& cfg)
             switch(cfg.format)
             {
                 default:
+                case BINARY:                    
+                {    
+                    std::ofstream fout("/dev/stdout", std::ios::binary | std::ios::app);
+                    fout.write(encoded.data(), encoded.size()); 
+                    break;
+                }
+                
                 case TEXTFORMAT:
                 {
                     
@@ -229,49 +238,59 @@ void encode(dccl::Codec& dccl, const Config& cfg)
 
 void decode(dccl::Codec& dccl, const Config& cfg)
 {
-    if(cfg.message.size() != 1)
+    std::string input;
+    if(cfg.format == BINARY)
     {
-        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
-        exit(EXIT_FAILURE);
+        std::ifstream fin("/dev/stdin", std::ios::binary);
+        std::ostringstream ostrm;
+        ostrm << fin.rdbuf();
+        input = ostrm.str();
     }
-        
-    while(!std::cin.eof())
+    else
     {
-        std::string input;
-        std::getline (std::cin, input);
-
-        if(boost::trim_copy(input).empty())
-            continue;
-        
-        switch(cfg.format)
+        while(!std::cin.eof())
         {
-            default:
-            case TEXTFORMAT:
+            std::string line;
+            std::getline (std::cin, line);
+            
+            if(boost::trim_copy(line).empty())
+                continue;
+            
+            switch(cfg.format)
             {
-                boost::trim_if(input, boost::is_any_of("\""));
-
-                
-                ByteString s;
-                google::protobuf::TextFormat::ParseFieldValueFromString("\"" + input + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
-                input = s.b();
-                break;
+                default:
+                case BINARY:
+                    break;
+                    
+                case TEXTFORMAT:
+                {
+                    boost::trim_if(line, boost::is_any_of("\""));
+                    
+                    
+                    ByteString s;
+                    google::protobuf::TextFormat::ParseFieldValueFromString("\"" + line + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
+                    input += s.b();
+                    break;
+                }
+                case HEX:
+                    input += dccl::hex_decode(line);
+                    break;
+                case BASE64:
+                    std::stringstream instream(line);
+                    std::stringstream outstream;
+                    base64::decoder D;
+                    D.decode(instream, outstream);
+                    input += outstream.str();
+                    break;
             }
-            case HEX:
-                input = dccl::hex_decode(input);
-                break;
-            case BASE64:
-                std::string in = input;
-                std::stringstream instream(input);
-                std::stringstream outstream;
-                base64::decoder D;
-		D.decode(instream, outstream);
-                input = outstream.str();
-                break;
         }
+    }
 
-        boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(input);
+    while(!input.empty())
+    {
+        boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(&input);
         std::cout << msg->ShortDebugString() << std::endl;
-    }    
+    }
 }
 
 void disp_proto(dccl::Codec& dccl, const Config& cfg)
@@ -318,7 +337,7 @@ void parse_options(int argc, char* argv[], Config* cfg)
     options.push_back(dccl::Option('l', "dlopen", required_argument, "Open this shared library containing compiled DCCL messages."));
     options.push_back(dccl::Option('m', "message", required_argument, "Message name to encode, decode or analyze."));
     options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
-    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'hex' is ascii-encoded hexadecimal (default), 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
+    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'bin' (default) is raw binary, 'hex' is ascii-encoded hexadecimal, 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
     options.push_back(dccl::Option('v', "verbose", no_argument, "Display extra debugging information."));
     options.push_back(dccl::Option('i', "id_codec", required_argument, "(Advanced) name for a nonstandard DCCL ID codec to use"));
     
@@ -348,6 +367,8 @@ void parse_options(int argc, char* argv[], Config* cfg)
                         cfg->format = HEX;
                     else if(!strcmp(optarg, "base64"))
                         cfg->format = BASE64;
+                    else if(!strcmp(optarg, "bin"))
+                        cfg->format = BINARY;
                     else
                     {
                         std::cerr << "Invalid format '" << optarg << "'" << std::endl;
