@@ -474,7 +474,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string header_str = "Header";
             std::string header_guard = std::string((full_width-header_str.size())/2, '-');
             *os << header_guard << " " << header_str << " " << header_guard << std::endl;
-            *os << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()+spaces) << id_bit_size << "\n";
+            *os << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()+spaces) << id_bit_size << " {" << id_codec()->name() <<  "}\n";
             codec->base_info(os, desc, MessageStack::HEAD);
 //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << std::endl;
             

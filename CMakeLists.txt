@@ -132,10 +132,8 @@ if(enable_cryptography)
   include_directories(${Cryptopp_INCLUDE_DIRS})
 endif()
 
+
 ## start adding subdirectories
 add_subdirectory(src)
 
-## export a file for folks to use
-export(TARGETS dccl FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
-file(APPEND ${CMAKE_BINARY_DIR}/dccl-config.cmake "set(DCCL_INCLUDE_DIR \"${dccl_INC_DIR}\")")
 
