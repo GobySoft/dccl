@@ -72,7 +72,7 @@ install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/d
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
-install(EXPORT dccl-config DESTINATION share/${PROJECTNAME}/cmake)
+install(EXPORT dccl-config DESTINATION share/dccl/cmake)
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
