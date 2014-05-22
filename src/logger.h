@@ -51,6 +51,7 @@ namespace dccl {
   
     }
 
+    
 
     void to_ostream(const std::string& msg, dccl::logger::Verbosity vrb,
                     dccl::logger::Group grp, std::ostream* os, bool add_timestamp);

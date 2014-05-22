@@ -434,7 +434,7 @@ namespace dccl
         int repeated_vector_field_size(int max_repeat)
         { return dccl::ceil_log2(max_repeat+1); }
 
-        void disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth);
+        void disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth, int vector_size = -1);
         
         
       private:

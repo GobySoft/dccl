@@ -65,11 +65,12 @@ void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb,
     {
         *os << "[ " << (t->tm_year+1900) << "-"
             << std::setw(2) << std::setfill('0') << (t->tm_mon+1) << "-"
-            << std::setw(2) << std::setfill('0') << t->tm_mday
+            << std::setw(2) << t->tm_mday
             << " "
-            << std::setw(2) << std::setfill('0') << t->tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << t->tm_min << ":"
-            << std::setw(2) << std::setfill('0') << t->tm_sec << " ]: ";
+            << std::setw(2) << t->tm_hour << ":"
+            << std::setw(2) << t->tm_min << ":"
+            << std::setw(2) << t->tm_sec << " ]: "
+            << std::setfill(' ');
     }
     
     *os << grp_str << msg << std::endl;

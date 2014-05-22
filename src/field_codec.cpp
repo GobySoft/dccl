@@ -82,7 +82,7 @@ void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
     
     Bitset new_bits;
     any_encode_repeated(&new_bits, wire_values);
-    disp_size(field, new_bits, msg_handler.field_.size());
+    disp_size(field, new_bits, msg_handler.field_.size(), wire_values.size());
     bits->append(new_bits);
 }
 
@@ -498,7 +498,7 @@ void dccl::FieldCodecBase::any_post_decode_repeated(
 // FieldCodecBase private
 //
 
-void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth)
+void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth, int vector_size /* = -1 */)
 {
     if(!root_descriptor_)
         return;
@@ -506,6 +506,9 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
     if(dlog.is(INFO, SIZE))
     {   
         std::string name = ((field) ? field->name() : root_descriptor_->full_name());
+        if(vector_size >= 0)
+            name +=  "[" + boost::lexical_cast<std::string>(vector_size) +  "]";
+
         
         dlog << std::string(depth, '|') << name << std::setfill('.') << std::setw(40-name.size()-depth) << new_bits.size() << std::endl;
         
