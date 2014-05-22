@@ -55,6 +55,7 @@ void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb,
         case logger::GENERAL: break;
         case logger::ENCODE: grp_str = "{encode}: "; break;
         case logger::DECODE: grp_str = "{decode}: "; break;
+        case logger::SIZE: grp_str = "{size}: "; break;
     }
     
     std::time_t now = std::time(0);

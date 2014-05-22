@@ -67,6 +67,7 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits,
     
     Bitset new_bits;
     any_encode(&new_bits, wire_value);
+    disp_size(field, new_bits, msg_handler.field_.size());
     bits->append(new_bits);
 }
 
@@ -81,6 +82,7 @@ void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
     
     Bitset new_bits;
     any_encode_repeated(&new_bits, wire_values);
+    disp_size(field, new_bits, msg_handler.field_.size());
     bits->append(new_bits);
 }
 
@@ -417,9 +419,6 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits, std::vecto
         wire_vector_size = size_bits.to_ulong();
     }
 
-    if(this_field())
-        std::cout << this_field()->DebugString() << "Wire values size: " << wire_values->size() << ", wire_vector_size: " << wire_vector_size << std::endl;
-
     wire_values->resize(wire_vector_size);
     
     for(unsigned i = 0, n = wire_vector_size; i < n; ++i)
@@ -499,3 +498,19 @@ void dccl::FieldCodecBase::any_post_decode_repeated(
 // FieldCodecBase private
 //
 
+void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth)
+{
+    if(!root_descriptor_)
+        return;
+
+    if(dlog.is(INFO, SIZE))
+    {   
+        std::string name = ((field) ? field->name() : root_descriptor_->full_name());
+        
+        dlog << std::string(depth, '|') << name << std::setfill('.') << std::setw(40-name.size()-depth) << new_bits.size() << std::endl;
+        
+        if(!field)
+            dlog << std::endl;
+        
+    }
+}

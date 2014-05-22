@@ -47,7 +47,7 @@ namespace dccl {
             DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1)
         };
         enum Group 
-        { GENERAL, ENCODE, DECODE };
+        { GENERAL, ENCODE, DECODE, SIZE };
   
     }
 
