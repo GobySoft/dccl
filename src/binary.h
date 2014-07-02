@@ -29,6 +29,8 @@
 #include <sstream>
 
 #include "dccl/common.h"
+#include "dccl/b64/encode.h"
+#include "dccl/b64/decode.h"
 
 namespace dccl
 {
@@ -124,6 +126,27 @@ namespace dccl
         hex_encode(in, &out);
         return out;
     }
+
+
+    inline std::string b64_encode(const std::string& in)
+    {
+        std::stringstream instream(in);
+        std::stringstream outstream;
+        base64::encoder D;
+        D.encode(instream, outstream);
+        return outstream.str();
+    }
+
+    inline std::string b64_decode(const std::string& in)
+    {
+        std::stringstream instream(in);
+        std::stringstream outstream;
+        base64::decoder D;
+        D.decode(instream, outstream);
+        return outstream.str();
+    }
+
+    
         
     /// \return ceil(log2(v))
     inline unsigned ceil_log2(dccl::uint64 v)

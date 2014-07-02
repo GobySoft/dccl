@@ -183,6 +183,9 @@ namespace dccl
             return desc->options().GetExtension(dccl::msg).id();
         }            
 
+        /// \brief Provides a map of all loaded DCCL IDs to the equivalent Protobuf descriptor
+        const std::map<int32, const google::protobuf::Descriptor*>& loaded() const { return id2desc_; }
+        
         //@}
             
         /// \brief Provides the encoded size (in bytes) of msg. This is useful if you need to know the size of a message before encoding it (encoding it is generally much more expensive than calling this method)
