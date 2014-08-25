@@ -15,6 +15,7 @@ add_library(dccl
   codecs2/field_codec_default.cpp
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
+  codecs3/field_codec_default.cpp
   type_helper.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp

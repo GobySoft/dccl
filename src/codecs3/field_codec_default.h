@@ -38,7 +38,6 @@ namespace dccl
             class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, FieldType> { };
 
 	typedef v2::DefaultBoolCodec DefaultBoolCodec;
-	typedef v2::DefaultStringCodec DefaultStringCodec;
 	typedef v2::DefaultBytesCodec DefaultBytesCodec;
         typedef v2::DefaultEnumCodec DefaultEnumCodec;
 
@@ -54,6 +53,24 @@ namespace dccl
         template<typename T>
             class StaticCodec : public v2::StaticCodec<T>
         { };
+
+
+        /// \brief Provides an variable length ASCII string encoder.
+        ///
+        /// [length of following string size: ceil(log2(max_length))][string]
+        class DefaultStringCodec : public TypedFieldCodec<std::string>
+        {
+          private:
+            Bitset encode();
+            Bitset encode(const std::string& wire_value);
+            std::string decode(Bitset* bits);
+            unsigned size();
+            unsigned size(const std::string& wire_value);
+            unsigned max_size();
+            unsigned min_size();
+            void validate();
+        };
+
     }
 }
 
