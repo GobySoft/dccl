@@ -126,14 +126,14 @@ namespace dccl
             
         dccl::Bitset encode(const dccl::uint32& wire_value)
         {
-            return DefaultNumericFieldCodec<dccl::uint32>::encode(
+            return dccl::v2::DefaultNumericFieldCodec<dccl::uint32>::encode(
                 (dccl::uint32)std::min<unsigned char>((dccl::uint32)max(), wire_value / SCALE_FACTOR));
         }
             
         dccl::uint32 decode(dccl::Bitset* bits)
         {
             return SCALE_FACTOR *
-                DefaultNumericFieldCodec<dccl::uint32>::decode(bits);
+                dccl::v2::DefaultNumericFieldCodec<dccl::uint32>::decode(bits);
         }
                         
         double max() { return (1 << dccl::BITS_IN_BYTE) - 1; }
