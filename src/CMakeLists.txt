@@ -24,7 +24,13 @@ add_library(dccl
   ${PROTO_SRCS} ${PROTO_HDRS}
   )
 
-target_link_libraries(dccl ${Cryptopp_LIBRARIES} ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+if(enable_cryptography)
+  target_link_libraries(dccl ${Cryptopp_LIBRARIES})
+endif()
+
+
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
 

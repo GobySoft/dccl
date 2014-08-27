@@ -31,7 +31,8 @@ bool same(double a, double b)
     return std::abs(a-b) < 1e-10;    
 }
 
-bool same(int a, int b)
+template<typename Int>
+bool same(Int a, Int b)
 {
     return a == b;
 }
@@ -50,26 +51,28 @@ int main()
     check(1.25, 1, 1.3);
     check(1.35, 1, 1.4);
     
-    check(1239, -1, 1240);
-    check(1351, -2, 1400);
-    check(1450, -2, 1500);
-    check(1344, -3, 1000);
+    check<int>(1239, -1, 1240);
+    check<int>(1351, -2, 1400);
+    check<int>(1450, -2, 1500);
+    check<int>(1344, -3, 1000);
     
     check(1239.0, -1, 1240.0);
     check(1351.0, -2, 1400.0);
     check(1450.0, -2, 1500.0);
     check(1344.0, -3, 1000.0);
     
-    check(-499000, -3, -499000);
-    check(-500000, -3, -500000);
+    check<int>(-499000, -3, -499000);
+    check<int>(-500000, -3, -500000);
 
     check(-500000.0, -3, -500000.0);
 
-    check(0, -3, 0);
-    check(0, 2, 0);
+    check<int>(0, -3, 0);
+    check<int>(0, 2, 0);
 
     check(0.0, -3, 0.0);
     check(0.0, 2, 0.0);
+
+    check<dccl::int64>(1409165969804999, -3, 1409165969805000);
     
     std::cout << "all tests passed" << std::endl;
     
