@@ -1,4 +1,4 @@
-// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
+// copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
 //                     GobySoft, LLC (2013-)
 //                     Massachusetts Institute of Technology (2007-2014)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
@@ -82,9 +82,9 @@ int main(int argc, char* argv[])
         state_in.set_longitude(-77.164266667);
         state_in.set_fix_age(4);
         
+	boost::gregorian::date today = boost::gregorian::day_clock::universal_day(); 
         boost::posix_time::ptime time_date(
-            boost::gregorian::date(boost::gregorian::day_clock::universal_day().year(),
-                                   boost::date_time::Mar, 04), 
+            boost::gregorian::date(today.year(), boost::date_time::Mar, 4), 
             boost::posix_time::time_duration(17,1,44));
         
         state_in.set_time_date(dccl::LegacyCCLTimeDateCodec::to_uint64_time(time_date));

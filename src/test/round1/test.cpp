@@ -72,7 +72,7 @@ int main()
     check(0.0, -3, 0.0);
     check(0.0, 2, 0.0);
 
-    check<dccl::int64>(1409165969804999, -3, 1409165969805000);
+    check<dccl::int64>(1409165969804999ull, -3, 1409165969805000ull);
     
     std::cout << "all tests passed" << std::endl;
     

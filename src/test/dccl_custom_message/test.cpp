@@ -59,8 +59,8 @@ private:
     CustomMsg decode(Bitset* bits)
         {
             if(part() == dccl::MessageStack::HEAD)
-            { throw(dccl::NullValueException()); }
-            else
+            { throw dccl::NullValueException(); }
+	    else
             {
                 Bitset a = *bits;
                 a.resize(A_SIZE);
