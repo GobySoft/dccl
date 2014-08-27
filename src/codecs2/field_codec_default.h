@@ -266,7 +266,8 @@ namespace dccl
                     daystart += max_secs;
                 }
 
-                return (TimeType)(conversion_factor * (daystart + encoded_time));
+                return dccl::round((TimeType)(conversion_factor * (daystart + encoded_time)),
+                                   precision() - std::log10((double)conversion_factor));
             }
 
           private:
