@@ -81,12 +81,49 @@ namespace dccl
         template<class Codec, google::protobuf::FieldDescriptor::Type type>
             static void add(const std::string& name);
 
+        /// \brief Remove a new field codec (used for codecs operating on statically generated Protobuf messages, that is, children of google::protobuf::Message but not google::protobuf::Message itself).
+        ///
+        /// \tparam Codec A child of FieldCodecBase
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
+        /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper remove() overload.
+        template<class Codec>
+            typename boost::enable_if<
+            boost::mpl::and_<boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
+            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
+            >,
+            void>::type 
+            static remove(const std::string& name, dummy_fcm<0> dummy_fcm = 0);
+                
+        /// \brief Remove a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
+        ///
+        /// \tparam Codec A child of FieldCodecBase
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
+        /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper remove() overload.
+        template<class Codec>
+            typename boost::disable_if<
+            boost::mpl::and_<boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
+            boost::mpl::not_<boost::is_same<google::protobuf::Message,typename Codec::wire_type> >
+            >,
+            void>::type
+            static remove(const std::string& name, dummy_fcm<1> dummy_fcm = 0);
+                
+        /// \brief Remove a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
+        ///
+        /// \tparam Codec A child of FieldCodecBase
+        /// \tparam type The google::protobuf::FieldDescriptor::Type enumeration that this codec works on.
+        /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
+        template<class Codec, google::protobuf::FieldDescriptor::Type type>
+            static void remove(const std::string& name);
+
+        
         /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
         static boost::shared_ptr<FieldCodecBase> find(
-            const google::protobuf::FieldDescriptor* field)
+            const google::protobuf::FieldDescriptor* field,
+            bool has_codec_group,
+            const std::string& codec_group)
         {
-            std::string name = __find_codec(field);
-                
+            std::string name = __find_codec(field, has_codec_group, codec_group);            
+            
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 return find(field->message_type(), name);
             else
@@ -101,9 +138,16 @@ namespace dccl
             const google::protobuf::Descriptor* desc,
             std::string name = "")
         {
+            // this was called on the root message
             if(name.empty())
-                name = desc->options().GetExtension(dccl::msg).codec();
-
+            {
+                // explicitly declared codec takes precedence over group
+                if(desc->options().GetExtension(dccl::msg).has_codec())
+                    name = desc->options().GetExtension(dccl::msg).codec();
+                else
+                    name = FieldCodecBase::codec_group(desc);
+            }
+            
             return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                           name, desc->full_name());
         }
@@ -115,6 +159,11 @@ namespace dccl
             return __find(type, name);
         }
 
+        static void clear()
+        {
+            TypeHelper::reset();
+            codecs_.clear();
+        }
         
         
       private:
@@ -132,27 +181,41 @@ namespace dccl
             
         static std::string __mangle_name(const std::string& codec_name,
                                          const std::string& type_name) 
-        { return type_name.empty() ? codec_name : codec_name + "@@" + type_name; }
+        { return type_name.empty() ? codec_name : codec_name + "[" + type_name + "]"; }
                 
 
         template<typename WireType, typename FieldType, class Codec> 
-            static void __add(const std::string& name); 
+            static void add_all_types(const std::string& name); 
 
         template<class Codec>
-            static void __add(const std::string& name,
-                              google::protobuf::FieldDescriptor::Type field_type,
-                              google::protobuf::FieldDescriptor::CppType wire_type);
+            static void add_single_type(const std::string& name,
+                                        google::protobuf::FieldDescriptor::Type field_type,
+                                        google::protobuf::FieldDescriptor::CppType wire_type);
+        
+        template<typename WireType, typename FieldType, class Codec> 
+            static void remove_all_types(const std::string& name); 
 
+        template<class Codec>
+            static void remove_single_type(const std::string& name,
+                                        google::protobuf::FieldDescriptor::Type field_type,
+                                        google::protobuf::FieldDescriptor::CppType wire_type);
 
-        static std::string __find_codec(const google::protobuf::FieldDescriptor* field)
+        
+        static std::string __find_codec(const google::protobuf::FieldDescriptor* field,
+                                        bool has_codec_group, const std::string& codec_group)
         {
             dccl::DCCLFieldOptions dccl_field_options = field->options().GetExtension(dccl::field);
                 
             // prefer the codec listed as a field extension
             if(dccl_field_options.has_codec())
-                return dccl_field_options.codec();
-            else if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
+                return dccl_field_options.codec();                
+            // then, the codec embedded in the message option extension
+            else if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE && field->message_type()->options().GetExtension(dccl::msg).has_codec())
                 return field->message_type()->options().GetExtension(dccl::msg).codec();
+            // then the overarching codec group
+            else if(has_codec_group)
+                return codec_group;
+            // finally the default
             else
                 return dccl_field_options.codec();
         }
@@ -173,9 +236,9 @@ void>::type
 dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<0> dummy_fcm)
 {
     TypeHelper::add<typename Codec::wire_type>();
-    __add<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
-                 google::protobuf::FieldDescriptor::TYPE_MESSAGE,
-                 google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
+    add_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
+                           google::protobuf::FieldDescriptor::TYPE_MESSAGE,
+                           google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
 }
 
 template<class Codec>
@@ -187,18 +250,18 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
     void>::type
     dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<1> dummy_fcm)
 {
-    __add<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
+    add_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
 
 template<class Codec, google::protobuf::FieldDescriptor::Type type> 
     void dccl::FieldCodecManager::add(const std::string& name) 
 { 
-    __add<Codec>(name, type, google::protobuf::FieldDescriptor::TypeToCppType(type));
+    add_single_type<Codec>(name, type, google::protobuf::FieldDescriptor::TypeToCppType(type));
 }
 
 
 template<typename WireType, typename FieldType, class Codec>
-    void dccl::FieldCodecManager::__add(const std::string& name)
+    void dccl::FieldCodecManager::add_all_types(const std::string& name)
 {
     using google::protobuf::FieldDescriptor;
     const FieldDescriptor::CppType cpp_field_type = ToProtoCppType<FieldType>::as_enum();
@@ -209,17 +272,17 @@ template<typename WireType, typename FieldType, class Codec>
         FieldDescriptor::Type field_type = static_cast<FieldDescriptor::Type>(i);
         if(FieldDescriptor::TypeToCppType(field_type) == cpp_field_type)
         {            
-            __add<Codec>(name, field_type, cpp_wire_type);
+            add_single_type<Codec>(name, field_type, cpp_wire_type);
         }
     }
 }
 
 template<class Codec>
-void dccl::FieldCodecManager::__add(const std::string& name,
-                                        google::protobuf::FieldDescriptor::Type field_type,
-                                        google::protobuf::FieldDescriptor::CppType wire_type)
+void dccl::FieldCodecManager::add_single_type(const std::string& name,
+                                              google::protobuf::FieldDescriptor::Type field_type,
+                                              google::protobuf::FieldDescriptor::CppType wire_type)
 {
-    using google::protobuf::FieldDescriptor;    
+    using google::protobuf::FieldDescriptor;
     if(!codecs_[field_type].count(name))
     {
         boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
@@ -243,6 +306,84 @@ void dccl::FieldCodecManager::__add(const std::string& name,
                                                             << std::endl;
     }
 }
+
+
+
+template<class Codec>
+typename boost::enable_if<
+boost::mpl::and_<
+boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
+boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
+>,
+void>::type 
+dccl::FieldCodecManager::remove(const std::string& name, dummy_fcm<0> dummy_fcm)
+{
+    TypeHelper::remove<typename Codec::wire_type>();
+    remove_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
+                              google::protobuf::FieldDescriptor::TYPE_MESSAGE,
+                              google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
+}
+
+template<class Codec>
+typename boost::disable_if<
+boost::mpl::and_<
+boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
+    boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
+    >,
+    void>::type
+    dccl::FieldCodecManager::remove(const std::string& name, dummy_fcm<1> dummy_fcm)
+{
+    remove_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
+}
+
+template<class Codec, google::protobuf::FieldDescriptor::Type type> 
+    void dccl::FieldCodecManager::remove(const std::string& name) 
+{ 
+    remove_single_type<Codec>(name, type, google::protobuf::FieldDescriptor::TypeToCppType(type));
+}
+
+
+template<typename WireType, typename FieldType, class Codec>
+    void dccl::FieldCodecManager::remove_all_types(const std::string& name)
+{
+    using google::protobuf::FieldDescriptor;
+    const FieldDescriptor::CppType cpp_field_type = ToProtoCppType<FieldType>::as_enum();
+    const FieldDescriptor::CppType cpp_wire_type = ToProtoCppType<WireType>::as_enum();
+
+    for(int i = 1, n = FieldDescriptor::MAX_TYPE; i <= n; ++i)
+    {
+        FieldDescriptor::Type field_type = static_cast<FieldDescriptor::Type>(i);
+        if(FieldDescriptor::TypeToCppType(field_type) == cpp_field_type)
+        {            
+            remove_single_type<Codec>(name, field_type, cpp_wire_type);
+        }
+    }
+}
+
+template<class Codec>
+void dccl::FieldCodecManager::remove_single_type(const std::string& name,
+                                              google::protobuf::FieldDescriptor::Type field_type,
+                                              google::protobuf::FieldDescriptor::CppType wire_type)
+{
+    using google::protobuf::FieldDescriptor;
+    if(codecs_[field_type].count(name))
+    {       
+        dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog << "Removing codec " << *codecs_[field_type][name]  << std::endl;
+        codecs_[field_type].erase(name);
+    }            
+    else
+    {
+        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
+        new_field_codec->set_name(name);
+        new_field_codec->set_field_type(field_type);
+        new_field_codec->set_wire_type(wire_type);
+        
+        dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog << "Trying to remove: " << *new_field_codec
+                                                            << ", but no such codec exists"
+                                                            << std::endl;
+    }
+}
+
 
 
 

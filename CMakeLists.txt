@@ -72,7 +72,7 @@ install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/d
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
-install(EXPORT dccl-config DESTINATION share/${PROJECTNAME}/cmake)
+install(EXPORT dccl-config DESTINATION share/dccl/cmake)
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
@@ -132,10 +132,8 @@ if(enable_cryptography)
   include_directories(${Cryptopp_INCLUDE_DIRS})
 endif()
 
+
 ## start adding subdirectories
 add_subdirectory(src)
 
-## export a file for folks to use
-export(TARGETS dccl FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
-file(APPEND ${CMAKE_BINARY_DIR}/dccl-config.cmake "set(DCCL_INCLUDE_DIR \"${dccl_INC_DIR}\")")
 

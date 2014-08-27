@@ -47,10 +47,11 @@ namespace dccl {
             DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1)
         };
         enum Group 
-        { GENERAL, ENCODE, DECODE };
+        { GENERAL, ENCODE, DECODE, SIZE };
   
     }
 
+    
 
     void to_ostream(const std::string& msg, dccl::logger::Verbosity vrb,
                     dccl::logger::Group grp, std::ostream* os, bool add_timestamp);

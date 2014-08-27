@@ -10,9 +10,12 @@ add_library(dccl
   codec.cpp
   field_codec.cpp
   field_codec_message_stack.cpp
-  field_codec_default.cpp
-  field_codec_default_message.cpp
   field_codec_manager.cpp
+  field_codec_id.cpp
+  codecs2/field_codec_default.cpp
+  codecs2/field_codec_default_message.cpp
+  codecs3/field_codec_default_message.cpp
+  codecs3/field_codec_default.cpp
   type_helper.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp
@@ -32,13 +35,20 @@ install(TARGETS dccl EXPORT dccl-config
 option(build_arithmetic "Build arithmetic coders shared library" ON)
 option(build_ccl "Build Compact Control Language (CCL) legacy support shared library" ON)
 
+set(DCCL_EXPORT_TARGETS dccl)
+
 if(build_ccl)
   add_subdirectory(ccl)
+  set(DCCL_EXPORT_TARGETS ${DCCL_EXPORT_TARGETS} dccl_ccl_compat)
 endif()
 
 if(build_arithmetic)
   add_subdirectory(arithmetic)
+  set(DCCL_EXPORT_TARGETS ${DCCL_EXPORT_TARGETS} dccl_arithmetic)
 endif()
+
+export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
+file(APPEND ${CMAKE_BINARY_DIR}/dccl-config.cmake "set(DCCL_INCLUDE_DIR \"${dccl_INC_DIR}\")")
 
 if(enable_testing)
   add_subdirectory(test)

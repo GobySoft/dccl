@@ -26,6 +26,8 @@
 
 
 #include <sstream>
+#include <fstream>
+
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/text_format.h>
@@ -40,13 +42,16 @@
 #include "dccl_tool.pb.h"
 
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
-enum Format { TEXTFORMAT, HEX, BASE64 };
+enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
 
 struct Config
 {
     Config()
         : action(NO_ACTION),
-          format(HEX)
+          format(BINARY),
+          id_codec(dccl::Codec::default_id_codec_name()),
+          verbose(false),
+          omit_prefix(false)
         { }
     
     Action action;
@@ -55,11 +60,14 @@ struct Config
     std::set<std::string> message;
     std::set<std::string> proto_file;
     Format format;
+    std::string id_codec;
+    bool verbose;
+    bool omit_prefix;
 };
 
     
 void analyze(dccl::Codec& dccl, const Config& cfg);
-void encode(dccl::Codec& dccl, const Config& cfg);
+void encode(dccl::Codec& dccl, Config& cfg);
 void decode(dccl::Codec& dccl, const Config& cfg);
 void disp_proto(dccl::Codec& dccl, const Config& cfg);
 
@@ -67,67 +75,95 @@ void disp_proto(dccl::Codec& dccl, const Config& cfg);
 void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name);
 void parse_options(int argc, char* argv[], Config* cfg);
 
+
 int main(int argc, char* argv[])
 {
-    Config cfg;
-    parse_options(argc, argv, &cfg);
-
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
-
-    dccl::DynamicProtobufManager::enable_compilation();
-    
-    for(std::set<std::string>::const_iterator it = cfg.include.begin(),
-            end = cfg.include.end(); it != end; ++it)
-        dccl::DynamicProtobufManager::add_include_path(*it);
-
-    dccl::Codec dccl;
-    for(std::set<std::string>::const_iterator it = cfg.dlopen.begin(),
-            end = cfg.dlopen.end(); it != end; ++it)
-        dccl.load_library(*it);
-    
-    for(std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
-            end = cfg.proto_file.end(); it != end; ++it)
+    std::vector<void *> dl_handles;
     {
-        const google::protobuf::FileDescriptor* file_desc =
-            dccl::DynamicProtobufManager::load_from_proto_file(*it);
+        Config cfg;
+        parse_options(argc, argv, &cfg);
 
-        if(!file_desc)
-        {
-            std::cerr << "failed to read in: " << *it << std::endl;
-            exit(EXIT_FAILURE);
-        }
+        if(!cfg.verbose)
+            dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+        else
+            dccl::dlog.connect(dccl::logger::DEBUG1_PLUS, &std::cerr);
         
-        // if no messages explicity specified, load them all.
-        if(cfg.message.empty())
+        dccl::DynamicProtobufManager::enable_compilation();
+    
+        for(std::set<std::string>::const_iterator it = cfg.include.begin(),
+                end = cfg.include.end(); it != end; ++it)
+            dccl::DynamicProtobufManager::add_include_path(*it);
+    
+        for(std::set<std::string>::const_iterator it = cfg.dlopen.begin(),
+                end = cfg.dlopen.end(); it != end; ++it)
         {
-            for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
+            void* handle = dlopen(it->c_str(), RTLD_LAZY);
+            if(handle)
             {
-                const google::protobuf::Descriptor* desc = file_desc->message_type(i);
-                cfg.message.insert(file_desc->message_type(i)->full_name());
+                dl_handles.push_back(handle);
+            }
+            else
+            {
+                std::cerr << "Failed to open shared library: " << *it << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        
+        }
+
+        dccl::Codec dccl(cfg.id_codec);
+        for(std::vector<void *>::iterator it = dl_handles.begin(),
+                n = dl_handles.end(); it != n; ++it)
+            dccl.load_library(*it);
+
+        bool no_messages_specified = cfg.message.empty();
+        for(std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
+                end = cfg.proto_file.end(); it != end; ++it)
+        {
+            const google::protobuf::FileDescriptor* file_desc =
+                dccl::DynamicProtobufManager::load_from_proto_file(*it);
+
+            if(!file_desc)
+            {
+                std::cerr << "failed to read in: " << *it << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        
+            // if no messages explicitly specified, load them all.
+            if(no_messages_specified && cfg.action != ENCODE)
+            {
+                for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
+                {
+                    cfg.message.insert(file_desc->message_type(i)->full_name());
+                }
             }
         }
-    }
 
-    // Load up all the messages
-    for(std::set<std::string>::const_iterator it = cfg.message.begin(),
-            end = cfg.message.end(); it != end; ++it)   
-    {
-        const google::protobuf::Descriptor* desc = 
-            dccl::DynamicProtobufManager::find_descriptor(*it);
-        load_desc(&dccl, desc, *it);
-    }
+        // Load up all the messages
+        for(std::set<std::string>::const_iterator it = cfg.message.begin(),
+                end = cfg.message.end(); it != end; ++it)   
+        {
+            const google::protobuf::Descriptor* desc = 
+                dccl::DynamicProtobufManager::find_descriptor(*it);
+            load_desc(&dccl, desc, *it);
+        }
 
-    switch(cfg.action)
-    {
-        case ENCODE: encode(dccl, cfg); break;
-        case DECODE: decode(dccl, cfg); break;
-        case ANALYZE: analyze(dccl, cfg); break;
-        case DISP_PROTO: disp_proto(dccl, cfg); break;
-        default:
-            std::cerr << "No action specified (e.g. analyze, decode, encode). Try --help." << std::endl;
-            exit(EXIT_SUCCESS);
+        switch(cfg.action)
+        {
+            case ENCODE: encode(dccl, cfg); break;
+            case DECODE: decode(dccl, cfg); break;
+            case ANALYZE: analyze(dccl, cfg); break;
+            case DISP_PROTO: disp_proto(dccl, cfg); break;
+            default:
+                std::cerr << "No action specified (e.g. analyze, decode, encode). Try --help." << std::endl;
+                exit(EXIT_SUCCESS);
         
+        }
     }
+
+    for(std::vector<void *>::iterator it = dl_handles.begin(),
+            n = dl_handles.end(); it != n; ++it)
+        dlclose(*it);
+    
 }
 
 
@@ -137,16 +173,14 @@ void analyze(dccl::Codec& dccl, const Config& cfg)
     dccl.info_all(&std::cout);
 }
 
-void encode(dccl::Codec& dccl, const Config& cfg)
+void encode(dccl::Codec& dccl, Config& cfg)
 {
-    if(cfg.message.size() != 1)
+    if(cfg.message.size() > 1)
     {
-        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
+        std::cerr << "No more than one DCCL message can be specified with -m or --message for encoding." << std::endl;
         exit(EXIT_FAILURE);
     }
-    const google::protobuf::Descriptor* desc = 
-        dccl::DynamicProtobufManager::find_descriptor(*cfg.message.begin());
-    int dccl_id = dccl.id(desc);
+    std::string command_line_name = *cfg.message.begin();
     
     while(!std::cin.eof())
     {
@@ -156,6 +190,50 @@ void encode(dccl::Codec& dccl, const Config& cfg)
         boost::trim(input);
         if(input.empty())
             continue;
+
+        std::string name;
+        if(input[0] == '|')
+        {
+            std::string::size_type close_bracket_pos = input.find('|', 1);
+            if(close_bracket_pos == std::string::npos)
+            {
+                std::cerr << "Incorrectly formatted input: expected '|'" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            name = input.substr(1, close_bracket_pos-1);
+            if(cfg.message.find(name) == cfg.message.end())
+            {
+                const google::protobuf::Descriptor* desc = 
+                    dccl::DynamicProtobufManager::find_descriptor(name);
+                load_desc(&dccl, desc, name);
+                cfg.message.insert(name);
+            }
+            
+            
+            if(input.size() > close_bracket_pos+1)
+                input = input.substr(close_bracket_pos+1);
+            else
+                input.clear();
+        }
+        else
+        {
+            if(cfg.message.size() == 0)
+            {
+                std::cerr << "Message name not given with -m or in the input (i.e. '[Name] field1: value field2: value')." << std::endl;
+                exit(EXIT_FAILURE);
+            }
+                
+            name = command_line_name;
+        }
+        
+        const google::protobuf::Descriptor* desc = dccl::DynamicProtobufManager::find_descriptor(name);
+        if(desc == 0)
+        {
+            std::cerr << "No descriptor with name " << name << " found! Make sure you have loaded all the necessary .proto files and/or shared libraries. Also make sure you specified the fully qualified name including the package, if any (e.g. 'goby.acomms.protobuf.NetworkAck', not just 'NetworkAck')." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        
         
         boost::shared_ptr<google::protobuf::Message> msg = dccl::DynamicProtobufManager::new_protobuf_message(desc);
         google::protobuf::TextFormat::ParseFromString(input, msg.get());
@@ -167,6 +245,13 @@ void encode(dccl::Codec& dccl, const Config& cfg)
             switch(cfg.format)
             {
                 default:
+                case BINARY:                    
+                {    
+                    std::ofstream fout("/dev/stdout", std::ios::binary | std::ios::app);
+                    fout.write(encoded.data(), encoded.size()); 
+                    break;
+                }
+                
                 case TEXTFORMAT:
                 {
                     
@@ -197,49 +282,61 @@ void encode(dccl::Codec& dccl, const Config& cfg)
 
 void decode(dccl::Codec& dccl, const Config& cfg)
 {
-    if(cfg.message.size() != 1)
+    std::string input;
+    if(cfg.format == BINARY)
     {
-        std::cerr << "Exactly one DCCL message must be specified with -m or --message" << std::endl;
-        exit(EXIT_FAILURE);
+        std::ifstream fin("/dev/stdin", std::ios::binary);
+        std::ostringstream ostrm;
+        ostrm << fin.rdbuf();
+        input = ostrm.str();
     }
-        
-    while(!std::cin.eof())
+    else
     {
-        std::string input;
-        std::getline (std::cin, input);
-
-        if(boost::trim_copy(input).empty())
-            continue;
-        
-        switch(cfg.format)
+        while(!std::cin.eof())
         {
-            default:
-            case TEXTFORMAT:
+            std::string line;
+            std::getline (std::cin, line);
+            
+            if(boost::trim_copy(line).empty())
+                continue;
+            
+            switch(cfg.format)
             {
-                boost::trim_if(input, boost::is_any_of("\""));
-
-                
-                ByteString s;
-                google::protobuf::TextFormat::ParseFieldValueFromString("\"" + input + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
-                input = s.b();
-                break;
+                default:
+                case BINARY:
+                    break;
+                    
+                case TEXTFORMAT:
+                {
+                    boost::trim_if(line, boost::is_any_of("\""));
+                    
+                    
+                    ByteString s;
+                    google::protobuf::TextFormat::ParseFieldValueFromString("\"" + line + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
+                    input += s.b();
+                    break;
+                }
+                case HEX:
+                    input += dccl::hex_decode(line);
+                    break;
+                case BASE64:
+                    std::stringstream instream(line);
+                    std::stringstream outstream;
+                    base64::decoder D;
+                    D.decode(instream, outstream);
+                    input += outstream.str();
+                    break;
             }
-            case HEX:
-                input = dccl::hex_decode(input);
-                break;
-            case BASE64:
-                std::string in = input;
-                std::stringstream instream(input);
-                std::stringstream outstream;
-                base64::decoder D;
-		D.decode(instream, outstream);
-                input = outstream.str();
-                break;
         }
+    }
 
-        boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(input);
+    while(!input.empty())
+    {
+        boost::shared_ptr<google::protobuf::Message> msg = dccl.decode<boost::shared_ptr<google::protobuf::Message> >(&input);
+        if(!cfg.omit_prefix)
+            std::cout << "|" << msg->GetDescriptor()->full_name() << "| ";
         std::cout << msg->ShortDebugString() << std::endl;
-    }    
+    }
 }
 
 void disp_proto(dccl::Codec& dccl, const Config& cfg)
@@ -286,7 +383,10 @@ void parse_options(int argc, char* argv[], Config* cfg)
     options.push_back(dccl::Option('l', "dlopen", required_argument, "Open this shared library containing compiled DCCL messages."));
     options.push_back(dccl::Option('m', "message", required_argument, "Message name to encode, decode or analyze."));
     options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
-    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'hex' is ascii-encoded hexadecimal (default), 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
+    options.push_back(dccl::Option(0, "format", required_argument, "Format for encode output or decode input: 'bin' (default) is raw binary, 'hex' is ascii-encoded hexadecimal, 'textformat' is a Google Protobuf TextFormat byte string, 'base64' is ascii-encoded base 64."));
+    options.push_back(dccl::Option('v', "verbose", no_argument, "Display extra debugging information."));
+    options.push_back(dccl::Option('o', "omit_prefix", no_argument, "Omit the DCCL type name prefix from the output of decode."));
+    options.push_back(dccl::Option('i', "id_codec", required_argument, "(Advanced) name for a nonstandard DCCL ID codec to use"));
     
     std::vector<option> long_options; 
     std::string opt_string;
@@ -314,6 +414,8 @@ void parse_options(int argc, char* argv[], Config* cfg)
                         cfg->format = HEX;
                     else if(!strcmp(optarg, "base64"))
                         cfg->format = BASE64;
+                    else if(!strcmp(optarg, "bin"))
+                        cfg->format = BINARY;
                     else
                     {
                         std::cerr << "Invalid format '" << optarg << "'" << std::endl;
@@ -336,6 +438,9 @@ void parse_options(int argc, char* argv[], Config* cfg)
             case 'l': cfg->dlopen.insert(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
             case 'f': cfg->proto_file.insert(optarg); break;                
+            case 'i': cfg->id_codec = optarg; break;                
+            case 'v': cfg->verbose = true; break;                
+            case 'o': cfg->omit_prefix = true; break;                
                 
             case 'h':
                 std::cout << "Usage of the Dynamic Compact Control Language (DCCL) tool ('dccl'): " << std::endl;

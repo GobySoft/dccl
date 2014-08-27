@@ -10,6 +10,8 @@ add_subdirectory(dccl_required_optional)
 add_subdirectory(dccl_static_methods)
 add_subdirectory(dccl_custom_id)
 add_subdirectory(dccl_numeric_bounds)
+add_subdirectory(dccl_codec_group)
+add_subdirectory(dccl_message_fix)
 
 if(build_ccl)
   add_subdirectory(dccl_ccl)
@@ -18,6 +20,9 @@ endif()
 if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
 endif()
+
+add_subdirectory(dccl_v2_all_fields)
+add_subdirectory(dccl_v2_header)
 
 add_subdirectory(bitset1)
 

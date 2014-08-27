@@ -24,6 +24,9 @@
 #ifndef DCCLFIELDCODECTYPED20120312H
 #define DCCLFIELDCODECTYPED20120312H
 
+
+#include <boost/type_traits.hpp>
+
 #include "field_codec.h"
 
 namespace dccl
@@ -72,7 +75,7 @@ namespace dccl
         class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     {
       public:
-      typedef WireType wire_type;
+typedef WireType wire_type;
       typedef FieldType field_type;
 
       public:
@@ -256,8 +259,14 @@ namespace dccl
       ///
       /// \param bits Bits to use for decoding.
       /// \return the decoded value.
-      virtual WireType decode(Bitset* bits)
-      { return decode_repeated(bits).at(0); }          
+      virtual WireType decode(dccl::Bitset* bits)
+      {
+          std::vector<WireType> return_vec = decode_repeated(bits);
+          if(return_vec.empty())
+              throw dccl::NullValueException();
+          else
+              return return_vec.at(0);
+      }
 
       /// \brief Calculate the size (in bits) of an empty field.
       ///

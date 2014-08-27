@@ -42,7 +42,9 @@
 #include "exception.h"
 #include "field_codec.h"
 #include "field_codec_fixed.h"
-#include "field_codec_default.h"
+
+#include "codecs2/field_codec_default_message.h"
+#include "codecs3/field_codec_default_message.h"
 #include "type_helper.h"
 #include "field_codec_manager.h"
  
@@ -84,7 +86,7 @@ namespace dccl
     class Codec
     {
       public:       
-        Codec(const std::string& dccl_id_codec = "_default_id_codec");
+        Codec(const std::string& dccl_id_codec = default_id_codec_name());
         virtual ~Codec()
         {
             for(std::vector<void *>::iterator it = dl_handles_.begin(),
@@ -181,6 +183,9 @@ namespace dccl
             return desc->options().GetExtension(dccl::msg).id();
         }            
 
+        /// \brief Provides a map of all loaded DCCL IDs to the equivalent Protobuf descriptor
+        const std::map<int32, const google::protobuf::Descriptor*>& loaded() const { return id2desc_; }
+        
         //@}
             
         /// \brief Provides the encoded size (in bytes) of msg. This is useful if you need to know the size of a message before encoding it (encoding it is generally much more expensive than calling this method)
@@ -237,8 +242,26 @@ namespace dccl
         /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
         template<typename GoogleProtobufMessagePointer>
             GoogleProtobufMessagePointer decode(std::string* bytes);
+      
+        static std::string default_id_codec_name()
+        { return "dccl.default.id"; }        
 
-        friend class DefaultMessageCodec;
+        
+        static std::string default_codec_name(int version = 2)
+        {
+            switch(version)
+            {
+                case 2:
+                    return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
+                default:
+                    return "dccl.default" + boost::lexical_cast<std::string>(version);
+            }
+            
+        }
+
+        
+        friend class v2::DefaultMessageCodec;
+        //friend class v3::DefaultMessageCodec;
       private:
         Codec(const Codec&);
         Codec& operator= (const Codec&);
@@ -253,11 +276,6 @@ namespace dccl
             return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
                                            id_codec_);
         }
-        
-        static const std::string& default_codec_name()
-        {
-            return dccl::DCCLFieldOptions::descriptor()->FindFieldByName("codec")->default_value_string();
-        }        
         
       private:
         // SHA256 hash of the crypto passphrase
@@ -287,7 +305,7 @@ GoogleProtobufMessagePointer dccl::Codec::decode(const std::string& bytes, bool 
     unsigned this_id = id(bytes);   
 
     if(!id2desc_.count(this_id))
-        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been validated. Call validate() before decoding this type."));
+        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));
                     
     // ownership of this object goes to the caller of decode()
     GoogleProtobufMessagePointer msg =

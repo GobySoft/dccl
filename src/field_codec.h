@@ -28,6 +28,7 @@
 #include <string>
 
 #include <boost/any.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -38,6 +39,7 @@
 #include "dccl/protobuf/option_extensions.pb.h"
 #include "type_helper.h"
 #include "field_codec_message_stack.h"
+#include "dccl/binary.h"
 
 namespace dccl
 {
@@ -94,7 +96,25 @@ namespace dccl
         // currently encoded or (partially) decoded root message
         static const google::protobuf::Message* root_message()
         { return root_message_; }
-            
+
+        static bool has_codec_group()
+        {
+            if(root_descriptor_)
+            {
+                return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group() ||
+                    root_descriptor_->options().GetExtension(dccl::msg).has_codec_version();
+            }
+            else
+                return false;
+        }
+
+        static std::string codec_group(const google::protobuf::Descriptor* desc);
+
+        static std::string codec_group()
+        { return codec_group(root_descriptor_); }
+
+        static int codec_version()
+        { return root_descriptor_->options().GetExtension(dccl::msg).codec_version(); }
             
         /// \brief the part of the message currently being encoded (head or body).
         static MessageStack::MessagePart part() { return part_; }
@@ -379,7 +399,6 @@ namespace dccl
         ///
         /// \return Minimum size of this field (in bits).
         virtual unsigned min_size() = 0;
-            
 
         virtual void any_encode_repeated(Bitset* bits, const std::vector<boost::any>& wire_values);
         virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* field_values);
@@ -404,29 +423,52 @@ namespace dccl
         void set_wire_type(google::protobuf::FieldDescriptor::CppType type)
         { wire_type_ = type; }
 
-        bool variable_size() { return max_size() != min_size(); }            
-            
+        bool variable_size()
+        {
+            if(this_field() && this_field()->is_repeated())
+                return max_size_repeated() != min_size_repeated();
+            else
+                return max_size() != min_size();
+        }            
+
+        int repeated_vector_field_size(int max_repeat)
+        { return dccl::ceil_log2(max_repeat+1); }
+
+        void disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits, int depth, int vector_size = -1);
+        
+        
       private:
         // sets global statics relating the current message begin processed
         // and unsets them on destruction
         struct BaseRAII
         {
             BaseRAII(MessageStack::MessagePart part,
-                     const google::protobuf::Message* root_message = 0)
+                     const google::protobuf::Descriptor* root_descriptor)
+                {
+                    FieldCodecBase::part_ = part;
+                    FieldCodecBase::root_message_ = 0;
+                    FieldCodecBase::root_descriptor_ = root_descriptor;
+                }
+
+            BaseRAII(MessageStack::MessagePart part,            
+                     const google::protobuf::Message* root_message)
                 {
                     FieldCodecBase::part_ = part;
                     FieldCodecBase::root_message_ = root_message;
+                    FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();                    
                 }
             ~BaseRAII()
                 {
                     FieldCodecBase::part_ = dccl::MessageStack::UNKNOWN;
                     FieldCodecBase::root_message_ = 0;
+                    FieldCodecBase::root_descriptor_ = 0;
                 }
         };
         
         
         static MessageStack::MessagePart part_;
         static const google::protobuf::Message* root_message_;
+        static const google::protobuf::Descriptor* root_descriptor_;
         
         std::string name_;
         google::protobuf::FieldDescriptor::Type field_type_;

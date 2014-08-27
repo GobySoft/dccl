@@ -1,22 +1,23 @@
-// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
-//                     GobySoft, LLC (2013-)
-//                     Massachusetts Institute of Technology (2007-2014)
+// Copyright 2009-2013 Toby Schneider (https://launchpad.net/~tes)
+//                     Massachusetts Institute of Technology (2007-)
+//                     Woods Hole Oceanographic Institution (2007-)
 //                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
+// 
 //
-// This file is part of the Dynamic Compact Control Language Applications
+// This file is part of the Dynamic Compact Control Language Library
 // ("DCCL").
 //
 // DCCL is free software: you can redistribute them and/or modify
-// them under the terms of the GNU General Public License as published by
+// them under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // DCCL is distributed in the hope that they will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 
@@ -136,9 +137,7 @@ int main(int argc, char* argv[])
     decode_check(bytes);
 
     // make sure DCCL defaults stay wire compatible
-
-    // v3
-    decode_check(dccl::hex_decode("047f277b16b95660c0b0188000d8c0132858800008002d4c6c2c4666264084c88cea2eb304cdeb67cc2b00b4464a805626e0014e800b2e60800378410b131b8b91990188109951dd6596a0b154cd7805506b9c2256caaf13094ba0978a6c248a692493c682fa6454a69a4e36a16e6ace37a918263616c330b1b118fd77ef9608a0bacbac574fa9cd1050fd6daa0500"));    
+    decode_check(dccl::hex_decode("047f277b9628060000b95660c0b0188000d8c0132858800008000dc2c4c6626466024488cca8ee324bd05c3f23af0000ad9112a09509788013e0820b18e0005ed0204c6c2c4666062042644675975982c65235f10a00ad718a5801000000905f27121600000000a0170050640300309201001a0b00007d320a0000a61a0070b20100a81b00d09c6f0000a0401026361643102636160300f0dfbd5b2280ea2e330f3da59a2100aabfa55a000000000000000000000000"));
 
     // run a bunch of tests with random strings
     std::string random = bytes;

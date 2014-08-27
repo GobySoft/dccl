@@ -6,6 +6,7 @@ message CustomMsg
   option (dccl.msg).id = 3;
   option (dccl.msg).max_bytes = 256;
   option (dccl.msg).codec = "custom_codec";
+  option (dccl.msg).codec_version = 3;
   
   optional uint32 a = 1;
   optional bool b = 2;
@@ -16,6 +17,7 @@ message CustomMsg2
 {
   option (dccl.msg).id = 4;
   option (dccl.msg).max_bytes = 256;
+  option (dccl.msg).codec_version = 3;
 
   optional CustomMsg msg = 1;
   repeated int32 c = 3 [(dccl.field).max=100,

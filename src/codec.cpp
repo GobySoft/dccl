@@ -38,7 +38,9 @@
 #endif // HAS_CRYPTOPP
 
 #include "dccl/codec.h"
-#include "field_codec_default.h"
+#include "dccl/codecs2/field_codec_default.h"
+#include "dccl/codecs3/field_codec_default.h"
+#include "dccl/field_codec_id.h"
 
 #include "dccl/protobuf/option_extensions.pb.h"
 
@@ -63,7 +65,7 @@ const unsigned full_width = 60;
 dccl::Codec::Codec(const std::string& dccl_id_codec)
     : id_codec_(dccl_id_codec)
 {
-    FieldCodecManager::add<DefaultIdentifierCodec>("_default_id_codec");
+    FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
     // make sure the id codec exists
     id_codec();
     set_default_codecs();
@@ -77,31 +79,59 @@ void dccl::Codec::set_default_codecs()
     if(!defaults_loaded)
     {
         using google::protobuf::FieldDescriptor;
-
-        FieldCodecManager::add<DefaultNumericFieldCodec<double> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<float> >(default_codec_name());
-        FieldCodecManager::add<DefaultBoolCodec>(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<int32> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<int64> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<uint32> >(default_codec_name());
-        FieldCodecManager::add<DefaultNumericFieldCodec<uint64> >(default_codec_name());
-        FieldCodecManager::add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
-        FieldCodecManager::add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
-        FieldCodecManager::add<DefaultEnumCodec>(default_codec_name());
-        FieldCodecManager::add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
         
-        FieldCodecManager::add<TimeCodec<uint64> >("_time");
-        FieldCodecManager::add<TimeCodec<int64> >("_time");
-        FieldCodecManager::add<TimeCodec<double> >("_time");
-        
-        FieldCodecManager::add<StaticCodec<std::string> >("_static");
-        FieldCodecManager::add<StaticCodec<double> >("_static");
-        FieldCodecManager::add<StaticCodec<float> >("_static");
-        FieldCodecManager::add<StaticCodec<int32> >("_static");
-        FieldCodecManager::add<StaticCodec<int64> >("_static");
-        FieldCodecManager::add<StaticCodec<uint32> >("_static");
-        FieldCodecManager::add<StaticCodec<uint64> >("_static");
+        // version 2
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<double> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<float> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultBoolCodec>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int32> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int64> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint32> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint64> >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
+        FieldCodecManager::add<v2::DefaultEnumCodec >(default_codec_name());
+        FieldCodecManager::add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
 
+        FieldCodecManager::add<v2::TimeCodec<uint64> >("dccl.time2");
+        FieldCodecManager::add<v2::TimeCodec<int64> >("dccl.time2");
+        FieldCodecManager::add<v2::TimeCodec<double> >("dccl.time2");
+
+        FieldCodecManager::add<v2::StaticCodec<std::string> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<double> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<float> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<int32> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<int64> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<uint32> >("dccl.static2");
+        FieldCodecManager::add<v2::StaticCodec<uint64> >("dccl.static2");
+
+        // version 3
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<double> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<float> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultBoolCodec>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int32> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int64> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint32> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint64> >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultEnumCodec >(default_codec_name(3));
+        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
+        
+        // for backwards compatibility
+        FieldCodecManager::add<v2::TimeCodec<uint64> >("_time");
+        FieldCodecManager::add<v2::TimeCodec<int64> >("_time");
+        FieldCodecManager::add<v2::TimeCodec<double> >("_time");
+
+        FieldCodecManager::add<v2::StaticCodec<std::string> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<double> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<float> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<int32> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<int64> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<uint32> >("_static");
+        FieldCodecManager::add<v2::StaticCodec<uint64> >("_static");
+        
+        
         defaults_loaded = true;
     }
 }
@@ -326,6 +356,9 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
             throw(Exception("Missing message option `(dccl.msg).id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (dccl.msg).id = 3\""));
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
             throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (dccl.msg).max_bytes = 32\""));
+
+        if(!desc->options().GetExtension(dccl::msg).has_codec_version())
+            dlog.is(WARN) && dlog << "** NOTE: No (dccl.msg).codec_version set for DCCL Message '" << desc->full_name() <<  "'. Unless you need backwards compatibility with Goby 2.0 (DCCL2), we highly recommend setting 'option (dccl.msg).codec_version = 3' in the message definition for " << desc->full_name() << " to use the default DCCL3 codecs. If you need compatibility with Goby 2.0, ignore this warning, or set 'option (dccl.msg).codec_version = 2' to remove this warning. **" << std::endl;
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
@@ -419,7 +452,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string guard = std::string((full_width-desc->full_name().size())/2, '=');
+            std::string message_name = boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string guard = std::string((full_width-message_name.size())/2, '=');
 
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -430,7 +464,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const int spaces = 8;
             std::string indent = std::string(spaces,' ');
             
-            *os << guard << " " << desc->full_name() << " " << guard << "\n"
+            *os << guard << " " << message_name << " " << guard << "\n"
                 << "Actual maximum size of message: " << byte_size << " bytes / "
                 << byte_size*BITS_IN_BYTE  << " bits\n"
                 << indent << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()) << id_bit_size << "\n"
@@ -443,7 +477,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string header_str = "Header";
             std::string header_guard = std::string((full_width-header_str.size())/2, '-');
             *os << header_guard << " " << header_str << " " << header_guard << std::endl;
-            *os << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()+spaces) << id_bit_size << "\n";
+            *os << bits_dccl_head_str << std::setfill('.') << std::setw(bits_width-bits_dccl_head_str.size()+spaces) << id_bit_size << " {" << id_codec()->name() <<  "}\n";
             codec->base_info(os, desc, MessageStack::HEAD);
 //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << std::endl;
             
@@ -459,6 +493,9 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
         {
             dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << " cannot provide information due to invalid configuration. Reason: " << e.what() << std::endl;
         }
+
+        os->flush();
+        
     }
     
 }
@@ -564,4 +601,5 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
         
 //        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
     }
+
 }

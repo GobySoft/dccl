@@ -38,9 +38,9 @@ std::map<std::string, std::map<std::string, dccl::Bitset> > dccl::Model::last_bi
 
 // shared library load
 
-extern "C"
+struct CodecLoader
 {
-    void dccl3_load(dccl::Codec* dccl)
+    CodecLoader()
     {
         using namespace dccl;
         
@@ -52,6 +52,29 @@ extern "C"
         FieldCodecManager::add<ArithmeticFieldCodec<float> >("_arithmetic");
         FieldCodecManager::add<ArithmeticFieldCodec<bool> >("_arithmetic");
         FieldCodecManager::add<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
+    }
+    ~CodecLoader()
+    {
+        using namespace dccl;
+        
+        FieldCodecManager::remove<ArithmeticFieldCodec<int32> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<int64> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<uint32> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<uint64> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<double> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<float> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<bool> >("_arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
+    }
+};
+    
+
+static CodecLoader loader;
+
+extern "C"
+{
+    void dccl3_load(dccl::Codec* dccl)
+    {
     }
 }
 

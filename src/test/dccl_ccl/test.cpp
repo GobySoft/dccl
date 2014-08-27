@@ -48,11 +48,9 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
 
-    {            
-	dccl::FieldCodecManager::add<dccl::LegacyCCLIdentifierCodec>("ccl_id_codec");
-        dccl::Codec codec("ccl_id_codec");
-
+    {
         void* dl_handle = dlopen("libdccl_ccl_compat" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
+        dccl::Codec codec("dccl.ccl.id");
 
         if(!dl_handle)
         {
