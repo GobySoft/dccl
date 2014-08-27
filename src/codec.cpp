@@ -356,6 +356,9 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
             throw(Exception("Missing message option `(dccl.msg).id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (dccl.msg).id = 3\""));
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
             throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (dccl.msg).max_bytes = 32\""));
+
+        if(!desc->options().GetExtension(dccl::msg).has_codec_version())
+            dlog.is(WARN) && dlog << "** NOTE: No (dccl.msg).codec_version set for DCCL Message '" << desc->full_name() <<  "'. Unless you need backwards compatibility with Goby 2.0 (DCCL2), we highly recommend setting 'option (dccl.msg).codec_version = 3' in the message definition for " << desc->full_name() << " to use the default DCCL3 codecs. If you need compatibility with Goby 2.0, ignore this warning, or set 'option (dccl.msg).codec_version = 2' to remove this warning. **" << std::endl;
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
