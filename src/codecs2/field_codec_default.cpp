@@ -26,7 +26,6 @@
 #include <algorithm>
 
 #include "dccl/codecs2/field_codec_default.h"
-#include "dccl/type_helper.h"
 #include "dccl/codec.h"
 
 using namespace dccl::logger;

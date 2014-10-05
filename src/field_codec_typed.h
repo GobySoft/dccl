@@ -32,8 +32,12 @@
 namespace dccl
 {
 
-    template <int> struct dummy { dummy(int) {} };
-        
+    namespace compiler
+    {
+        // workaround for compilers with broken template support (i.e. gcc 3.3)
+        template <int> struct dummy { dummy(int) {} };
+    }
+    
     /// \brief if WireType == FieldType, we don't have to add any more virtual methods for converting between them.
     template <typename WireType, typename FieldType, class Enable = void> 
         class FieldCodecSelector : public FieldCodecBase
@@ -160,12 +164,12 @@ typedef WireType wire_type;
       // we don't currently support type conversion (post_decode / pre_encode) of Message types
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<0> dummy = 0)
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, compiler::dummy<0> dummy = 0)
       {  *field_value = wire_value; }
       
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<1> dummy = 0)
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, compiler::dummy<1> dummy = 0)
       {
           try
           {
@@ -185,7 +189,7 @@ typedef WireType wire_type;
       
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<0> dummy = 0)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<0> dummy = 0)
       {
           try
           {
@@ -201,7 +205,7 @@ typedef WireType wire_type;
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<1> dummy = 0)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<1> dummy = 0)
       {
           try
           { *wire_value = decode(bits); }
@@ -312,7 +316,7 @@ typedef WireType wire_type;
 
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<0> dummy = 0)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, compiler::dummy<0> dummy = 0)
       {
           std::vector<WireType> decoded_msgs = decode_repeated(repeated_bits);
           wire_values->resize(decoded_msgs.size(), WireType());
@@ -326,7 +330,7 @@ typedef WireType wire_type;
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<1> dummy = 0)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, compiler::dummy<1> dummy = 0)
       {
           std::vector<WireType> decoded = decode_repeated(repeated_bits);
           wire_values->resize(decoded.size(), WireType());

@@ -37,8 +37,8 @@
 #include "common.h"
 #include "exception.h"
 #include "dccl/protobuf/option_extensions.pb.h"
-#include "type_helper.h"
-#include "field_codec_message_stack.h"
+#include "internal/type_helper.h"
+#include "internal/field_codec_message_stack.h"
 #include "dccl/binary.h"
 
 namespace dccl
@@ -75,7 +75,7 @@ namespace dccl
         ///
         /// \return FieldDescriptor for the current field or 0 if this codec is encoding the base message.
         const google::protobuf::FieldDescriptor* this_field() const 
-        { return !MessageStack::field_.empty() ? MessageStack::field_.back() : 0; }
+        { return !internal::MessageStack::field_.empty() ? internal::MessageStack::field_.back() : 0; }
             
         /// \brief Returns the Descriptor (message schema meta-data) for the immediate parent Message
         ///
@@ -91,7 +91,7 @@ namespace dccl
         /// returns Descriptor for Foo if this_field() == FieldDescriptor for bar
         /// returns Descriptor for FooBar if this_field() == FieldDescriptor for baz
         static const google::protobuf::Descriptor* this_descriptor()
-        { return !MessageStack::desc_.empty() ? MessageStack::desc_.back() : 0; }
+        { return !internal::MessageStack::desc_.empty() ? internal::MessageStack::desc_.back() : 0; }
 
         // currently encoded or (partially) decoded root message
         static const google::protobuf::Message* root_message()
@@ -117,7 +117,7 @@ namespace dccl
         { return root_descriptor_->options().GetExtension(dccl::msg).codec_version(); }
             
         /// \brief the part of the message currently being encoded (head or body).
-        static MessageStack::MessagePart part() { return part_; }
+        static MessagePart part() { return part_; }
             
         //@}
 
@@ -140,14 +140,14 @@ namespace dccl
         /// \param part Part of the message to encode
         void base_encode(Bitset* bits,
                          const google::protobuf::Message& msg,
-                         MessageStack::MessagePart part);
+                         MessagePart part);
 
         /// \brief Calculate the size (in bits) of a part of the base message when it is encoded
         ///
         /// \param bit_size Pointer to unsigned integer to store the result.
         /// \param msg the DCCL Message of which to calculate the size
         /// \param part part of the Message to calculate the size of
-        void base_size(unsigned* bit_size, const google::protobuf::Message& msg, MessageStack::MessagePart part);
+        void base_size(unsigned* bit_size, const google::protobuf::Message& msg, MessagePart part);
 
         /// \brief Decode part of a message
         ///
@@ -156,34 +156,34 @@ namespace dccl
         /// \param part part of the Message to decode         
         void base_decode(Bitset* bits,
                          google::protobuf::Message* msg,
-                         MessageStack::MessagePart part);
+                         MessagePart part);
 
         /// \brief Calculate the maximum size of a message given its Descriptor alone (no data)
         ///
         /// \param bit_size Pointer to unsigned integer to store calculated maximum size in bits.
         /// \param desc Descriptor to calculate the maximum size of. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
         /// \param part part of the Message 
-        void base_max_size(unsigned* bit_size, const google::protobuf::Descriptor* desc, MessageStack::MessagePart part);
+        void base_max_size(unsigned* bit_size, const google::protobuf::Descriptor* desc, MessagePart part);
 
         /// \brief Calculate the minimum size of a message given its Descriptor alone (no data)
         ///
         /// \param bit_size Pointer to unsigned integer to store calculated minimum size in bits.
         /// \param desc Descriptor to calculate the minimum size of. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
         /// \param part part of the Message
-        void base_min_size(unsigned* bit_size, const google::protobuf::Descriptor* desc, MessageStack::MessagePart part);
+        void base_min_size(unsigned* bit_size, const google::protobuf::Descriptor* desc, MessagePart part);
 
         /// \brief Validate this part of the message to make sure all required extensions are set.
         ///
         /// \param desc Descriptor to validate. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
         /// \param part part of the Message       
-        void base_validate(const google::protobuf::Descriptor* desc, MessageStack::MessagePart part);
+        void base_validate(const google::protobuf::Descriptor* desc, MessagePart part);
 
         /// \brief Get human readable information (size of fields, etc.) about this part of the DCCL message
         /// 
         /// \param os Pointer to stream to store this information
         /// \param desc Descriptor to get information on. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
         /// \param part the part of the Message to act on.
-        void base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessageStack::MessagePart part);
+        void base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessagePart part);
         //@}
             
         /// \name Field functions (primitive types and embedded messages)
@@ -442,7 +442,7 @@ namespace dccl
         // and unsets them on destruction
         struct BaseRAII
         {
-            BaseRAII(MessageStack::MessagePart part,
+            BaseRAII(MessagePart part,
                      const google::protobuf::Descriptor* root_descriptor)
                 {
                     FieldCodecBase::part_ = part;
@@ -450,7 +450,7 @@ namespace dccl
                     FieldCodecBase::root_descriptor_ = root_descriptor;
                 }
 
-            BaseRAII(MessageStack::MessagePart part,            
+            BaseRAII(MessagePart part,            
                      const google::protobuf::Message* root_message)
                 {
                     FieldCodecBase::part_ = part;
@@ -459,14 +459,14 @@ namespace dccl
                 }
             ~BaseRAII()
                 {
-                    FieldCodecBase::part_ = dccl::MessageStack::UNKNOWN;
+                    FieldCodecBase::part_ = dccl::UNKNOWN;
                     FieldCodecBase::root_message_ = 0;
                     FieldCodecBase::root_descriptor_ = 0;
                 }
         };
         
         
-        static MessageStack::MessagePart part_;
+        static MessagePart part_;
         static const google::protobuf::Message* root_message_;
         static const google::protobuf::Descriptor* root_descriptor_;
         
@@ -479,6 +479,7 @@ namespace dccl
     inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec )
     {
         using google::protobuf::FieldDescriptor;
+        using internal::TypeHelper;
         return os << "[FieldCodec '" << field_codec.name() << "']: field type: "
                   << TypeHelper::find(field_codec.field_type())->as_str()
                   << " (" << TypeHelper::find(FieldDescriptor::TypeToCppType(field_codec.field_type()))->as_str()
@@ -490,7 +491,7 @@ namespace dccl
                                     const std::type_info& got)
     {
         std::string e = "error " + action + ", expected: ";
-        e += expected.name();
+        e += expected.name();   
         e += ", got ";
         e += got.name();
         return Exception(e);

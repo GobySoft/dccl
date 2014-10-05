@@ -22,56 +22,56 @@
 
 
 #include "field_codec_message_stack.h"
-#include "field_codec.h"
+#include "dccl/field_codec.h"
 
-std::vector<const google::protobuf::FieldDescriptor*> dccl::MessageStack::field_;
-std::vector<const google::protobuf::Descriptor*> dccl::MessageStack::desc_;
-std::vector<dccl::MessageStack::MessagePart> dccl::MessageStack::parts_;
+std::vector<const google::protobuf::FieldDescriptor*> dccl::internal::MessageStack::field_;
+std::vector<const google::protobuf::Descriptor*> dccl::internal::MessageStack::desc_;
+std::vector<dccl::MessagePart> dccl::internal::MessageStack::parts_;
 
 //
 // MessageStack
 //
 
-void dccl::MessageStack::push(const google::protobuf::Descriptor* desc)
+void dccl::internal::MessageStack::push(const google::protobuf::Descriptor* desc)
  
 {
     desc_.push_back(desc);
     ++descriptors_pushed_;
 }
 
-void dccl::MessageStack::push(const google::protobuf::FieldDescriptor* field)
+void dccl::internal::MessageStack::push(const google::protobuf::FieldDescriptor* field)
 {
     field_.push_back(field);
     ++fields_pushed_;
 }
 
-void dccl::MessageStack::push(MessagePart part)
+void dccl::internal::MessageStack::push(MessagePart part)
 {
     parts_.push_back(part);
     ++parts_pushed_;
 }
 
 
-void dccl::MessageStack::__pop_desc()
+void dccl::internal::MessageStack::__pop_desc()
 {
     if(!desc_.empty())
         desc_.pop_back();
 }
 
-void dccl::MessageStack::__pop_field()
+void dccl::internal::MessageStack::__pop_field()
 {
     if(!field_.empty())
         field_.pop_back();
 }
 
-void dccl::MessageStack::__pop_parts()
+void dccl::internal::MessageStack::__pop_parts()
 {
     if(!parts_.empty())
         parts_.pop_back();
 }
 
 
-dccl::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
+dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
     : descriptors_pushed_(0),
       fields_pushed_(0),
       parts_pushed_(0)
@@ -100,7 +100,7 @@ dccl::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
     
 }
 
-dccl::MessageStack::~MessageStack()
+dccl::internal::MessageStack::~MessageStack()
 {
     for(int i = 0; i < fields_pushed_; ++i)
         __pop_field();

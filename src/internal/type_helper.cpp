@@ -23,26 +23,26 @@
 
 #include "type_helper.h"
 
-dccl::TypeHelper::TypeMap dccl::TypeHelper::type_map_;
-dccl::TypeHelper::CppTypeMap dccl::TypeHelper::cpptype_map_;
-dccl::TypeHelper::CustomMessageMap dccl::TypeHelper::custom_message_map_;
+dccl::internal::TypeHelper::TypeMap dccl::internal::TypeHelper::type_map_;
+dccl::internal::TypeHelper::CppTypeMap dccl::internal::TypeHelper::cpptype_map_;
+dccl::internal::TypeHelper::CustomMessageMap dccl::internal::TypeHelper::custom_message_map_;
 
 // used to construct, initialize, and delete a copy of this object
-boost::shared_ptr<dccl::TypeHelper> dccl::TypeHelper::inst_(new dccl::TypeHelper);
+boost::shared_ptr<dccl::internal::TypeHelper> dccl::internal::TypeHelper::inst_(new dccl::internal::TypeHelper);
 
 template<google::protobuf::FieldDescriptor::Type t>
-void insertType(dccl::TypeHelper::TypeMap* type_map)
-{ type_map->insert(std::make_pair(t, boost::shared_ptr<dccl::FromProtoTypeBase>(new dccl::FromProtoType<t>))); }
+void insertType(dccl::internal::TypeHelper::TypeMap* type_map)
+{ type_map->insert(std::make_pair(t, boost::shared_ptr<dccl::internal::FromProtoTypeBase>(new dccl::internal::FromProtoType<t>))); }
 
 template<google::protobuf::FieldDescriptor::CppType t>
-void insert(dccl::TypeHelper::CppTypeMap* cpptype_map)
-{ cpptype_map->insert(std::make_pair(t, boost::shared_ptr<dccl::FromProtoCppTypeBase>(new dccl::FromProtoCppType<t>))); }
+void insert(dccl::internal::TypeHelper::CppTypeMap* cpptype_map)
+{ cpptype_map->insert(std::make_pair(t, boost::shared_ptr<dccl::internal::FromProtoCppTypeBase>(new dccl::internal::FromProtoCppType<t>))); }
 
 
 //
 // TypeHelper
 //
-void dccl::TypeHelper::initialize()
+void dccl::internal::TypeHelper::initialize()
 {
     using namespace google::protobuf;
     using boost::shared_ptr;
@@ -86,7 +86,7 @@ void dccl::TypeHelper::initialize()
 
 }
 
-boost::shared_ptr<dccl::FromProtoCppTypeBase> dccl::TypeHelper::find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name /*= ""*/)
+boost::shared_ptr<dccl::internal::FromProtoCppTypeBase> dccl::internal::TypeHelper::find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name /*= ""*/)
 {
     if(!type_name.empty())
     {
@@ -103,7 +103,7 @@ boost::shared_ptr<dccl::FromProtoCppTypeBase> dccl::TypeHelper::find(google::pro
 }
 
 
-boost::shared_ptr<dccl::FromProtoTypeBase> dccl::TypeHelper::find(google::protobuf::FieldDescriptor::Type type)
+boost::shared_ptr<dccl::internal::FromProtoTypeBase> dccl::internal::TypeHelper::find(google::protobuf::FieldDescriptor::Type type)
 {
     TypeMap::iterator it = type_map_.find(type);
     if(it != type_map_.end())

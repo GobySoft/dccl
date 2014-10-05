@@ -1,7 +1,6 @@
 import "dccl/protobuf/option_extensions.proto";
 package dccl.test;
 
-
 message CustomMsg
 {
   option (dccl.msg).id = 3;

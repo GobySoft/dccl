@@ -38,14 +38,12 @@
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
 #include "logger.h"
-#include "protobuf_cpp_type_helpers.h"
 #include "exception.h"
 #include "field_codec.h"
 #include "field_codec_fixed.h"
 
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
-#include "type_helper.h"
 #include "field_codec_manager.h"
  
 /// Objects pertaining to acoustic communications (acomms)

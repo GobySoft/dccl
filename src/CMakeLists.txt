@@ -9,18 +9,18 @@ add_library(dccl
   logger.cpp
   codec.cpp
   field_codec.cpp
-  field_codec_message_stack.cpp
   field_codec_manager.cpp
   field_codec_id.cpp
+  bitset.cpp
+  dynamic_protobuf_manager.cpp
   codecs2/field_codec_default.cpp
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
   codecs3/field_codec_default.cpp
-  type_helper.cpp
-  bitset.cpp
-  dynamic_protobuf_manager.cpp
   b64/cencode.c
   b64/cdecode.c
+  internal/type_helper.cpp
+  internal/field_codec_message_stack.cpp
   ${PROTO_SRCS} ${PROTO_HDRS}
   )
 

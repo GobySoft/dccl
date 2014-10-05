@@ -30,15 +30,18 @@
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/logical.hpp>
 
-#include "type_helper.h"
+#include "internal/type_helper.h"
 #include "field_codec.h"
 #include "dccl/logger.h"
 
 namespace dccl
 {
     // See Bug #1089061, and Boost MPL Documentation section 3.4 (compiler workarounds)
-    template <int> struct dummy_fcm { dummy_fcm(int) {} };
-
+    namespace compiler
+    {
+        template <int> struct dummy_fcm { dummy_fcm(int) {} };
+    }
+    
     /// \todo (tes) Make sanity check for newly added FieldCodecs
     class FieldCodecManager
     {
@@ -58,7 +61,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
             >,
             void>::type 
-            static add(const std::string& name, dummy_fcm<0> dummy_fcm = 0);
+            static add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0);
                 
         /// \brief Add a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
         ///
@@ -71,7 +74,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message,typename Codec::wire_type> >
             >,
             void>::type
-            static add(const std::string& name, dummy_fcm<1> dummy_fcm = 0);
+            static add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0);
                 
         /// \brief Add a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
         ///
@@ -92,7 +95,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
             >,
             void>::type 
-            static remove(const std::string& name, dummy_fcm<0> dummy_fcm = 0);
+            static remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0);
                 
         /// \brief Remove a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
         ///
@@ -105,7 +108,7 @@ namespace dccl
             boost::mpl::not_<boost::is_same<google::protobuf::Message,typename Codec::wire_type> >
             >,
             void>::type
-            static remove(const std::string& name, dummy_fcm<1> dummy_fcm = 0);
+            static remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0);
                 
         /// \brief Remove a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
         ///
@@ -161,7 +164,7 @@ namespace dccl
 
         static void clear()
         {
-            TypeHelper::reset();
+            internal::TypeHelper::reset();
             codecs_.clear();
         }
         
@@ -233,9 +236,9 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
 boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
 >,
 void>::type 
-dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<0> dummy_fcm)
+    dccl::FieldCodecManager::add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
 {
-    TypeHelper::add<typename Codec::wire_type>();
+    internal::TypeHelper::add<typename Codec::wire_type>();
     add_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
                            google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                            google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
@@ -248,7 +251,7 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
     boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
     >,
     void>::type
-    dccl::FieldCodecManager::add(const std::string& name, dummy_fcm<1> dummy_fcm)
+    dccl::FieldCodecManager::add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm)
 {
     add_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
@@ -264,8 +267,8 @@ template<typename WireType, typename FieldType, class Codec>
     void dccl::FieldCodecManager::add_all_types(const std::string& name)
 {
     using google::protobuf::FieldDescriptor;
-    const FieldDescriptor::CppType cpp_field_type = ToProtoCppType<FieldType>::as_enum();
-    const FieldDescriptor::CppType cpp_wire_type = ToProtoCppType<WireType>::as_enum();
+    const FieldDescriptor::CppType cpp_field_type = internal::ToProtoCppType<FieldType>::as_enum();
+    const FieldDescriptor::CppType cpp_wire_type = internal::ToProtoCppType<WireType>::as_enum();
 
     for(int i = 1, n = FieldDescriptor::MAX_TYPE; i <= n; ++i)
     {
@@ -316,9 +319,9 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
 boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
 >,
 void>::type 
-dccl::FieldCodecManager::remove(const std::string& name, dummy_fcm<0> dummy_fcm)
+    dccl::FieldCodecManager::remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
 {
-    TypeHelper::remove<typename Codec::wire_type>();
+    internal::TypeHelper::remove<typename Codec::wire_type>();
     remove_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
                               google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                               google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
@@ -331,7 +334,7 @@ boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
     boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type> >
     >,
     void>::type
-    dccl::FieldCodecManager::remove(const std::string& name, dummy_fcm<1> dummy_fcm)
+    dccl::FieldCodecManager::remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm)
 {
     remove_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
@@ -347,8 +350,8 @@ template<typename WireType, typename FieldType, class Codec>
     void dccl::FieldCodecManager::remove_all_types(const std::string& name)
 {
     using google::protobuf::FieldDescriptor;
-    const FieldDescriptor::CppType cpp_field_type = ToProtoCppType<FieldType>::as_enum();
-    const FieldDescriptor::CppType cpp_wire_type = ToProtoCppType<WireType>::as_enum();
+    const FieldDescriptor::CppType cpp_field_type = internal::ToProtoCppType<FieldType>::as_enum();
+    const FieldDescriptor::CppType cpp_wire_type = internal::ToProtoCppType<WireType>::as_enum();
 
     for(int i = 1, n = FieldDescriptor::MAX_TYPE; i <= n; ++i)
     {
