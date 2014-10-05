@@ -38,10 +38,15 @@ install(TARGETS dccl EXPORT dccl-config
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib) 
 
+set(DCCL_EXPORT_TARGETS dccl)
+
 option(build_arithmetic "Build arithmetic coders shared library" ON)
 option(build_ccl "Build Compact Control Language (CCL) legacy support shared library" ON)
+option(build_doc "Build documentation (requires Doxygen [and LaTeX for PDF generation])" OFF)
 
-set(DCCL_EXPORT_TARGETS dccl)
+if(build_doc)
+  add_subdirectory(doc)
+endif()
 
 if(build_ccl)
   add_subdirectory(ccl)

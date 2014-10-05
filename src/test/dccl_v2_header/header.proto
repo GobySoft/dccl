@@ -1,4 +1,5 @@
 import "dccl/protobuf/option_extensions.proto";
+package dccl.test;
 
 // required fields will be filled in for you by ApplicationBase
 // if you choose not to do so yourself

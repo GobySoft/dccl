@@ -30,6 +30,7 @@
 #include "dccl/ccl/ccl_compatibility.h"
 #include "test.pb.h"
 
+using namespace dccl::test;
 
 using dccl::operator<<;
 

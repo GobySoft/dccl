@@ -28,6 +28,7 @@
 #include "dccl/binary.h"
 
 #include "test.pb.h"
+using namespace dccl::test;
 
 using dccl::operator<<;
 

@@ -20,6 +20,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dccl/logger.h"
+using namespace dccl::test;
 
 /// asserts false if called - used for testing proper short-circuiting of logger calls
 inline std::ostream& stream_assert(std::ostream & os)

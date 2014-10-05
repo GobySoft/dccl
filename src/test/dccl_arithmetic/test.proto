@@ -1,5 +1,6 @@
 import "dccl/protobuf/option_extensions.proto";
 import "dccl/arithmetic/protobuf/arithmetic_extensions.proto";
+package dccl.test;
 
 
 enum Enum1

@@ -33,6 +33,7 @@
 #include "dccl/binary.h"
 
 using dccl::operator<<;
+using namespace dccl::test;
 
 
 

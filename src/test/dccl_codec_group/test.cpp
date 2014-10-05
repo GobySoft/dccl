@@ -32,6 +32,7 @@
 
 #include "test.pb.h"
 #include "dccl/binary.h"
+using namespace dccl::test;
 
 template <typename Msg>
 void check(double val, bool should_pass);

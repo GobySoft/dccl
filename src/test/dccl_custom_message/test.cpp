@@ -29,6 +29,7 @@
 
 
 #include "dccl/binary.h"
+using namespace dccl::test;
 
 using dccl::operator<<;
 using dccl::Bitset;

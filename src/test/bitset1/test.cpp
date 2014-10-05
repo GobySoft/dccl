@@ -26,6 +26,7 @@
 #include "dccl/binary.h"
 #include "dccl/bitset.h"
 
+using namespace dccl::test;
 using dccl::Bitset;
 
 int main()
