@@ -62,15 +62,29 @@ const unsigned full_width = 60;
 // Codec
 //
 
-dccl::Codec::Codec(const std::string& dccl_id_codec)
+dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
     : id_codec_(dccl_id_codec)
 {
+    set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
+
+    if(!library_path.empty())
+        load_library(library_path);
     // make sure the id codec exists
     id_codec();
-    set_default_codecs();
 }
 
+dccl::Codec::~Codec()
+{
+    for(std::vector<void *>::iterator it = dl_handles_.begin(),
+            n = dl_handles_.end(); it != n; ++it)
+    {
+        unload_library(*it);
+        dlclose(*it);
+    }
+}
+
+    
 void dccl::Codec::set_default_codecs()
 {
     // only need to load these once into the static FieldCodecManager
@@ -404,6 +418,22 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
     }
 }
 
+
+void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
+{
+    unsigned dccl_id = id(desc);
+    if(id2desc_.count(dccl_id)) 
+    {
+        id2desc_.erase(dccl_id);
+    }
+    else
+    {
+        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": is not loaded. Ignoring unload request." << std::endl;
+        return;
+    }
+    
+}
+
 unsigned dccl::Codec::size(const google::protobuf::Message& msg)
 {
     const Descriptor* desc = msg.GetDescriptor();
@@ -553,13 +583,25 @@ void dccl::Codec::load_library(const std::string& library_path)
 void dccl::Codec::load_library(void* dl_handle)
 {
     if(!dl_handle)
-        throw(Exception("Null shared library handle passed to load_shared_library_codecs"));
+        throw(Exception("Null shared library handle passed to load_library"));
     
     // load any shared library codecs
     void (*dccl_load_ptr)(dccl::Codec*);
     dccl_load_ptr = (void (*)(dccl::Codec*)) dlsym(dl_handle, "dccl3_load");
     if(dccl_load_ptr)
         (*dccl_load_ptr)(this);
+}
+
+void dccl::Codec::unload_library(void* dl_handle)
+{
+    if(!dl_handle)
+        throw(Exception("Null shared library handle passed to unload_library"));
+    
+    // unload any shared library codecs
+    void (*dccl_unload_ptr)(dccl::Codec*);
+    dccl_unload_ptr = (void (*)(dccl::Codec*)) dlsym(dl_handle, "dccl3_unload");
+    if(dccl_unload_ptr)
+        (*dccl_unload_ptr)(this);
 }
 
 

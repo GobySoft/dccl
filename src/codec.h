@@ -46,51 +46,26 @@
 #include "codecs3/field_codec_default_message.h"
 #include "field_codec_manager.h"
  
-/// Objects pertaining to acoustic communications (acomms)
+/// Dynamic Compact Control Language namespace
 namespace dccl
 {
     class FieldCodec;
   
-    /// \class Codec dccl/dccl.h dccl/dccl.h
-    /// \brief provides an API to the Dynamic CCL Codec.
-    /// \ingroup acomms_api
-    /// \ingroup dccl_api
-    /// \sa acomms_dccl.proto and acomms_modem_message.proto for definition of Google Protocol Buffers messages (namespace dccl::protobuf).
-    ///
-    /// Simple usage example:
-    /// 1. Define a Google Protobuf message with DCCL extensions:
-    /// \verbinclude simple.proto
-    /// 2. Write a bit of code like this:
-    /// \code
-    /// dccl::Codec* dccl = dccl::Codec::get();
-    /// dccl->load<Simple>();
-    /// Simple message_out;
-    /// message_out.set_telegram("Hello!");
-    /// std::string bytes;
-    /// dccl->encode(&bytes, message);
-    /// \\ send bytes across some network
-    /// Simple message_in;
-    /// dccl->decode(bytes&, message_in);
-    /// \endcode
-    /// \example acomms/chat/chat.cpp
-    /// \example acomms/dccl/dccl_simple/dccl_simple.cpp
-    /// simple.proto
-    /// \verbinclude simple.proto
-    /// dccl_simple.cpp
-    /// \example acomms/dccl/two_message/two_message.cpp
-    /// two_message.proto
-    /// \verbinclude two_message.proto
-    /// two_message.cpp
+    /// \class Codec 
+    /// \brief The Dynamic CCL enCODer/DECoder. This is the main class you will use to load, encode and decode DCCL messages. Many users will not need any other DCCL classes than this one.
     class Codec
     {
       public:       
-        Codec(const std::string& dccl_id_codec = default_id_codec_name());
-        virtual ~Codec()
-        {
-            for(std::vector<void *>::iterator it = dl_handles_.begin(),
-                    n = dl_handles_.end(); it != n; ++it)
-                dlclose(*it);
-        }
+        /// \brief Instantiate a Codec, optionally with a non-default identifier field codec.
+        ///
+        /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManager::add and then instantiate Codec with that name.
+        /// \param dccl_id_codec Name passed to FieldCodecManager::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+        /// \param library_path Library to load using load_library (this library would typically load the identifier codec referenced in dccl_id_codec).
+        Codec(const std::string& dccl_id_codec = default_id_codec_name(),
+              const std::string& library_path = "");
+
+        /// \brief Destructor
+        virtual ~Codec();
 
         /// \brief Load any codecs present in the given shared library handle
         ///
@@ -98,6 +73,7 @@ namespace dccl
         /// (declared extern "C") called "dccl3_load" with the signature
         /// void dccl3_load(dccl::Codec* codec)
         void load_library(void* dl_handle);
+        void unload_library(void* dl_handle);
 
         /// \brief Load any codecs present in the given shared library handle
         ///
@@ -114,11 +90,17 @@ namespace dccl
             void load()
         { load(ProtobufMessage::descriptor()); }
 
+        template<typename ProtobufMessage>
+            void unload()
+        { unload(ProtobufMessage::descriptor()); }
+
+        
         /// \brief An alterative form for loading and validating messages for message types <i>not</i> known at compile-time ("dynamic").
         ///
         /// \param desc The Google Protobuf "Descriptor" (meta-data) of the message to validate.
         /// \throw dccl::Exception if message is invalid.
         void load(const google::protobuf::Descriptor* desc);
+        void unload(const google::protobuf::Descriptor* desc);
 
         void set_crypto_passphrase(const std::string& passphrase,
                                    const std::set<unsigned>& do_not_encrypt_ids_ = std::set<unsigned>());

@@ -29,72 +29,67 @@
 #include "WhoiUtil.h"
 #include "dccl/codec.h"
 
-// shared library load
-
-namespace dccl
-{
-    namespace legacyccl
-    {
-        struct CodecLoader
-        {
-            CodecLoader()
-                {
-                    using namespace dccl;
-                    using namespace dccl::legacyccl;
-                    FieldCodecManager::add<IdentifierCodec>("dccl.ccl.id");
-
-                    FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
-                    FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
-                    FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
-                    FieldCodecManager::add<HeadingCodec>("_ccl_heading");
-                    FieldCodecManager::add<DepthCodec>("_ccl_depth");
-                    FieldCodecManager::add<VelocityCodec>("_ccl_velocity");
-                    FieldCodecManager::add<WattsCodec>("_ccl_watts");
-                    FieldCodecManager::add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-                    FieldCodecManager::add<SpeedCodec>("_ccl_speed");
-                    FieldCodecManager::add<HiResAltitudeCodec>("_ccl_hires_altitude");
-                    FieldCodecManager::add<TemperatureCodec>("_ccl_temperature");
-                    FieldCodecManager::add<SalinityCodec>("_ccl_salinity");
-                    FieldCodecManager::add<SoundSpeedCodec>("_ccl_sound_speed");
-                }
-            ~CodecLoader()
-                {
-                    using namespace dccl;
-                    using namespace dccl::legacyccl;
-                    FieldCodecManager::remove<IdentifierCodec>("dccl.ccl.id");
-
-                    FieldCodecManager::remove<LatLonCompressedCodec>("_ccl_latloncompressed");
-                    FieldCodecManager::remove<FixAgeCodec>("_ccl_fix_age");
-                    FieldCodecManager::remove<TimeDateCodec>("_ccl_time_date");
-                    FieldCodecManager::remove<HeadingCodec>("_ccl_heading");
-                    FieldCodecManager::remove<DepthCodec>("_ccl_depth");
-                    FieldCodecManager::remove<VelocityCodec>("_ccl_velocity");
-                    FieldCodecManager::remove<WattsCodec>("_ccl_watts");
-                    FieldCodecManager::remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-                    FieldCodecManager::remove<SpeedCodec>("_ccl_speed");
-                    FieldCodecManager::remove<HiResAltitudeCodec>("_ccl_hires_altitude");
-                    FieldCodecManager::remove<TemperatureCodec>("_ccl_temperature");
-                    FieldCodecManager::remove<SalinityCodec>("_ccl_salinity");
-                    FieldCodecManager::remove<SoundSpeedCodec>("_ccl_sound_speed");
-                }
-        };
-    }
-}
-
-static dccl::legacyccl::CodecLoader loader;
-
 extern "C"
 {
     void dccl3_load(dccl::Codec* dccl)
-    {        
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATEmpty>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATRedirect>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATBathy>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATCTD>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATState>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATCommand>();
-        dccl->load<dccl::legacyccl::protobuf::CCLMDATError>();
+    {
+        using namespace dccl;
+        using namespace dccl::legacyccl;
+        
+        FieldCodecManager::add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");   
+        FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
+        FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
+        FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
+        FieldCodecManager::add<HeadingCodec>("_ccl_heading");
+        FieldCodecManager::add<DepthCodec>("_ccl_depth");
+        FieldCodecManager::add<VelocityCodec>("_ccl_velocity");
+        FieldCodecManager::add<WattsCodec>("_ccl_watts");
+        FieldCodecManager::add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        FieldCodecManager::add<SpeedCodec>("_ccl_speed");
+        FieldCodecManager::add<HiResAltitudeCodec>("_ccl_hires_altitude");
+        FieldCodecManager::add<TemperatureCodec>("_ccl_temperature");
+        FieldCodecManager::add<SalinityCodec>("_ccl_salinity");
+        FieldCodecManager::add<SoundSpeedCodec>("_ccl_sound_speed");
+                    
+        dccl->load<protobuf::CCLMDATEmpty>();
+        dccl->load<protobuf::CCLMDATRedirect>();
+        dccl->load<protobuf::CCLMDATBathy>();
+        dccl->load<protobuf::CCLMDATCTD>();
+        dccl->load<protobuf::CCLMDATState>();
+        dccl->load<protobuf::CCLMDATCommand>();
+        dccl->load<protobuf::CCLMDATError>();
     }
+    
+    void dccl3_unload(dccl::Codec* dccl)
+    {
+        using namespace dccl;
+        using namespace dccl::legacyccl;
+
+        dccl->unload<protobuf::CCLMDATEmpty>();
+        dccl->unload<protobuf::CCLMDATRedirect>();
+        dccl->unload<protobuf::CCLMDATBathy>();
+        dccl->unload<protobuf::CCLMDATCTD>();
+        dccl->unload<protobuf::CCLMDATState>();
+        dccl->unload<protobuf::CCLMDATCommand>();
+        dccl->unload<protobuf::CCLMDATError>();
+
+        FieldCodecManager::remove<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
+        FieldCodecManager::remove<LatLonCompressedCodec>("_ccl_latloncompressed");
+        FieldCodecManager::remove<FixAgeCodec>("_ccl_fix_age");
+        FieldCodecManager::remove<TimeDateCodec>("_ccl_time_date");
+        FieldCodecManager::remove<HeadingCodec>("_ccl_heading");
+        FieldCodecManager::remove<DepthCodec>("_ccl_depth");
+        FieldCodecManager::remove<VelocityCodec>("_ccl_velocity");
+        FieldCodecManager::remove<WattsCodec>("_ccl_watts");
+        FieldCodecManager::remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        FieldCodecManager::remove<SpeedCodec>("_ccl_speed");
+        FieldCodecManager::remove<HiResAltitudeCodec>("_ccl_hires_altitude");
+        FieldCodecManager::remove<TemperatureCodec>("_ccl_temperature");
+        FieldCodecManager::remove<SalinityCodec>("_ccl_salinity");
+        FieldCodecManager::remove<SoundSpeedCodec>("_ccl_sound_speed");
+                    
+    }
+
 }
 
 //
