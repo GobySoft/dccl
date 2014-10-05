@@ -36,40 +36,42 @@ struct CodecLoader
     CodecLoader()
         {
             using namespace dccl;
-            FieldCodecManager::add<LegacyCCLIdentifierCodec>("dccl.ccl.id");
+            using namespace dccl::legacyccl;
+            FieldCodecManager::add<IdentifierCodec>("dccl.ccl.id");
 
-            FieldCodecManager::add<LegacyCCLLatLonCompressedCodec>("_ccl_latloncompressed");
-            FieldCodecManager::add<LegacyCCLFixAgeCodec>("_ccl_fix_age");
-            FieldCodecManager::add<LegacyCCLTimeDateCodec>("_ccl_time_date");
-            FieldCodecManager::add<LegacyCCLHeadingCodec>("_ccl_heading");
-            FieldCodecManager::add<LegacyCCLDepthCodec>("_ccl_depth");
-            FieldCodecManager::add<LegacyCCLVelocityCodec>("_ccl_velocity");
-            FieldCodecManager::add<LegacyCCLWattsCodec>("_ccl_watts");
-            FieldCodecManager::add<LegacyCCLGFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-            FieldCodecManager::add<LegacyCCLSpeedCodec>("_ccl_speed");
-            FieldCodecManager::add<LegacyCCLHiResAltitudeCodec>("_ccl_hires_altitude");
-            FieldCodecManager::add<LegacyCCLTemperatureCodec>("_ccl_temperature");
-            FieldCodecManager::add<LegacyCCLSalinityCodec>("_ccl_salinity");
-            FieldCodecManager::add<LegacyCCLSoundSpeedCodec>("_ccl_sound_speed");
+            FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
+            FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
+            FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
+            FieldCodecManager::add<HeadingCodec>("_ccl_heading");
+            FieldCodecManager::add<DepthCodec>("_ccl_depth");
+            FieldCodecManager::add<VelocityCodec>("_ccl_velocity");
+            FieldCodecManager::add<WattsCodec>("_ccl_watts");
+            FieldCodecManager::add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+            FieldCodecManager::add<SpeedCodec>("_ccl_speed");
+            FieldCodecManager::add<HiResAltitudeCodec>("_ccl_hires_altitude");
+            FieldCodecManager::add<TemperatureCodec>("_ccl_temperature");
+            FieldCodecManager::add<SalinityCodec>("_ccl_salinity");
+            FieldCodecManager::add<SoundSpeedCodec>("_ccl_sound_speed");
         }
     ~CodecLoader()
         {
             using namespace dccl;
-            FieldCodecManager::remove<LegacyCCLIdentifierCodec>("dccl.ccl.id");
+            using namespace dccl::legacyccl;
+            FieldCodecManager::remove<IdentifierCodec>("dccl.ccl.id");
 
-            FieldCodecManager::remove<LegacyCCLLatLonCompressedCodec>("_ccl_latloncompressed");
-            FieldCodecManager::remove<LegacyCCLFixAgeCodec>("_ccl_fix_age");
-            FieldCodecManager::remove<LegacyCCLTimeDateCodec>("_ccl_time_date");
-            FieldCodecManager::remove<LegacyCCLHeadingCodec>("_ccl_heading");
-            FieldCodecManager::remove<LegacyCCLDepthCodec>("_ccl_depth");
-            FieldCodecManager::remove<LegacyCCLVelocityCodec>("_ccl_velocity");
-            FieldCodecManager::remove<LegacyCCLWattsCodec>("_ccl_watts");
-            FieldCodecManager::remove<LegacyCCLGFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-            FieldCodecManager::remove<LegacyCCLSpeedCodec>("_ccl_speed");
-            FieldCodecManager::remove<LegacyCCLHiResAltitudeCodec>("_ccl_hires_altitude");
-            FieldCodecManager::remove<LegacyCCLTemperatureCodec>("_ccl_temperature");
-            FieldCodecManager::remove<LegacyCCLSalinityCodec>("_ccl_salinity");
-            FieldCodecManager::remove<LegacyCCLSoundSpeedCodec>("_ccl_sound_speed");
+            FieldCodecManager::remove<LatLonCompressedCodec>("_ccl_latloncompressed");
+            FieldCodecManager::remove<FixAgeCodec>("_ccl_fix_age");
+            FieldCodecManager::remove<TimeDateCodec>("_ccl_time_date");
+            FieldCodecManager::remove<HeadingCodec>("_ccl_heading");
+            FieldCodecManager::remove<DepthCodec>("_ccl_depth");
+            FieldCodecManager::remove<VelocityCodec>("_ccl_velocity");
+            FieldCodecManager::remove<WattsCodec>("_ccl_watts");
+            FieldCodecManager::remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+            FieldCodecManager::remove<SpeedCodec>("_ccl_speed");
+            FieldCodecManager::remove<HiResAltitudeCodec>("_ccl_hires_altitude");
+            FieldCodecManager::remove<TemperatureCodec>("_ccl_temperature");
+            FieldCodecManager::remove<SalinityCodec>("_ccl_salinity");
+            FieldCodecManager::remove<SoundSpeedCodec>("_ccl_sound_speed");
         }
 };
     
@@ -79,26 +81,26 @@ extern "C"
 {
     void dccl3_load(dccl::Codec* dccl)
     {        
-        dccl->load<dccl::protobuf::CCLMDATEmpty>();
-        dccl->load<dccl::protobuf::CCLMDATRedirect>();
-        dccl->load<dccl::protobuf::CCLMDATBathy>();
-        dccl->load<dccl::protobuf::CCLMDATCTD>();
-        dccl->load<dccl::protobuf::CCLMDATState>();
-        dccl->load<dccl::protobuf::CCLMDATCommand>();
-        dccl->load<dccl::protobuf::CCLMDATError>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATEmpty>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATRedirect>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATBathy>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATCTD>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATState>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATCommand>();
+        dccl->load<dccl::legacyccl::protobuf::CCLMDATError>();
     }
 }
 
 //
-// LegacyCCLLatLonCompressedCodec
+// LatLonCompressedCodec
 //
 
-dccl::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode()
+dccl::Bitset dccl::legacyccl::LatLonCompressedCodec::encode()
 {
     return encode(0);
 }
 
-dccl::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode(const double& wire_value)
+dccl::Bitset dccl::legacyccl::LatLonCompressedCodec::encode(const double& wire_value)
 {
     LONG_AND_COMP encoded;
     encoded.as_long = 0;
@@ -106,28 +108,28 @@ dccl::Bitset dccl::LegacyCCLLatLonCompressedCodec::encode(const double& wire_val
     return dccl::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
 }
 
-double dccl::LegacyCCLLatLonCompressedCodec::decode(Bitset* bits)
+double dccl::legacyccl::LatLonCompressedCodec::decode(Bitset* bits)
 {    
     LONG_AND_COMP decoded;
     decoded.as_long = static_cast<long>(bits->to_ulong());
     return Decode_latlon(decoded.as_compressed);
 }
 
-unsigned dccl::LegacyCCLLatLonCompressedCodec::size()
+unsigned dccl::legacyccl::LatLonCompressedCodec::size()
 {
     return LATLON_COMPRESSED_BYTE_SIZE * BITS_IN_BYTE;
 }
 
 //
-// LegacyCCLTimeDateCodec
+// TimeDateCodec
 //
 
-dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode()
+dccl::Bitset dccl::legacyccl::TimeDateCodec::encode()
 {
     return encode(0);
 }
 
-dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const dccl::uint64& wire_value)
+dccl::Bitset dccl::legacyccl::TimeDateCodec::encode(const dccl::uint64& wire_value)
 {
     TIME_DATE_LONG encoded;
     encoded.as_long = 0;
@@ -135,7 +137,7 @@ dccl::Bitset dccl::LegacyCCLTimeDateCodec::encode(const dccl::uint64& wire_value
     return dccl::Bitset(size(), static_cast<unsigned long>(encoded.as_long));
 }
 
-dccl::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
+dccl::uint64 dccl::legacyccl::TimeDateCodec::decode(Bitset* bits)
 {
     TIME_DATE_LONG decoded;
     decoded.as_long = bits->to_ulong();
@@ -154,7 +156,7 @@ dccl::uint64 dccl::LegacyCCLTimeDateCodec::decode(Bitset* bits)
     return to_uint64_time(time_date);
 }
 
-dccl::uint64 dccl::LegacyCCLTimeDateCodec::to_uint64_time(const boost::posix_time::ptime& time_date)
+dccl::uint64 dccl::legacyccl::TimeDateCodec::to_uint64_time(const boost::posix_time::ptime& time_date)
 {
             
     using namespace boost::posix_time;
@@ -178,47 +180,47 @@ dccl::uint64 dccl::LegacyCCLTimeDateCodec::to_uint64_time(const boost::posix_tim
 }
 
 
-unsigned dccl::LegacyCCLTimeDateCodec::size()
+unsigned dccl::legacyccl::TimeDateCodec::size()
 {
     return TIME_DATE_COMPRESSED_BYTE_SIZE * BITS_IN_BYTE;
 }
 
 
 //
-// LegacyCCLHeadingCodec
+// HeadingCodec
 //
-dccl::Bitset dccl::LegacyCCLHeadingCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::HeadingCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_heading(wire_value)); } 
 
-float dccl::LegacyCCLHeadingCodec::decode(Bitset* bits)
+float dccl::legacyccl::HeadingCodec::decode(Bitset* bits)
 { return Decode_heading(bits->to_ulong()); }
 
 
 //
-// LegacyCCLDepthCodec
+// DepthCodec
 //
-dccl::Bitset dccl::LegacyCCLDepthCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::DepthCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_depth(wire_value)); } 
 
-float dccl::LegacyCCLDepthCodec::decode(Bitset* bits)
+float dccl::legacyccl::DepthCodec::decode(Bitset* bits)
 { return Decode_depth(bits->to_ulong()); }
 
 //
-// LegacyCCLVelocityCodec
+// VelocityCodec
 //
-dccl::Bitset dccl::LegacyCCLVelocityCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::VelocityCodec::encode(const float& wire_value)
 {
     return dccl::Bitset(size(), Encode_est_velocity(wire_value));
 } 
 
-float dccl::LegacyCCLVelocityCodec::decode(Bitset* bits)
+float dccl::legacyccl::VelocityCodec::decode(Bitset* bits)
 { return Decode_est_velocity(bits->to_ulong()); }
 
 
 //
-// LegacyCCLSpeedCodec
+// SpeedCodec
 //
-dccl::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::SpeedCodec::encode(const float& wire_value)
 {
     const google::protobuf::Message* root = FieldCodecBase::root_message();
     const google::protobuf::FieldDescriptor* thrust_mode_field_desc =
@@ -236,7 +238,7 @@ dccl::Bitset dccl::LegacyCCLSpeedCodec::encode(const float& wire_value)
     }
 } 
 
-float dccl::LegacyCCLSpeedCodec::decode(Bitset* bits)
+float dccl::legacyccl::SpeedCodec::decode(Bitset* bits)
 {
     const google::protobuf::Message* root = FieldCodecBase::root_message();
     const google::protobuf::FieldDescriptor* thrust_mode_field_desc =
@@ -257,23 +259,23 @@ float dccl::LegacyCCLSpeedCodec::decode(Bitset* bits)
 
 
 //
-// LegacyCCLWattsCodec
+// WattsCodec
 //
-dccl::Bitset dccl::LegacyCCLWattsCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::WattsCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_watts(wire_value, 1)); } 
 
-float dccl::LegacyCCLWattsCodec::decode(Bitset* bits)
+float dccl::legacyccl::WattsCodec::decode(Bitset* bits)
 { return Decode_watts(bits->to_ulong()); }
 
 //
-// LegacyCCLGFIPitchOilCodec
+// GFIPitchOilCodec
 //
-dccl::Bitset dccl::LegacyCCLGFIPitchOilCodec::encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value)
+dccl::Bitset dccl::legacyccl::GFIPitchOilCodec::encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value)
 {
     return dccl::Bitset(size(), Encode_gfi_pitch_oil(wire_value.gfi(), wire_value.pitch(), wire_value.oil()));
 }
 
-dccl::protobuf::CCLMDATState::GFIPitchOil dccl::LegacyCCLGFIPitchOilCodec::decode(Bitset* bits)
+dccl::legacyccl::protobuf::CCLMDATState::GFIPitchOil dccl::legacyccl::GFIPitchOilCodec::decode(Bitset* bits)
 {
     float gfi, pitch, oil;
     Decode_gfi_pitch_oil(bits->to_ulong(), &gfi, &pitch, &oil);
@@ -285,37 +287,37 @@ dccl::protobuf::CCLMDATState::GFIPitchOil dccl::LegacyCCLGFIPitchOilCodec::decod
 }
 
 //
-// LegacyCCLHiResAltitudeCodec
+// HiResAltitudeCodec
 //
-dccl::Bitset dccl::LegacyCCLHiResAltitudeCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::HiResAltitudeCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_hires_altitude(wire_value)); } 
 
-float dccl::LegacyCCLHiResAltitudeCodec::decode(Bitset* bits)
+float dccl::legacyccl::HiResAltitudeCodec::decode(Bitset* bits)
 { return Decode_hires_altitude(bits->to_ulong()); }
 
 //
-// LegacyCCLSalinityCodec
+// SalinityCodec
 //
-dccl::Bitset dccl::LegacyCCLSalinityCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::SalinityCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_salinity(wire_value)); } 
 
-float dccl::LegacyCCLSalinityCodec::decode(Bitset* bits)
+float dccl::legacyccl::SalinityCodec::decode(Bitset* bits)
 { return Decode_salinity(bits->to_ulong()); }
 
 //
-// LegacyCCLTemperatureCodec
+// TemperatureCodec
 //
-dccl::Bitset dccl::LegacyCCLTemperatureCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::TemperatureCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_temperature(wire_value)); } 
 
-float dccl::LegacyCCLTemperatureCodec::decode(Bitset* bits)
+float dccl::legacyccl::TemperatureCodec::decode(Bitset* bits)
 { return Decode_temperature(bits->to_ulong()); }
 
 //
-// LegacyCCLSoundSpeedCodec
+// SoundSpeedCodec
 //
-dccl::Bitset dccl::LegacyCCLSoundSpeedCodec::encode(const float& wire_value)
+dccl::Bitset dccl::legacyccl::SoundSpeedCodec::encode(const float& wire_value)
 { return dccl::Bitset(size(), Encode_sound_speed(wire_value)); } 
 
-float dccl::LegacyCCLSoundSpeedCodec::decode(Bitset* bits)
+float dccl::legacyccl::SoundSpeedCodec::decode(Bitset* bits)
 { return Decode_sound_speed(bits->to_ulong()); }

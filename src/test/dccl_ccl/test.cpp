@@ -74,9 +74,9 @@ int main(int argc, char* argv[])
         
         assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
         
-        codec.info<dccl::protobuf::CCLMDATState>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATState>(&dccl::dlog);
         
-        dccl::protobuf::CCLMDATState state_in, state_out;
+        dccl::legacyccl::protobuf::CCLMDATState state_in, state_out;
         std::string test_state_encoded = "0e86fa11ad20c9011b4432bf47d10000002401042f0e7d87fa111620c95a200a";
         codec.decode(dccl::hex_decode(test_state_encoded), &state_out);
         state_in.set_latitude(25.282416667);
@@ -88,10 +88,10 @@ int main(int argc, char* argv[])
             boost::gregorian::date(today.year(), boost::date_time::Mar, 4), 
             boost::posix_time::time_duration(17,1,44));
         
-        state_in.set_time_date(dccl::LegacyCCLTimeDateCodec::to_uint64_time(time_date));
+        state_in.set_time_date(dccl::legacyccl::TimeDateCodec::to_uint64_time(time_date));
         state_in.set_heading(270);
         state_in.set_depth(2323);
-        state_in.set_mission_mode(dccl::protobuf::CCLMDATState::NORMAL);
+        state_in.set_mission_mode(dccl::legacyccl::protobuf::CCLMDATState::NORMAL);
         state_in.set_faults(dccl::hex_decode("00000024"));
         state_in.set_faults_2(dccl::hex_decode("01"));
         state_in.set_mission_leg(4);
@@ -117,13 +117,13 @@ int main(int argc, char* argv[])
         
  
     // test the dynamically generated message
-        boost::shared_ptr<google::protobuf::Message> state_in_2 = dccl::DynamicProtobufManager::new_protobuf_message(dccl::protobuf::CCLMDATState::descriptor());
+        boost::shared_ptr<google::protobuf::Message> state_in_2 = dccl::DynamicProtobufManager::new_protobuf_message(dccl::legacyccl::protobuf::CCLMDATState::descriptor());
         state_in_2->CopyFrom(state_in);
         
         std::string state_encoded;
         codec.encode(&state_encoded, *state_in_2);
         
-        dccl::protobuf::CCLMDATState state_out_2;
+        dccl::legacyccl::protobuf::CCLMDATState state_out_2;
         codec.decode(state_encoded, &state_out_2);
         
         std::cout << "in:" << state_in << std::endl;
@@ -140,18 +140,18 @@ int main(int argc, char* argv[])
         std::cout << dccl::hex_encode(state_out.faults_2()) << std::endl;
         
         
-        codec.info<dccl::protobuf::CCLMDATRedirect>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATRedirect>(&dccl::dlog);
         
-        dccl::protobuf::CCLMDATRedirect redirect_in, redirect_out;
+        dccl::legacyccl::protobuf::CCLMDATRedirect redirect_in, redirect_out;
         std::string test_redirect_encoded = "07522cf9113d20c99964003d6464003d640be60014142035f911ef21c9000000";
         codec.decode(dccl::hex_decode(test_redirect_encoded), &redirect_out);
         redirect_in.set_message_number(82);
         redirect_in.set_latitude(25.274995002149939);
         redirect_in.set_longitude(-77.166669030984522);
-        redirect_in.set_transit_vertical_mode(dccl::protobuf::CCLMDATRedirect::ALTITUDE);  
-        redirect_in.set_transit_thrust_mode(dccl::protobuf::CCLMDATRedirect::METERS_PER_SECOND);
-        redirect_in.set_survey_vertical_mode(dccl::protobuf::CCLMDATRedirect::ALTITUDE);  
-        redirect_in.set_survey_thrust_mode(dccl::protobuf::CCLMDATRedirect::METERS_PER_SECOND);
+        redirect_in.set_transit_vertical_mode(dccl::legacyccl::protobuf::CCLMDATRedirect::ALTITUDE);  
+        redirect_in.set_transit_thrust_mode(dccl::legacyccl::protobuf::CCLMDATRedirect::METERS_PER_SECOND);
+        redirect_in.set_survey_vertical_mode(dccl::legacyccl::protobuf::CCLMDATRedirect::ALTITUDE);  
+        redirect_in.set_survey_thrust_mode(dccl::legacyccl::protobuf::CCLMDATRedirect::METERS_PER_SECOND);
         
         redirect_in.set_depth_goal_transit(10.0);
         redirect_in.set_speed_transit(2.0333333);
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
         std::string redirect_encoded;
         codec.encode(&redirect_encoded, redirect_in);
         
-        dccl::protobuf::CCLMDATRedirect redirect_out_2;
+        dccl::legacyccl::protobuf::CCLMDATRedirect redirect_out_2;
         codec.decode(redirect_encoded, &redirect_out_2);
         
         std::cout << "in:" << redirect_in << std::endl;
@@ -188,11 +188,11 @@ int main(int argc, char* argv[])
         assert(test_redirect_encoded == dccl::hex_encode(redirect_encoded));
         
         
-        codec.info<dccl::protobuf::CCLMDATEmpty>(&dccl::dlog);
-        codec.info<dccl::protobuf::CCLMDATBathy>(&dccl::dlog);
-        codec.info<dccl::protobuf::CCLMDATCTD>(&dccl::dlog);
-        codec.info<dccl::protobuf::CCLMDATError>(&dccl::dlog);
-        codec.info<dccl::protobuf::CCLMDATCommand>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATEmpty>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATBathy>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATCTD>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATError>(&dccl::dlog);
+        codec.info<dccl::legacyccl::protobuf::CCLMDATCommand>(&dccl::dlog);
         
         
         std::cout << "all tests passed" << std::endl;

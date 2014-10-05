@@ -27,14 +27,14 @@
 using dccl::dlog;
 using namespace dccl::logger;
 
-std::map<std::string, dccl::Model> dccl::ModelManager::arithmetic_models_;
-const dccl::Model::symbol_type dccl::Model::OUT_OF_RANGE_SYMBOL;
-const dccl::Model::symbol_type dccl::Model::EOF_SYMBOL;
-const dccl::Model::symbol_type dccl::Model::MIN_SYMBOL;
-const int dccl::Model::CODE_VALUE_BITS;
-const int dccl::Model::FREQUENCY_BITS;
-const dccl::Model::freq_type dccl::Model::MAX_FREQUENCY;
-std::map<std::string, std::map<std::string, dccl::Bitset> > dccl::Model::last_bits_map;
+std::map<std::string, dccl::arith::Model> dccl::arith::ModelManager::arithmetic_models_;
+const dccl::arith::Model::symbol_type dccl::arith::Model::OUT_OF_RANGE_SYMBOL;
+const dccl::arith::Model::symbol_type dccl::arith::Model::EOF_SYMBOL;
+const dccl::arith::Model::symbol_type dccl::arith::Model::MIN_SYMBOL;
+const int dccl::arith::Model::CODE_VALUE_BITS;
+const int dccl::arith::Model::FREQUENCY_BITS;
+const dccl::arith::Model::freq_type dccl::arith::Model::MAX_FREQUENCY;
+std::map<std::string, std::map<std::string, dccl::Bitset> > dccl::arith::Model::last_bits_map;
 
 // shared library load
 
@@ -43,6 +43,7 @@ struct CodecLoader
     CodecLoader()
     {
         using namespace dccl;
+        using namespace dccl::arith;
         
         FieldCodecManager::add<ArithmeticFieldCodec<int32> >("_arithmetic");
         FieldCodecManager::add<ArithmeticFieldCodec<int64> >("_arithmetic");
@@ -56,6 +57,7 @@ struct CodecLoader
     ~CodecLoader()
     {
         using namespace dccl;
+        using namespace dccl::arith;
         
         FieldCodecManager::remove<ArithmeticFieldCodec<int32> >("_arithmetic");
         FieldCodecManager::remove<ArithmeticFieldCodec<int64> >("_arithmetic");
@@ -78,7 +80,7 @@ extern "C"
     }
 }
 
-dccl::Model::symbol_type dccl::Model::value_to_symbol(value_type value) const
+dccl::arith::Model::symbol_type dccl::arith::Model::value_to_symbol(value_type value) const
 {
     if(value < *user_model_.value_bound().begin() || value > *(user_model_.value_bound().end()-1))
         return Model::OUT_OF_RANGE_SYMBOL;
@@ -109,7 +111,7 @@ dccl::Model::symbol_type dccl::Model::value_to_symbol(value_type value) const
 }
               
                   
-dccl::Model::value_type dccl::Model::symbol_to_value(symbol_type symbol) const
+dccl::arith::Model::value_type dccl::arith::Model::symbol_to_value(symbol_type symbol) const
 {
 
     if(symbol == EOF_SYMBOL)
@@ -123,7 +125,7 @@ dccl::Model::value_type dccl::Model::symbol_to_value(symbol_type symbol) const
 }
               
 
-std::pair<dccl::Model::freq_type, dccl::Model::freq_type> dccl::Model::symbol_to_cumulative_freq(symbol_type symbol, ModelState state) const
+std::pair<dccl::arith::Model::freq_type, dccl::arith::Model::freq_type> dccl::arith::Model::symbol_to_cumulative_freq(symbol_type symbol, ModelState state) const
 {
     const boost::bimap<symbol_type, freq_type>& c_freqs = (state == ENCODER) ?
         encoder_cumulative_freqs_ :
@@ -146,7 +148,7 @@ std::pair<dccl::Model::freq_type, dccl::Model::freq_type> dccl::Model::symbol_to
                           
 }
 
-std::pair<dccl::Model::symbol_type, dccl::Model::symbol_type> dccl::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_freq_pair,  ModelState state) const
+std::pair<dccl::arith::Model::symbol_type, dccl::arith::Model::symbol_type> dccl::arith::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_freq_pair,  ModelState state) const
 {
 
     const boost::bimap<symbol_type, freq_type>& c_freqs = (state == ENCODER) ?
@@ -178,7 +180,7 @@ std::pair<dccl::Model::symbol_type, dccl::Model::symbol_type> dccl::Model::cumul
 }
 
 
-void dccl::Model::update_model(symbol_type symbol, ModelState state)
+void dccl::arith::Model::update_model(symbol_type symbol, ModelState state)
 {
     if(!user_model_.is_adaptive())
         return;

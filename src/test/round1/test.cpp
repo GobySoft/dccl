@@ -24,7 +24,6 @@
 #include <utility>
 
 #include "dccl/common.h"
-using namespace dccl::test;
 
 bool same(double a, double b)
 {
