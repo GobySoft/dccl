@@ -33,6 +33,7 @@
 
 namespace dccl {
     namespace logger {
+        /// Verbosity levels used by the Logger
         enum Verbosity {
             WARN = 1<<1,
             INFO = 1<<2,
@@ -127,12 +128,22 @@ namespace dccl {
         
         };
     }
-    
+
+    /// The DCCL Logger class. Do not instantiate this class directly. Rather, use the dccl::dlog object. 
     class Logger : public std::ostream {
       public:
       Logger() : std::ostream(&buf_) { }
         virtual ~Logger() { }
 
+        /// \brief Indicates the verbosity of the Logger until the next std::flush or std::endl. The boolean return is used to take advantage of short-circuit evaluation of && to avoid spending CPU time generating log files that if they are not used.
+        ///
+        /// The typical usage is
+        /// \code
+        /// dlog.is(INFO) && dlog << "Something of interest." << std::endl;
+        /// dlog.is(WARN, ENCODE) && dlog << "Something bad happened while encoding." << std::endl;
+        /// \endcode
+        /// \param verbosity The verbosity level to tag the following message with. These levels are used to direct the output of dlog to different logs or omit them completely.
+        /// \param group The group that this message belongs to.
         bool is(logger::Verbosity verbosity, logger::Group group = logger::GENERAL) {
             if (!buf_.contains(verbosity)) {
                 return false;
@@ -143,31 +154,43 @@ namespace dccl {
             }
         }     
      
-        /// connect a signal to a slot (function pointer or similar)
+        /// \brief Connect the output of one or more given verbosities to a slot (function pointer or similar)
+        ///
+        /// \param verbosity_mask A bitmask representing the verbosity or verbosities to send to this slot. For example, you can use connect(WARN | INFO, slot) to send both WARN and INFO messages to slot.
+        /// \param slot The slot must be a function pointer or like object (e.g. boost::function) of type
+        /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
         template<typename Slot>
             void connect(int verbosity_mask, Slot slot) {
             buf_.connect(verbosity_mask, slot);
         }
 
-        /// connect a signal to a member function
+        /// \brief Connect the output of one or more given verbosities to a member function
+        ///
+        /// \param verbosity_mask A bitmask representing the verbosity or verbosities to send to this slot. For example, you can use connect(WARN | INFO, this, &MyClass::slot) to send both WARN and INFO messages to MyClass::slot.
+        /// \param obj Pointer to the instantiation of the class of which this member function should be called.
+        /// \param mem_func Member function of type
+        /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
         template<typename Obj> 
             void connect(
                 int verbosity_mask, Obj* obj,
                 void(Obj::*mem_func)(const std::string& msg, logger::Verbosity vrb, logger::Group grp))
         { connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2, _3)); }
 
-        /// connect a verbosity to a ostream
+        /// \brief Connect the output of one or more given verbosities to a std::ostream
+        ///
+        /// \param verbosity_mask A bitmask representing the verbosity or verbosities to send to this slot. For example, you can use connect(WARN | INFO, &std::cout) to send both WARN and INFO messages to std::cout.
+        /// \param os Pointer to a std::ostream
+        /// \param add_timestamp If true, prepend the current timestamp of the message to each log message.
         void connect(int verbosity_mask, std::ostream* os,
                      bool add_timestamp = true)
         {
             buf_.connect(verbosity_mask, boost::bind(to_ostream, _1, _2, _3, os, add_timestamp));
         }
-     
+
+        /// \brief Disconnect all slots for one or more given verbosities
         void disconnect(int verbosity_mask)
         { buf_.disconnect(verbosity_mask); }
-
-
-     
+        
       private:
         internal::LogBuffer buf_;
      

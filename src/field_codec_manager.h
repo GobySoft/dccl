@@ -36,13 +36,13 @@
 
 namespace dccl
 {
-    // See Bug #1089061, and Boost MPL Documentation section 3.4 (compiler workarounds)
     namespace compiler
     {
+        /// See Bug #1089061, and Boost MPL Documentation section 3.4 (compiler workarounds)
         template <int> struct dummy_fcm { dummy_fcm(int) {} };
     }
-    
-    /// \todo (tes) Make sanity check for newly added FieldCodecs
+
+    /// \brief A class for managing the various field codecs. Here you can add and remove field codecs. The DCCL Codec and DefaultMessageCodec use the find() methods to locate the appropriate field codec.
     class FieldCodecManager
     {
       public:

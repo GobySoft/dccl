@@ -39,9 +39,18 @@
 
 namespace dccl
 {
+    /// Helper class for creating google::protobuf::Message objects that are not statically compiled into the application.
     class DynamicProtobufManager
     {
       public:
+        /// \brief Finds the Google Protobuf Descriptor (essentially a meta-class for a given Message) from a given Message name.
+        ///
+        /// \param protobuf_type_name The fully qualified name of the Google Protobuf Message including package name. E.g. in the .proto file:
+        /// \code
+        /// package dccl.protobuf
+        /// message A { }
+        /// \endcode
+        /// would result in protobuf_type_name == "dccl.protobuf.A"
         static const google::protobuf::Descriptor* find_descriptor(const std::string& protobuf_type_name)
         {
             // try the generated pool
@@ -52,7 +61,17 @@ namespace dccl
             desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
             return desc;
         }
-            
+
+        /// \brief Create a new (empty) Google Protobuf message of a given type by name.
+        ///
+        /// \param protobuf_type_name The fully qualified name of the Google Protobuf Message including package name. E.g. in the .proto file:
+        /// \code
+        /// package dccl.protobuf
+        /// message A { }
+        /// \endcode
+        /// would result in protobuf_type_name == "dccl.protobuf.A"
+        /// \tparam GoogleProtobufMessagePointer A pointer or anything that acts like a pointer (has operator*()) to a google::protobuf::Message
+        /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. boost::shared_ptr<google::protobuf::Message>) are recommended.
         template<typename GoogleProtobufMessagePointer>
             static GoogleProtobufMessagePointer new_protobuf_message(
                 const std::string& protobuf_type_name)
@@ -64,40 +83,63 @@ namespace dccl
                 throw(std::runtime_error("Unknown type " + protobuf_type_name + ", be sure it is loaded at compile-time, via dlopen, or with a call to add_protobuf_file()"));
         }
             
+        /// \brief Create a new (empty) Google Protobuf message of a given type by Descriptor
+        ///
+        /// \param desc The Google Protobuf Descriptor of the message to create.
+        /// \tparam GoogleProtobufMessagePointer A pointer or anything that acts like a pointer (has operator*()) to a google::protobuf::Message
+        /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. boost::shared_ptr<google::protobuf::Message>) are recommended.
         template<typename GoogleProtobufMessagePointer>
             static GoogleProtobufMessagePointer new_protobuf_message( 
                 const google::protobuf::Descriptor* desc)
         { return GoogleProtobufMessagePointer(msg_factory().GetPrototype(desc)->New()); }
             
+        /// \brief Create a new (empty) Google Protobuf message of a given type by Descriptor
+        ///
+        /// \param desc The Google Protobuf Descriptor of the message to create.
+        /// \return A boost::shared_ptr to the newly created object.
         static boost::shared_ptr<google::protobuf::Message> new_protobuf_message(
             const google::protobuf::Descriptor* desc)
         { return new_protobuf_message<boost::shared_ptr<google::protobuf::Message> >(desc); }
             
+        /// \brief Create a new (empty) Google Protobuf message of a given type by name.
+        ///
+        /// \param desc The Google Protobuf Descriptor of the message to create.
+        /// \return A boost::shared_ptr to the newly created object.
         static boost::shared_ptr<google::protobuf::Message> new_protobuf_message(
             const std::string& protobuf_type_name)
         { return new_protobuf_message<boost::shared_ptr<google::protobuf::Message> >(protobuf_type_name); }
             
             
+        /// \brief Add a Google Protobuf DescriptorDatabase to the set of databases searched for Message Descriptors.
         static void add_database(google::protobuf::DescriptorDatabase* database)
         {
             get_instance()->databases_.push_back(database);
             get_instance()->update_databases();
         }
 
+        /// \brief Enable on the fly compilation of .proto files on the local disk. Must be called before load_from_proto_file() is called.
         static void enable_compilation()
         {
             get_instance()->enable_disk_source_database();
         }
 
-        /** It is critical that the argument be the absolute, canonical path to the file.
-         * This could be achieved, e.g., by using Boost filesystem as follows...
-         * boost::filesystem::path abs_path = boost::filesystem::complete(rel_path);
-         * abs_path.normalize();
-         */
+        /// \brief Load a message from a .proto file on the disk. enable_compilation() must be called first.
+        ///
+        /// \param protofile_absolute_path It is critical that the argument be the absolute, canonical path to the file. (No relative paths and no "." or "..")
+        /// This could be achieved, e.g., by using Boost filesystem as follows...
+        /// \code
+        /// boost::filesystem::path abs_path = boost::filesystem::complete(rel_path);
+        /// abs_path.normalize();
+        /// \endcode
+        /// \throw Exception If enable_compilation() has not been called before using this function
+        /// \throw Exception If any error exists in locating or parsing this .proto file.
         static const google::protobuf::FileDescriptor*
             load_from_proto_file(const std::string& protofile_absolute_path);
 
 
+        /// \brief Add a path for searching for import messages when loading .proto files using load_from_proto_file()
+        ///
+        /// \throw Exception If enable_compilation() has not been called before using this function.
         static void add_include_path(const std::string& path)
         {
             if(!get_instance()->disk_source_tree_)
@@ -105,7 +147,10 @@ namespace dccl
 
             get_instance()->disk_source_tree_->MapPath("", path);
         }
-            
+
+        /// \brief Load compiled .proto files from a UNIX shared library (i.e. *.so or *.dylib)
+        ///
+        /// \param shared_lib_path Path to shared library. May be relative if known by ld.so
         static void* load_from_shared_lib(const std::string& shared_lib_path)
         {
             void* handle = dlopen(shared_lib_path.c_str(), RTLD_LAZY);
@@ -113,13 +158,14 @@ namespace dccl
                 get_instance()->dl_handles_.push_back(handle);
             return handle;
         }
-            
+        
         static void protobuf_shutdown()
         {
             get_instance()->shutdown();
         }
             
-            
+        
+        /// \brief Add a protobuf file defined in a google::protobuf::FileDescriptorProto
         static const google::protobuf::FileDescriptor* add_protobuf_file(
             const google::protobuf::FileDescriptorProto& proto);
 

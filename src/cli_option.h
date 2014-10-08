@@ -29,9 +29,16 @@
 
 namespace dccl
 {
+    /// Represents a command line option
     class Option
     {
       public:
+        /// \brief Create a command line option
+        ///
+        /// \param shortname Single character representation (e.g. 'v' for "-v")
+        /// \param longname Full representation (e.g. "verbose" for "--verbose")
+        /// \param has_argument Does the parameter take an argument?
+        /// \param description Human description for the --help option
         Option(char shortname,
                const char* longname,
                int has_argument,
@@ -45,7 +52,10 @@ namespace dccl
             c_opt_.val = shortname;
         }
 
+        /// \return Equivalent option from <getopt.h>
         option c_opt() const { return c_opt_; }
+
+        /// \return option code from <getopt.h> used in getopt_long()
         std::string opt_code() const 
         {
             std::string opt_code;
@@ -64,6 +74,7 @@ namespace dccl
             
         }    
 
+        /// \return String giving usage for the --help option.
         std::string usage() const 
         {
             std::stringstream usage; 
@@ -74,6 +85,7 @@ namespace dccl
             return usage.str();
         }
     
+        /// \brief Convert a vector of Options into a vector of options (from getopt.h) and an opt_string, suitable for use in getopt_long()
         static void convert_vector(const std::vector<Option>& options, std::vector<option>* c_options, std::string* opt_string)
         {
             for(int i = 0, n = options.size(); i < n; ++i)

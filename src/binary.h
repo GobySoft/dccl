@@ -148,7 +148,7 @@ namespace dccl
 
     
         
-    /// \return ceil(log2(v))
+    /// \return Efficiently computes ceil(log2(v))
     inline unsigned ceil_log2(dccl::uint64 v)
     {
         // r will be one greater (ceil) if v is not a power of 2

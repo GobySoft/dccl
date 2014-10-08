@@ -49,6 +49,7 @@ extern "C"
 
 namespace dccl
 {
+    /// DCCL Arithmetic Encoder Library namespace 
     namespace arith
     {
         class Model

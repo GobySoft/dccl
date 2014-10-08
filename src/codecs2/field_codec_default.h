@@ -47,6 +47,7 @@
 
 namespace dccl
 {
+    /// Goby/DCCL version 2 default field codecs
     namespace v2
     {
         /// \brief Provides a basic bounded arbitrary length numeric (double, float, uint32, uint64, int32, int64) encoder.

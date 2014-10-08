@@ -12,6 +12,7 @@ For details, see http://sourceforge.net/projects/libb64
 
 namespace dccl
 {
+    /// Base64 encoding/decoding namespace
     namespace base64
     {
 	extern "C" 

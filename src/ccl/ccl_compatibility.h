@@ -36,6 +36,7 @@ extern "C"
 
 namespace dccl
 {
+    /// DCCL Implementation of the REMUS CCL Language Library namespace 
     namespace legacyccl
     {
         const unsigned char DCCL_CCL_HEADER = 32;

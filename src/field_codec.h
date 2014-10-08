@@ -45,7 +45,7 @@ namespace dccl
 {
     class Codec;
 
-    /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users will use the TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
+    /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
     class FieldCodecBase
     {
       public:

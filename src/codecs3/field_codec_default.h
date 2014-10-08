@@ -31,6 +31,7 @@
 
 namespace dccl
 {
+    /// DCCL version 3 default field codecs
     namespace v3
     {
 	// all these are the same as version 2

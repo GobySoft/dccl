@@ -30,6 +30,8 @@ namespace dccl
 {
     class FieldCodecBase;
     enum MessagePart { HEAD, BODY, UNKNOWN };
+
+    /// Namespace for objects used internally by DCCL
     namespace internal
     {
         //RAII handler for the current Message recursion stack

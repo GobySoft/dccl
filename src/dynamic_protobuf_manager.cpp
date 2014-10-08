@@ -61,7 +61,7 @@ const google::protobuf::FileDescriptor*
 dccl::DynamicProtobufManager::load_from_proto_file(const std::string& protofile_absolute_path)
 {
     if(!get_instance()->source_database_)
-        throw(std::runtime_error("Must called enable_compilation() before loading proto files directly"));
+        throw(dccl::Exception("Must called enable_compilation() before loading proto files directly"));
 
     return user_descriptor_pool().FindFileByName(protofile_absolute_path);
 }

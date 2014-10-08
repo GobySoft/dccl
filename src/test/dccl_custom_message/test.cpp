@@ -36,6 +36,7 @@ using dccl::Bitset;
 
 namespace dccl
 {
+    /// Unit test namespace
     namespace test
     {
         class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>

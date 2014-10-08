@@ -46,6 +46,7 @@ enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
 
 namespace dccl
 {
+    /// 'dccl' command line tool namespace
     namespace tool
     {
         struct Config
@@ -135,11 +136,16 @@ int main(int argc, char* argv[])
             }
         
             // if no messages explicitly specified, load them all.
-            if(no_messages_specified && cfg.action != ENCODE)
+            if(no_messages_specified)
             {
                 for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
                 {
                     cfg.message.insert(file_desc->message_type(i)->full_name());
+                    if(i == 0 && cfg.action == ENCODE)
+                    {
+                        std::cerr << "Encoding assuming message: " << file_desc->message_type(i)->full_name() << std::endl;
+                        break;
+                    }
                 }
             }
         }
@@ -186,6 +192,12 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
         std::cerr << "No more than one DCCL message can be specified with -m or --message for encoding." << std::endl;
         exit(EXIT_FAILURE);
     }
+    else if(cfg.message.size() == 0)
+    {
+        std::cerr << "You must specify a DCCL message to encode with -m" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
     std::string command_line_name = *cfg.message.begin();
     
     while(!std::cin.eof())

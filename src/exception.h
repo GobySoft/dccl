@@ -28,7 +28,7 @@
 
 namespace dccl
 {
-    /// \brief Exception class for libdccl
+    /// \brief Exception class for DCCL
     class Exception : public std::runtime_error {
       public:
       Exception(const std::string& s)
@@ -37,7 +37,7 @@ namespace dccl
 
     };
 
-    // used to signal null value in field codecs
+    /// \brief Exception used to signal null (non-existent) value within field codecs during decode.
     class NullValueException : public Exception
     {
       public:
