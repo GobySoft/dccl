@@ -32,6 +32,7 @@
 
 #include "test.pb.h"
 #include "dccl/binary.h"
+using namespace dccl::test;
 
 template <typename Msg>
 void check(double val, bool should_pass);
@@ -39,13 +40,20 @@ dccl::Codec codec;
 TestMsg msg_in;
 TestMsgGroup msg_group_in;
 
-class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
+
+namespace dccl
 {
-    double max() { return 100; }
-    double min() { return -100; }
-    double precision() { return 1; }
-    void validate() { }    
-};
+    namespace test
+    {
+        class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
+        {
+            double max() { return 100; }
+            double min() { return -100; }
+            double precision() { return 1; }
+            void validate() { }    
+        };
+    }
+}
 
     
 
@@ -54,7 +62,7 @@ int main(int argc, char* argv[])
 {
 //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
-    dccl::FieldCodecManager::add<TestCodec>("test.grouptest");
+    dccl::FieldCodecManager::add<dccl::test::TestCodec>("test.grouptest");
     dccl::FieldCodecManager::add<dccl::v3::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>("test.grouptest");
     
     check<TestMsg>(50, true);

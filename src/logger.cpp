@@ -25,7 +25,7 @@
 
 dccl::Logger dccl::dlog;
 
-int dccl::LogBuffer::sync() {
+int dccl::internal::LogBuffer::sync() {
     // all but last one
     while(buffer_.size() > 1) {
         display(buffer_.front());
@@ -37,7 +37,7 @@ int dccl::LogBuffer::sync() {
     return 0;
 }
 
-int dccl::LogBuffer::overflow(int c) {
+int dccl::internal::LogBuffer::overflow(int c) {
     if (c == EOF) { return c; }
     else if(c == '\n') { buffer_.push_back(std::string()); }
     else { buffer_.back().push_back(c); }

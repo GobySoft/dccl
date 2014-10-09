@@ -30,6 +30,7 @@
 #include "dccl/codec.h"
 #include "test.pb.h"
 #include "dccl/binary.h"
+using namespace dccl::test;
 
 void decode_check(const std::string& encoded);
 dccl::Codec codec;

@@ -49,7 +49,7 @@ dccl::FieldCodecManager::__find(google::protobuf::FieldDescriptor::Type type,
             return inside_it->second;
     }
     
-    throw(Exception("No codec by the name `" + codec_name + "` found for type: " + TypeHelper::find(type)->as_str()));
+    throw(Exception("No codec by the name `" + codec_name + "` found for type: " + internal::TypeHelper::find(type)->as_str()));
 }
 
 

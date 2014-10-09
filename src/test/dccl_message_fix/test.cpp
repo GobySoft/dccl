@@ -33,6 +33,7 @@
 #include "test.pb.h"
 #include "dccl/binary.h"
 
+using namespace dccl::test;
 
 int main(int argc, char* argv[])
 {

@@ -1,5 +1,5 @@
 import "dccl/protobuf/option_extensions.proto";
-
+package dccl.test;
 
 message CustomMsg
 {

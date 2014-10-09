@@ -44,43 +44,50 @@
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
 enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
 
-struct Config
+namespace dccl
 {
-    Config()
-        : action(NO_ACTION),
-          format(BINARY),
-          id_codec(dccl::Codec::default_id_codec_name()),
-          verbose(false),
-          omit_prefix(false)
-        { }
+    /// 'dccl' command line tool namespace
+    namespace tool
+    {
+        struct Config
+        {
+            Config()
+                : action(NO_ACTION),
+                  format(BINARY),
+                  id_codec(dccl::Codec::default_id_codec_name()),
+                  verbose(false),
+                  omit_prefix(false)
+                { }
     
-    Action action;
-    std::set<std::string> include;
-    std::set<std::string> dlopen;
-    std::set<std::string> message;
-    std::set<std::string> proto_file;
-    Format format;
-    std::string id_codec;
-    bool verbose;
-    bool omit_prefix;
-};
+            Action action;
+            std::set<std::string> include;
+            std::set<std::string> dlopen;
+            std::set<std::string> message;
+            std::set<std::string> proto_file;
+            Format format;
+            std::string id_codec;
+            bool verbose;
+            bool omit_prefix;
+        };
+    }
+}
 
     
-void analyze(dccl::Codec& dccl, const Config& cfg);
-void encode(dccl::Codec& dccl, Config& cfg);
-void decode(dccl::Codec& dccl, const Config& cfg);
-void disp_proto(dccl::Codec& dccl, const Config& cfg);
+void analyze(dccl::Codec& dccl, const dccl::tool::Config& cfg);
+void encode(dccl::Codec& dccl, dccl::tool::Config& cfg);
+void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg);
+void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 
         
 void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name);
-void parse_options(int argc, char* argv[], Config* cfg);
+void parse_options(int argc, char* argv[], dccl::tool::Config* cfg);
 
 
 int main(int argc, char* argv[])
 {
     std::vector<void *> dl_handles;
     {
-        Config cfg;
+        dccl::tool::Config cfg;
         parse_options(argc, argv, &cfg);
 
         if(!cfg.verbose)
@@ -129,11 +136,16 @@ int main(int argc, char* argv[])
             }
         
             // if no messages explicitly specified, load them all.
-            if(no_messages_specified && cfg.action != ENCODE)
+            if(no_messages_specified)
             {
                 for(int i = 0, n = file_desc->message_type_count(); i < n; ++i)
                 {
                     cfg.message.insert(file_desc->message_type(i)->full_name());
+                    if(i == 0 && cfg.action == ENCODE)
+                    {
+                        std::cerr << "Encoding assuming message: " << file_desc->message_type(i)->full_name() << std::endl;
+                        break;
+                    }
                 }
             }
         }
@@ -168,18 +180,24 @@ int main(int argc, char* argv[])
 
 
 
-void analyze(dccl::Codec& dccl, const Config& cfg)
+void analyze(dccl::Codec& dccl, const dccl::tool::Config& cfg)
 {
     dccl.info_all(&std::cout);
 }
 
-void encode(dccl::Codec& dccl, Config& cfg)
+void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 {
     if(cfg.message.size() > 1)
     {
         std::cerr << "No more than one DCCL message can be specified with -m or --message for encoding." << std::endl;
         exit(EXIT_FAILURE);
     }
+    else if(cfg.message.size() == 0)
+    {
+        std::cerr << "You must specify a DCCL message to encode with -m" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
     std::string command_line_name = *cfg.message.begin();
     
     while(!std::cin.eof())
@@ -255,7 +273,7 @@ void encode(dccl::Codec& dccl, Config& cfg)
                 case TEXTFORMAT:
                 {
                     
-                    ByteString s;
+                    dccl::tool::protobuf::ByteString s;
                     s.set_b(encoded);
                     std::string output;
                     google::protobuf::TextFormat::PrintFieldValueToString(s, s.GetDescriptor()->FindFieldByNumber(1), -1, &output);
@@ -270,7 +288,7 @@ void encode(dccl::Codec& dccl, Config& cfg)
                 case BASE64:
                     std::stringstream instream(encoded);
                     std::stringstream outstream;
-                    base64::encoder D;
+                    dccl::base64::encoder D;
                     D.encode(instream, outstream);
                     std::cout << outstream.str();
                     break;
@@ -280,7 +298,7 @@ void encode(dccl::Codec& dccl, Config& cfg)
     }    
 }
 
-void decode(dccl::Codec& dccl, const Config& cfg)
+void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
 {
     std::string input;
     if(cfg.format == BINARY)
@@ -311,7 +329,7 @@ void decode(dccl::Codec& dccl, const Config& cfg)
                     boost::trim_if(line, boost::is_any_of("\""));
                     
                     
-                    ByteString s;
+                    dccl::tool::protobuf::ByteString s;
                     google::protobuf::TextFormat::ParseFieldValueFromString("\"" + line + "\"", s.GetDescriptor()->FindFieldByNumber(1), &s);
                     input += s.b();
                     break;
@@ -322,7 +340,7 @@ void decode(dccl::Codec& dccl, const Config& cfg)
                 case BASE64:
                     std::stringstream instream(line);
                     std::stringstream outstream;
-                    base64::decoder D;
+                    dccl::base64::decoder D;
                     D.decode(instream, outstream);
                     input += outstream.str();
                     break;
@@ -339,7 +357,7 @@ void decode(dccl::Codec& dccl, const Config& cfg)
     }
 }
 
-void disp_proto(dccl::Codec& dccl, const Config& cfg)
+void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg)
 {
     std::cout << "Please note that for Google Protobuf versions < 2.5.0, the dccl extensions will not be show below, so you'll need to refer to the original .proto file." << std::endl;
    for(std::set<std::string>::const_iterator it = cfg.message.begin(),
@@ -371,7 +389,7 @@ void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, con
     }
 }
 
-void parse_options(int argc, char* argv[], Config* cfg)
+void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
 {
     std::vector<dccl::Option> options;
     options.push_back(dccl::Option('e', "encode", no_argument, "Encode a DCCL message to STDOUT from STDIN"));

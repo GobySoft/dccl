@@ -26,32 +26,39 @@
 #include "dccl/codec.h"
 #include "dccl/field_codec.h"
 #include "test.pb.h"
+using namespace dccl::test;
 
 using dccl::operator<<;
 
-class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
+namespace dccl
 {
-private:
-    dccl::Bitset encode(const dccl::uint32& wire_value);
+    namespace test
+    {    
+        class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
+        {
+        private:
+            dccl::Bitset encode(const dccl::uint32& wire_value);
     
-    dccl::Bitset encode()
-        { return encode(MINI_ID_OFFSET); }
+            dccl::Bitset encode()
+                { return encode(MINI_ID_OFFSET); }
     
-    dccl::uint32 decode(dccl::Bitset* bits)
-        { return bits->to_ulong() + MINI_ID_OFFSET; }
+            dccl::uint32 decode(dccl::Bitset* bits)
+                { return bits->to_ulong() + MINI_ID_OFFSET; }
     
-    unsigned size()
-        { return MINI_ID_SIZE; }
+            unsigned size()
+                { return MINI_ID_SIZE; }
     
-    void validate()
-        { }
+            void validate()
+                { }
     
 
-    // Add this value when decoding to put us safely in our own namespace
-    // from the normal default DCCL Codec
-    enum { MINI_ID_OFFSET = 1000000 };    
-    enum { MINI_ID_SIZE = 6 };
-};
+            // Add this value when decoding to put us safely in our own namespace
+            // from the normal default DCCL Codec
+            enum { MINI_ID_OFFSET = 1000000 };    
+            enum { MINI_ID_SIZE = 6 };
+        };
+    }
+}
 
 
 bool double_cmp(double a, double b, int precision)
@@ -65,7 +72,7 @@ bool double_cmp(double a, double b, int precision)
     return (a_whole == b_whole) && (a_part == b_part);
 }
 
-dccl::Bitset MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uint32& wire_value)
+dccl::Bitset dccl::test::MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uint32& wire_value)
 {
     // 16 bits, only 13 are useable, so
     // 3 "blank bits" + 3 bits for us
@@ -78,7 +85,7 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     
     {        
-	dccl::FieldCodecManager::add<MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
+	dccl::FieldCodecManager::add<dccl::test::MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
         dccl::Codec codec("mini_id_codec");
         codec.set_crypto_passphrase("309ldskjfla39");
         

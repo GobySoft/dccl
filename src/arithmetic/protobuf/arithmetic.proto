@@ -1,6 +1,6 @@
 import "dccl/protobuf/option_extensions.proto";
 
-package dccl.protobuf;
+package dccl.arith.protobuf;
 
 message ArithmeticModel
 {

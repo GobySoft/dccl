@@ -1,3 +1,5 @@
+package dccl.tool.protobuf;
+
 message ByteString
 {
   required bytes b = 1;

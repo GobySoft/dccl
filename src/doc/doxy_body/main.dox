@@ -1,0 +1,132 @@
+/*! \mainpage Dynamic Compact Control Language
+ 
+\image html dccl-50cols.png 
+
+The Dynamic Compact Control Language (DCCL) is a language for marshalling (or roughly analogously: source encoding or compressing) object-based messages for extremely low throughput network links. Originally designed for commanding and retrieving data from autonomous underwater vehicles over acoustic modem links, DCCL has found additional uses in the robotics community (such as for sending messages over satellite or degraded land-based links). It is suitable for use when having a very small encoded message size is of much more importance than the speed of encoding and decoding these messages. 
+
+DCCL provides two main components: 1) an interface descriptor language (IDL) for defining messages based as an extension to Google Protocol Buffers (GPB); and 2) a set of built-in encoders and decoders ("codecs") that operate on the messages defined in the DCCL IDL. In addition to the built-in codecs, further field codecs can be defined as extensions to the DCCL library to optimally encode specific sources of data. For example, two sets of these codecs are included with the core DCCL distribution as plugin shared libraries: an arithmetic encoder and a collection of REMUS CCL compatible codecs. DCCL can be thought of as an alternative encoder to the one that is included with the GPB library. DCCL will produce more compact messages than GPB, but at the cost of additional design and CPU time.
+
+\section quick Quick Start
+
+<ol>
+<li> Grab dependencies:
+\code
+# apt-add-repository ppa:dccl-dev/ppa
+# apt-get install libdccl3-dev
+\endcode
+<li> Find or create a plain GPB message (navreport.proto):
+\code
+message NavigationReport {
+  required double x = 1;
+  required double y = 2;
+  required double z = 3;
+  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
+  optional VehicleClass veh_class = 4;
+  optional bool battery_ok = 5;
+}
+\endcode
+<li> Turn it into a DCCL message. Create bounds on the message and give it a unique identifier number using DCCL extensions:
+\code
+import "dccl/protobuf/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg) = { codec_version: 3
+                        id: 124
+                        max_bytes: 32 };
+  required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+  required double y = 2 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+  required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
+  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
+  optional VehicleClass veh_class = 4;
+  optional bool battery_ok = 5;
+}
+\endcode
+<li> (Optional) Learn about the sizes of your messages fields using the 'dccl' tool:
+\code
+$ dccl --analyze -f navreport.proto
+||||||| Dynamic Compact Control Language (DCCL) Codec |||||||
+1 messages loaded.
+Field sizes are in bits unless otherwise noted.
+=================== 124: NavigationReport ===================
+Actual maximum size of message: 8 bytes / 64 bits
+        dccl.id head...........................8
+        user head..............................0
+        body..................................53
+        padding to full byte...................3
+Allowed maximum size of message: 32 bytes / 256 bits
+--------------------------- Header ---------------------------
+dccl.id head...................................8 {dccl.default.id}
+---------------------------- Body ----------------------------
+NavigationReport..............................53 {dccl.default3}
+        1. x..................................18 {dccl.default3}
+        2. y..................................18 {dccl.default3}
+        3. z..................................13 {dccl.default3}
+        4. veh_class...........................2 {dccl.default3}
+        5. battery_ok..........................2 {dccl.default3}
+\endcode
+<li> Run protoc to generate navreport.pb.h and navreport.pb.cc C++ files from your navreport.proto file.
+\code
+protoc --cpp_out=. navreport.proto -I . -I /usr/include
+\endcode
+<li> Use the dccl::Codec in your C++ code to encode and decode messages (quick.cpp):
+\code
+#include <iostream>
+
+#include "dccl.h"
+#include "navreport.pb.h"
+
+int main()
+{
+    std::string encoded_bytes;
+    dccl::Codec codec;
+    codec.load<NavigationReport>();
+    // SENDER
+    {
+        NavigationReport r_out;
+        r_out.set_x(450);
+        r_out.set_y(550);
+        r_out.set_z(-100);
+        r_out.set_veh_class(NavigationReport::AUV);
+        r_out.set_battery_ok(true);
+        
+        codec.encode(&encoded_bytes, r_out);
+    }
+    // send encoded_bytes across your link
+
+    // RECEIVER
+    if(codec.id(encoded_bytes) == codec.id<NavigationReport>())
+    {
+        NavigationReport r_in;
+        codec.decode(encoded_bytes, &r_in);
+        std::cout << r_in.ShortDebugString() << std::endl;
+    }    
+}
+
+
+\endcode
+<li> Compile it:
+\code
+g++ quick.cpp -o quick navreport.pb.cc -ldccl -lprotobuf 
+\endcode
+<li> Run it:
+\code
+$ ./quick                                                                   
+x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
+\endcode
+<li> Or skip steps 5-8 and use the command line tool 'dccl' instead:
+\code
+$ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
+0000000: f834 9871 7046 3213                      .4.qpF2.
+$ cat msg.txt | dccl --decode -f navreport.proto --omit_prefix
+x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
+\endcode
+
+</ol>
+
+\section history History
+DCCL grew out of the Goby project (<https://launchpad.net/goby>), where versions 1.0 and 2.0 still reside (in the equivalent Goby version). Goby 2.1 is the first version of that project to use the standalone DCCL version 3. DCCL v3 messages are compatible with Goby/DCCL v2 when messages are defined with codec_version = 2 (the default). Goby/DCCL v1 uses XML for the IDL definition language, which can be converted to DCCL v2 messages using the dccl_xml_to_dccl_proto tool included in Goby. 
+
+\section authors Authors
+DCCL is a collaboration of those in the DCCL Developers group (https://launchpad.net/~dccl-dev). The original author and lead developer is Toby Schneider (GobySoft, LLC <http://gobysoft.org>). 
+
+*/

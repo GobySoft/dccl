@@ -1,7 +1,7 @@
 import "dccl/ccl/protobuf/ccl_extensions.proto";
 import "dccl/protobuf/option_extensions.proto";
 
-package dccl.protobuf;
+package dccl.legacyccl.protobuf;
 
 // typedef struct
 // {

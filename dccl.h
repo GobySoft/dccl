@@ -30,4 +30,6 @@
 
 #include "dccl/codec.h"
 
+/// \defgroup dccl_api API class for using the DCCL Codec
+/// \defgroup dccl_field_api API classes for defining new custom field encoders/decoders
 #endif

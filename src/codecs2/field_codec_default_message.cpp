@@ -69,8 +69,8 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
             
             boost::shared_ptr<FieldCodecBase> codec = find(field_desc);            
-            boost::shared_ptr<FromProtoCppTypeBase> helper =
-                TypeHelper::find(field_desc);
+            boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
+                internal::TypeHelper::find(field_desc);
 
             if(field_desc->is_repeated())
             {   
@@ -168,18 +168,18 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if(MessageStack::current_part() == MessageStack::UNKNOWN) // part not yet explicitly specified
+        else if(internal::MessageStack::current_part() == UNKNOWN) // part not yet explicitly specified
         {
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
                find(field)->name() == Codec::default_codec_name()) // default message codec will expand
                 return true;
-            else if((part() == MessageStack::HEAD && !dccl_field_options.in_head())
-                    || (part() == MessageStack::BODY && dccl_field_options.in_head()))
+            else if((part() == HEAD && !dccl_field_options.in_head())
+                    || (part() == BODY && dccl_field_options.in_head()))
                 return false;
             else
                 return true;
         }
-        else if(MessageStack::current_part() != part()) // part specified and doesn't match
+        else if(internal::MessageStack::current_part() != part()) // part specified and doesn't match
             return false;
         else
             return true;

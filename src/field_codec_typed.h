@@ -32,9 +32,14 @@
 namespace dccl
 {
 
-    template <int> struct dummy { dummy(int) {} };
-        
-    /// \brief if WireType == FieldType, we don't have to add any more virtual methods for converting between them.
+    /// Compiler workarounds namespace
+    namespace compiler
+    {
+        /// workaround for compilers with broken template support (i.e. gcc 3.3)
+        template <int> struct dummy { dummy(int) {} };
+    }
+    
+    /// \brief A class that goes between FieldCodecBase and TypedFieldCodec to determine if the pre_encode() and post_decode() methods (which convert between WireType and FieldType) must be implemented or not. 
     template <typename WireType, typename FieldType, class Enable = void> 
         class FieldCodecSelector : public FieldCodecBase
         {
@@ -52,23 +57,27 @@ namespace dccl
           virtual FieldType post_decode(const WireType& wire_value) = 0;
         };
     
+
+    /// \brief A class that goes between FieldCodecBase and TypedFieldCodec to determine if the pre_encode() and post_decode() methods must be implemented or not. The specialization is selected if WireType == FieldType and implements these functions as a pass-through.
     template <typename WireType, typename FieldType>
         class FieldCodecSelector<WireType, FieldType,
         typename boost::enable_if<boost::is_same<WireType, FieldType> >::type>
         : public FieldCodecBase
     {
       protected:
+        /// \brief No-op version of pre_encode (since FieldType == WireType)
         virtual WireType pre_encode(const FieldType& field_value)
         { return field_value; }
+        /// \brief No-op version of post_encode (since FieldType == WireType)
         virtual FieldType post_decode(const WireType& wire_value)
         { return wire_value; }
     };
 
     
     
-    /// \brief Base class for static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire).
-    /// \ingroup dccl_api
+    /// \brief Base class for static-typed (no boost::any) field encoders/decoders. Most single-valued user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire) or RepeatedTypedFieldCodec if your codec has special behavior for repeated (vector) fields.
     ///
+    /// \ingroup dccl_field_api
     ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DefaultEnumCodec which uses DefaultNumericFieldCodec to do all the numerical encoding / decoding while DefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
     ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
@@ -160,12 +169,12 @@ typedef WireType wire_type;
       // we don't currently support type conversion (post_decode / pre_encode) of Message types
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<0> dummy = 0)
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, compiler::dummy<0> dummy = 0)
       {  *field_value = wire_value; }
       
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, dummy<1> dummy = 0)
+      any_post_decode_specific(const boost::any& wire_value, boost::any* field_value, compiler::dummy<1> dummy = 0)
       {
           try
           {
@@ -185,7 +194,7 @@ typedef WireType wire_type;
       
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<0> dummy = 0)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<0> dummy = 0)
       {
           try
           {
@@ -201,7 +210,7 @@ typedef WireType wire_type;
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_specific(Bitset* bits, boost::any* wire_value, dummy<1> dummy = 0)
+      any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<1> dummy = 0)
       {
           try
           { *wire_value = decode(bits); }
@@ -212,9 +221,9 @@ typedef WireType wire_type;
     };
 
 
-    /// \brief Base class for "repeated" (multiple value) static-typed (no boost::any) field encoders/decoders. Most user defined variable length codecs will start with this class. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire). Use TypedFieldCodec if your fields are always singular ("optional" or "required"). Singular fields are default implemented in this codec by calls to the equivalent repeated function with an empty or single valued vector.
-    /// \ingroup dccl_api
+    /// \brief Base class for "repeated" (multiple value) static-typed (no boost::any) field encoders/decoders. Use TypedFixedFieldCodec if your codec is fixed length (always uses the same number of bits on the wire). Use TypedFieldCodec if your fields are always singular ("optional" or "required"). Singular fields are default implemented in this codec by calls to the equivalent repeated function with an empty or single valued vector.
     ///
+    /// \ingroup dccl_field_api
     ///\tparam WireType the type used for the encode and decode functions. This can be any C++ type, and is often the same as FieldType, unless a type conversion should be performed. The reason for using a different WireType and FieldType should be clear from the DefaultEnumCodec which uses DefaultNumericFieldCodec to do all the numerical encoding / decoding while DefaultEnumCodec does the type conversion (pre_encode() and post_decode()).
     ///\tparam FieldType the type used in the Google Protobuf message that is exposed to the end-user Codec::decode(), Codec::encode(), etc. functions.
     template<typename WireType, typename FieldType = WireType>
@@ -312,7 +321,7 @@ typedef WireType wire_type;
 
       template<typename T>
       typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<0> dummy = 0)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, compiler::dummy<0> dummy = 0)
       {
           std::vector<WireType> decoded_msgs = decode_repeated(repeated_bits);
           wire_values->resize(decoded_msgs.size(), WireType());
@@ -326,7 +335,7 @@ typedef WireType wire_type;
           
       template<typename T>
       typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, dummy<1> dummy = 0)
+      any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values, compiler::dummy<1> dummy = 0)
       {
           std::vector<WireType> decoded = decode_repeated(repeated_bits);
           wire_values->resize(decoded.size(), WireType());

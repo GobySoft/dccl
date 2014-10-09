@@ -38,77 +38,57 @@
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
 #include "logger.h"
-#include "protobuf_cpp_type_helpers.h"
 #include "exception.h"
 #include "field_codec.h"
 #include "field_codec_fixed.h"
 
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
-#include "type_helper.h"
 #include "field_codec_manager.h"
  
-/// Objects pertaining to acoustic communications (acomms)
+/// Dynamic Compact Control Language namespace
 namespace dccl
 {
     class FieldCodec;
   
-    /// \class Codec dccl/dccl.h dccl/dccl.h
-    /// \brief provides an API to the Dynamic CCL Codec.
-    /// \ingroup acomms_api
+    /// \brief The Dynamic CCL enCODer/DECoder. This is the main class you will use to load, encode and decode DCCL messages. Many users will not need any other DCCL classes than this one.
     /// \ingroup dccl_api
-    /// \sa acomms_dccl.proto and acomms_modem_message.proto for definition of Google Protocol Buffers messages (namespace dccl::protobuf).
-    ///
-    /// Simple usage example:
-    /// 1. Define a Google Protobuf message with DCCL extensions:
-    /// \verbinclude simple.proto
-    /// 2. Write a bit of code like this:
-    /// \code
-    /// dccl::Codec* dccl = dccl::Codec::get();
-    /// dccl->load<Simple>();
-    /// Simple message_out;
-    /// message_out.set_telegram("Hello!");
-    /// std::string bytes;
-    /// dccl->encode(&bytes, message);
-    /// \\ send bytes across some network
-    /// Simple message_in;
-    /// dccl->decode(bytes&, message_in);
-    /// \endcode
-    /// \example acomms/chat/chat.cpp
-    /// \example acomms/dccl/dccl_simple/dccl_simple.cpp
-    /// simple.proto
-    /// \verbinclude simple.proto
-    /// dccl_simple.cpp
-    /// \example acomms/dccl/two_message/two_message.cpp
-    /// two_message.proto
-    /// \verbinclude two_message.proto
-    /// two_message.cpp
     class Codec
     {
       public:       
-        Codec(const std::string& dccl_id_codec = default_id_codec_name());
-        virtual ~Codec()
-        {
-            for(std::vector<void *>::iterator it = dl_handles_.begin(),
-                    n = dl_handles_.end(); it != n; ++it)
-                dlclose(*it);
-        }
-
-        /// \brief Load any codecs present in the given shared library handle
+        /// \brief Instantiate a Codec, optionally with a non-default identifier field codec.
         ///
-        /// Codecs must be loaded within the shared library using a C function
+        /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManager::add and then instantiate Codec with that name.
+        /// \param dccl_id_codec Name passed to FieldCodecManager::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+        /// \param library_path Library to load using load_library (this library would typically load the identifier codec referenced in dccl_id_codec).
+        Codec(const std::string& dccl_id_codec = default_id_codec_name(),
+              const std::string& library_path = "");
+
+        /// \brief Destructor
+        virtual ~Codec();
+
+        /// \brief Add codecs and/or load messages present in the given shared library handle
+        ///
+        /// Codecs and messages must be loaded within the shared library using a C function
         /// (declared extern "C") called "dccl3_load" with the signature
         /// void dccl3_load(dccl::Codec* codec)
         void load_library(void* dl_handle);
 
-        /// \brief Load any codecs present in the given shared library handle
+        /// \brief Remove codecs and/or unload messages present in the given shared library handle
         ///
-        /// Codecs must be loaded within the shared library using a C function
-        /// (declared extern "C") called "dccl3_load" with the signature
-        /// void dccl3_load(dccl::Codec* codec)
+        /// Codecs and messages must be unloaded within the shared library using a C function
+        /// (declared extern "C") called "dccl3_unload" with the signature
+        /// void dccl3_unload(dccl::Codec* codec)
+        /// Note that codecs must be added before messages that use them are loaded.
+        void unload_library(void* dl_handle);
+
+        /// \brief Load any codecs present in the given shared library name. 
+        ///
+        /// The library is opened and then load_library(void* dl_handle) is called. Any libraries
+        /// loaded this way will be unloaded when Codec is destructed.
         void load_library(const std::string& library_path);
         
-        /// \brief All messages must be explicited loaded and validated (size checks, option extensions checks, etc.) before they can be encoded/decoded. Use this form when the messages used are static (known at compile time).
+        /// \brief All messages must be explicited loaded and validated (size checks, option extensions checks, etc.) before they can be encoded/decoded. Use this version of load() when the messages used are static (known at compile time).
         ///
         /// \tparam ProtobufMessage Any Google Protobuf Message generated by protoc (i.e. subclass of google::protobuf::Message)
         /// \throw dccl::Exception if message is invalid. Warnings and errors are written to dccl::dlog.
@@ -116,12 +96,31 @@ namespace dccl
             void load()
         { load(ProtobufMessage::descriptor()); }
 
+        /// \brief Unload a given message.
+        ///
+        /// \tparam ProtobufMessage Any Google Protobuf Message generated by protoc (i.e. subclass of google::protobuf::Message)
+        template<typename ProtobufMessage>
+            void unload()
+        { unload(ProtobufMessage::descriptor()); }
+
+        
         /// \brief An alterative form for loading and validating messages for message types <i>not</i> known at compile-time ("dynamic").
         ///
         /// \param desc The Google Protobuf "Descriptor" (meta-data) of the message to validate.
         /// \throw dccl::Exception if message is invalid.
         void load(const google::protobuf::Descriptor* desc);
 
+        /// \brief An alterative form for unloading messages for message types <i>not</i> known at compile-time ("dynamic").
+        ///
+        /// \param desc The Google Protobuf "Descriptor" (meta-data) of the message to validate.
+        /// \throw dccl::Exception if message is invalid.
+        void unload(const google::protobuf::Descriptor* desc);
+
+        /// \brief Set a passphrase to be used when encoded messages to encrypt them and to decrypt messages after decoding them.
+        ///
+        /// Encryption is performed using AES via the opertional Crypto++ library. If this library is not compiled in, no encryption will be performed.
+        /// \param passphrase Plain-text passphrase
+        /// \param do_not_encrypt_ids_ Optional set of DCCL ids for which to skip encrypting or decrypting
         void set_crypto_passphrase(const std::string& passphrase,
                                    const std::set<unsigned>& do_not_encrypt_ids_ = std::set<unsigned>());
             
@@ -161,16 +160,16 @@ namespace dccl
         /// 
         /// You can use this method along with id() to handle multiple types of known (static) incoming DCCL messages. For example:
         /// \code
-        /// unsigned dccl_id = codec->id_from_encoded(bytes);    
-        /// if(dccl_id == codec->id<MyProtobufType1>())
+        /// unsigned dccl_id = codec.id(bytes);    
+        /// if(dccl_id == codec.id<MyProtobufType1>())
         /// {
         ///     MyProtobufType1 msg_out1;
-        ///     codec->decode(bytes, &msg_out1);
+        ///     codec.decode(bytes, &msg_out1);
         /// }
-        /// else if(dccl_id == codec->id<MyProtobufType2>())
+        /// else if(dccl_id == codec.id<MyProtobufType2>())
         /// {
         ///     MyProtobufType2 msg_out2;
-        ///     codec->decode(bytes, &msg_out2);
+        ///     codec.decode(bytes, &msg_out2);
         /// }
         /// \endcode
         /// \param bytes encoded message to get the DCCL ID of
@@ -188,13 +187,6 @@ namespace dccl
         
         //@}
             
-        /// \brief Provides the encoded size (in bytes) of msg. This is useful if you need to know the size of a message before encoding it (encoding it is generally much more expensive than calling this method)
-        ///
-        /// \param msg Google Protobuf message with DCCL extensions for which the encoded size is requested
-        /// \return Encoded (using DCCL) size in bytes
-        unsigned size(const google::protobuf::Message& msg);
-            
-        //@}
        
         /// \name Codec functions.
         ///
@@ -242,7 +234,16 @@ namespace dccl
         /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
         template<typename GoogleProtobufMessagePointer>
             GoogleProtobufMessagePointer decode(std::string* bytes);
-      
+
+        /// \brief Provides the encoded size (in bytes) of msg. This is useful if you need to know the size of a message before encoding it (encoding it is generally much more expensive than calling this method)
+        ///
+        /// \param msg Google Protobuf message with DCCL extensions for which the encoded size is requested
+        /// \return Encoded (using DCCL) size in bytes
+        unsigned size(const google::protobuf::Message& msg);
+            
+        //@}
+
+        
         static std::string default_id_codec_name()
         { return "dccl.default.id"; }        
 
@@ -260,9 +261,8 @@ namespace dccl
         }
 
         
-        friend class v2::DefaultMessageCodec;
-        //friend class v3::DefaultMessageCodec;
       private:
+        friend class v2::DefaultMessageCodec;
         Codec(const Codec&);
         Codec& operator= (const Codec&);
 
