@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{threeparttable}
+\usepackage{amsmath}
+\usepackage[font=footnotesize]{subfig}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+
+
+\begin{document}
+\begin{table}
+\centering
+\begin{threeparttable}
+\caption{Definition of the DCCL Structure Language}
+\label{tab:dccl_language}
+\begin{tabular}{l|p{0.09\textwidth}|p{0.3\textwidth}|p{0.2\textwidth}|l}
+\hline \multicolumn{5}{c}{Message Extensions\tnote{a}} \\ \hline
+\hline Extension Name & Extension Type & \multicolumn{3}{c}{Explanation} \\
+\hline (dccl.msg).id & int32 & \multicolumn{3}{c}{Unique identifying integer for this message}  \\
+\hline (dccl.msg).max\_bytes & uint32 & \multicolumn{3}{c}{Enforced upper bound for the encoded message length}  \\
+\hline (dccl.msg).codec\_version & int32 & \multicolumn{3}{c}{Default codec set to use (corresponds to DCCL major version)}  \\
+\hline (dccl.msg).codec & string & \multicolumn{3}{c}{Name of the codec to use for encoding the base message.}  \\
+\hline \multicolumn{5}{c}{Field Extensions\tnote{b}} \\ \hline
+\hline Extension Name & Extension Type & Explanation & Applicable Fields & Symbol \\
+\hline (dccl.field).precision & int32 & Decimal digits to preserve; can be negative.  & double, float & $p$ \\
+\hline (dccl.field).min  & double & Minimum value that this field can contain (inclusive) & (u)intN\tnote{c}, double, float  & $x_m$ \\
+\hline (dccl.field).max  & double & Maximum value value that this field can contain (inclusive)   & (u)intN, double, float & $x_M$ \\
+\hline (dccl.field).max\_length  & uint32  & Maximum length (in bytes) that can be encoded & string, bytes & $L_M$ \\
+\hline (dccl.field).max\_repeat  & uint32  & Maximum number of repeated values. & all \textit{repeated} & $r_M$ \\
+\hline (dccl.field).codec & string  & Codec to use for this field (if omitted, the defaults given in Table \ref{tab:dccl_enc} are used) & all & - \\
+\hline (dccl.field).omit & bool & Do not include field in encoded message (default = false)  & all & - \\
+\hline 
+\end{tabular} 
+\begin{tablenotes}
+\item[a] Extensions of \texttt{google.protobuf.MessageOptions}
+\item[b] Extensions of \texttt{google.protobuf.FieldOptions}
+\item[c] (u)intN refers to any of the integer types: int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+
+
+
+\begin{table*}
+\centering
+\begin{threeparttable}
+\caption{Default formulas for encoding the DCCL types.}
+\label{tab:dccl_enc}
+\begin{tabular}{p{0.15\textwidth}|p{0.28\textwidth}|p{0.5\textwidth}}
+\hline GPB Type & Size (bits) ($q$) & Encode\tnote{a}  \\ \hline
+\hline \multicolumn{3}{c}{(dccl.msg).id header (varint)} \\ \hline
+\hline int32 &  $\left. 
+\begin{array}{l l}
+  8 & \quad \text{if $x \in [0,128)$ }\\
+  16 & \quad \text{if $x \in [128, 32768)$} \\
+\end{array} \right.$ & $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  x \cdot 2 & \quad \text{if $x \in [0,128)$ }\\
+  x \cdot 2 + 1 & \quad \text{if $x \in [128, 32768)$} \\
+\end{array} \right.$ \\ 
+\hline \multicolumn{3}{c}{\textit{required} fields} \\ \hline
+\hline bool & 1 & 
+$x_{enc} = \left\{ 
+\begin{array}{l l}
+  1 & \quad \text{if $x$ is true}\\
+  0 & \quad \text{if $x$ is false}\\
+\end{array} \right.$
+\\ 
+\hline enum & $\lceil \hbox{log}_2(\sum{\epsilon_i}) \rceil$ & $x_{enc} =  i $ \\ 
+\hline (u)intN & $\lceil \hbox{log}_2(x_M-x_m + 1) \rceil$ & $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  x - x_m  & \quad \text{if $x \in [x_m,x_M]$ }\\
+  0 & \quad \text{otherwise} \\
+\end{array} \right.$   \\ 
+\hline double, float & $\lceil \hbox{log}_2((x_M-x_m)\cdot 10^{p} + 1) \rceil$ &  $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  \hbox{nint}((x - x_m)\cdot 10^{p}) & \quad \text{if $x \in [x_m,x_M]$ }\\
+  0 & \quad \text{otherwise} \\
+\end{array} \right.$   \\ 
+\hline string (of length $L$) & $8 + \text{min}(L, L_M) \cdot 8$ & $x_{enc} = L + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8(n+1)}$ \\ 
+\hline bytes & $L_M \cdot 8$ & $x_{enc}$ = $x$ \\ 
+\hline \textit{Message} & sum of \textit{Message} field sizes & $x_{enc}$ for each field of \textit{Message} bitwise concatenated (recursive encoding).  \\ 
+\hline \multicolumn{3}{c}{\textit{optional} fields} \\ \hline
+\hline bool & 2 & 
+$x_{enc} = \left\{ 
+\begin{array}{l l}
+  2 & \quad \text{if $x$ is true}\\
+  1 & \quad \text{if $x$ is false}\\
+  0 & \quad \text{if $x$ is not set}\\
+\end{array} \right.$
+\\ 
+\hline enum & $\lceil \hbox{log}_2(1+\sum{\epsilon_i}) \rceil$ & $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  i+1 & \quad \text{if $x \in \{\epsilon_i\}$ }\\
+  0 & \quad \text{otherwise}\\
+\end{array} \right.$   \\ 
+\hline (u)intN & $\lceil \hbox{log}_2(x_M-x_m + 2) \rceil$ & $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  x - x_m + 1  & \quad \text{if $x \in [x_m,x_M]$ }\\
+  0 & \quad \text{if $x$ is not set} \\
+\end{array} \right.$   \\ 
+\hline double, float & $\lceil \hbox{log}_2((x_M-x_m)\cdot 10^{p} + 2) \rceil$ &  $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  \hbox{nint}((x - x_m)\cdot 10^{p})+1 & \quad \text{if $x \in [x_m,x_M]$ }\\
+  0 & \quad \text{otherwise} \\
+\end{array} \right.$   \\ 
+\hline string & \multicolumn{2}{c}{same as \textit{required}} \\ 
+\hline bytes & $L_M \cdot 8 + 1$ & $x_{enc} =  \left\{ 
+\begin{array}{l l}
+  x \cdot 2 + 1 & \quad \text{if $x$ is set }\\
+  0 & \quad \text{otherwise} \\
+\end{array} \right.$   \\
+\hline \textit{Message} & \multicolumn{2}{c}{same as \textit{required}} \\ 
+\hline \multicolumn{3}{c}{\textit{repeated} fields} \\ \hline
+\hline all & $r_M \cdot q_{optional}$ & $x_{enc}$ for \textit{optional} field is calculated for each repeated element then bitwise concatenated (where repeated index 0 is at the least significant bit)  \\ 
+\hline
+\end{tabular}
+\begin{tablenotes}
+\item Symbols (in addition to those defined in Table \ref{tab:dccl_language}):
+\item $\cdot$ $x$ is the original (and decoded) value.
+\item $\cdot$ $x[n]$ is the ASCII value of the nth character of the string.
+\item $\cdot$ $x_{enc}$ is the encoded value. 
+\item $\cdot$ $\epsilon_i$ is the $i$th child of the enumeration definition (where $i = 0, 1, 2, \ldots$), \textit{not} the value assigned to the enum (which need not be sequential).
+\item $\cdot$ nint($x$) means round $x$ to the nearest integer.
+\item[a] If data are out of range (e.g. $x > max$ or $x < min$), for \textit{optional} fields they are encoded as zero ($x_{enc} = 0$) and decoded as not set; for \textit{required} fields, they are encoded as the $min$ value. In the case of strings whose length exceeds $L_M$, the string is truncated to $L_M$ before encoding. Thus, care should be taken not to exceed the $min$ and $max$ values to ensure the message is losslessly decodable.
+\end{tablenotes}
+\end{threeparttable}
+\end{table*}
+\end{document}

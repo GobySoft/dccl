@@ -759,6 +759,8 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = @CMAKE_SOURCE_DIR@/src/doc/doxy_body/main.dox \
+                         @CMAKE_SOURCE_DIR@/src/doc/doxy_body/idl.dox \
+                         @CMAKE_SOURCE_DIR@/src/doc/doxy_body/codecs.dox \
                          @dccl_INC_DIR@ \
                          @CMAKE_SOURCE_DIR@/src
 

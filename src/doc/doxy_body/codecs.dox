@@ -1,0 +1,84 @@
+/*! \page codecs DCCL Encoders/Decoders (codecs)
+
+DCCL messages are encoded and decoded using a set of "field codecs" that are responsible for encoding and decoding a given field. The library comes with a default implementation for all the Google Protocol Buffers (Protobuf) types. It is also possible to define \ref codecs-custom "custom field codecs" to encode one or more fields of a given message (or even the entire message).
+
+\section codecs-encode Encoding algorithm
+
+The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v3::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure.
+
+\code
+function Encode(DCCL Message)
+1: Initialize global Bits to an empty bitset
+2: Encode the identifier by calling EncodeId with the value of dccl.msg.id
+3: Encode the header by calling EncodeFields with all fields in the DCCL Message where in_head is true
+4: Encode the body by calling EncodeFields with all fields in the DCCL Message where in_head is false
+5: Optionally encrypt the body using the header as a nonce
+6: Convert Bits to a string of bytes and return this string
+\endcode
+
+
+\code
+function EncodeId(dccl.msg.id)
+1: Find the identifier codec (defaults to dccl::DefaultIdentifierCodec, otherwise specified in the dccl::Codec constructor)
+2: Encode the value of dccl.msg.id using this codec and append result to Bits
+\endcode
+
+\code
+function EncodeFields(fields)
+1: For each field in fields
+2:   Find the correct FieldCodec by the name given to dccl::FieldCodecManager::add()
+       If (dccl.field).codec is explicitly set use that name.
+       Else if this is an embedded message type and (dccl.msg).codec is explicitly set in that message definition, then use that name.
+       Else if (dccl.msg).codec_group is set in the root message, use that name.
+       Else use the name "dccl.defaultN", where (dccl.msg).codec_version = N (set in the root message or defaults to 2)
+3:   Encode field and append result to Bits. If field is an embedded Message, EncodeFields is called recursively with the fields of the embedded Message.
+4: Append zero bits to Bits until the length of Bits is an integer number of bytes
+\endcode
+
+Definitions:
+<ol>
+<li> Byte: exactly eight (8) bits
+<li> Field: a numbered field in the Google Protobuf Message
+<li> dccl::Bitset: A set of bits without byte boundaries. The <b>front</b> is the least significant bit, and the <b>back</b> is the most significant bit. Thus, appending to a Bitset means add these bits to the most significant bit. 
+</ol>
+
+
+\section codecs-example Example encoding
+
+The following DCCL Message "CommandMessage" gives an example DCCL definition of a basic command, and on the left shows the parts of the encoded message. Note that LSB = least significant byte, MSB = most significant byte.
+
+
+\image html codecs-ex-msg.png
+\image latex codecs-ex-msg.png 
+
+Example of encoding the DCCL "CommandMessage" for a representative set of values. The table gives the unencoded \f$x\f$ and encoded \f$x_{enc}\f$ values using the formulas in \ref codecs-math. Below the table is the encoded message in little endian format (both in hexadecimal and binary notation).
+
+\image html codecs-ex-enc.png
+\image latex codecs-ex-enc.png 
+
+
+\section codecs-math Default Field Codec Reference
+
+See \ref idl-options "Table 1" in the \ref idl for symbol definitions.
+
+These formulas refer to DCCLv3 defaults (i.e. codec_version = 3 which is equivalent to codec = "dccl.default3"):
+
+\image html codecs-table.png
+\image latex codecs-table.png 
+
+\section codecs-custom Custom Field Codecs
+
+To define your own codecs:
+<ol>
+<li>subclass one of the base classes in the \ref dccl_field_api
+<li>add the class into the dccl::FieldCodecManager with a given string name
+<li>set a given field's (dccl.field).codec to the name given to dccl::FieldCodecManager, or the (dccl.msg).codec to change the entire message's field codec.
+</ol>
+
+
+\sa \ref dccl_custom_message/test.proto, 
+    \ref dccl_custom_message/test.cpp,
+    \ref dccl_codec_group/test.proto, 
+    \ref dccl_codec_group/test.cpp
+    
+*/

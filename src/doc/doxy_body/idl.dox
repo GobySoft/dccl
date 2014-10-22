@@ -1,0 +1,62 @@
+/*! \page idl DCCL Interface Descriptor Language (IDL)
+
+DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf using before reading the rest of this document: see <http://code.google.com/apis/protocolbuffers/docs/overview.html>.
+
+An example DCCL message is as follows (using Protobuf version 2.4.0 or newer; see \ref idl-old-syntax "old syntax" for older versions):
+\code
+import "dccl/protobuf/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg) = { codec_version: 3
+                        id: 124
+                        max_bytes: 32 };
+  required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+  required double y = 2 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+  required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
+  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
+  optional VehicleClass veh_class = 4;
+  optional bool battery_ok = 5;
+}
+\endcode
+
+In the above message, the snippet \code option (dccl.msg) = { codec_version: 3  id: 124  max_bytes: 32 }; \endcode represents the <b>message</b> options extensions since they affect the design of the entire DCCL message (in this case "NavigationReport"). The <b>field</b> options affect a given field, e.g. \code [(dccl.field) = { min: -10000 max: 10000 precision: 1 }]; \endcode
+
+
+The full Protobuf definition of the DCCL extensions is given in option_extensions.proto (as messages DCCLFieldOptions and DCCLMessageOptions).
+
+\section idl-options DCCL options
+
+The core set of DCCL options is given in the following table: 
+
+\image html idl-table.png
+\image latex idl-table.png 
+
+\section idl-old-syntax DCCL Syntax for older Protobuf versions (< 2.4.0)
+
+When using older versions of Google Protocol Buffers than 2.4.0, options cannot be aggregated. Thus, the example NavigationReport message would be written as such: 
+
+\code
+import "dccl/protobuf/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).id = 124;
+  option (dccl.msg).max_bytes = 32;
+
+  required double x = 1 [(dccl.field).min = -10000,
+                         (dccl.field).max = 10000,
+                         (dccl.field).precision = 1];
+  required double y = 2 [(dccl.field).min = -10000,
+                         (dccl.field).max = 10000,
+                         (dccl.field).precision = 1];
+  required double z = 3 [(dccl.field).min = -5000,
+                         (dccl.field).max = 0,
+                         (dccl.field).precision = 0];
+  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
+  optional VehicleClass veh_class = 4;
+  optional bool battery_ok = 5;
+}
+\endcode
+
+Note that this syntax is valid for newer versions of Protobuf as well, so it's the choice to use if you are concerned about portability over readability.
+*/
