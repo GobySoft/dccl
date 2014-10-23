@@ -31,6 +31,18 @@ The core set of DCCL options is given in the following table:
 \image html idl-table.png
 \image latex idl-table.png 
 
+\subsection idl-options-id DCCL ID: (dccl.msg).id
+
+The DCCL ID is used to uniquely identify a given message name without having to encode the name in the message (encoding a number is much cheaper than a string). To interoperate with other groups, please see http://gobysoft.org/wiki/DcclIdTable. For private work, please use IDs 124-127 (one-byte) and 128-255 (two-byte). 
+
+\subsection idl-options-maxbytes DCCL Maximum bytes: (dccl.msg).max_bytes
+
+This value is the maximum message size before you get an error from DCCL. This is a design tool to help ensure messages do not exceed a desired value, typically the path maximum transmission unit (MTU). Messages that do not take the actual max_bytes size are encoded only as the size they take up (i.e. they are not padded to max_bytes).
+
+\subsection idl-options-codecversion DCCL Codec Version: (dccl.msg).codec_version
+
+This option sets the default codec version (which is not wire-compatibility between Goby/DCCL 2 and DCCL 3). Hence, the default is "2" to preserve backwards-compatibility on a message-by-message basis, but this should always be set to "3" when you are able to use DCCL v3 for all nodes that deploy this message.
+
 \section idl-old-syntax DCCL Syntax for older Protobuf versions (< 2.4.0)
 
 When using older versions of Google Protocol Buffers than 2.4.0, options cannot be aggregated. Thus, the example NavigationReport message would be written as such: 

@@ -4,7 +4,7 @@ DCCL messages are encoded and decoded using a set of "field codecs" that are res
 
 \section codecs-encode Encoding algorithm
 
-The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v3::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure.
+The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v3::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. Keep in mind that DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
 
 \code
 function Encode(DCCL Message)
@@ -59,9 +59,94 @@ Example of encoding the DCCL "CommandMessage" for a representative set of values
 
 \section codecs-math Default Field Codec Reference
 
-See \ref idl-options "Table 1" in the \ref idl for symbol definitions.
+You certainly don't need to know how the fields are encoded to use DCCL, but this may be of interest to those looking to optimize their usage of DCCL or to implement custom encoders. First we will casually introduce the default encoders, then you can reference \ref codecs-math-table "Table 2" below for precise details.
 
-These formulas refer to DCCLv3 defaults (i.e. codec_version = 3 which is equivalent to codec = "dccl.default3"):
+Remember that DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
+
+\subsection codecs-math-id Default Identifier Codec
+
+Each DCCL message must have a unique numeric ID (defined using (dccl.msg).id = N). To interoperate with other groups, please see http://gobysoft.org/wiki/DcclIdTable. For private work, please use IDs 124-127 (one-byte) and 128-255 (two-byte). 
+
+This ID is used in lieu of the DCCL message name on the wire. It is encoded using a one- or two-byte value, allowing for a larger set of values to be used than a single byte would allow, but still preserving a set of one-byte identifiers for frequently sent messages. This is always the first 8 or 16 bits of the message so that the dccl::Codec knows which message to decode.
+
+The first (least significant) bit of the ID determines if it is a one- or two-byte identifier. If the first bit is true, it's a two-byte identifier and the next 15 bits give the actual ID. If the first bit is false, the next 7 bits give the ID. 
+
+Two examples:
+<ol>
+<li>One byte ID [0-128): (dccl.msg).id = 124. Decimal 124 is binary 1111100, which is appended to a single 0 bit to indicate a one-byte ID. Thus, the ID on the wire is 11111000 (or 124*2 = 248)
+<li>Two byte ID [128-32768): (dccl.msg).id = 240. Decimal 240 is binary 0000000 11110000. This is appended to a single 1 bit to indicate a two-byte ID, giving an encoded ID of 00000001 11100001 (or 240*2+1 = 481).
+</ol>
+
+\subsection codecs-math-numeric Default Numeric Codec
+
+Numeric values are all encoded essentially the same way. Integers are treated as floating point values with zero precision. Precision is defined as the number of decimal places to preserve (e.g. precision = 3 means round to the closest thousandth, precision = -1 means round to the closest tens). Thus, integer fields can also have negative precision, if desired. Fields are bounded by a minimum and maximum allowable value, based on the underlying source of the data.
+
+To encode, the numeric value is rounded to the desired precision, and then multiplied by the appropriate power of ten to make it an integer. Then it is increased or decreased so that zero (0) represents the minimum encodable value. At this point, it is simply an unsigned integer. To encode the optional field's "not set", an additional value (not an additional bit) is reserved. To allow "not set" to be the zero (0) encoded value, all other values are incremented by one.
+
+This default encoder assumes unset fields are rare. If you commonly have unset optional fields, you may want to implement a "presence bit" encoder that uses a separate bit to indicate if a field is set or not. These are two extremes of the more general purpose idea of an entropy encoder, such as the arithmetic encoder. In that case, "not set" is simply another symbol that has a probability mass relative to the actual values to capture the frequency with which fields are set or not set.
+
+For example:
+\code
+required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+\endcode
+
+The field takes 18 bits: \f$\lceil \hbox{log}_2(10000-(-10000)\cdot 10^1 + 1) \rceil =\lceil 17.61 \rceil = 18 \f$.
+
+Say we wanted to encode the value 10.56:
+<ul>
+<li> Round to tenths: 10.6
+<li> Subtract the minimum value: 10.6 - (-10000) = 10010.6 
+<li> Multiply by precision orders of magnitude: 10010.6*10 = 100106 = binary 01 10000111 00001010
+</ul>
+
+\subsection codecs-math-enum Default Enumeration Codec
+
+Enumerations are treated like unsigned integers, where the enumeration keys are given values based on the order they are declared (not the value given in the .proto file). 
+
+For example:
+\code
+enum VehicleClass { AUV = 10; USV = 5; SHIP = 3; }
+optional VehicleClass veh_class = 4;
+\endcode
+
+In this case (for encoding): AUV is 0, USV is 1, SHIP is 2. After this mapping, the field is encoded exactly like an equivalent integer field (with max = 2, min = 0 in this case).
+
+\subsection codecs-math-bool Default Boolean Codec
+
+Booleans are simple. If they are required, they are encoded with false = 0, true = 1. If they are optional, they are tribools with "not set" = 0, false = 1, true = 2
+
+\subsection codecs-math-string Default String Codec
+
+Strings are given a maximum size in the proto file (max_length). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
+
+For example:
+\code
+optional string message = 4 [(dccl.field).max_length = 10];
+\endcode
+
+Say we want to encode "HELLO":
+<ul>
+<li> The string is length 5, so we insert 4 bits (\f$\lceil \hbox{log}_2(10 + 1) \rceil = 4\f$) with value 5: 0101
+<li> Following, we add the ASCII values: 01001111 01001100 01001100 01000101 01001000 
+<li> The full encoded value is thus 0100 11110100 11000100 11000100 01010100 10000101 
+</ul>
+
+\subsection codecs-math-bytes Default Bytes Codec
+
+Like the string codec, but not variable length. It always takes max_length bytes in the message, and if it is optional, a presence bit is added at the front. If the presence bit is false, the bytes are omitted.
+
+\subsection codecs-math-message Default Message Codec
+
+Sub-messages are encoded recursively. In the case of an optionanl message, a presence bit is added before the message fields. If the presence bit is false (indicating the message is not set), no further bits are used. 
+
+\subsection codecs-math-table Mathematical formulas for Default Field Codecs
+
+See \ref idl-options "Table 1" in the \ref idl for symbol definitions. The formulas below in Table 2 refer to DCCLv3 defaults (i.e. codec_version = 3 which is equivalent to codec = "dccl.default3"). A few things that may make it easier to read this table:
+<ul>
+<li> Left bit-shifting by N bits (\f$x << N\f$) is equivalent to multiplying by powers of two to the N (\f$x \cdot 2^N\f$). 
+<li> \f$\lceil \hbox{log}_2(b-a+1) \rceil\f$ is the fewest number of bits that can hold all the values between \f$a\f$ and \f$b\f$. For example, \f$a=0\f$ through \f$b=7\f$ can be stored in 3 (\f$\lceil \hbox{log}_2(7-0+1) \rceil\f$) bits. Even if \f$b\f$ was 4, 5, or 6, it would still take 3 bits since you cannot have partial bits, hence the ceiling function (\f$\lceil \ldots \rceil\f$).
+<li> Appending bits in this context means adding these bits to the most signficant end (the left side if the bits are written MSB to LSB from left to right). For example, appending a Bitset of size 2 with decimal value 3 (b11) to a Bitset of size 3 with decimal value 1 (b001) would yield a Bitset of size 5 with value 25 (b11001). This is equivalent to the mathematical expression \f$1+3\cdot 2^3 = 25\f$
+</ul>
 
 \image html codecs-table.png
 \image latex codecs-table.png 
