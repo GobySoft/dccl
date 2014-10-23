@@ -120,7 +120,7 @@ namespace dccl
                   dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(dccl::round(wire_value, 0));
 
                   // "presence" value (0)
-                  if(!FieldCodecBase::this_field()->is_required())
+                  if(!FieldCodecBase::use_required())
                       uint_value += 1;
 	  
 
@@ -137,7 +137,7 @@ namespace dccl
                   // See, e.g., http://gcc.gnu.org/bugzilla/show_bug.cgi?id=10959
                   dccl::uint64 uint_value = (bits->template to<dccl::uint64>)();
 
-                  if(!FieldCodecBase::this_field()->is_required())
+                  if(!FieldCodecBase::use_required())
                   {
                       if(!uint_value) throw NullValueException();
                       --uint_value;
@@ -162,7 +162,7 @@ namespace dccl
               unsigned size()
               {
                   // if not required field, leave one value for unspecified (always encoded as 0)
-                  const unsigned NULL_VALUE = FieldCodecBase::this_field()->is_required() ? 0 : 1;
+                  const unsigned NULL_VALUE = FieldCodecBase::use_required() ? 0 : 1;
               
                   return dccl::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
               }

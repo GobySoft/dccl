@@ -341,7 +341,20 @@ namespace dccl
             }
                 
         }
-            
+
+        /// \brief Whether to use the required or optional encoding
+        bool use_required()
+        {
+            const google::protobuf::FieldDescriptor* field = this_field();
+            if(!field)
+                return true;
+            else if(codec_version() > 2) // use required for both repeated and required fields
+                return field->is_required() || field->is_repeated();
+            else // use required only for required fields
+                return field->is_required();
+        }
+        
+        
         // 
         // VIRTUAL
         //

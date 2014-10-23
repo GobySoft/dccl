@@ -45,7 +45,7 @@
 \begin{threeparttable}
 \caption{Default formulas for encoding the DCCL types.}
 \label{tab:dccl_enc}
-\begin{tabular}{p{0.15\textwidth}|p{0.28\textwidth}|p{0.5\textwidth}}
+\begin{tabular}{p{0.19\textwidth}|p{0.32\textwidth}|p{0.48\textwidth}}
 \hline GPB Type & Size (bits) ($q$) & Encode\tnote{a}  \\ \hline
 \hline \multicolumn{3}{c}{(dccl.msg).id header (varint)} \\ \hline
 \hline int32 &  $\left. 
@@ -76,9 +76,9 @@ $x_{enc} = \left\{
   \hbox{nint}((x - x_m)\cdot 10^{p}) & \quad \text{if $x \in [x_m,x_M]$ }\\
   0 & \quad \text{otherwise} \\
 \end{array} \right.$   \\ 
-\hline string (of length $L$) & $8 + \text{min}(L, L_M) \cdot 8$ & $x_{enc} = L + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8(n+1)}$ \\ 
+\hline string (of length $L$) & $\lceil \hbox{log}_2(L_M + 1)\rceil + \text{min}(L, L_M) \cdot 8$ & $x_{enc} = L + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M + 1)\rceil}$ \\ 
 \hline bytes & $L_M \cdot 8$ & $x_{enc}$ = $x$ \\ 
-\hline \textit{Message} & sum of \textit{Message} field sizes & $x_{enc}$ for each field of \textit{Message} bitwise concatenated (recursive encoding).  \\ 
+\hline \textit{Message} & $\sum q_{subfields}$ & $x_{enc}$ for each field of \textit{Message} appended to the previous (recursive encoding).   \\ 
 \hline \multicolumn{3}{c}{\textit{optional} fields} \\ \hline
 \hline bool & 2 & 
 $x_{enc} = \left\{ 
@@ -96,22 +96,31 @@ $x_{enc} = \left\{
 \hline (u)intN & $\lceil \hbox{log}_2(x_M-x_m + 2) \rceil$ & $x_{enc} =  \left\{ 
 \begin{array}{l l}
   x - x_m + 1  & \quad \text{if $x \in [x_m,x_M]$ }\\
-  0 & \quad \text{if $x$ is not set} \\
+  0 & \quad \text{otherwise} \\
 \end{array} \right.$   \\ 
 \hline double, float & $\lceil \hbox{log}_2((x_M-x_m)\cdot 10^{p} + 2) \rceil$ &  $x_{enc} =  \left\{ 
 \begin{array}{l l}
   \hbox{nint}((x - x_m)\cdot 10^{p})+1 & \quad \text{if $x \in [x_m,x_M]$ }\\
   0 & \quad \text{otherwise} \\
 \end{array} \right.$   \\ 
-\hline string & \multicolumn{2}{c}{same as \textit{required}} \\ 
-\hline bytes & $L_M \cdot 8 + 1$ & $x_{enc} =  \left\{ 
+\hline string & \multicolumn{2}{c}{same as \textit{required}; empty string treated as ``not set''} \\ 
+\hline bytes & $\begin{array}{l l}
+  1 + L_M \cdot 8  & \quad \text{if $x$ is set} \\
+  1 & \quad \text{if $x$ is not set}\\
+\end{array}$ & $x_{enc} =  \left\{ 
 \begin{array}{l l}
   x \cdot 2 + 1 & \quad \text{if $x$ is set }\\
-  0 & \quad \text{otherwise} \\
+  0 & \quad \text{if $x$ is not set} \\
 \end{array} \right.$   \\
-\hline \textit{Message} & \multicolumn{2}{c}{same as \textit{required}} \\ 
-\hline \multicolumn{3}{c}{\textit{repeated} fields} \\ \hline
-\hline all & $r_M \cdot q_{optional}$ & $x_{enc}$ for \textit{optional} field is calculated for each repeated element then bitwise concatenated (where repeated index 0 is at the least significant bit)  \\ 
+\hline \textit{Message} & $\begin{array}{l l}
+  1 + \sum q_{subfields}  & \quad \text{if $x$ is set} \\
+  1 & \quad \text{if $x$ is not set}\\
+\end{array}$ & $x_{enc} = \left\{ \begin{array}{l l}
+  \text{\textit{required} $x_{enc}$ appended to } 1 & \quad \text{if $x$ is set} \\
+  0 & \quad \text{if $x$ is not set}\\
+\end{array} \right.$ \\ 
+\hline \multicolumn{3}{c}{\textit{repeated} fields (of size $r$)} \\ \hline
+\hline all & $\lceil \hbox{log}_2(r_M + 1)\rceil + r_M \cdot q_{optional}$ & $x_{enc}$ for \textit{optional} field is calculated for each repeated element then bitwise concatenated (where repeated index 0 is at the least significant bit) \\ 
 \hline
 \end{tabular}
 \begin{tablenotes}

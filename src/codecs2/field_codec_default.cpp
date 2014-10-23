@@ -42,13 +42,13 @@ dccl::Bitset dccl::v2::DefaultBoolCodec::encode()
 
 dccl::Bitset dccl::v2::DefaultBoolCodec::encode(const bool& wire_value)
 {
-    return Bitset(size(), this_field()->is_required() ? wire_value : wire_value + 1);
+    return Bitset(size(), use_required() ? wire_value : wire_value + 1);
 }
 
 bool dccl::v2::DefaultBoolCodec::decode(Bitset* bits)
 {
     unsigned long t = bits->to_ulong();
-    if(this_field()->is_required())
+    if(use_required())
     {
         return t;
     }
@@ -69,7 +69,7 @@ unsigned dccl::v2::DefaultBoolCodec::size()
     // true and false
     const unsigned BOOL_VALUES = 2;
     // if field unspecified
-    const unsigned NULL_VALUE = this_field()->is_required() ? 0 : 1;
+    const unsigned NULL_VALUE = use_required() ? 0 : 1;
     
     return dccl::ceil_log2(BOOL_VALUES + NULL_VALUE);
 }
@@ -192,7 +192,7 @@ dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
     bits.from_byte_string(wire_value);
     bits.resize(max_size());
     
-    if(!this_field()->is_required())
+    if(!use_required())
     {
         bits <<= 1;
         bits.set(0, true); // presence bit
@@ -215,7 +215,7 @@ unsigned dccl::v2::DefaultBytesCodec::size(const std::string& wire_value)
 
 std::string dccl::v2::DefaultBytesCodec::decode(Bitset* bits)
 {
-    if(!this_field()->is_required())
+    if(!use_required())
     {
         if(bits->to_ulong())
         {
@@ -242,12 +242,12 @@ std::string dccl::v2::DefaultBytesCodec::decode(Bitset* bits)
 unsigned dccl::v2::DefaultBytesCodec::max_size()
 {
     return dccl_field_options().max_length() * BITS_IN_BYTE +
-        (this_field()->is_required() ? 0 : 1); // presence bit?
+        (use_required() ? 0 : 1); // presence bit?
 }
 
 unsigned dccl::v2::DefaultBytesCodec::min_size()
 {
-    if(this_field()->is_required())
+    if(use_required())
         return max_size();
     else
         return 1; // presence bit
