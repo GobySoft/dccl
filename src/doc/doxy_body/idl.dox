@@ -29,7 +29,7 @@ The full Protobuf definition of the DCCL extensions is given in option_extension
 The core set of DCCL options is given in the following table: 
 
 \image html idl-table.png
-\image latex idl-table.png 
+\image latex idl-table.png "" width=6in
 
 \subsection idl-options-id DCCL ID: (dccl.msg).id
 

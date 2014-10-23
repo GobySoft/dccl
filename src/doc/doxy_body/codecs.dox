@@ -49,12 +49,12 @@ The following DCCL Message "CommandMessage" gives an example DCCL definition of 
 
 
 \image html codecs-ex-msg.png
-\image latex codecs-ex-msg.png 
+\image latex codecs-ex-msg.png "" width=6in
 
 Example of encoding the DCCL "CommandMessage" for a representative set of values. The table gives the unencoded \f$x\f$ and encoded \f$x_{enc}\f$ values using the formulas in \ref codecs-math. Below the table is the encoded message in little endian format (both in hexadecimal and binary notation).
 
 \image html codecs-ex-enc.png
-\image latex codecs-ex-enc.png 
+\image latex codecs-ex-enc.png  "" width=6in
 
 
 \section codecs-math Default Field Codec Reference
@@ -149,7 +149,7 @@ See \ref idl-options "Table 1" in the \ref idl for symbol definitions. The formu
 </ul>
 
 \image html codecs-table.png
-\image latex codecs-table.png 
+\image latex codecs-table.png  "" width=6in
 
 \section codecs-custom Custom Field Codecs
 
