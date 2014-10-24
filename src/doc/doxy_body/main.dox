@@ -123,6 +123,35 @@ x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 
 </ol>
 
+\section code Code
+
+DCCL is written in C++ and is released available under the Lesser GNU Public License. 
+
+<ul>
+<li> Source code DVCS (bazaar): https://launchpad.net/dccl
+\code
+bzr co lp:dccl/3.0 dccl3
+\endcode
+<li> Compiled release binary packages for Ubuntu: https://launchpad.net/~dccl-dev/+archive/ubuntu/ppa
+\code
+sudo apt-add-repository ppa:dccl-dev/ppa
+sudo apt-get update
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc
+\endcode
+<li> Daily builds binary packages for Ubuntu: https://launchpad.net/~tes/+archive/ubuntu/dccl-daily
+\code
+sudo apt-add-repository ppa:tes/dccl-daily
+sudo apt-get update
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc
+\endcode
+<li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
+\code
+bzr co lp:dccl/3.0 dccl3
+cd dccl3
+bzr co lp:~dccl-dev/dccl/debian3 debian
+\endcode
+</ul>
+
 \section reference Reference
 
 <ul>
