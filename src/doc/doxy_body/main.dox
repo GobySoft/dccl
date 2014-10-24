@@ -113,7 +113,7 @@ g++ quick.cpp -o quick navreport.pb.cc -ldccl -lprotobuf
 $ ./quick                                                                   
 x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 \endcode
-<li> Or skip steps 5-8 and use the command line tool 'dccl' instead:
+<li> Or skip steps 5-8 and use the command line tool 'dccl' instead (apt-get install dccl3-apps):
 \code
 $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
 0000000: f834 9871 7046 3213                      .4.qpF2.
@@ -136,13 +136,13 @@ bzr co lp:dccl/3.0 dccl3
 \code
 sudo apt-add-repository ppa:dccl-dev/ppa
 sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps
 \endcode
 <li> Daily builds binary packages for Ubuntu: https://launchpad.net/~tes/+archive/ubuntu/dccl-daily
 \code
 sudo apt-add-repository ppa:tes/dccl-daily
 sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps
 \endcode
 <li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
 \code
