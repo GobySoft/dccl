@@ -40,6 +40,7 @@
 #include "dccl/b64/encode.h"
 #include "dccl/b64/decode.h"
 #include "dccl_tool.pb.h"
+#include "dccl/version.h"
 
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
 enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
@@ -405,6 +406,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
     options.push_back(dccl::Option('v', "verbose", no_argument, "Display extra debugging information."));
     options.push_back(dccl::Option('o', "omit_prefix", no_argument, "Omit the DCCL type name prefix from the output of decode."));
     options.push_back(dccl::Option('i', "id_codec", required_argument, "(Advanced) name for a nonstandard DCCL ID codec to use"));
+    options.push_back(dccl::Option('V', "version", no_argument, "DCCL Version"));
     
     std::vector<option> long_options; 
     std::string opt_string;
@@ -466,6 +468,12 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
                     std::cout << "  " << options[i].usage() << std::endl;
                 exit(EXIT_SUCCESS);
                 break;
+
+            case 'V':
+                std::cout << dccl::VERSION_STRING  << std::endl;
+                exit(EXIT_SUCCESS);
+                break;
+
                 
             case '?':
                 std::cerr << "Try --help for valid options." << std::endl;

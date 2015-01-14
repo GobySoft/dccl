@@ -5,8 +5,8 @@ copying DCCL
 DCCL is copyright as listed in the individual header files.
 see header files of individual components for copyright details and owners.
 
-distribution of libraries is allowed under the terms of the LGPL v2.1
-distribution of binaries is allowed under the terms of the GPL v2
+distribution of libraries is allowed under the terms of the LGPL v2.1 or later
+distribution of binaries is allowed under the terms of the GPL v2 or later
 
 The text of both licences follows:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

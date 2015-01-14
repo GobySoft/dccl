@@ -1,7 +1,7 @@
-// Copyright 2009-2012 Toby Schneider (https://launchpad.net/~tes)
-//                     Massachusetts Institute of Technology (2007-)
-//                     Woods Hole Oceanographic Institution (2007-)
-//                     Goby Developers Team (https://launchpad.net/~goby-dev)
+// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
+//                     GobySoft, LLC (2013-)
+//                     Massachusetts Institute of Technology (2007-2014)
+//                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
 // 
 //
 // This file is part of the Goby Underwater Autonomy Project Libraries
