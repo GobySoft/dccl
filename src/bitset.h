@@ -27,6 +27,7 @@
 #include <deque>
 #include <algorithm>
 #include <limits>
+#include <string>
 
 #include "exception.h"
 
