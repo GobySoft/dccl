@@ -85,27 +85,30 @@ namespace dccl
         return out;
     }
 
-    /// \brief Encodes a (little-endian) hexadecimal string from a byte string. Index 0 of `in` is written to index 0 and 1 (first byte) of `out`
+    /// \brief Encodes a (little-endian) hexadecimal string from a byte string. Index 0 of `begin` is written to index 0 and 1 (first byte) of `out`
     ///
-    /// \param in byte string to encode (e.g. "TOM")
+    /// \param begin iterator to first byte of string to encode (e.g. "TOM")
+    /// \param end iterator pointing to the past-the-end character of the string.
     /// \param out pointer to string to store result (e.g. "544f4d")
     /// \param upper_case set true to use upper case for the alphabet characters (i.e. A,B,C,D,E,F), otherwise lowercase is used (a,b,c,d,e,f).
-    inline void hex_encode(const std::string& in, std::string* out, bool upper_case = false)
+    template <typename CharIterator>
+    inline void hex_encode(CharIterator begin, CharIterator end, std::string* out, bool upper_case = false)
     {
         static const short char0_9_to_number = 48;
         static const short charA_F_to_number = 55; 
         static const short chara_f_to_number = 87; 
 
-        int in_size = in.size();
-        int out_size = in_size << 1;
-    
+        size_t in_size = std::distance(begin, end);
+        size_t out_size = in_size << 1;
+
+        out->clear();
         out->resize(out_size);
-        for(int i = 0, n = in_size;
-            i < n;
-            ++i)
+
+        size_t i = 0;
+        for(CharIterator it = begin; it != end; ++it)
         {
-            short msn = (in[i] >> 4) & 0x0f;
-            short lsn = in[i] & 0x0f;
+            short msn = (*it >> 4) & 0x0f;
+            short lsn = *it & 0x0f;
 
             if(msn >= 0 && msn <= 9)
                 (*out)[2*i] = msn + char0_9_to_number;
@@ -117,7 +120,27 @@ namespace dccl
             else if(lsn >= 10 && lsn <= 15)
                 (*out)[2*i+1] = lsn + (upper_case ? charA_F_to_number : chara_f_to_number);
 
+            i++;
         }
+    }
+
+    template <typename CharIterator>
+    inline std::string hex_encode(CharIterator begin, CharIterator end)
+    {
+        std::string out;
+        hex_encode(begin, end, &out);
+        return out;
+
+    }
+
+    /// \brief Encodes a (little-endian) hexadecimal string from a byte string. Index 0 of `in` is written to index 0 and 1 (first byte) of `out`
+    ///
+    /// \param in byte string to encode (e.g. "TOM")
+    /// \param out pointer to string to store result (e.g. "544f4d")
+    /// \param upper_case set true to use upper case for the alphabet characters (i.e. A,B,C,D,E,F), otherwise lowercase is used (a,b,c,d,e,f).
+    inline void hex_encode(const std::string& in, std::string* out, bool upper_case = false)
+    {
+        hex_encode(in.begin(), in.end(), out, upper_case);
     }
 
     inline std::string hex_encode(const std::string& in)
