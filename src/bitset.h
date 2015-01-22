@@ -331,6 +331,9 @@ namespace dccl
 
             assert( max_len >= len );
 
+            // initialize buffer to all zeroes
+            std::memset(buf, 0, len);
+
             for(size_type i = 0, n = this->size(); i < n; ++i)
                 buf[i/8] |= static_cast<char>((*this)[i] << (i%8));
 
