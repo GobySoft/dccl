@@ -28,6 +28,8 @@
 #include <algorithm>
 #include <limits>
 #include <string>
+#include <cassert>
+#include <cstring>
 
 #include "exception.h"
 
@@ -319,15 +321,44 @@ namespace dccl
             return s;
         }
 
+        /// \brief Generate a byte string representation of the Bitset, where each character represents 8 bits of the Bitset. The string is used as a byte container, and is not intended to be printed.
+        /// \param buf An output string containing the value of the Bitset, with the least signficant byte in string[0] and the most significant byte in string[size()-1]
+        /// \param max_len Maximum length of buf
+        /// \return number of bytes written to buf
+        size_t to_byte_string(char* buf, size_t max_len)
+        {
+            // number of bytes needed is ceil(size() / 8)
+            size_t len = this->size()/8 + (this->size()%8 ? 1 : 0);
+
+            assert( max_len >= len );
+
+            // initialize buffer to all zeroes
+            std::memset(buf, 0, len);
+
+            for(size_type i = 0, n = this->size(); i < n; ++i)
+                buf[i/8] |= static_cast<char>((*this)[i] << (i%8));
+
+            return len;
+        }
+
         /// \brief Sets the value of the Bitset to the contents of a byte string, where each character represents 8 bits of the Bitset.
         ///
         /// \param s A string container the values where the least signficant byte in string[0] and the most significant byte in string[size()-1]
         void from_byte_string(const std::string& s)
         {
-            this->resize(s.size() * 8);
+            from_byte_stream(s.begin(), s.end());
+        }
+
+        /// \brief Sets the value of the Bitset to the contents of a byte string, where each character represents 8 bits of the Bitset.
+        /// A string container the values where the least signficant byte in string[0] and the most significant byte in string[size()-1]
+        /// \param begin Iterator pointing to the begining of the input buffer
+        /// \param end Iterator pointing to the end of the input bufer
+        template<typename CharIterator>
+        void from_byte_stream(CharIterator begin, CharIterator end)
+        {
+            this->resize(std::distance(begin, end) * 8);
             int i = 0;
-            for(std::string::const_iterator it = s.begin(), n = s.end();
-                it != n; ++it)
+            for(CharIterator it = begin; it != end; ++it)
             {
                 for(size_type j = 0; j < 8; ++j)
                     (*this)[i*8+j] = (*it) & (1 << j);
