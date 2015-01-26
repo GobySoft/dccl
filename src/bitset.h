@@ -29,6 +29,7 @@
 #include <limits>
 #include <string>
 #include <cassert>
+#include <cstring>
 
 #include "exception.h"
 
