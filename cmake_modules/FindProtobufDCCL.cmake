@@ -84,11 +84,15 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS)
     list(APPEND ${SRCS} "${FIL_PATH}/${FIL_WE}.pb.cc")
     list(APPEND ${HDRS} "${FIL_PATH}/${FIL_WE}.pb.h")
 
+    if(EXISTS ${dccl_BIN_DIR}/protoc-gen-dccl)
+      set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_BIN_DIR}/protoc-gen-dccl)
+    endif()
+
     add_custom_command(
       OUTPUT "${FIL_PATH}/${FIL_WE}.pb.cc"
              "${FIL_PATH}/${FIL_WE}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-      ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR}
+      ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR} ${DCCL_PROTOC_ARGS}
       DEPENDS ${ABS_FIL}
       COMMENT "Running C++ protocol buffer compiler on ${FIL}"
       VERBATIM )

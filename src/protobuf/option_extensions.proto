@@ -51,6 +51,11 @@ message DCCLFieldOptions
   optional uint32 max_repeat = 10 [default = 1];
 
   optional string description = 20;
+
+  // units
+  optional string base_dimensions = 31;
+  optional string derived_dimensions = 32;
+  optional string units_system = 33 [default = "si"];
   
   // ccl = 1000
   // arithmetic = 1001
