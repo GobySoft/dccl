@@ -6,8 +6,12 @@
 #include <boost/shared_ptr.hpp>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
-#include "dccl/protobuf/option_extensions.pb.h"
+#include "option_extensions.pb.h"
 #include "gen_units_class_plugin.h"
+
+std::set<std::string> systems_to_include_;
+std::string filename_h_;
+
 
 class DCCLGenerator : public google::protobuf::compiler::CodeGenerator {
  public:
@@ -21,8 +25,10 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator {
                   google::protobuf::compiler::GeneratorContext* generator_context,
                   std::string* error) const;
  private:
+    void generate_message(const google::protobuf::Descriptor* desc, google::protobuf::compiler::GeneratorContext* generator_context) const;
+    void generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer) const;
     bool check_field_type(const google::protobuf::FieldDescriptor* field) const;
-
+    
 };
 
 bool DCCLGenerator::check_field_type(const google::protobuf::FieldDescriptor* field) const
@@ -46,72 +52,113 @@ bool DCCLGenerator::check_field_type(const google::protobuf::FieldDescriptor* fi
 
 
 bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
-                            const std::string& parameter,
+                             const std::string& parameter,
                              google::protobuf::compiler::GeneratorContext* generator_context,
                              std::string* error) const
 {
     try
     {
         const std::string& filename = file->name();
-        std::string filename_h = filename.substr(0, filename.find(".proto")) + ".pb.h";
-        std::string filename_cc = filename.substr(0, filename.find(".proto")) + ".pb.cc";
-    
+        filename_h_ = filename.substr(0, filename.find(".proto")) + ".pb.h";
+//        std::string filename_cc = filename.substr(0, filename.find(".proto")) + ".pb.cc";
+        
         for(int message_i = 0, message_n = file->message_type_count(); message_i < message_n; ++message_i)
         {
-            const google::protobuf::Descriptor * desc = file->message_type(message_i);
-            boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
-                generator_context->OpenForInsert(filename_h, "class_scope:" + desc->full_name()));
-            google::protobuf::io::Printer printer(output.get(), '$');
-        
-            for(int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
-            {
-                const google::protobuf::FieldDescriptor * field = desc->field(field_i);
-
-                const dccl::DCCLFieldOptions& dccl_options = field->options().GetExtension(dccl::field);
-
-                if(dccl_options.has_base_dimensions() && dccl_options.has_derived_dimensions())
-                {
-                    throw(std::runtime_error("May define either (dccl.field).base_dimensions or (dccl.field).derived_dimensions, but not both"));
-                }
-                else if(dccl_options.has_base_dimensions())
-                {
-                    std::stringstream new_methods;
-                
-                    std::vector<double> powers;
-                    std::vector<std::string> unused;
-                    std::vector<std::string> dimensions;
-                    if(client::parse_base_dimensions(dccl_options.base_dimensions().begin(),
-                                                     dccl_options.base_dimensions().end(),
-                                                     powers, unused, dimensions))
-                    {
-                        handle_base_dims(dimensions, powers, field->name(), new_methods);
-
-                        bool is_integer = check_field_type(field);
-                    
-                        construct_field_class_plugin(is_integer,
-                                                     field->name(),
-                                                     dccl_options.units_system(),
-                                                     new_methods);
-                    
-                        printer.Print(new_methods.str().c_str());
-                    }
-                    else
-                    {
-                        throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.base_dimensions() + "\"")));
-                    }
-                }
-                else if(dccl_options.has_derived_dimensions())   
-                {
-                
-                }
-            }
+            generate_message(file->message_type(message_i), generator_context);
         }
+        
+        boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
+            generator_context->OpenForInsert(filename_h_, "includes"));
+        google::protobuf::io::Printer include_printer(include_output.get(), '$');
+        std::stringstream includes_ss;
+
+        for(std::set<std::string>::const_iterator it = systems_to_include_.begin(), end = systems_to_include_.end(); it != end; ++it)
+        {
+            include_units_headers(*it, includes_ss);
+        }
+        include_printer.Print(includes_ss.str().c_str());
+        
         return true;
     }
     catch (std::exception&e)
     {
         *error = e.what();
         return false;
+    }
+}
+
+
+void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, google::protobuf::compiler::GeneratorContext* generator_context) const
+{
+    boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
+        generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
+    google::protobuf::io::Printer printer(output.get(), '$');
+    
+    for(int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
+    {
+        generate_field(desc->field(field_i), &printer);
+    }
+}
+
+void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer) const
+{
+    const dccl::DCCLFieldOptions& dccl_options = field->options().GetExtension(dccl::field);
+                
+    if(dccl_options.has_base_dimensions() && dccl_options.has_derived_dimensions())
+    {
+        throw(std::runtime_error("May define either (dccl.field).base_dimensions or (dccl.field).derived_dimensions, but not both"));
+    }
+    else if(dccl_options.has_base_dimensions())
+    {
+
+        std::stringstream new_methods;
+                
+        std::vector<double> powers;
+        std::vector<std::string> unused;
+        std::vector<std::string> dimensions;
+        if(client::parse_base_dimensions(dccl_options.base_dimensions().begin(),
+                                         dccl_options.base_dimensions().end(),
+                                         powers, unused, dimensions))
+        {
+            handle_base_dims(dimensions, powers, field->name(), new_methods);
+
+            bool is_integer = check_field_type(field);                    
+            construct_field_class_plugin(is_integer,
+                                         field->name(),
+                                         dccl_options.units_system(),
+                                         new_methods);
+            printer->Print(new_methods.str().c_str());
+            systems_to_include_.insert(dccl_options.units_system());
+        }
+        else
+        {
+            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.base_dimensions() + "\"")));
+        }
+    }
+    else if(dccl_options.has_derived_dimensions())   
+    {
+        std::stringstream new_methods;
+                
+        std::vector<std::string> operators;
+        std::vector<std::string> dimensions;
+        if(client::parse_derived_dimensions(dccl_options.derived_dimensions().begin(),
+                                            dccl_options.derived_dimensions().end(),
+                                            operators, dimensions))
+        {
+            handle_derived_dims(dimensions, operators, field->name(), new_methods);
+                        
+            bool is_integer = check_field_type(field);
+            construct_field_class_plugin(is_integer,
+                                         field->name(),
+                                         dccl_options.units_system(),
+                                         new_methods);
+            printer->Print(new_methods.str().c_str());
+            systems_to_include_.insert(dccl_options.units_system());
+        }
+        else
+        {
+            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.base_dimensions() + "\"")));
+        }
     }
 }
 

@@ -1,8 +1,8 @@
-#set(PROTOS
-#  protobuf/option_extensions.proto
-# )
+set(PROTOS
+  protobuf/option_extensions.proto
+ )
 
-#protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 add_library(dccl 
   logger.cpp
@@ -20,7 +20,7 @@ add_library(dccl
   b64/cdecode.c
   internal/type_helper.cpp
   internal/field_codec_message_stack.cpp
-#  ${PROTO_SRCS} ${PROTO_HDRS}
+  ${PROTO_SRCS} ${PROTO_HDRS}
   )
 
 target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})

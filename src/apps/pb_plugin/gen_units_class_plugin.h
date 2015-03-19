@@ -273,7 +273,7 @@ inline void handle_derived_dims(const std::vector<std::string>& dim_vec, const s
     std::string result = dim_vec[0];
     for(int i=0; i<operator_vec.size(); i++){
       if(operator_vec[i] == "/")
-        result = "boost::mpl::divide<boost::units::" + result + "_dimension,boost::units::" + dim_vec[i+1] + "_dimension>::type";
+        result = "boost::mpl::divides<boost::units::" + result + "_dimension,boost::units::" + dim_vec[i+1] + "_dimension>::type";
       else if(operator_vec[i] == "*")
         result = "boost::mpl::times<boost::units::" + result + "_dimension,boost::units::" + dim_vec[i+1] + "_dimension>::type";
     }
