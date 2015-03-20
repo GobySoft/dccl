@@ -1,3 +1,23 @@
+// Copyright 2014-2015 Toby Schneider (https://launchpad.net/~tes)
+//                     Stephanie Petillo (https://launchpad.net/~spetillo)
+//                     GobySoft, LLC
+//
+// This file is part of the Dynamic Compact Control Language Applications
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute them and/or modify
+// them under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that they will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/compiler/code_generator.h>
@@ -103,12 +123,14 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
 void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer) const
 {
     const dccl::DCCLFieldOptions& dccl_options = field->options().GetExtension(dccl::field);
-                
-    if(dccl_options.has_base_dimensions() && dccl_options.has_derived_dimensions())
+
+    if(!dccl_options.has_units()) return;
+    
+    if(dccl_options.units().has_base_dimensions() && dccl_options.units().has_derived_dimensions())
     {
-        throw(std::runtime_error("May define either (dccl.field).base_dimensions or (dccl.field).derived_dimensions, but not both"));
+        throw(std::runtime_error("May define either (dccl.field).units.base_dimensions or (dccl.field).units.derived_dimensions, but not both"));
     }
-    else if(dccl_options.has_base_dimensions())
+    else if(dccl_options.units().has_base_dimensions())
     {
 
         std::stringstream new_methods;
@@ -116,8 +138,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         std::vector<double> powers;
         std::vector<std::string> unused;
         std::vector<std::string> dimensions;
-        if(client::parse_base_dimensions(dccl_options.base_dimensions().begin(),
-                                         dccl_options.base_dimensions().end(),
+        if(client::parse_base_dimensions(dccl_options.units().base_dimensions().begin(),
+                                         dccl_options.units().base_dimensions().end(),
                                          powers, unused, dimensions))
         {
             handle_base_dims(dimensions, powers, field->name(), new_methods);
@@ -125,24 +147,24 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             bool is_integer = check_field_type(field);                    
             construct_field_class_plugin(is_integer,
                                          field->name(),
-                                         dccl_options.units_system(),
+                                         dccl_options.units().system(),
                                          new_methods);
             printer->Print(new_methods.str().c_str());
-            systems_to_include_.insert(dccl_options.units_system());
+            systems_to_include_.insert(dccl_options.units().system());
         }
         else
         {
-            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.base_dimensions() + "\"")));
+            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.units().base_dimensions() + "\"")));
         }
     }
-    else if(dccl_options.has_derived_dimensions())   
+    else if(dccl_options.units().has_derived_dimensions())   
     {
         std::stringstream new_methods;
                 
         std::vector<std::string> operators;
         std::vector<std::string> dimensions;
-        if(client::parse_derived_dimensions(dccl_options.derived_dimensions().begin(),
-                                            dccl_options.derived_dimensions().end(),
+        if(client::parse_derived_dimensions(dccl_options.units().derived_dimensions().begin(),
+                                            dccl_options.units().derived_dimensions().end(),
                                             operators, dimensions))
         {
             handle_derived_dims(dimensions, operators, field->name(), new_methods);
@@ -150,14 +172,14 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             bool is_integer = check_field_type(field);
             construct_field_class_plugin(is_integer,
                                          field->name(),
-                                         dccl_options.units_system(),
+                                         dccl_options.units().system(),
                                          new_methods);
             printer->Print(new_methods.str().c_str());
-            systems_to_include_.insert(dccl_options.units_system());
+            systems_to_include_.insert(dccl_options.units().system());
         }
         else
         {
-            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.base_dimensions() + "\"")));
+            throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.units().base_dimensions() + "\"")));
         }
     }
 }

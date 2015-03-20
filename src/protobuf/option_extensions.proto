@@ -52,10 +52,16 @@ message DCCLFieldOptions
 
   optional string description = 20;
 
-  // units
-  optional string base_dimensions = 31;
-  optional string derived_dimensions = 32;
-  optional string units_system = 33 [default = "si"];
+  message Units
+  {
+    // units
+    optional string base_dimensions = 1;
+    optional string derived_dimensions = 2;
+    optional string system = 3 [default = "si"];
+    optional bool relative_temperature = 4 [default = false];
+    optional string unit = 5;
+  }
+  optional Units units = 30;
   
   // ccl = 1000
   // arithmetic = 1001

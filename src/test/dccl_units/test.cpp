@@ -1,7 +1,6 @@
-// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
-//                     GobySoft, LLC (2013-)
-//                     Massachusetts Institute of Technology (2007-2014)
-//                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
+// Copyright 2014-2015 Toby Schneider (https://launchpad.net/~tes)
+//                     Stephanie Petillo (https://launchpad.net/~spetillo)
+//                     GobySoft, LLC
 //
 // This file is part of the Dynamic Compact Control Language Applications
 // ("DCCL").
@@ -39,11 +38,11 @@ int main()
     using boost::units::metric::bar_base_unit;
     using boost::units::si::deci;
     
+    typedef bar_base_unit::unit_type Bar;
+    static const Bar bar;
     
-    static const bar_base_unit::unit_type bar;
     
-    
-    quantity<si::pressure> pressure(150.0*si::deci*bar);
+    quantity<Bar> pressure(150.0*si::deci*bar);
 
     test_msg.set_pressure_with_units(pressure);
 

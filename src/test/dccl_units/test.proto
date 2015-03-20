@@ -3,11 +3,16 @@ import "dccl/protobuf/option_extensions.proto";
 
 message CTDTestMessage
 { 
-  optional double conductivity = 2 [(dccl.field).derived_dimensions = "conductance/length"];
-  required double temperature = 3 [(dccl.field).derived_dimensions = "temperature"];
-  required int32 pressure = 4 [(dccl.field).derived_dimensions = "pressure"];
+  optional double conductivity = 2 [(dccl.field).units.derived_dimensions = "conductance/length"];
+  required double temperature = 3 [(dccl.field) = { units { derived_dimensions: "temperature"
+//                                                            system: "celsius"
+                                                           }
+                                                    min: 0
+                                                    max: 30
+                                                    precision: -1 }];
+  required int32 pressure = 4 [(dccl.field).units.derived_dimensions = "pressure"];
   
   required double salinity = 10;
-  required double sound_speed = 11 [(dccl.field).base_dimensions = " LT^-1"]; 
-  optional double density = 12 [(dccl.field).base_dimensions = "M L^-3"];
+  required double sound_speed = 11 [(dccl.field).units.base_dimensions = " LT^-1"]; 
+  optional double density = 12 [(dccl.field).units.base_dimensions = "M L^-3"];
 }
