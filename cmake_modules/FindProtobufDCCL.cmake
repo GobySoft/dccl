@@ -53,12 +53,22 @@
 #  License text for the above reference.)
 
 function(PROTOBUF_GENERATE_CPP SRCS HDRS)
+  protobuf_generate_cpp_internal("True" PROTO_SRCS PROTO_HDRS ${ARGN})
+  set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
+  set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
+endfunction()
+
+function(PROTOBUF_GENERATE_CPP_NO_DCCL SRCS HDRS)
+  protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+  set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
+  set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
+endfunction()
+
+function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
   if(NOT ARGN)
     message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP() called without any proto files")
     return()
   endif(NOT ARGN)
-
-#  file(MAKE_DIRECTORY ${dccl_BUILD_DIR}/proto) 
 
   set(${SRCS})
   set(${HDRS})
@@ -84,7 +94,7 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS)
     list(APPEND ${SRCS} "${FIL_PATH}/${FIL_WE}.pb.cc")
     list(APPEND ${HDRS} "${FIL_PATH}/${FIL_WE}.pb.h")
 
-    if(EXISTS ${dccl_BIN_DIR}/protoc-gen-dccl)
+    if(USE_DCCL)
       set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_BIN_DIR}/protoc-gen-dccl)
     endif()
 
