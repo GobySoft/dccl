@@ -124,8 +124,14 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 {
     const dccl::DCCLFieldOptions& dccl_options = field->options().GetExtension(dccl::field);
 
-    if(!dccl_options.has_units()) return;
-    
+    if(!dccl_options.has_units())
+      {
+	// construct_units_typedef_from_base_unit(field->name(), base_unit_category_and_name, new_methods);
+	// construct_field_class_plugin(field->name(),
+	// 			     new_methods, 
+	// 			     dccl::units::get_field_type_name(field->cpp_type()));
+	return;
+      }    
     if(dccl_options.units().has_base_dimensions() && dccl_options.units().has_derived_dimensions())
     {
         throw(std::runtime_error("May define either (dccl.field).units.base_dimensions or (dccl.field).units.derived_dimensions, but not both"));
@@ -138,17 +144,16 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         std::vector<double> powers;
         std::vector<std::string> unused;
         std::vector<std::string> dimensions;
-        if(client::parse_base_dimensions(dccl_options.units().base_dimensions().begin(),
+        if(dccl::units::parse_base_dimensions(dccl_options.units().base_dimensions().begin(),
                                          dccl_options.units().base_dimensions().end(),
                                          powers, unused, dimensions))
         {
-            handle_base_dims(dimensions, powers, field->name(), new_methods);
+            construct_base_dims_typedef(dimensions, powers, field->name(), dccl_options.units().system(), new_methods);
 
             bool is_integer = check_field_type(field);                    
-            construct_field_class_plugin(is_integer,
-                                         field->name(),
-                                         dccl_options.units().system(),
-                                         new_methods);
+            construct_field_class_plugin(field->name(),
+                                         new_methods, 
+					 dccl::units::get_field_type_name(field->cpp_type()));
             printer->Print(new_methods.str().c_str());
             systems_to_include_.insert(dccl_options.units().system());
         }
@@ -163,17 +168,16 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                 
         std::vector<std::string> operators;
         std::vector<std::string> dimensions;
-        if(client::parse_derived_dimensions(dccl_options.units().derived_dimensions().begin(),
+        if(dccl::units::parse_derived_dimensions(dccl_options.units().derived_dimensions().begin(),
                                             dccl_options.units().derived_dimensions().end(),
                                             operators, dimensions))
         {
-            handle_derived_dims(dimensions, operators, field->name(), new_methods);
+            construct_derived_dims_typedef(dimensions, operators, field->name(), dccl_options.units().system(), new_methods);
                         
             bool is_integer = check_field_type(field);
-            construct_field_class_plugin(is_integer,
-                                         field->name(),
-                                         dccl_options.units().system(),
-                                         new_methods);
+            construct_field_class_plugin(field->name(),
+                                         new_methods, 
+					 dccl::units::get_field_type_name(field->cpp_type()));
             printer->Print(new_methods.str().c_str());
             systems_to_include_.insert(dccl_options.units().system());
         }
