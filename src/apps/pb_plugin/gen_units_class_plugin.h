@@ -247,6 +247,13 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os){
   // pre-defined systems from boost units:
   // http://www.boost.org/doc/libs/1_54_0/boost/units/systems/
 
+  static bool output_absolute_header = false;
+  if(!output_absolute_header)
+    {
+      os <<"#include <boost/units/absolute.hpp>" <<std::endl;
+      output_absolute_header = true;
+    }
+
   if(sysname == "si" ||
      sysname == "boost::units::si")
     {
@@ -306,7 +313,7 @@ inline void include_base_unit_headers(const std::string& base_unit_category_and_
 
 
 // Generate a unit typedef when given derived_ or base_dimensions
-inline void construct_units_typedef_from_dimension(const std::string& fieldname, const std::string& sysname, std::ostream& os){
+inline void construct_units_typedef_from_dimension(const std::string& fieldname, const std::string& sysname, const bool& absolute, std::ostream& os){
 
   // Namespace the sysname if necessary
   std::string sysname_ns;
@@ -321,14 +328,22 @@ inline void construct_units_typedef_from_dimension(const std::string& fieldname,
   else
     sysname_ns = sysname;
 
-  // Typedef the dimension
-  os <<"typedef boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> " <<fieldname <<"_unit;" <<std::endl;
+  // Typedef the unit
+  if(absolute)
+    os <<"typedef boost::units::absolute<boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> > " <<fieldname <<"_unit;" <<std::endl;
+  else // relative temperature or not a temperature (default)
+    os <<"typedef boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> " <<fieldname <<"_unit;" <<std::endl; 
+
   os << std::endl;
 }
 
 // Generate a dimension typedef when given base_dimensions
-inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<double>& power_vec, const std::string& fieldname, const std::string& sysname, std::ostream& os){
+inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<double>& power_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, std::ostream& os){
   /////////// BASE DIMENSIONS --> DERIVED FIELD DIMENSION
+  bool temperature_dimension = false;
+  if(dim_vec[0] == "temperature" && dim_vec.size() == 1)
+      temperature_dimension = true;
+
   os <<"typedef boost::units::derived_dimension< ";
   for(int i=0; i<dim_vec.size(); i++){
     os <<"boost::units::" <<dim_vec[i] <<"_base_dimension," <<power_vec[i] ;
@@ -338,13 +353,20 @@ inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec,
   os <<" >::type " <<fieldname <<"_dimension;" <<std::endl;
   os << std::endl;
 
-  construct_units_typedef_from_dimension(fieldname, sysname, os);
+  construct_units_typedef_from_dimension(fieldname, sysname, 
+					 temperature_dimension && !rel_temperature, 
+					 os);
 }
 
 // Generate a dimension typedef when given derived_dimensions
-inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<std::string>& operator_vec, const std::string& fieldname, const std::string& sysname, std::ostream& os){
+inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<std::string>& operator_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, std::ostream& os){
   /////////// DERIVED DIMENSIONS --> DERIVED FIELD DIMENSION
+
+  bool temperature_dimension = false;
+
   if (dim_vec.size() == 1){
+    if(dim_vec[0] == "temperature")
+      temperature_dimension = true;
     os <<"typedef boost::units::" <<dim_vec[0] <<"_dimension " <<fieldname <<"_dimension;" <<std::endl;
   }
   else{//construct new dimension type with mpl divides/times calls based on operators and powers
@@ -362,7 +384,9 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
   }
   os << std::endl;
 
-  construct_units_typedef_from_dimension(fieldname, sysname, os);
+  construct_units_typedef_from_dimension(fieldname, sysname, 
+					 temperature_dimension && !rel_temperature,
+					 os);
 }
 
 
@@ -372,10 +396,22 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
 
 //===========
 // Generate a unit typedef when given base_unit
-inline void construct_units_typedef_from_base_unit(const std::string& fieldname, const std::string& base_unit_category_and_name, std::ostream& os){
+inline void construct_units_typedef_from_base_unit(const std::string& fieldname, const std::string& base_unit_category_and_name, const bool& rel_temperature, std::ostream& os){
 
-  // Namespace and typedef the base unit 
-  os <<"typedef boost::units::" <<base_unit_category_and_name <<"_base_unit " <<fieldname <<"_unit;" <<std::endl;
+  bool temperature_unit = false;
+
+  //expect to see "temperature::celsius" or "temperature::fahrenheit" or "si::kelvin"
+  if((base_unit_category_and_name.find("temperature") != std::string::npos) || (base_unit_category_and_name.find("kelvin") != std::string::npos))
+    temperature_unit = true;
+
+  bool absolute = temperature_unit && !rel_temperature;
+
+  // Namespace and typedef the unit 
+  if(absolute)
+    os <<"typedef boost::units::absolute<boost::units::" <<base_unit_category_and_name <<"_base_unit::unit_type> " <<fieldname <<"_unit;" <<std::endl;
+  else // relative temperature or not a temperature (default)
+    os <<"typedef boost::units::" <<base_unit_category_and_name <<"_base_unit::unit_type " <<fieldname <<"_unit;" <<std::endl;
+
   os << std::endl;
 }
 
@@ -387,18 +423,18 @@ inline void construct_field_class_plugin(const std::string& fieldname, std::ostr
   // Overloading set_fieldname to accept boost units, i.e. quantity<unit<fieldname_dimension,sysname::system> >
   os <<"template<typename Quantity >" <<std::endl;
   os <<"  void set_" <<fieldname <<"_with_units(Quantity value_w_units)" <<std::endl;
-  os <<"  { set_" <<fieldname <<"(boost::units::quantity<" <<fieldname <<"_unit::unit_type," <<value_type <<" >(value_w_units) / " <<fieldname <<"_unit::unit_type() ); };" <<std::endl;
+  os <<"  { set_" <<fieldname <<"(boost::units::quantity<" <<fieldname <<"_unit," <<value_type <<" >(value_w_units).value() ); };" <<std::endl;
   os << std::endl;
   
   //returns whatever units are requested
   os <<"template<typename Quantity >" <<std::endl;
   os <<"  Quantity " <<fieldname <<"_with_units() const" <<std::endl;
-  os <<"  { return Quantity(" <<fieldname <<"() * " <<fieldname <<"_unit::unit_type()); };" <<std::endl;
+  os <<"  { return Quantity(" <<fieldname <<"() * " <<fieldname <<"_unit()); };" <<std::endl;
   os << std::endl;
 
   //returns syname units only
-  os <<"boost::units::quantity< " <<fieldname <<"_unit::unit_type > " <<fieldname <<"_with_units() const" <<std::endl;
-  os <<"  { return " <<fieldname <<"_with_units<boost::units::quantity< " <<fieldname <<"_unit::unit_type," <<value_type <<" > >(); };" <<std::endl;
+  os <<"boost::units::quantity< " <<fieldname <<"_unit > " <<fieldname <<"_with_units() const" <<std::endl;
+  os <<"  { return " <<fieldname <<"_with_units<boost::units::quantity< " <<fieldname <<"_unit," <<value_type <<" > >(); };" <<std::endl;
   os << std::endl;
 }
 

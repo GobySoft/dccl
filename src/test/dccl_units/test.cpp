@@ -29,7 +29,7 @@
 #include <boost/units/systems/temperature/fahrenheit.hpp>
 #include <boost/units/systems/si/velocity.hpp>
 #include <boost/units/systems/si.hpp>
-#include <boost/units/systems/si/dimensionless.hpp>
+//#include <boost/units/systems/si/dimensionless.hpp>
 #include "test.pb.h"
 
 #include <boost/units/base_units/metric/nautical_mile.hpp>
@@ -57,13 +57,14 @@ int main()
     double temp_d = (temp - quantity<absolute<Kelvin> >(0*absolute<Kelvin>()))/Kelvin();
     std::cout << temp_d << std::endl;
 
-    //    test_msg.set_temperature_with_units(15*absolute<fahrenheit::temperature>());
+    test_msg.set_temperature_with_units(15*absolute<fahrenheit::temperature>());
     test_msg.set_salinity(35.2);
     test_msg.set_sound_speed(1500);
 
     quantity<si::velocity> c(1500*si::meters_per_second);
     test_msg.set_sound_speed_with_units(c);    
     test_msg.set_depth_with_units(100*si::meters);
+    //test_msg.set_auv_speed_with_units(2.5*si::meters_per_second);
 
     //typedef boost::units::unit<boost::units::dimensionless,boost::units::si::system> Dimensionless;
     //test_msg.set_salinity_with_units(35.2*si::dimensionless());
@@ -74,6 +75,7 @@ int main()
     std::cout <<std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units() << std::endl;
     std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units()) << std::endl;
     std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
+    //std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
     //std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
 
     AUVStatus status;
