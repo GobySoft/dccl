@@ -247,11 +247,12 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os){
   // pre-defined systems from boost units:
   // http://www.boost.org/doc/libs/1_54_0/boost/units/systems/
 
-  static bool output_absolute_header = false;
-  if(!output_absolute_header)
+  static bool output_extra_headers = false;
+  if(!output_extra_headers)
     {
       os <<"#include <boost/units/absolute.hpp>" <<std::endl;
-      output_absolute_header = true;
+      os <<"#include <boost/units/dimensionless_type.hpp>" <<std::endl;
+      output_extra_headers = true;
     }
 
   if(sysname == "si" ||
@@ -343,14 +344,20 @@ inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec,
   bool temperature_dimension = false;
   if(dim_vec[0] == "temperature" && dim_vec.size() == 1)
       temperature_dimension = true;
-
-  os <<"typedef boost::units::derived_dimension< ";
-  for(int i=0; i<dim_vec.size(); i++){
-    os <<"boost::units::" <<dim_vec[i] <<"_base_dimension," <<power_vec[i] ;
-    if(i != dim_vec.size()-1)
-      os <<", ";
-  }
-  os <<" >::type " <<fieldname <<"_dimension;" <<std::endl;
+  if(dim_vec[0] == "dimensionless" && dim_vec.size() == 1)
+    {
+      os <<"typedef boost::units::dimensionless_type " <<fieldname <<"_dimension;" <<std::endl;;
+    }
+  else
+    {
+      os <<"typedef boost::units::derived_dimension< ";
+      for(int i=0; i<dim_vec.size(); i++){
+	os <<"boost::units::" <<dim_vec[i] <<"_base_dimension," <<power_vec[i] ;
+	if(i != dim_vec.size()-1)
+	  os <<", ";
+      }
+      os <<" >::type " <<fieldname <<"_dimension;" <<std::endl;
+     }
   os << std::endl;
 
   construct_units_typedef_from_dimension(fieldname, sysname, 
@@ -367,7 +374,10 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
   if (dim_vec.size() == 1){
     if(dim_vec[0] == "temperature")
       temperature_dimension = true;
-    os <<"typedef boost::units::" <<dim_vec[0] <<"_dimension " <<fieldname <<"_dimension;" <<std::endl;
+    if(dim_vec[0] == "dimensionless")
+      os <<"typedef boost::units::dimensionless_type " <<fieldname <<"_dimension;" <<std::endl;
+    else
+      os <<"typedef boost::units::" <<dim_vec[0] <<"_dimension " <<fieldname <<"_dimension;" <<std::endl;
   }
   else{//construct new dimension type with mpl divides/times calls based on operators and powers
     //see example here:

@@ -29,7 +29,7 @@
 #include <boost/units/systems/temperature/fahrenheit.hpp>
 #include <boost/units/systems/si/velocity.hpp>
 #include <boost/units/systems/si.hpp>
-//#include <boost/units/systems/si/dimensionless.hpp>
+#include <boost/units/systems/si/dimensionless.hpp>
 #include "test.pb.h"
 
 #include <boost/units/base_units/metric/nautical_mile.hpp>
@@ -69,7 +69,7 @@ int main()
     std::cout <<"auv_spd: " <<auv_spd <<std::endl;
 
     //typedef boost::units::unit<boost::units::dimensionless,boost::units::si::system> Dimensionless;
-    //test_msg.set_salinity_with_units(35.2*si::dimensionless());
+    test_msg.set_salinity_with_units(38.9*si::dimensionless());
     
     
     std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
@@ -78,7 +78,7 @@ int main()
     std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units()) << std::endl;
     std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
     std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
-    //std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
+    std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
 
     AUVStatus status;
     status.set_x_with_units(1000*si::meters);
