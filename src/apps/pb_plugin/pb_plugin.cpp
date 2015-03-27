@@ -30,6 +30,7 @@
 #include "gen_units_class_plugin.h"
 
 std::set<std::string> systems_to_include_;
+std::set<std::string> base_units_to_include_;
 std::string filename_h_;
 
 
@@ -96,6 +97,10 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         {
             include_units_headers(*it, includes_ss);
         }
+        for(std::set<std::string>::const_iterator it = base_units_to_include_.begin(), end = base_units_to_include_.end(); it != end; ++it)
+        {
+            include_base_unit_headers(*it, includes_ss);
+        }
         include_printer.Print(includes_ss.str().c_str());
         
         return true;
@@ -140,6 +145,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 	construct_field_class_plugin(field->name(),
 				     new_methods, 
 				     dccl::units::get_field_type_name(field->cpp_type()));
+	printer->Print(new_methods.str().c_str());
+        base_units_to_include_.insert(dccl_options.units().unit());
     }
     else if(dccl_options.units().has_base_dimensions())
     {
@@ -151,9 +158,9 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         std::vector<std::string> dimensions;
         if(dccl::units::parse_base_dimensions(dccl_options.units().base_dimensions().begin(),
                                          dccl_options.units().base_dimensions().end(),
-                                         powers, short_dimensions, dimensions))
-        {
-	  construct_base_dims_typedef(dimensions, powers, field->name(), dccl_options.units().system(), dccl_options.units().relative_temperature(), new_methods);
+					      powers, short_dimensions, dimensions))
+	  {
+	    construct_base_dims_typedef(dimensions, powers, field->name(), dccl_options.units().system(), dccl_options.units().relative_temperature(), new_methods);
 
             bool is_integer = check_field_type(field);                    
             construct_field_class_plugin(field->name(),
@@ -161,7 +168,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 					 dccl::units::get_field_type_name(field->cpp_type()));
             printer->Print(new_methods.str().c_str());
             systems_to_include_.insert(dccl_options.units().system());
-        }
+	  }
         else
         {
             throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" + dccl_options.units().base_dimensions() + "\"")));
@@ -174,9 +181,9 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         std::vector<std::string> operators;
         std::vector<std::string> dimensions;
         if(dccl::units::parse_derived_dimensions(dccl_options.units().derived_dimensions().begin(),
-                                            dccl_options.units().derived_dimensions().end(),
-                                            operators, dimensions))
-        {
+						 dccl_options.units().derived_dimensions().end(),
+						 operators, dimensions))
+	  {
             construct_derived_dims_typedef(dimensions, operators, field->name(), dccl_options.units().system(), dccl_options.units().relative_temperature(), new_methods);
                         
             bool is_integer = check_field_type(field);

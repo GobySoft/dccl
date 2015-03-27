@@ -64,18 +64,20 @@ int main()
     quantity<si::velocity> c(1500*si::meters_per_second);
     test_msg.set_sound_speed_with_units(c);    
     test_msg.set_depth_with_units(100*si::meters);
-    //test_msg.set_auv_speed_with_units(2.5*si::meters_per_second);
+    quantity<si::velocity> auv_spd(2.5*si::meters_per_second);
+    test_msg.set_auv_speed_with_units(auv_spd);
+    std::cout <<"auv_spd: " <<auv_spd <<std::endl;
 
     //typedef boost::units::unit<boost::units::dimensionless,boost::units::si::system> Dimensionless;
     //test_msg.set_salinity_with_units(35.2*si::dimensionless());
     
     
-    std::cout << test_msg.DebugString() << std::endl;
+    std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
     std::cout << "Temperature: " << test_msg.temperature_with_units() << std::endl;
     std::cout <<std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units() << std::endl;
     std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units()) << std::endl;
     std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
-    //std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
+    std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
     //std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
 
     AUVStatus status;
