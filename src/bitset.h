@@ -329,9 +329,9 @@ namespace dccl
             // number of bytes needed is ceil(size() / 8)
             size_t len = this->size()/8 + (this->size()%8 ? 1 : 0);
 
-            if (max_len < len) {
-                std::string desc = "max_len (" + std::to_string(max_len) + ") is < len (" + std::to_string(len) + ")";
-                throw std::length_error(desc);
+            if (max_len < len)
+            {
+                throw std::length_error("max_len must be >= len");
             }
 
             // initialize buffer to all zeroes
