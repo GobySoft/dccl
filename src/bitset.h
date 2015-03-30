@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <limits>
 #include <string>
+#include <cstring>
 
 #include "exception.h"
 
