@@ -72,6 +72,7 @@ namespace dccl
                     // DCCL message
                     bits->get_more_bits(dccl::DefaultIdentifierCodec::min_size());
                     (*bits) >>= dccl::BITS_IN_BYTE;
+                    bits->resize(dccl::DefaultIdentifierCodec::min_size());
                     return dccl::DefaultIdentifierCodec::decode(bits);
                 }
                 else
