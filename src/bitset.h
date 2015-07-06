@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <limits>
 #include <string>
-#include <cassert>
 #include <cstring>
 
 #include "exception.h"
@@ -325,15 +324,19 @@ namespace dccl
         /// \param buf An output string containing the value of the Bitset, with the least signficant byte in string[0] and the most significant byte in string[size()-1]
         /// \param max_len Maximum length of buf
         /// \return number of bytes written to buf
+        /// \throw std::length_error if max_len < encoded length.
         size_t to_byte_string(char* buf, size_t max_len)
         {
             // number of bytes needed is ceil(size() / 8)
             size_t len = this->size()/8 + (this->size()%8 ? 1 : 0);
 
-            assert( max_len >= len );
+            if (max_len < len)
+            {
+                throw std::length_error("max_len must be >= len");
+            }
 
             // initialize buffer to all zeroes
-            std::memset(buf, 0, len);
+            std::fill_n(buf, len, 0);
 
             for(size_type i = 0, n = this->size(); i < n; ++i)
                 buf[i/8] |= static_cast<char>((*this)[i] << (i%8));

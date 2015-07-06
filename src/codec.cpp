@@ -219,7 +219,10 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
     encode_internal(msg, header_only, head_bits, body_bits);
 
     size_t head_byte_size = ceil_bits2bytes(head_bits.size());
-    assert(max_len >= head_byte_size);
+    if (max_len < head_byte_size)
+    {
+        throw std::length_error("max_len must be >= head_byte_size");
+    }
     head_bits.to_byte_string(bytes, head_byte_size);
 
     dlog.is(DEBUG2, ENCODE) && dlog << "Head bytes (bits): " << head_byte_size << "(" << head_bits.size() << ")" << std::endl;
@@ -230,7 +233,10 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
     if (!header_only)
     {
         body_byte_size = ceil_bits2bytes(body_bits.size());
-        assert(max_len >= head_byte_size + body_byte_size);
+        if (max_len < (head_byte_size + body_byte_size))
+        {
+            throw std::length_error("max_len must be >= (head_byte_size + body_byte_size)");
+        }
         body_bits.to_byte_string(bytes+head_byte_size, max_len-head_byte_size);
 
         dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Body (bin): " << body_bits << std::endl;

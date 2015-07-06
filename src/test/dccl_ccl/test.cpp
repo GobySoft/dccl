@@ -45,18 +45,15 @@ bool double_cmp(double a, double b, int precision)
     return (a_whole == b_whole) && (a_part == b_part);
 }
 
-int main(int argc, char* argv[])
-{
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
-
-    dccl::Codec codec("dccl.ccl.id", "libdccl_ccl_compat" SHARED_LIBRARY_SUFFIX);
-        
-    codec.load<NormalDCCL>();
-    codec.info<NormalDCCL>(&dccl::dlog);
-    NormalDCCL normal_msg, normal_msg_out;
+template<typename N>
+void check_normal_dccl(dccl::Codec& codec)
+{    
+    codec.load<N>();
+    codec.info<N>(&dccl::dlog);
+    N normal_msg, normal_msg_out;
     normal_msg.set_a(123);
     normal_msg.set_b(321);
-
+        
     std::string encoded;
     codec.encode(&encoded, normal_msg);
     std::cout << dccl::hex_encode(encoded) << std::endl;
@@ -64,7 +61,18 @@ int main(int argc, char* argv[])
     codec.decode(encoded, &normal_msg_out);
         
     assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
-        
+}
+
+
+int main(int argc, char* argv[])
+{
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
+
+    dccl::Codec codec("dccl.ccl.id", "libdccl_ccl_compat" SHARED_LIBRARY_SUFFIX);
+
+    check_normal_dccl<NormalDCCL1Byte>(codec);
+    check_normal_dccl<NormalDCCL2Byte>(codec);    
+    
     codec.info<dccl::legacyccl::protobuf::CCLMDATState>(&dccl::dlog);
         
     dccl::legacyccl::protobuf::CCLMDATState state_in, state_out;

@@ -171,12 +171,7 @@ int main(int argc, char* argv[])
                 exit(EXIT_SUCCESS);
         
         }
-    }
-
-    for(std::vector<void *>::iterator it = dl_handles.begin(),
-            n = dl_handles.end(); it != n; ++it)
-        dlclose(*it);
-    
+    }    
 }
 
 
