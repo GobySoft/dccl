@@ -25,7 +25,9 @@ add_library(dccl
 
 target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-add_dependencies(dccl protoc-gen-dccl)
+if(enable_units)
+  add_dependencies(dccl protoc-gen-dccl)
+endif()
 
 if(enable_cryptography)
   target_link_libraries(dccl ${Cryptopp_LIBRARIES})
