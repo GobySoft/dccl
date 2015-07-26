@@ -53,7 +53,11 @@
 #  License text for the above reference.)
 
 function(PROTOBUF_GENERATE_CPP SRCS HDRS)
-  protobuf_generate_cpp_internal("True" PROTO_SRCS PROTO_HDRS ${ARGN})
+  if(enable_units)
+    protobuf_generate_cpp_internal("True" PROTO_SRCS PROTO_HDRS ${ARGN})
+  else()
+    protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+  endif()
   set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
   set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
 endfunction()

@@ -128,9 +128,15 @@ x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 DCCL is written in C++ and is released available under the Lesser GNU Public License. 
 
 <ul>
-<li> Source code DVCS (bazaar): https://launchpad.net/dccl
+<li> Source code DVCS (bazaar): https://launchpad.net/dccl. 
 \code
 bzr co lp:dccl/3.0 dccl3
+\endcode
+To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. On Debian/Ubuntu systems, this would be
+\code
+sudo apt-get install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
+cd dccl3
+./build.sh
 \endcode
 <li> Compiled release binary packages for Ubuntu: https://launchpad.net/~dccl-dev/+archive/ubuntu/ppa
 \code
