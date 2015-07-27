@@ -1,0 +1,18 @@
+import "dccl/protobuf/option_extensions.proto";
+
+message CommandMessage
+{
+    option (dccl.msg) = { id:  125  max_bytes:  32  codec_version: 3 };
+  
+
+    required int32 destination = 1 [(dccl.field)  = { max: 31 min: 0 in_head: true }];  
+    optional string description = 2 [(dccl.field).omit = true];
+    enum SonarPower { NOMINAL = 10; LOW = 5; OFF = 0; }
+    optional SonarPower sonar_power = 10;
+    required double speed = 11 [(dccl.field) = { units { base_dimensions: "LT^-1" }
+                                                 max: 2.0  min: -0.5 precision: 1 }];
+    repeated int32 waypoint_depth = 12
+        [(dccl.field) = { units { base_dimensions: "L" }
+                          max: 40  min: 0 max_repeat: 4 }];
+}
+

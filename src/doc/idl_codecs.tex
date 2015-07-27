@@ -9,24 +9,26 @@
 \begin{table}
 \centering
 \begin{threeparttable}
-\caption{Definition of the DCCL Structure Language}
+\caption{Definition of the DCCL Interface Description Language}
 \label{tab:dccl_language}
-\begin{tabular}{l|p{0.09\textwidth}|p{0.3\textwidth}|p{0.2\textwidth}|l}
-\hline \multicolumn{5}{c}{Message Extensions\tnote{a}} \\ \hline
-\hline Extension Name & Extension Type & \multicolumn{3}{c}{Explanation} \\
-\hline (dccl.msg).id & int32 & \multicolumn{3}{c}{Unique identifying integer for this message}  \\
-\hline (dccl.msg).max\_bytes & uint32 & \multicolumn{3}{c}{Enforced upper bound for the encoded message length}  \\
-\hline (dccl.msg).codec\_version & int32 & \multicolumn{3}{c}{Default codec set to use (corresponds to DCCL major version)}  \\
-\hline (dccl.msg).codec & string & \multicolumn{3}{c}{Name of the codec to use for encoding the base message.}  \\
-\hline \multicolumn{5}{c}{Field Extensions\tnote{b}} \\ \hline
-\hline Extension Name & Extension Type & Explanation & Applicable Fields & Symbol \\
-\hline (dccl.field).precision & int32 & Decimal digits to preserve; can be negative.  & double, float & $p$ \\
-\hline (dccl.field).min  & double & Minimum value that this field can contain (inclusive) & (u)intN\tnote{c}, double, float  & $x_m$ \\
-\hline (dccl.field).max  & double & Maximum value value that this field can contain (inclusive)   & (u)intN, double, float & $x_M$ \\
-\hline (dccl.field).max\_length  & uint32  & Maximum length (in bytes) that can be encoded & string, bytes & $L_M$ \\
-\hline (dccl.field).max\_repeat  & uint32  & Maximum number of repeated values. & all \textit{repeated} & $r_M$ \\
-\hline (dccl.field).codec & string  & Codec to use for this field (if omitted, the defaults given in Table \ref{tab:dccl_enc} are used) & all & - \\
-\hline (dccl.field).omit & bool & Do not include field in encoded message (default = false)  & all & - \\
+\begin{tabular}{l|l|p{0.25\textwidth}|p{0.15\textwidth}|p{0.06\textwidth}|l}
+\hline \multicolumn{6}{c}{\textbf{Message Extensions}\tnote{a}} \\ \hline
+\hline \textit{Name} & \textit{Type} & \multicolumn{3}{c|}{\textit{Explanation}} & \textit{Default} \\
+\hline (dccl.msg).id & int32 & \multicolumn{3}{c|}{Unique identifying integer for this message} & - \\
+\hline (dccl.msg).max\_bytes & uint32 & \multicolumn{3}{c|}{Enforced upper bound for the encoded message length}  &- \\
+\hline (dccl.msg).codec\_version & int32 & \multicolumn{3}{c|}{Default codec set to use (corresponds to DCCL major version)} & 2 \\
+\hline (dccl.msg).codec & string & \multicolumn{3}{c|}{Name of the codec to use for encoding the base message.} & dccl.default2 \\ 
+\hline (dccl.msg).codec\_group & string & \multicolumn{3}{c|}{Group of codecs to be used for encoding the fields.} & dccl.default2 \\ 
+\hline \hline \multicolumn{6}{c}{\textbf{Field Extensions}\tnote{b}} \\ \hline
+\hline \textit{Name} & \textit{Type} & \textit{Explanation} & \textit{Applicable Fields} & \textit{Symbol} &  \textit{Default}\\
+\hline (dccl.field).precision & int32 & Decimal digits to preserve; can be negative.  & double, float & $p$ & 0 \\
+\hline (dccl.field).min  & double & Minimum value that this field can contain (inclusive) & (u)intN\tnote{c}, double, float  & $x_m$ & -\\
+\hline (dccl.field).max  & double & Maximum value value that this field can contain (inclusive)   & (u)intN, double, float & $x_M$ &- \\
+\hline (dccl.field).max\_length  & uint32  & Maximum length (in bytes) that can be encoded & string, bytes & $L_M$ & -\\
+\hline (dccl.field).max\_repeat  & uint32  & Maximum number of repeated values. & all \textit{repeated} & $r_M$ & -\\
+\hline (dccl.field).codec & string  & Codec to use for this field (if omitted, the defaults given in Table~\ref{tab:dccl_enc} are used) & all & - &- \\
+\hline (dccl.field).omit & bool & Do not include field in encoded message (default = false)  & all & - & False \\
+\hline (dccl.field).units & Units & Physical dimensions and units system information & (u)intN, double, float & - & - \\
 \hline 
 \end{tabular} 
 \begin{tablenotes}
@@ -134,4 +136,26 @@ $x_{enc} = \left\{
 \end{tablenotes}
 \end{threeparttable}
 \end{table*}
+
+
+\begin{table}
+\centering
+\caption{Base dimensions in DCCL}
+\label{tab:basedims}
+\begin{tabular}{l|l}
+\hline Physical dimension & Symbol character \\ \hline
+\hline length & L \\ 
+\hline time & T \\ 
+\hline mass & M \\ 
+\hline plane angle & A \\ 
+\hline solid angle & S \\ 
+\hline current & I \\ 
+\hline temperature & K \\ 
+\hline amount & N \\ 
+\hline luminous intensity & J \\ 
+\hline information & B \\ 
+\hline dimensionless & - \\ 
+\end{tabular}
+\end{table}
+
 \end{document}

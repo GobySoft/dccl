@@ -31,6 +31,7 @@
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/si/dimensionless.hpp>
 #include "test.pb.h"
+#include "auv_status.pb.h"
 
 #include <boost/units/base_units/metric/nautical_mile.hpp>
 
@@ -67,8 +68,7 @@ int main()
     quantity<si::velocity> auv_spd(2.5*si::meters_per_second);
     test_msg.set_auv_speed_with_units(auv_spd);
     std::cout <<"auv_spd: " <<auv_spd <<std::endl;
-
-    //typedef boost::units::unit<boost::units::dimensionless,boost::units::si::system> Dimensionless;
+    
     test_msg.set_salinity_with_units(38.9*si::dimensionless());
     
     
@@ -83,7 +83,8 @@ int main()
     AUVStatus status;
     status.set_x_with_units(1000*si::meters);
     status.set_y_with_units(500*si::meters);
-
+    status.set_heading_with_units(3.1415926535/2*si::radians);
+    
     typedef metric::nautical_mile_base_unit::unit_type NauticalMile;
     quantity<NauticalMile> x_nm(status.x_with_units());
     quantity<NauticalMile> y_nm(status.y_with_units());
@@ -91,6 +92,7 @@ int main()
     std::cout << status.DebugString() << std::endl;
     std::cout << x_nm << std::endl;
     std::cout << y_nm << std::endl;
+    std::cout << status.heading_with_units() << std::endl;
     
     
     std::cout << "all tests passed" << std::endl;

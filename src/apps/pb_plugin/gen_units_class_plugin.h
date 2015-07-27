@@ -256,7 +256,8 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os){
     }
 
   if(sysname == "si" ||
-     sysname == "boost::units::si")
+     sysname == "boost::units::si" ||
+     sysname == "angle::radian")
     {
       os <<"#include <boost/units/systems/si.hpp>" <<std::endl;
     }
@@ -325,7 +326,9 @@ inline void construct_units_typedef_from_dimension(const std::string& fieldname,
   else if(sysname == "temperature::celsius" || sysname == "temperature::fahrenheit")
     sysname_ns = boost::replace_all_copy(sysname, "temperature::", "boost::units::");
   else if(sysname == "angle::degree" || sysname == "angle::gradian" || sysname == "angle::revolution")
-    sysname_ns = boost::replace_all_copy(sysname, "angle::", "boost::units::");
+    sysname_ns = boost::replace_all_copy(sysname, "angle::", "boost::units::") + "::system";
+  else if(sysname == "angle::radian")
+    sysname_ns = "boost::units::si::system";
   else
     sysname_ns = sysname;
 
@@ -427,25 +430,53 @@ inline void construct_units_typedef_from_base_unit(const std::string& fieldname,
 
 //===========
 // Generate the body of the units plugin for the message class
-inline void construct_field_class_plugin(const std::string& fieldname, std::ostream& os, const std::string& value_type){
+inline void construct_field_class_plugin(const std::string& fieldname, std::ostream& os, const std::string& value_type, bool is_repeated){
   /////////// DERIVED FIELD DIMENSION --> PROTOBUF EXTENSIONS
 
   // Overloading set_fieldname to accept boost units, i.e. quantity<unit<fieldname_dimension,sysname::system> >
   os <<"template<typename Quantity >" <<std::endl;
-  os <<"  void set_" <<fieldname <<"_with_units(Quantity value_w_units)" <<std::endl;
-  os <<"  { set_" <<fieldname <<"(boost::units::quantity<" <<fieldname <<"_unit," <<value_type <<" >(value_w_units).value() ); };" <<std::endl;
+  os <<"  void set_" <<fieldname <<"_with_units(";
+  if(is_repeated)
+      os << "int index, ";
+  os <<"Quantity value_w_units)" <<std::endl;
+  os <<"  { set_" <<fieldname <<"(";
+  if(is_repeated)
+      os << "index, ";
+  os <<"boost::units::quantity<" <<fieldname <<"_unit," <<value_type <<" >(value_w_units).value() ); };" <<std::endl;
   os << std::endl;
+
+  if(is_repeated)
+  {
+      os <<"template<typename Quantity >" <<std::endl;
+      os <<"  void add_" <<fieldname <<"_with_units(Quantity value_w_units)" <<std::endl;
+      os <<"  { add_" <<fieldname <<"(boost::units::quantity<" <<fieldname <<"_unit," <<value_type <<" >(value_w_units).value() ); };" <<std::endl;
+      os << std::endl;      
+  }
+
   
   //returns whatever units are requested
   os <<"template<typename Quantity >" <<std::endl;
-  os <<"  Quantity " <<fieldname <<"_with_units() const" <<std::endl;
-  os <<"  { return Quantity(" <<fieldname <<"() * " <<fieldname <<"_unit()); };" <<std::endl;
+  os <<"  Quantity " <<fieldname <<"_with_units(";
+  if(is_repeated)
+      os << "int index";
+  os <<") const" <<std::endl;
+  os <<"  { return Quantity(" <<fieldname <<"(";
+  if(is_repeated)
+      os << "index";
+  os <<") * " <<fieldname <<"_unit()); };" <<std::endl;
   os << std::endl;
 
   //returns syname units only
-  os <<"boost::units::quantity< " <<fieldname <<"_unit > " <<fieldname <<"_with_units() const" <<std::endl;
-  os <<"  { return " <<fieldname <<"_with_units<boost::units::quantity< " <<fieldname <<"_unit," <<value_type <<" > >(); };" <<std::endl;
+  os <<"boost::units::quantity< " <<fieldname <<"_unit > " <<fieldname <<"_with_units(";
+  if(is_repeated)
+      os << "int index";
+  os <<") const" <<std::endl;
+  os <<"  { return " <<fieldname <<"_with_units<boost::units::quantity< " <<fieldname <<"_unit," <<value_type <<" > >(";
+  if(is_repeated)
+      os << "index";
+  os << "); };" <<std::endl;
   os << std::endl;
+
 }
 
 //=============^^^^

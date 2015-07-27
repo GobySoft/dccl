@@ -143,8 +143,9 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 
 	construct_units_typedef_from_base_unit(field->name(), dccl_options.units().unit(), dccl_options.units().relative_temperature(), new_methods);
 	construct_field_class_plugin(field->name(),
-				     new_methods, 
-				     dccl::units::get_field_type_name(field->cpp_type()));
+                                 new_methods, 
+                                 dccl::units::get_field_type_name(field->cpp_type()),
+                                 field->is_repeated());
 	printer->Print(new_methods.str().c_str());
         base_units_to_include_.insert(dccl_options.units().unit());
     }
@@ -165,7 +166,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             bool is_integer = check_field_type(field);                    
             construct_field_class_plugin(field->name(),
                                          new_methods, 
-					 dccl::units::get_field_type_name(field->cpp_type()));
+                                         dccl::units::get_field_type_name(field->cpp_type()),
+                                         field->is_repeated());
             printer->Print(new_methods.str().c_str());
             systems_to_include_.insert(dccl_options.units().system());
 	  }
@@ -189,7 +191,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             bool is_integer = check_field_type(field);
             construct_field_class_plugin(field->name(),
                                          new_methods, 
-					 dccl::units::get_field_type_name(field->cpp_type()));
+                                         dccl::units::get_field_type_name(field->cpp_type()),
+                                         field->is_repeated());
             printer->Print(new_methods.str().c_str());
             systems_to_include_.insert(dccl_options.units().system());
         }
