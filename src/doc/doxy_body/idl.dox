@@ -1,6 +1,6 @@
 /*! \page idl DCCL Interface Descriptor Language (IDL)
 
-DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf using before reading the rest of this document: see <http://code.google.com/apis/protocolbuffers/docs/overview.html>.
+DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf usage before reading the rest of this document: see <http://code.google.com/apis/protocolbuffers/docs/overview.html>.
 
 An example DCCL message is as follows (using Protobuf version 2.4.0 or newer; see \ref idl-old-syntax "old syntax" for older versions):
 \code
@@ -74,7 +74,7 @@ You can also create your own system and use it in DCCL. To do this, make the nam
 
 \subsection idl-units-gen DCCL Units Generated Code
 
-The DCCL Units C++ generated accessors and mutators mirror those provided by the standard Google Protocol Buffers compiler for numeric fields, with the method name appended by the string "_with_units". Units are only valid on numeric fields (either singular or repeated). Two accessors are provided for convenience: a non-template accessor that returns the value as the Quantity (i.e. boost::units::quantity) defined in the DCCL field, and a template accessor that can take any valid Boost Units Quantity (i.e. a type with the same dimensions as the DCCL field) and return the value in that type, accounting for all conversion factors.
+The DCCL Units C++ generated accessors and mutators mirror those provided by the standard Google Protocol Buffers compiler for numeric fields, with the method name appended by the string "_with_units". For the standard Protobuf generated code see <https://developers.google.com/protocol-buffers/docs/reference/cpp-generated>. DCCL Units are only valid on numeric fields (either singular or repeated). Two accessors are provided for convenience: a non-template accessor that returns the value as the Quantity (i.e. boost::units::quantity) defined in the DCCL field, and a template accessor that can take any valid Boost Units Quantity (i.e. a type with the same dimensions as the DCCL field) and return the value in that type, accounting for all conversion factors.
 
 \subsubsection idl-units-gen-singular Singular Numeric Fields
 
