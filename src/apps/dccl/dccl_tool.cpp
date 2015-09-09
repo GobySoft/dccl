@@ -62,7 +62,7 @@ namespace dccl
     
             Action action;
             std::set<std::string> include;
-            std::set<std::string> dlopen;
+            std::vector<std::string> dlopen;
             std::set<std::string> message;
             std::set<std::string> proto_file;
             Format format;
@@ -86,7 +86,6 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg);
 
 int main(int argc, char* argv[])
 {
-    std::vector<void *> dl_handles;
     {
         dccl::tool::Config cfg;
         parse_options(argc, argv, &cfg);
@@ -102,25 +101,15 @@ int main(int argc, char* argv[])
                 end = cfg.include.end(); it != end; ++it)
             dccl::DynamicProtobufManager::add_include_path(*it);
     
-        for(std::set<std::string>::const_iterator it = cfg.dlopen.begin(),
-                end = cfg.dlopen.end(); it != end; ++it)
-        {
-            void* handle = dlopen(it->c_str(), RTLD_LAZY);
-            if(handle)
-            {
-                dl_handles.push_back(handle);
-            }
-            else
-            {
-                std::cerr << "Failed to open shared library: " << *it << std::endl;
-                exit(EXIT_FAILURE);
-            }
-        
-        }
 
-        dccl::Codec dccl(cfg.id_codec);
-        for(std::vector<void *>::iterator it = dl_handles.begin(),
-                n = dl_handles.end(); it != n; ++it)
+
+        std::string first_dl;
+        if(cfg.dlopen.size())
+            first_dl = cfg.dlopen[0];
+        
+        dccl::Codec dccl(cfg.id_codec, first_dl);
+        for(std::vector<std::string>::iterator it = cfg.dlopen.begin()+1,
+                n = cfg.dlopen.end(); it != n; ++it)
             dccl.load_library(*it);
 
         bool no_messages_specified = cfg.message.empty();
@@ -450,7 +439,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
             case 'a': cfg->action = ANALYZE; break;    
             case 'p': cfg->action = DISP_PROTO; break;    
             case 'I': cfg->include.insert(optarg); break;
-            case 'l': cfg->dlopen.insert(optarg); break;
+            case 'l': cfg->dlopen.push_back(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
             case 'f': cfg->proto_file.insert(optarg); break;                
             case 'i': cfg->id_codec = optarg; break;                
