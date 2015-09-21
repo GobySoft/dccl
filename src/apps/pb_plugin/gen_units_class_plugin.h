@@ -128,7 +128,6 @@ namespace dccl
 	using qi::phrase_parse;
 	using ascii::space;
 	using phoenix::ref;
-	using phoenix::bind; 
 	using phoenix::push_back;
 	using qi::eps;
 
@@ -138,8 +137,8 @@ namespace dccl
 	    bool r = phrase_parse(
 				  first,                          /*< start iterator >*/
 				  last,                           /*< end iterator >*/
-				  +((char_("LTMASIKNJB-")[bind(&push_char_base, ref(base_dim_chars), ref(base_dim_strings), _1)] | 
-				     ((ascii::string("length") | ascii::string("time") | ascii::string("mass") | ascii::string("plane_angle") | ascii::string("solid_angle") | ascii::string("current") | ascii::string("temperature") | ascii::string("amount") | ascii::string("luminous_intensity") | ascii::string("information") | ascii::string("dimensionless"))[bind(&push_string_base, ref(base_dim_chars), ref(base_dim_strings), _1)])) >>
+				  +((char_("LTMASIKNJB-")[phoenix::bind(&push_char_base, ref(base_dim_chars), ref(base_dim_strings), _1)] | 
+				     ((ascii::string("length") | ascii::string("time") | ascii::string("mass") | ascii::string("plane_angle") | ascii::string("solid_angle") | ascii::string("current") | ascii::string("temperature") | ascii::string("amount") | ascii::string("luminous_intensity") | ascii::string("information") | ascii::string("dimensionless"))[phoenix::bind(&push_string_base, ref(base_dim_chars), ref(base_dim_strings), _1)])) >>
 				    -(ascii::string("_base_dimension")) >>
 				    ('^' > double_[push_back(ref(base_dim_powers), _1)] | eps[push_back(ref(base_dim_powers), 1)])),
 				  space                           /*< the skip-parser >*/
@@ -166,7 +165,6 @@ namespace dccl
 	using qi::phrase_parse;
 	using ascii::space;
 	using phoenix::ref;
-	using phoenix::bind; 
 	using phoenix::push_back;
 	using qi::eps;
 
@@ -174,8 +172,8 @@ namespace dccl
 	  {
 	    std::vector<std::string> params;
 	    bool r = boost::spirit::qi::parse(first, last,
-					      +((+char_("a-z1_"))[boost::phoenix::bind(&push_char_vec, boost::phoenix::ref(params), _1)] >>
-						-(*char_(" ") >> (char_("*/")[bind(&push_char, ref(derived_dim_operators), _1)] | eps[push_back(ref(derived_dim_operators), "*")]) >> *char_(" "))));
+					      +((+char_("a-z1_"))[phoenix::bind(&push_char_vec, boost::phoenix::ref(params), _1)] >>
+						-(*char_(" ") >> (char_("*/")[phoenix::bind(&push_char, ref(derived_dim_operators), _1)] | eps[push_back(ref(derived_dim_operators), "*")]) >> *char_(" "))));
 
 	    if(derived_dim_operators.size())
 	      derived_dim_operators.pop_back();
