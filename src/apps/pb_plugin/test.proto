@@ -1,0 +1,6 @@
+// protoc --cpp_out=. --dccl_out=. test.proto
+
+  message Range 
+{
+  optional double distance = 1;
+}

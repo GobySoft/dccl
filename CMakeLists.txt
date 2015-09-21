@@ -132,6 +132,7 @@ if(enable_cryptography)
   include_directories(${Cryptopp_INCLUDE_DIRS})
 endif()
 
+option(enable_units "Enable static unit-safety functionality" ON)
 
 ## start adding subdirectories
 add_subdirectory(src)

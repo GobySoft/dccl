@@ -51,6 +51,17 @@ message DCCLFieldOptions
   optional uint32 max_repeat = 10 [default = 1];
 
   optional string description = 20;
+
+  message Units
+  {
+    // units
+    optional string base_dimensions = 1;
+    optional string derived_dimensions = 2;
+    optional string system = 3 [default = "si"];
+    optional bool relative_temperature = 4 [default = false];
+    optional string unit = 5;
+  }
+  optional Units units = 30;
   
   // ccl = 1000
   // arithmetic = 1001

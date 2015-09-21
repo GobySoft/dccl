@@ -53,12 +53,26 @@
 #  License text for the above reference.)
 
 function(PROTOBUF_GENERATE_CPP SRCS HDRS)
+  if(enable_units)
+    protobuf_generate_cpp_internal("True" PROTO_SRCS PROTO_HDRS ${ARGN})
+  else()
+    protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+  endif()
+  set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
+  set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
+endfunction()
+
+function(PROTOBUF_GENERATE_CPP_NO_DCCL SRCS HDRS)
+  protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+  set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
+  set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
+endfunction()
+
+function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
   if(NOT ARGN)
     message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP() called without any proto files")
     return()
   endif(NOT ARGN)
-
-#  file(MAKE_DIRECTORY ${dccl_BUILD_DIR}/proto) 
 
   set(${SRCS})
   set(${HDRS})
@@ -84,11 +98,15 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS)
     list(APPEND ${SRCS} "${FIL_PATH}/${FIL_WE}.pb.cc")
     list(APPEND ${HDRS} "${FIL_PATH}/${FIL_WE}.pb.h")
 
+    if(USE_DCCL)
+      set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_BIN_DIR}/protoc-gen-dccl)
+    endif()
+
     add_custom_command(
       OUTPUT "${FIL_PATH}/${FIL_WE}.pb.cc"
              "${FIL_PATH}/${FIL_WE}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-      ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR}
+      ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR} ${DCCL_PROTOC_ARGS}
       DEPENDS ${ABS_FIL}
       COMMENT "Running C++ protocol buffer compiler on ${FIL}"
       VERBATIM )
