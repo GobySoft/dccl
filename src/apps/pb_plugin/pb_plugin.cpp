@@ -23,6 +23,7 @@
 #include <google/protobuf/compiler/code_generator.h>
 #include <iostream>
 #include <sstream>
+#include <set>
 #include <boost/shared_ptr.hpp>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
