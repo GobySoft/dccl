@@ -105,6 +105,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(ProtobufDCCL REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
+message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
+
 # Protobuf uses pthread so we need to link it too (if it's here)
 find_package(Threads)
 
@@ -132,7 +134,12 @@ if(enable_cryptography)
   include_directories(${Cryptopp_INCLUDE_DIRS})
 endif()
 
-option(enable_units "Enable static unit-safety functionality" ON)
+
+if(${PROTOC_VERSION} VERSION_LESS 2.4.0})
+  option(enable_units "Enable static unit-safety functionality" OFF)
+else()
+  option(enable_units "Enable static unit-safety functionality" ON)
+endif()
 
 ## start adding subdirectories
 add_subdirectory(src)
