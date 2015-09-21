@@ -108,10 +108,13 @@ int main(int argc, char* argv[])
             first_dl = cfg.dlopen[0];
         
         dccl::Codec dccl(cfg.id_codec, first_dl);
-        for(std::vector<std::string>::iterator it = cfg.dlopen.begin()+1,
-                n = cfg.dlopen.end(); it != n; ++it)
-            dccl.load_library(*it);
 
+        if(cfg.dlopen.size() > 1)
+        {
+            for(std::vector<std::string>::iterator it = cfg.dlopen.begin()+1,
+                    n = cfg.dlopen.end(); it != n; ++it)
+                dccl.load_library(*it);
+        }
         bool no_messages_specified = cfg.message.empty();
         for(std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
                 end = cfg.proto_file.end(); it != end; ++it)
