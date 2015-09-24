@@ -163,6 +163,7 @@ bzr co lp:~dccl-dev/dccl/debian3 debian
 <ul>
 <li> \ref idl - documents the extensions to the Google Protocol Buffers language that encompass the DCCL interface descriptor language.
 <li> \ref codecs - gives the default codecs and describes the DCCL encoding and decoding process.
+<li> \ref <a href=http://gobysoft.org/dl/oceans2015_dccl.pdf>OCEANS 2015 Conference Paper</a> on <em>The Dynamic Compact Control Language Version 3</em> presented in Genova, Italy in May 2015.
 </ul>
 
 \section history History
