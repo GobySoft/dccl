@@ -135,7 +135,7 @@ git clone https://github.com/GobySoft/dccl.git
 To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. On Debian/Ubuntu systems, this would be
 \code
 sudo apt-get install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
-cd dccl3
+cd dccl
 ./build.sh
 \endcode
 <li> Compiled release binary packages for Ubuntu: https://launchpad.net/~dccl-dev/+archive/ubuntu/ppa
@@ -152,8 +152,8 @@ sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps
 \endcode
 <li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
 \code
-bzr co lp:dccl/3.0 dccl3
-cd dccl3
+git clone https://github.com/GobySoft/dccl.git
+cd dccl
 bzr co lp:~dccl-dev/dccl/debian3 debian
 \endcode
 </ul>
