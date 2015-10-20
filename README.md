@@ -5,3 +5,4 @@ The Dynamic Compact Control Language (DCCL) is a marshalling and protocol langua
 - Documentation: http://libdccl.org
 - Release Ubuntu Packages PPA: https://launchpad.net/~dccl-dev/+archive/ppa
 - Daily build Ubuntu Packages PPA: https://launchpad.net/~tes/+archive/dccl-daily
+- Assigned DCCL IDs table: http://gobysoft.org/wiki/DcclIdTable
