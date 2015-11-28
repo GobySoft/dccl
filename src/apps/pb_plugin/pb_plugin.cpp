@@ -86,7 +86,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         
         for(int message_i = 0, message_n = file->message_type_count(); message_i < message_n; ++message_i)
         {
-            generate_message(file->message_type(message_i), generator_context);
+            generate_message(file->message_type(message_i), generator_context);            
         }
         
         boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
@@ -124,6 +124,9 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
     {
         generate_field(desc->field(field_i), &printer);
     }
+
+    for(int nested_type_i = 0, nested_type_n = desc->nested_type_count(); nested_type_i < nested_type_n; ++nested_type_i)
+        generate_message(desc->nested_type(nested_type_i), generator_context);
 }
 
 void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer) const
