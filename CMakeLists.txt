@@ -100,10 +100,10 @@ configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 ## boost
 find_package(Boost 1.40.0)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(ProtobufDCCL REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
 message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
 
