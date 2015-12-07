@@ -139,7 +139,7 @@ namespace dccl
 				  +((char_("LTMASIKNJB-")[phoenix::bind(&push_char_base, phoenix::ref(base_dim_chars), phoenix::ref(base_dim_strings), _1)] |
 				     ((ascii::string("length") | ascii::string("time") | ascii::string("mass") | ascii::string("plane_angle") | ascii::string("solid_angle") | ascii::string("current") | ascii::string("temperature") | ascii::string("amount") | ascii::string("luminous_intensity") | ascii::string("information") | ascii::string("dimensionless"))[phoenix::bind(&push_string_base, phoenix::ref(base_dim_chars), phoenix::ref(base_dim_strings), _1)])) >>
 				    -(ascii::string("_base_dimension")) >>
-				    ('^' > double_[push_back(phoenix::ref(base_dim_powers), _1)] | eps[push_back(phoenix::ref(base_dim_powers), 1)])),
+				    (('^' > double_[push_back(phoenix::ref(base_dim_powers), _1)]) | eps[push_back(phoenix::ref(base_dim_powers), 1)])),
 				  space                           /*< the skip-parser >*/
 				  );
 
