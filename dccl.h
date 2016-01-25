@@ -25,8 +25,8 @@
 // courtesy header for the Dynamic Compact Control Language Library
 // (libdccl)
 
-#ifndef DCCLCOURTESY20091211H
-#define DCCLCOURTESY20091211H
+#ifndef DCCL3COURTESY20091211H
+#define DCCL3COURTESY20091211H
 
 #include "dccl/codec.h"
 
