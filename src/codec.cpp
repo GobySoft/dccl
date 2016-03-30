@@ -405,6 +405,48 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
     return head_size_bytes + body_size_bytes;
 }
 
+unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
+{
+    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+    
+    unsigned dccl_id = id(desc);
+    unsigned head_size_bits;
+    codec->base_max_size(&head_size_bits, desc, HEAD);
+
+    unsigned id_bits = 0;
+    id_codec()->field_max_size(&id_bits, 0);
+    head_size_bits += id_bits;
+    
+    unsigned body_size_bits;
+    codec->base_max_size(&body_size_bits, desc, BODY);
+
+    const unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
+    const unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
+    return head_size_bytes + body_size_bytes;
+}
+
+unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
+{
+    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+    
+    unsigned dccl_id = id(desc);
+    unsigned head_size_bits;
+    codec->base_min_size(&head_size_bits, desc, HEAD);
+
+    unsigned id_bits = 0;
+    id_codec()->field_min_size(&id_bits, 0);
+    head_size_bits += id_bits;
+    
+    unsigned body_size_bits;
+    codec->base_min_size(&body_size_bits, desc, BODY);
+
+    const unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
+    const unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
+    return head_size_bytes + body_size_bytes;
+}
+
+
+
 void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */ ) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
