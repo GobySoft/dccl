@@ -328,7 +328,7 @@ namespace dccl
 template<typename GoogleProtobufMessagePointer>
 GoogleProtobufMessagePointer dccl::Codec::decode(const std::string& bytes, bool header_only /* = false */)
 {
-    unsigned this_id = id(bytes);   
+    unsigned this_id = id(bytes);
 
     if(!id2desc_.count(this_id))
         throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) + " has not been loaded. Call load() before decoding this type."));

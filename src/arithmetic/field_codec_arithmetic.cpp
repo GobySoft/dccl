@@ -41,6 +41,11 @@ extern "C"
 {
     void dccl3_load(dccl::Codec* dccl)
     {
+        dccl_arithmetic_load(dccl);
+    }
+
+    void dccl_arithmetic_load(dccl::Codec* dccl)
+    {
         using namespace dccl;
         using namespace dccl::arith;
                     
@@ -52,8 +57,23 @@ extern "C"
         FieldCodecManager::add<ArithmeticFieldCodec<float> >("_arithmetic");
         FieldCodecManager::add<ArithmeticFieldCodec<bool> >("_arithmetic");
         FieldCodecManager::add<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
+
+        FieldCodecManager::add<ArithmeticFieldCodec<int32> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<int64> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<uint32> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<uint64> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<double> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<float> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<bool> >("dccl.arithmetic");
+        FieldCodecManager::add<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("dccl.arithmetic");
+
     }
     void dccl3_unload(dccl::Codec* dccl)
+    {
+        dccl_arithmetic_unload(dccl);
+    }
+    
+    void dccl_arithmetic_unload(dccl::Codec* dccl)
     {
         using namespace dccl;
         using namespace dccl::arith;
@@ -66,6 +86,16 @@ extern "C"
         FieldCodecManager::remove<ArithmeticFieldCodec<float> >("_arithmetic");
         FieldCodecManager::remove<ArithmeticFieldCodec<bool> >("_arithmetic");
         FieldCodecManager::remove<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("_arithmetic");
+
+        FieldCodecManager::remove<ArithmeticFieldCodec<int32> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<int64> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<uint32> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<uint64> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<double> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<float> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<bool> >("dccl.arithmetic");
+        FieldCodecManager::remove<ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*> >("dccl.arithmetic");
+        
     }
 }
 

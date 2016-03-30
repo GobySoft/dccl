@@ -45,6 +45,9 @@
 extern "C"
 {
     void dccl3_load(dccl::Codec* dccl);
+    void dccl3_unload(dccl::Codec* dccl);
+    void dccl_arithmetic_load(dccl::Codec* dccl);
+    void dccl_arithmetic_unload(dccl::Codec* dccl);
 }
 
 namespace dccl
