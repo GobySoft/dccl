@@ -12,6 +12,7 @@ DCCL provides two main components: 1) an \ref idl "interface descriptor language
 <li> Grab dependencies:
 \code
 # apt-add-repository ppa:dccl-dev/ppa
+# apt-get update
 # apt-get install libdccl3-dev
 \endcode
 <li> Find or create a plain GPB message (navreport.proto):
@@ -41,7 +42,7 @@ message NavigationReport {
   optional bool battery_ok = 5;
 }
 \endcode
-<li> (Optional) Learn about the sizes of your messages fields using the 'dccl' tool:
+<li> (Optional, requires dccl3-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
 \code
 $ dccl --analyze -f navreport.proto
 ||||||| Dynamic Compact Control Language (DCCL) Codec |||||||
