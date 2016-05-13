@@ -1,0 +1,27 @@
+== Core Authors ==
+
+DCCL is primarily authored by:
+
+Toby Schneider: https://github.com/tsaubergine
+GobySoft dccl-dev team:  https://github.com/orgs/GobySoft/teams/dccl-dev
+
+== MIT Authors ==
+
+DCCL started as part of the Goby Underwater Autonomy Project, a project with the Massachusetts Institute of Technology. Please see the AUTHORS file within that project for more details: https://github.com/GobySoft/goby/blob/2.1/AUTHORS
+
+== Community contributions to DCCL ==
+
+We greatly appreciate contributions of code, bug fixes, and documentation from the community.
+
+Before contributing to DCCL, in order for us to use your contribution and distribute it under the existing open source licenses, we request that you read the appropriate Contributor License Agreement (CLA) located at:
+
+Individuals: 
+  http://gobysoft.org/dl/gobysoft_contributor_license_agreement-individual.pdf
+Entities:
+  http://gobysoft.org/dl/gobysoft_contributor_license_agreement-entity.pdf
+
+** Please note **: This CLA does not take away your copyright, it merely gives us a license to use your open source contribution.
+
+To accept this CLA, please add your name, email, and date to the list below, and commit the change using your name and email. Committing your name electronically with your SSH key will be considered a substitute for your physical signature:
+
+Toby Schneider <toby@gobysoft.org> 2016-05-13
