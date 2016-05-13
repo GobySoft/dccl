@@ -1,6 +1,6 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
+// Copyright 2015-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+//                     Stephanie Petillo (http://gobysoft.org/index.wt/people/stephanie)
+//                     GobySoft, LLC
 //                     Community contributors (see AUTHORS file)
 //
 //
