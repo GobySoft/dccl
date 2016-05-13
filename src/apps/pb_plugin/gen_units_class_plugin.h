@@ -1,23 +1,24 @@
-// Copyright 2014-2015 Toby Schneider (https://launchpad.net/~tes)
-//                     Stephanie Petillo (https://launchpad.net/~spetillo)
+// Copyright 2014-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+//                     Stephanie Petillo (http://gobysoft.org/index.wt/people/stephanie)
 //                     GobySoft, LLC
+//                     Community contributors (see AUTHORS file)
 //
-// This file is part of the Dynamic Compact Control Language Applications
+//
+// This file is part of the Dynamic Compact Control Language Library
 // ("DCCL").
 //
-// DCCL is free software: you can redistribute them and/or modify
-// them under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
 // (at your option) any later version.
 //
-// DCCL is distributed in the hope that they will be useful,
+// DCCL is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-
 #ifndef GenUnitsClassPlugin20150310H
 #define GenUnitsClassPlugin20150310H
 
