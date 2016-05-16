@@ -43,6 +43,11 @@
 #include "dccl_tool.pb.h"
 #include "dccl/version.h"
 
+// for realpath
+#include <limits.h>
+#include <stdlib.h>
+
+
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
 enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
 
@@ -445,7 +450,21 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
             case 'I': cfg->include.insert(optarg); break;
             case 'l': cfg->dlopen.push_back(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
-            case 'f': cfg->proto_file.insert(optarg); break;                
+            case 'f':
+            {
+                char* proto_file_canonical_path = realpath(optarg, 0);
+                if(proto_file_canonical_path)
+                {
+                    cfg->proto_file.insert(proto_file_canonical_path);
+                    free(proto_file_canonical_path);
+                }
+                else
+                {
+                    std::cerr << "Invalid proto file path: '" << optarg << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            }
             case 'i': cfg->id_codec = optarg; break;                
             case 'v': cfg->verbose = true; break;                
             case 'o': cfg->omit_prefix = true; break;                
