@@ -1,22 +1,23 @@
-// Copyright 2009-2014 Toby Schneider (https://launchpad.net/~tes)
-//                     GobySoft, LLC (2013-)
-//                     Massachusetts Institute of Technology (2007-2014)
-//                     DCCL Developers Team (https://launchpad.net/~dccl-dev)
+// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+//                     GobySoft, LLC (for 2013-)
+//                     Massachusetts Institute of Technology (for 2007-2014)
+//                     Community contributors (see AUTHORS file)
 //
-// This file is part of the Dynamic Compact Control Language Applications
+//
+// This file is part of the Dynamic Compact Control Language Library
 // ("DCCL").
 //
-// DCCL is free software: you can redistribute them and/or modify
-// them under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
 // (at your option) any later version.
 //
-// DCCL is distributed in the hope that they will be useful,
+// DCCL is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 //
 // For the 'dccl' tool: loading non-GPL shared libraries for the purpose of
@@ -41,6 +42,11 @@
 #include "dccl/b64/decode.h"
 #include "dccl_tool.pb.h"
 #include "dccl/version.h"
+
+// for realpath
+#include <limits.h>
+#include <stdlib.h>
+
 
 enum Action { NO_ACTION, ENCODE, DECODE, ANALYZE, DISP_PROTO };
 enum Format { BINARY, TEXTFORMAT, HEX, BASE64 };
@@ -444,7 +450,21 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
             case 'I': cfg->include.insert(optarg); break;
             case 'l': cfg->dlopen.push_back(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
-            case 'f': cfg->proto_file.insert(optarg); break;                
+            case 'f':
+            {
+                char* proto_file_canonical_path = realpath(optarg, 0);
+                if(proto_file_canonical_path)
+                {
+                    cfg->proto_file.insert(proto_file_canonical_path);
+                    free(proto_file_canonical_path);
+                }
+                else
+                {
+                    std::cerr << "Invalid proto file path: '" << optarg << "'" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            }
             case 'i': cfg->id_codec = optarg; break;                
             case 'v': cfg->verbose = true; break;                
             case 'o': cfg->omit_prefix = true; break;                

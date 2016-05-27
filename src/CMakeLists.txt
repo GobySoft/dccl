@@ -36,6 +36,10 @@ endif()
 
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
+set_property(TARGET dccl APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+  $<BUILD_INTERFACE:${dccl_INC_DIR}>
+  $<INSTALL_INTERFACE:include>  # <prefix>/include
+)
 
 install(TARGETS dccl EXPORT dccl-config
    LIBRARY DESTINATION lib
@@ -62,7 +66,6 @@ if(build_arithmetic)
 endif()
 
 export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
-file(APPEND ${CMAKE_BINARY_DIR}/dccl-config.cmake "set(DCCL_INCLUDE_DIR \"${dccl_INC_DIR}\")")
 
 if(enable_testing)
   add_subdirectory(test)
