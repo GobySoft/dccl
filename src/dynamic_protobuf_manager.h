@@ -198,6 +198,8 @@ namespace dccl
                 databases_.push_back(simple_database_); 
                 databases_.push_back(generated_database_);
 
+                msg_factory_->SetDelegateToGeneratedFactory(true);
+
                 merged_database_ = new google::protobuf::MergedDescriptorDatabase(databases_);
                 user_descriptor_pool_ = new google::protobuf::DescriptorPool(merged_database_);
             }
