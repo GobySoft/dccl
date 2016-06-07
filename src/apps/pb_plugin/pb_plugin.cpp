@@ -120,6 +120,16 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
     boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
         generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
     google::protobuf::io::Printer printer(output.get(), '$');
+
+    if(desc->options().HasExtension(dccl::msg))
+    {
+        std::stringstream id_enum;
+        id_enum << "enum DCCLParameters { DCCL_ID = " << desc->options().GetExtension(dccl::msg).id() << ", " <<
+            " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };";
+        printer.Print(id_enum.str().c_str());
+    }
+    
+        
     
     for(int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
     {
