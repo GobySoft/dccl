@@ -5,7 +5,8 @@ message CTDMessage
 {
   option (dccl.msg) = { id: 123
                         max_bytes: 32
-                        codec_version: 3 };
+                        codec_version: 3
+                        unit_system: "si" };
     
   required double temperature = 1 [(dccl.field) = { units { derived_dimensions: "temperature"
                                                             system: "celsius" }

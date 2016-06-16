@@ -78,5 +78,8 @@ message DCCLMessageOptions
 
   optional string codec_group = 4 [default = "dccl.default2"];
   optional int32 codec_version = 5 [default = 2];
+
+  optional string unit_system = 30 [default = "si"];
+    
 }
 

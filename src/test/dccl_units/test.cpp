@@ -94,7 +94,16 @@ int main()
     std::cout << x_nm << std::endl;
     std::cout << y_nm << std::endl;
     std::cout << status.heading_with_units() << std::endl;
+
+
+    Parent p;
+    p.set_mass_with_units(2*si::kilograms);
+    p.set_si_mass_with_units(10*si::kilograms);
+    p.mutable_child()->set_length_with_units(5*si::meters);
     
+    assert(p.mass() == 2000); // grams
+    assert(p.si_mass() == 10); // kilograms
+    assert(p.child().length() == 500); // centimeters
     
     std::cout << "all tests passed" << std::endl;
 }

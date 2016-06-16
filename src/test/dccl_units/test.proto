@@ -2,7 +2,9 @@ import "dccl/protobuf/option_extensions.proto";
 
 
 message CTDTestMessage
-{ 
+{
+  option (dccl.msg).unit_system = "si";
+    
   optional double conductivity = 2 [(dccl.field).units.derived_dimensions = "conductance/length"];
   required double temperature = 3 [(dccl.field) = { units { derived_dimensions: "temperature"
 //                                                            system: "celsius"
@@ -24,4 +26,23 @@ message CTDTestMessage
 
 }
 
+message Parent
+{
+    option (dccl.msg).unit_system = "cgs";
 
+    required int32 mass = 1 [(dccl.field).units.base_dimensions = "M"]; // should be grams
+    required int32 si_mass = 2 [(dccl.field) = { units { system: "si" base_dimensions: "M" } }]; // should be kilograms
+
+    required Child child = 3;
+
+    message Child
+    {
+        required int32 length = 1 [(dccl.field).units.derived_dimensions = "length"]; // should be centimeters
+    }
+
+}
+
+message OuterChild
+{
+    required int32 length = 1 [(dccl.field).units.derived_dimensions = "length", (dccl.field).units.system = "si"]; 
+}

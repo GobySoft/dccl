@@ -23,9 +23,9 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "1")
+set(DCCL_VERSION_PATCH "3")
 set(DCCL_VERSION "${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}")
-set(DCCL_VERSION_DATE "2015.09.21")
+set(DCCL_VERSION_DATE "2016.05.27")
 
 include(today)
 today(DCCL_COMPILE_DATE)
