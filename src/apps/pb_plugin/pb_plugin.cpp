@@ -138,7 +138,7 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
         {
             std::stringstream id_enum;
             id_enum << "enum DCCLParameters { DCCL_ID = " << desc->options().GetExtension(dccl::msg).id() << ", " <<
-                " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };";
+                " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };\n";
             printer.Print(id_enum.str().c_str());
 
 
