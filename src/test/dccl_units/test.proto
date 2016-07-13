@@ -24,7 +24,15 @@ message CTDTestMessage
 
   required double auv_speed = 14 [(dccl.field).units.unit = "metric::knot"]; 
 
+    required NoUnits no_units = 20;
+
 }
+
+message NoUnits
+{
+    optional int32 foo = 1;
+}
+
 
 message Parent
 {
@@ -32,13 +40,14 @@ message Parent
 
     required int32 mass = 1 [(dccl.field).units.base_dimensions = "M"]; // should be grams
     required int32 si_mass = 2 [(dccl.field) = { units { system: "si" base_dimensions: "M" } }]; // should be kilograms
-
+    
     required Child child = 3;
 
     message Child
     {
         required int32 length = 1 [(dccl.field).units.derived_dimensions = "length"]; // should be centimeters
     }
+
 
 }
 

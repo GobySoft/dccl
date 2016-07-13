@@ -51,7 +51,7 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator {
     void generate_message(const google::protobuf::Descriptor* desc,
                           google::protobuf::compiler::GeneratorContext* generator_context,
                           boost::shared_ptr<std::string> message_unit_system = boost::shared_ptr<std::string>()) const;
-    void generate_field(const google::protobuf::FieldDescriptor* field,
+    bool generate_field(const google::protobuf::FieldDescriptor* field,
                         google::protobuf::io::Printer* printer,
                         boost::shared_ptr<std::string> message_unit_system) const;
     bool check_field_type(const google::protobuf::FieldDescriptor* field) const;
@@ -133,7 +133,14 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
         boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
             generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
         google::protobuf::io::Printer printer(output.get(), '$');
-
+        
+        std::stringstream debug_string;
+        debug_string << "std::string DebugStringWithUnits(size_t _indents = 0) const\n";
+        debug_string << "{\n";
+        debug_string << "  std::string _ind(_indents, ' ');\n";
+        debug_string << "  std::stringstream _ss;\n";
+        debug_string << "  _ss << std::setprecision(std::numeric_limits<double>::digits10+1);\n";
+        
         if(desc->options().HasExtension(dccl::msg))
         {
             std::stringstream id_enum;
@@ -150,12 +157,35 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
                 systems_to_include_.insert(dccl_msg_options.unit_system());
             }
         }    
-    
+
+        int fields_with_units = 0;
         for(int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
         {
-            generate_field(desc->field(field_i), &printer, message_unit_system);
+            if(generate_field(desc->field(field_i), &printer, message_unit_system))
+            {
+                debug_string << "  if(has_" << desc->field(field_i)->name() << "()) _ss << _ind << \"" << desc->field(field_i)->name() << ": \" << " << desc->field(field_i)->name() << "_with_units() << std::endl;" << std::endl;
+                ++fields_with_units;
+            }
+            else
+            {
+                if(desc->field(field_i)->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
+                {
+                    debug_string << " if(has_" << desc->field(field_i)->name() <<"()) _ss << _ind << \"" << desc->field(field_i)->name() << " { \\n\" << " << desc->field(field_i)->name() << "().DebugStringWithUnits(_indents+2) << _ind << \"}\" << std::endl;" << std::endl;
+                }
+                else
+                {
+                    debug_string << "  if(has_" << desc->field(field_i)->name() << "()) _ss << _ind << \"" << desc->field(field_i)->name() << ": \" << " << desc->field(field_i)->name() << "() << std::endl;" << std::endl;
+                }
+            }
         }
 
+        debug_string << "  return _ss.str();\n";        
+        debug_string << "}\n";
+
+        if(fields_with_units > 0)
+            printer.Print(debug_string.str().c_str());
+
+        
         for(int nested_type_i = 0, nested_type_n = desc->nested_type_count(); nested_type_i < nested_type_n; ++nested_type_i)
             generate_message(desc->nested_type(nested_type_i), generator_context, message_unit_system);
     }
@@ -165,13 +195,13 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
     }
 }
 
-void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer, boost::shared_ptr<std::string> message_unit_system) const
+bool DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field, google::protobuf::io::Printer* printer, boost::shared_ptr<std::string> message_unit_system) const
 {
     try
     {
         const dccl::DCCLFieldOptions& dccl_field_options = field->options().GetExtension(dccl::field);
 
-        if(!dccl_field_options.has_units()) {return;}
+        if(!dccl_field_options.has_units()) {return false;}
    
         if((dccl_field_options.units().has_base_dimensions() && dccl_field_options.units().has_derived_dimensions())||
            (dccl_field_options.units().has_base_dimensions() && dccl_field_options.units().has_unit()) ||
@@ -190,6 +220,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                          field->is_repeated());
             printer->Print(new_methods.str().c_str());
             base_units_to_include_.insert(dccl_field_options.units().unit());
+            return true;
         }
         else if(dccl_field_options.units().has_base_dimensions())
         {
@@ -218,6 +249,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
                 systems_to_include_.insert(unit_system);
+                return true;
             }
             else
             {
@@ -247,6 +279,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
                 systems_to_include_.insert(unit_system);
+                return true;
             }
             else
             {
@@ -259,6 +292,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
     {
         throw(std::runtime_error(std::string("Field: \n" + field->DebugString() + "\n" + e.what())));
     }
+    return false;
 }
 
 

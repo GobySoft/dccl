@@ -71,9 +71,11 @@ int main()
     std::cout <<"auv_spd: " <<auv_spd <<std::endl;
     
     test_msg.set_salinity_with_units(38.9*si::dimensionless());
-    
+
+    test_msg.mutable_no_units()->set_foo(10);
     
     std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
+    std::cout << test_msg.DebugStringWithUnits() << std::endl;
     std::cout << "Temperature: " << test_msg.temperature_with_units() << std::endl;
     std::cout <<std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units() << std::endl;
     std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units()) << std::endl;
@@ -91,6 +93,7 @@ int main()
     quantity<NauticalMile> y_nm(status.y_with_units());
     
     std::cout << status.DebugString() << std::endl;
+    std::cout << status.DebugStringWithUnits() << std::endl;
     std::cout << x_nm << std::endl;
     std::cout << y_nm << std::endl;
     std::cout << status.heading_with_units() << std::endl;
@@ -104,6 +107,8 @@ int main()
     assert(p.mass() == 2000); // grams
     assert(p.si_mass() == 10); // kilograms
     assert(p.child().length() == 500); // centimeters
+
+    
     
     std::cout << "all tests passed" << std::endl;
 }

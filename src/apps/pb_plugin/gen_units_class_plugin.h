@@ -247,8 +247,12 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os){
   static bool output_extra_headers = false;
   if(!output_extra_headers)
     {
+      os <<"#include <iomanip>" <<std::endl;
+      os <<"#include <sstream>" <<std::endl;
+      os << std::endl;
       os <<"#include <boost/units/absolute.hpp>" <<std::endl;
       os <<"#include <boost/units/dimensionless_type.hpp>" <<std::endl;
+      os <<"#include <boost/units/io.hpp>" <<std::endl;
       output_extra_headers = true;
     }
 
