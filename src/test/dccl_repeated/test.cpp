@@ -81,29 +81,69 @@ int main(int argc, char* argv[])
     std::cout << "Try decode..." << std::endl;
 
 
+    // non-destructive
+    {
+        std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
+        try
+        {
+            std::string::iterator begin = bytes1.begin(), end = bytes1.end();
+            while(begin != end)
+            {
+                std::map<dccl::int32, const google::protobuf::Descriptor*>::const_iterator it = codec.loaded().find(codec.id(begin, end));
+                if(it == codec.loaded().end())
+                    break;
+                
+                boost::shared_ptr<google::protobuf::Message> msg =
+                    dccl::DynamicProtobufManager::new_protobuf_message(it->second);
+                begin = codec.decode(begin, end, msg.get());
+                msgs_out.push_back(msg);
+            }
+        }
+        catch(dccl::Exception &e)
+        {
+            std::cout << e.what() << std::endl;
+        }
+
+        std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
+
+        assert(msgs.size() == msgs_out.size());
     
-    std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
-    try
-    {
-        while(!bytes1.empty())
-            msgs_out.push_back(codec.decode<boost::shared_ptr<google::protobuf::Message> >(&bytes1));
-    }
-    catch(dccl::Exception &e)
-    {
-        std::cout << e.what() << std::endl;
+        for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
+                end = msgs_out.end(); it != end; ++it)
+        {
+            static int i = 0;
+            std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
+            assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
+            ++in_it;
+        }
     }
 
-    std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
 
-    assert(msgs.size() == msgs_out.size());
-    
-    for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
-            end = msgs_out.end(); it != end; ++it)
+    // destructive
     {
-        static int i = 0;
-        std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
-        assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
-        ++in_it;
+        std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
+        try
+        {
+            while(!bytes1.empty())
+                msgs_out.push_back(codec.decode<boost::shared_ptr<google::protobuf::Message> >(&bytes1));
+        }
+        catch(dccl::Exception &e)
+        {
+            std::cout << e.what() << std::endl;
+        }
+
+        std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
+
+        assert(msgs.size() == msgs_out.size());
+    
+        for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
+                end = msgs_out.end(); it != end; ++it)
+        {
+            static int i = 0;
+            std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
+            assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
+            ++in_it;
+        }
     }
     
 
