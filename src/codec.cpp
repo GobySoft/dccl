@@ -165,7 +165,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             throw(Exception("Message is not properly initialized. All `required` fields must be set."));
         
         if(!id2desc_.count(id(desc)))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been validated. Call validate() before encoding this type."));
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been loaded. Call load() before encoding this type."));
     
         
         
