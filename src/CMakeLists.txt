@@ -16,14 +16,16 @@ add_library(dccl
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
   codecs3/field_codec_default.cpp
-  b64/cencode.c
-  b64/cdecode.c
   internal/type_helper.cpp
   internal/field_codec_message_stack.cpp
   ${PROTO_SRCS} ${PROTO_HDRS}
   )
 
 target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+if(enable_b64)
+  target_link_libraries(dccl ${B64_LIBRARIES})
+endif()
 
 if(enable_units)
   add_dependencies(dccl protoc-gen-dccl)

@@ -38,8 +38,8 @@
 
 #include "dccl/codec.h"
 #include "dccl/cli_option.h"
-#include "dccl/b64/encode.h"
-#include "dccl/b64/decode.h"
+#include "dccl/binary.h"
+
 #include "dccl_tool.pb.h"
 #include "dccl/version.h"
 
@@ -280,11 +280,16 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
                     std::cout << dccl::hex_encode(encoded) << std::endl;
                     break;
                 case BASE64:
+#if DCCL_HAS_B64
                     std::stringstream instream(encoded);
                     std::stringstream outstream;
-                    dccl::base64::encoder D;
+                    ::base64::encoder D;
                     D.encode(instream, outstream);
                     std::cout << outstream.str();
+#else
+                    std::cerr << "dccl was not compiled with libb64-dev, so no Base64 functionality is available." << std::endl;
+                    exit(EXIT_FAILURE);
+#endif
                     break;
             }
         
@@ -332,12 +337,17 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
                     input += dccl::hex_decode(line);
                     break;
                 case BASE64:
+#if DCCL_HAS_B64
                     std::stringstream instream(line);
                     std::stringstream outstream;
-                    dccl::base64::decoder D;
+                    ::base64::decoder D;
                     D.decode(instream, outstream);
                     input += outstream.str();
                     break;
+#else
+                    std::cerr << "dccl was not compiled with libb64-dev, so no Base64 functionality is available." << std::endl;
+                    exit(EXIT_FAILURE);
+#endif
             }
         }
     }
