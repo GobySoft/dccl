@@ -160,7 +160,6 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
     try
     {
         size_t head_byte_size = 0;
-        size_t body_byte_size = 0;
 
         if(!msg.IsInitialized() && !header_only)
             throw(Exception("Message is not properly initialized. All `required` fields must be set."));
@@ -409,8 +408,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
 unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 {
     boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
-    
-    unsigned dccl_id = id(desc);
+
     unsigned head_size_bits;
     codec->base_max_size(&head_size_bits, desc, HEAD);
 
@@ -429,8 +427,7 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 {
     boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
-    
-    unsigned dccl_id = id(desc);
+
     unsigned head_size_bits;
     codec->base_min_size(&head_size_bits, desc, HEAD);
 

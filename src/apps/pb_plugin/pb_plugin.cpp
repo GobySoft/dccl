@@ -211,7 +211,6 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
               
                 construct_base_dims_typedef(dimensions, powers, field->name(), unit_system, dccl_field_options.units().relative_temperature(), new_methods);
 
-                bool is_integer = check_field_type(field);                    
                 construct_field_class_plugin(field->name(),
                                              new_methods, 
                                              dccl::units::get_field_type_name(field->cpp_type()),
@@ -239,8 +238,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                 const std::string& unit_system = (!dccl_field_options.units().has_system() && message_unit_system) ? *message_unit_system : dccl_field_options.units().system();
   
                 construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system, dccl_field_options.units().relative_temperature(), new_methods);
-                        
-                bool is_integer = check_field_type(field);
+
                 construct_field_class_plugin(field->name(),
                                              new_methods, 
                                              dccl::units::get_field_type_name(field->cpp_type()),
