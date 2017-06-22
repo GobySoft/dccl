@@ -89,15 +89,6 @@ endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${dccl_INC_DIR}/dccl)
 
-## copy to dccl/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto)
-foreach(I ${INCLUDE_FILES})
-  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
-endforeach()
-
-configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
-
-
 ## boost
 find_package(Boost 1.40.0)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
@@ -130,16 +121,44 @@ endif()
 
 if(enable_cryptography)
   find_package(Cryptopp REQUIRED)
-  add_definitions(-DHAS_CRYPTOPP)
+  set(DCCL_HAS_CRYPTOPP "1")
   include_directories(${Cryptopp_INCLUDE_DIRS})
+else()
+  set(DCCL_HAS_CRYPTOPP "0")
 endif()
 
+## b64 for base64 functions
+find_package(B64 QUIET)
+set(B64_DOC_STRING "Enable base64 functionality (requires libb64-dev: http://libb64.sourceforge.net/")
+if(B64_FOUND)
+  option(enable_b64 ${B64_DOC_STRING} ON)
+else()
+  option(enable_b64 ${B64_DOC_STRING} OFF)
+  message(">> setting enable_b64 to OFF ... if you need this functionality: 1) install libb64-dev; 2) run cmake -Denable_b64=ON")
+endif()
+
+if(enable_b64)
+  find_package(B64 REQUIRED)
+  set(DCCL_HAS_B64 "1")
+  include_directories(${B64_INCLUDE_DIRS})
+else()
+  set(DCCL_HAS_B64 "0")
+endif()
 
 if(${PROTOC_VERSION} VERSION_LESS 2.4.0})
   option(enable_units "Enable static unit-safety functionality" OFF)
 else()
   option(enable_units "Enable static unit-safety functionality" ON)
 endif()
+
+## copy to dccl/include
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto)
+foreach(I ${INCLUDE_FILES})
+  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
+endforeach()
+
+configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
+
 
 ## start adding subdirectories
 add_subdirectory(src)

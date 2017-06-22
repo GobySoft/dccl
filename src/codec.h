@@ -43,6 +43,8 @@
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
 #include "field_codec_manager.h"
+
+#define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
  
 /// Dynamic Compact Control Language namespace
 namespace dccl

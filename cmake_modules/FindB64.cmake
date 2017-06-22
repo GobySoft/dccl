@@ -1,0 +1,12 @@
+find_path(B64_INCLUDE_DIR b64/encode.h)
+find_library(B64_LIBRARY NAMES b64 DOC "The base64 (b64) library")
+mark_as_advanced(B64_INCLUDE_DIR B64_LIBRARY)
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(B64 DEFAULT_MSG
+  B64_LIBRARY B64_INCLUDE_DIR)
+
+if(B64_FOUND)
+  set(B64_INCLUDE_DIRS ${B64_INCLUDE_DIR})
+  set(B64_LIBRARIES    ${B64_LIBRARY})
+endif()
