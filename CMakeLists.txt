@@ -28,8 +28,39 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
 set(DCCL_VERSION_PATCH "4")
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+   message("Compiling in Git source tree.")
+   include(today)
+   today(DCCL_VERSION_DATE)  
+   execute_process(COMMAND git rev-parse --short HEAD
+     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+     OUTPUT_VARIABLE DCCL_LAST_REV)
+   string(STRIP ${DCCL_LAST_REV} DCCL_LAST_REV)
+
+   execute_process(COMMAND git rev-list ${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}..HEAD --count
+     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+     OUTPUT_VARIABLE DCCL_REVS_SINCE_TAG)
+   string(STRIP ${DCCL_REVS_SINCE_TAG} DCCL_REVS_SINCE_TAG)
+      
+   execute_process(COMMAND git diff-index --quiet HEAD
+     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+     RESULT_VARIABLE DCCL_DIRTY_REV)
+   if(DCCL_DIRTY_REV EQUAL 0)
+     set(DCCL_DIRTY_REV_STRING "")
+   else()
+     set(DCCL_DIRTY_REV_STRING "-dirty")
+   endif()
+   set(DCCL_VERSION_PATCH "${DCCL_VERSION_PATCH}+${DCCL_REVS_SINCE_TAG}+git${DCCL_LAST_REV}${DCCL_DIRTY_REV_STRING}")
+   
+else()
+   message("Compiling from release tarball.")
+   set(DCCL_VERSION_DATE "2016.06.24")
+endif()
+
+
 set(DCCL_VERSION "${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}")
-set(DCCL_VERSION_DATE "2016.06.24")
+
 
 include(today)
 today(DCCL_COMPILE_DATE)
