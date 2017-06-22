@@ -7,6 +7,10 @@
 # > ./build.sh
 
 cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
+
+# FILE GLOB_RECURSE calls should not follow symlinks by default.
+cmake_policy(SET CMP0009 NEW)
+
 project(dccl)
 
 ## allows us to write custom modules or modifying existing ones
@@ -34,13 +38,28 @@ today(DCCL_COMPILE_DATE)
 set(DCCL_SOVERSION "30")
 
 # fetch all the local directories for generated code
-get_filename_component(dccl_LIB_DIR lib ABSOLUTE)
-get_filename_component(dccl_BIN_DIR bin ABSOLUTE)
-get_filename_component(dccl_INC_DIR include ABSOLUTE)
 get_filename_component(dccl_SRC_DIR src ABSOLUTE)
-get_filename_component(dccl_SHARE_DIR share ABSOLUTE)
 get_filename_component(dccl_BUILD_DIR build ABSOLUTE)
 get_filename_component(dccl_SCRIPTS_DIR scripts ABSOLUTE)
+
+get_filename_component(dccl_LIB_DIR ${dccl_BUILD_DIR}/lib ABSOLUTE)
+get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
+get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
+get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
+
+# symlink these into the build directory for backwards compatibility
+get_filename_component(dccl_FORMER_LIB_DIR lib ABSOLUTE)
+get_filename_component(dccl_FORMER_BIN_DIR bin ABSOLUTE)
+get_filename_component(dccl_FORMER_INC_DIR include ABSOLUTE)
+get_filename_component(dccl_FORMER_SHARE_DIR share ABSOLUTE)
+add_custom_command(OUTPUT LibLink COMMAND ${CMAKE_COMMAND} -E create_symlink ${dccl_LIB_DIR} ${dccl_FORMER_LIB_DIR})
+add_custom_target(lib_link ALL DEPENDS LibLink)
+add_custom_command(OUTPUT BinLink COMMAND ${CMAKE_COMMAND} -E create_symlink ${dccl_BIN_DIR} ${dccl_FORMER_BIN_DIR})
+add_custom_target(bin_link ALL DEPENDS BinLink)
+add_custom_command(OUTPUT IncludeLink COMMAND ${CMAKE_COMMAND} -E create_symlink ${dccl_INC_DIR} ${dccl_FORMER_INC_DIR})
+add_custom_target(inc_link ALL DEPENDS IncludeLink)
+add_custom_command(OUTPUT ShareLink COMMAND ${CMAKE_COMMAND} -E create_symlink ${dccl_SHARE_DIR} ${dccl_FORMER_SHARE_DIR})
+add_custom_target(share_link ALL DEPENDS ShareLink)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall") # -fprofile-arcs -ftest-coverage")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall") # -fprofile-arcs -ftest-coverage")
@@ -159,6 +178,11 @@ endforeach()
 
 configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
+## copy to build/share
+file(GLOB SHARE_FILES RELATIVE ${dccl_SRC_DIR} src/share/*)
+foreach(I ${SHARE_FILES})
+  file(COPY ${dccl_SRC_DIR}/${I} DESTINATION ${dccl_SHARE_DIR})
+endforeach()
 
 ## start adding subdirectories
 add_subdirectory(src)
