@@ -70,7 +70,7 @@ set(DCCL_SOVERSION "30")
 
 # fetch all the local directories for generated code
 get_filename_component(dccl_SRC_DIR src ABSOLUTE)
-get_filename_component(dccl_BUILD_DIR build ABSOLUTE)
+set(dccl_BUILD_DIR ${CMAKE_BINARY_DIR})
 get_filename_component(dccl_SCRIPTS_DIR scripts ABSOLUTE)
 
 get_filename_component(dccl_LIB_DIR ${dccl_BUILD_DIR}/lib ABSOLUTE)
