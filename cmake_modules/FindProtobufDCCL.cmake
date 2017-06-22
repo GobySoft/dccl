@@ -126,6 +126,16 @@ endfunction()
 
 find_path(PROTOBUF_INCLUDE_DIR google/protobuf/service.h)
 
+# Support preference of static libs by adjusting CMAKE_FIND_LIBRARY_SUFFIXES
+if( make_static_libs )
+  set( _protobuf_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  if(WIN32)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  else()
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a )
+  endif()
+endif()
+
 # Google's provided vcproj files generate libraries with a "lib"
 # prefix on Windows
 if(WIN32)
@@ -151,6 +161,11 @@ mark_as_advanced(PROTOBUF_INCLUDE_DIR
 # Restore original find library prefixes
 if(WIN32)
     set(CMAKE_FIND_LIBRARY_PREFIXES "${PROTOBUF_ORIG_FIND_LIBRARY_PREFIXES}")
+endif()
+
+# Restore the original find library ordering
+if( Protobuf_USE_STATIC_LIBS )
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${_protobuf_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
 include(FindPackageHandleStandardArgs)
