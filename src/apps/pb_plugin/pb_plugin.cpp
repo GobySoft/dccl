@@ -1,4 +1,4 @@
-// Copyright 2014-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2014-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     Stephanie Petillo (http://gobysoft.org/index.wt/people/stephanie)
 //                     GobySoft, LLC
 //                     Community contributors (see AUTHORS file)
@@ -145,7 +145,7 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
         {
             std::stringstream id_enum;
             id_enum << "enum DCCLParameters { DCCL_ID = " << desc->options().GetExtension(dccl::msg).id() << ", " <<
-                " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };";
+                " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };\n";
             printer.Print(id_enum.str().c_str());
 
 

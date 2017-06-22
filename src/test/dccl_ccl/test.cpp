@@ -1,4 +1,4 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     GobySoft, LLC (for 2013-)
 //                     Massachusetts Institute of Technology (for 2007-2014)
 //                     Community contributors (see AUTHORS file)
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
 
-    dccl::Codec codec("dccl.ccl.id", "libdccl_ccl_compat" SHARED_LIBRARY_SUFFIX);
+    dccl::Codec codec("dccl.ccl.id", DCCL_CCL_COMPAT_NAME);
 
     check_normal_dccl<NormalDCCL1Byte>(codec);
     check_normal_dccl<NormalDCCL2Byte>(codec);    

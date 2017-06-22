@@ -1,4 +1,4 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     GobySoft, LLC (for 2013-)
 //                     Massachusetts Institute of Technology (for 2007-2014)
 //                     Community contributors (see AUTHORS file)
@@ -27,8 +27,13 @@
 #include <sstream>
 
 #include "dccl/common.h"
-#include "dccl/b64/encode.h"
-#include "dccl/b64/decode.h"
+
+#define DCCL_HAS_B64 @DCCL_HAS_B64@
+
+#if DCCL_HAS_B64
+#include "b64/encode.h"
+#include "b64/decode.h"
+#endif
 
 namespace dccl
 {
@@ -148,7 +153,8 @@ namespace dccl
         return out;
     }
 
-
+    
+#if DCCL_HAS_B64
     inline std::string b64_encode(const std::string& in)
     {
         std::stringstream instream(in);
@@ -166,8 +172,7 @@ namespace dccl
         D.decode(instream, outstream);
         return outstream.str();
     }
-
-    
+#endif    
         
     /// \return Efficiently computes ceil(log2(v))
     inline unsigned ceil_log2(dccl::uint64 v)

@@ -1,4 +1,4 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     GobySoft, LLC (for 2013-)
 //                     Massachusetts Institute of Technology (for 2007-2014)
 //                     Community contributors (see AUTHORS file)
@@ -23,7 +23,9 @@
 
 #include <dlfcn.h> // for shared library loading
 
-#ifdef HAS_CRYPTOPP
+#include "dccl/codec.h"
+
+#if DCCL_HAS_CRYPTOPP
 #if CRYPTOPP_PATH_USES_PLUS_SIGN
 #include <crypto++/filters.h>
 #include <crypto++/sha.h>
@@ -37,7 +39,6 @@
 #endif // CRYPTOPP_PATH_USES_PLUS_SIGN
 #endif // HAS_CRYPTOPP
 
-#include "dccl/codec.h"
 #include "dccl/codecs2/field_codec_default.h"
 #include "dccl/codecs3/field_codec_default.h"
 #include "dccl/field_codec_id.h"
@@ -165,7 +166,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             throw(Exception("Message is not properly initialized. All `required` fields must be set."));
         
         if(!id2desc_.count(id(desc)))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been validated. Call validate() before encoding this type."));
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been loaded. Call load() before encoding this type."));
     
         
         
@@ -524,7 +525,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
 
 void dccl::Codec::encrypt(std::string* s, const std::string& nonce /* message head */)
 {
-#ifdef HAS_CRYPTOPP
+#if DCCL_HAS_CRYPTOPP
     using namespace CryptoPP;
 
     std::string iv;
@@ -544,7 +545,7 @@ void dccl::Codec::encrypt(std::string* s, const std::string& nonce /* message he
 
 void dccl::Codec::decrypt(std::string* s, const std::string& nonce)
 {
-#ifdef HAS_CRYPTOPP
+#if DCCL_HAS_CRYPTOPP
     using namespace CryptoPP;
 
     std::string iv;
@@ -602,7 +603,7 @@ void dccl::Codec::set_crypto_passphrase(const std::string& passphrase, const std
         crypto_key_.clear();
     skip_crypto_ids_.clear();
 
-#ifdef HAS_CRYPTOPP
+#if DCCL_HAS_CRYPTOPP
     using namespace CryptoPP;
     
     SHA256 hash;

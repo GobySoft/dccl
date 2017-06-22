@@ -1,4 +1,4 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     GobySoft, LLC (for 2013-)
 //                     Massachusetts Institute of Technology (for 2007-2014)
 //                     Community contributors (see AUTHORS file)
@@ -44,10 +44,10 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
 
     if(!i)
     {
-        void* dl_handle = dlopen("libdccl_arithmetic" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
+        void* dl_handle = dlopen(DCCL_ARITHMETIC_NAME, RTLD_LAZY);
         if(!dl_handle)
         {
-            std::cerr << "Failed to open libdccl_arithmetic" SHARED_LIBRARY_SUFFIX << std::endl;
+            std::cerr << "Failed to open " << DCCL_ARITHMETIC_NAME << std::endl;
             exit(1);
         }
         codec.load_library(dl_handle);
