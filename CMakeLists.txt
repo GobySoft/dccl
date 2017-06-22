@@ -151,9 +151,6 @@ message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
 # Protobuf uses pthread so we need to link it too (if it's here)
 find_package(Threads)
 
-# shared library suffix
-add_definitions(-DSHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}")
-
 # work around OLD compilers and systems (like gcc3.3 ...) where reentrancy matters to boost::signals2.  Dccl Bug #1090022.
 add_definitions(-D_REENTRANT)
 add_definitions(-pthread)
