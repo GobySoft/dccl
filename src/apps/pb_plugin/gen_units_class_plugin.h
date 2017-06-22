@@ -1,4 +1,4 @@
-// Copyright 2014-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2014-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     Stephanie Petillo (http://gobysoft.org/index.wt/people/stephanie)
 //                     GobySoft, LLC
 //                     Community contributors (see AUTHORS file)

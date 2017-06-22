@@ -1,4 +1,4 @@
-// Copyright 2009-2016 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
+// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
 //                     GobySoft, LLC (for 2013-)
 //                     Massachusetts Institute of Technology (for 2007-2014)
 //                     Community contributors (see AUTHORS file)
