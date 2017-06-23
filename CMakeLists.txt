@@ -70,7 +70,7 @@ set(DCCL_SOVERSION "30")
 
 # fetch all the local directories for generated code
 get_filename_component(dccl_SRC_DIR src ABSOLUTE)
-set(dccl_BUILD_DIR ${CMAKE_BINARY_DIR})
+set(dccl_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 get_filename_component(dccl_SCRIPTS_DIR scripts ABSOLUTE)
 
 get_filename_component(dccl_LIB_DIR ${dccl_BUILD_DIR}/lib ABSOLUTE)
@@ -207,7 +207,7 @@ foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
 
-configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 ## copy to build/share
 file(GLOB SHARE_FILES RELATIVE ${dccl_SRC_DIR} src/share/*)
