@@ -108,12 +108,9 @@ else()
 endif()
 
 ## set the cmake defaults for libraries and binaries
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${dccl_LIB_DIR} CACHE PATH 
-  "Output directory for the dynamic libraries" )
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dccl_BIN_DIR} CACHE PATH
-  "Output directory for the binaries" )
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR} CACHE PATH 
-  "Output directory for the static libraries (archives)" )
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dccl_BIN_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
 
 
 ## set instructions for `make install`
