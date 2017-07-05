@@ -164,7 +164,7 @@ if(WIN32)
 endif()
 
 # Restore the original find library ordering
-if( Protobuf_USE_STATIC_LIBS )
+if( make_static_libs )
   set(CMAKE_FIND_LIBRARY_SUFFIXES ${_protobuf_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
