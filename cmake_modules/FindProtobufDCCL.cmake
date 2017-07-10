@@ -164,7 +164,7 @@ if(WIN32)
 endif()
 
 # Restore the original find library ordering
-if( make_static_libs )
+if( NOT BUILD_SHARED_LIBS )
   set(CMAKE_FIND_LIBRARY_SUFFIXES ${_protobuf_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
