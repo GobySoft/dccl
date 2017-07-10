@@ -70,7 +70,7 @@ set(DCCL_SOVERSION "30")
 
 # fetch all the local directories for generated code
 get_filename_component(dccl_SRC_DIR src ABSOLUTE)
-set(dccl_BUILD_DIR ${CMAKE_BINARY_DIR})
+set(dccl_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 get_filename_component(dccl_SCRIPTS_DIR scripts ABSOLUTE)
 
 get_filename_component(dccl_LIB_DIR ${dccl_BUILD_DIR}/lib ABSOLUTE)
@@ -108,12 +108,9 @@ else()
 endif()
 
 ## set the cmake defaults for libraries and binaries
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${dccl_LIB_DIR} CACHE PATH 
-  "Output directory for the dynamic libraries" )
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dccl_BIN_DIR} CACHE PATH
-  "Output directory for the binaries" )
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR} CACHE PATH 
-  "Output directory for the static libraries (archives)" )
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${dccl_BIN_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
 
 
 ## set instructions for `make install`
@@ -207,7 +204,7 @@ foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
 
-configure_file(${CMAKE_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 ## copy to build/share
 file(GLOB SHARE_FILES RELATIVE ${dccl_SRC_DIR} src/share/*)
