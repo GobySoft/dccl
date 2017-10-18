@@ -27,7 +27,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "4")
+set(DCCL_VERSION_PATCH "5")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -55,7 +55,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2016.06.24")
+   set(DCCL_VERSION_DATE "2017.07.11")
 endif()
 
 
@@ -77,6 +77,8 @@ get_filename_component(dccl_LIB_DIR ${dccl_BUILD_DIR}/lib ABSOLUTE)
 get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
 get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
+
+option(dccl_EXEC_DIR "Directory where executable DCCL code resides. Change for cross-compilation." ${dccl_BIN_DIR})
 
 # symlink these into the build directory for backwards compatibility
 option(ADD_SYMLINKS "Add symlinks to root directory for backwards compatibility." ON)
