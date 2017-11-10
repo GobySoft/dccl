@@ -244,14 +244,6 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os){
   // pre-defined systems from boost units:
   // http://www.boost.org/doc/libs/1_54_0/boost/units/systems/
 
-  static bool output_extra_headers = false;
-  if(!output_extra_headers)
-    {
-      os <<"#include <boost/units/absolute.hpp>" <<std::endl;
-      os <<"#include <boost/units/dimensionless_type.hpp>" <<std::endl;
-      output_extra_headers = true;
-    }
-
   if(sysname == "si" ||
      sysname == "boost::units::si" ||
      sysname == "angle::radian")
@@ -310,9 +302,48 @@ inline void include_base_unit_headers(const std::string& base_unit_category_and_
   os <<"#include <boost/units/base_units/" <<cat_name_sub <<".hpp>" <<std::endl;
 }
 
+inline void add_absolute(std::string& before, std::string& after)
+{
+    before = "boost::units::absolute<" + before;
+    after += "> ";
+}
+
+inline void add_prefix(const std::string& prefix, std::string& before, std::string& after)
+{
+    int power = 1;
+    if(prefix == "yotta")      power = 24;
+    else if(prefix == "zetta") power = 21;
+    else if(prefix == "exa")   power = 18;
+    else if(prefix == "peta")  power = 15;
+    else if(prefix == "tera")  power = 12;
+    else if(prefix == "giga")  power = 9;
+    else if(prefix == "mega")  power = 6;
+    else if(prefix == "kilo")  power = 3;
+    else if(prefix == "hecto") power = 2;
+    else if(prefix == "deka")  power = 1;
+    else if(prefix == "deci")  power = -1;
+    else if(prefix == "centi") power = -2;
+    else if(prefix == "milli") power = -3;
+    else if(prefix == "micro") power = -6;
+    else if(prefix == "nano")  power = -9;
+    else if(prefix == "pico")  power = -12;
+    else if(prefix == "femto") power = -15;
+    else if(prefix == "atto")  power = -18;
+    else if(prefix == "zepto") power = -21;
+    else if(prefix == "yocto") power = -24;
+    else
+        throw(std::runtime_error(std::string("Invalid SI prefix: " + prefix)));
+
+    std::stringstream power_ss;
+    power_ss << power;
+    
+    before = "boost::units::make_scaled_unit<" + before;
+    after += ", boost::units::scale<10, boost::units::static_rational<" + power_ss.str() + "> > >::type ";
+}
+
 
 // Generate a unit typedef when given derived_ or base_dimensions
-inline void construct_units_typedef_from_dimension(const std::string& fieldname, const std::string& sysname, const bool& absolute, std::ostream& os){
+inline void construct_units_typedef_from_dimension(const std::string& fieldname, const std::string& sysname, const bool& absolute, const std::string& prefix, std::ostream& os){
 
   // Namespace the sysname if necessary
   std::string sysname_ns;
@@ -329,17 +360,22 @@ inline void construct_units_typedef_from_dimension(const std::string& fieldname,
   else
     sysname_ns = sysname;
 
-  // Typedef the unit
+  std::string before;
+  std::string after;
   if(absolute)
-    os <<"typedef boost::units::absolute<boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> > " <<fieldname <<"_unit;" <<std::endl;
-  else // relative temperature or not a temperature (default)
-    os <<"typedef boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> " <<fieldname <<"_unit;" <<std::endl; 
+      add_absolute(before, after);  
 
+  if(!prefix.empty())
+      add_prefix(prefix, before, after);
+  
+  
+  // Typedef the unit
+  os <<"typedef " << before << "boost::units::unit<" <<fieldname <<"_dimension," <<sysname_ns <<"> " << after <<fieldname <<"_unit;" <<std::endl;
   os << std::endl;
 }
 
 // Generate a dimension typedef when given base_dimensions
-inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<double>& power_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, std::ostream& os){
+inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<double>& power_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, const std::string& prefix, std::ostream& os){
   /////////// BASE DIMENSIONS --> DERIVED FIELD DIMENSION
   bool temperature_dimension = false;
   if(dim_vec[0] == "temperature" && dim_vec.size() == 1)
@@ -361,12 +397,13 @@ inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec,
   os << std::endl;
 
   construct_units_typedef_from_dimension(fieldname, sysname, 
-					 temperature_dimension && !rel_temperature, 
+					 temperature_dimension && !rel_temperature,
+                                         prefix,
 					 os);
 }
 
 // Generate a dimension typedef when given derived_dimensions
-inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<std::string>& operator_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, std::ostream& os){
+inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_vec, const std::vector<std::string>& operator_vec, const std::string& fieldname, const std::string& sysname, const bool& rel_temperature, const std::string& prefix, std::ostream& os){
   /////////// DERIVED DIMENSIONS --> DERIVED FIELD DIMENSION
 
   bool temperature_dimension = false;
@@ -396,7 +433,8 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
 
   construct_units_typedef_from_dimension(fieldname, sysname, 
 					 temperature_dimension && !rel_temperature,
-					 os);
+                                         prefix,
+                                         os);
 }
 
 
@@ -406,7 +444,7 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
 
 //===========
 // Generate a unit typedef when given base_unit
-inline void construct_units_typedef_from_base_unit(const std::string& fieldname, const std::string& base_unit_category_and_name, const bool& rel_temperature, std::ostream& os){
+inline void construct_units_typedef_from_base_unit(const std::string& fieldname, const std::string& base_unit_category_and_name, const bool& rel_temperature, const std::string& prefix, std::ostream& os){
 
   bool temperature_unit = false;
 
@@ -416,11 +454,17 @@ inline void construct_units_typedef_from_base_unit(const std::string& fieldname,
 
   bool absolute = temperature_unit && !rel_temperature;
 
-  // Namespace and typedef the unit 
+  std::string before;
+  std::string after;
   if(absolute)
-    os <<"typedef boost::units::absolute<boost::units::" <<base_unit_category_and_name <<"_base_unit::unit_type> " <<fieldname <<"_unit;" <<std::endl;
-  else // relative temperature or not a temperature (default)
-    os <<"typedef boost::units::" <<base_unit_category_and_name <<"_base_unit::unit_type " <<fieldname <<"_unit;" <<std::endl;
+      add_absolute(before, after);  
+
+  if(!prefix.empty())
+      add_prefix(prefix, before, after);
+  
+  
+  // Namespace and typedef the unit 
+  os <<"typedef " << before << "boost::units::" <<base_unit_category_and_name <<"_base_unit::unit_type " << after <<fieldname <<"_unit;" <<std::endl;
 
   os << std::endl;
 }

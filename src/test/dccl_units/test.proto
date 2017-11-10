@@ -18,12 +18,15 @@ message CTDTestMessage
   required double sound_speed = 11 [(dccl.field).units.base_dimensions = " LT^-1"]; 
   optional double density = 12 [(dccl.field).units.base_dimensions = "M L^-3"];
 
-  required int32 depth = 13 [(dccl.field) = { units { derived_dimensions: "length" }
-                                             min: 0
-                                             max: 6000 }];
+  required int32 depth = 13 [(dccl.field) = { units { derived_dimensions: "length" prefix: "kilo" }
+                                              min: 0
+                                              max: 6000
+                                               }];
 
-  required double auv_speed = 14 [(dccl.field).units.unit = "metric::knot"]; 
+  required double auv_speed = 14 [(dccl.field).units.unit = "metric::knot"];
 
+    
+    
 }
 
 message Parent
