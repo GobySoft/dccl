@@ -172,7 +172,7 @@ namespace dccl
 	    std::vector<std::string> params;
 	    bool r = boost::spirit::qi::parse(first, last,
 					      +((+char_("a-z1_"))[phoenix::bind(&push_char_vec, boost::phoenix::ref(params), _1)] >>
-						-(*char_(" ") >> (char_("*/")[phoenix::bind(&push_char, phoenix::ref(derived_dim_operators), _1)] | eps[push_back(phoenix::ref(derived_dim_operators), "*")]) >> *char_(" "))));
+						-(*char_(" ") >> (char_("*/")[phoenix::bind(&push_char, phoenix::ref(derived_dim_operators), _1)] | eps[push_back(phoenix::ref(derived_dim_operators), std::string("*"))]) >> *char_(" "))));
 
 	    if(derived_dim_operators.size())
 	      derived_dim_operators.pop_back();
