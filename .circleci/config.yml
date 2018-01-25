@@ -5,6 +5,6 @@ jobs:
       - image: ubuntu:xenial
     steps: 
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y cmake libboost-dev libcrypto++-dev libprotobuf-dev libprotoc-dev protobuf-compiler libb64-dev doxygen graphviz
+      - run: apt-get update && apt-get install -y cmake libboost-dev libcrypto++-dev libprotobuf-dev libprotoc-dev protobuf-compiler libb64-dev doxygen graphviz
       - run: cmake --build .
       - run: make test
