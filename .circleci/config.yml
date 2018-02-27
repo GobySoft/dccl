@@ -2,9 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: ubuntu:xenial
+      - image: tsaubergine/dccl-circleci:0.0.1
     steps: 
       - checkout
-      - run: apt-get update && apt-get install -y cmake libboost-dev libcrypto++-dev libprotobuf-dev libprotoc-dev protobuf-compiler libb64-dev doxygen graphviz build-essential git
+      - run: apt-get update && apt-get dist-upgrade -y 
       - run: cd /root/project/build && cmake .. -Denable_testing=ON && make -j4
       - run: cd /root/project/build && make test
