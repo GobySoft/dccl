@@ -143,19 +143,19 @@ cd dccl
 \code
 sudo apt-add-repository ppa:dccl-dev/ppa
 sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
 \endcode
 <li> Daily builds binary packages for Ubuntu: https://launchpad.net/~tes/+archive/ubuntu/dccl-daily
 \code
 sudo apt-add-repository ppa:tes/dccl-daily
 sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps
+sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
 \endcode
 <li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
 \code
 git clone https://github.com/GobySoft/dccl.git
 cd dccl
-bzr co lp:~dccl-dev/dccl/debian3 debian
+git clone https://github.com/GobySoft/dccl-debian
 \endcode
 </ul>
 
