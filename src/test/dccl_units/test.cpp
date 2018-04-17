@@ -60,6 +60,7 @@ int main()
     std::cout << temp_d << std::endl;
 
     test_msg.set_temperature_with_units(15*absolute<fahrenheit::temperature>());
+    test_msg.set_micro_temp_with_units(15*Kelvin());
     test_msg.set_salinity(35.2);
     test_msg.set_sound_speed(1500);
 
@@ -75,6 +76,7 @@ int main()
     
     std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
     std::cout << "Temperature: " << test_msg.temperature_with_units() << std::endl;
+    std::cout << "Micro temperature: " << test_msg.micro_temp_with_units() << std::endl;
     std::cout <<std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units() << std::endl;
     std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units()) << std::endl;
     std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
