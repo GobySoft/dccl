@@ -159,7 +159,7 @@ namespace dccl
               unsigned size()
               {
                   // if not required field, leave one value for unspecified (always encoded as 0)
-                  const unsigned NULL_VALUE = FieldCodecBase::use_required() ? 0 : 1;
+                  unsigned NULL_VALUE = FieldCodecBase::use_required() ? 0 : 1;
               
                   return dccl::ceil_log2((max()-min())*std::pow(10.0, precision())+1 + NULL_VALUE);
               }

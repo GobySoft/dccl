@@ -106,6 +106,11 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         google::protobuf::io::Printer include_printer(include_output.get(), '$');
         std::stringstream includes_ss;
 
+        includes_ss << "#include <boost/units/quantity.hpp>" <<std::endl;
+        includes_ss << "#include <boost/units/absolute.hpp>" <<std::endl;
+        includes_ss << "#include <boost/units/dimensionless_type.hpp>" <<std::endl;
+        includes_ss << "#include <boost/units/make_scaled_unit.hpp>" <<std::endl;
+
         for(std::set<std::string>::const_iterator it = systems_to_include_.begin(), end = systems_to_include_.end(); it != end; ++it)
         {
             include_units_headers(*it, includes_ss);
@@ -136,11 +141,15 @@ void DCCLGenerator::generate_message(const google::protobuf::Descriptor* desc, g
 
         if(desc->options().HasExtension(dccl::msg))
         {
-            std::stringstream id_enum;
-            id_enum << "enum DCCLParameters { DCCL_ID = " << desc->options().GetExtension(dccl::msg).id() << ", " <<
-                " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };\n";
-            printer.Print(id_enum.str().c_str());
 
+            if(desc->options().GetExtension(dccl::msg).id() != 0)
+            {
+                std::stringstream id_enum;
+                id_enum << "enum DCCLParameters { DCCL_ID = " << desc->options().GetExtension(dccl::msg).id() << ", " <<
+                    " DCCL_MAX_BYTES = " << desc->options().GetExtension(dccl::msg).max_bytes() << " };\n";
+                printer.Print(id_enum.str().c_str());
+            }
+            
 
             // set message level unit system - used if fields do not specify
             const dccl::DCCLMessageOptions& dccl_msg_options = desc->options().GetExtension(dccl::msg);
@@ -183,7 +192,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         {
             std::stringstream new_methods;
 
-            construct_units_typedef_from_base_unit(field->name(), dccl_field_options.units().unit(), dccl_field_options.units().relative_temperature(), new_methods);
+            construct_units_typedef_from_base_unit(field->name(), dccl_field_options.units().unit(), dccl_field_options.units().relative_temperature(), dccl_field_options.units().prefix(), new_methods);
             construct_field_class_plugin(field->name(),
                                          new_methods, 
                                          dccl::units::get_field_type_name(field->cpp_type()),
@@ -209,7 +218,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                 // default to system set in the field, otherwise use the system set at the message level
                 const std::string& unit_system = (!dccl_field_options.units().has_system() && message_unit_system) ? *message_unit_system : dccl_field_options.units().system();
               
-                construct_base_dims_typedef(dimensions, powers, field->name(), unit_system, dccl_field_options.units().relative_temperature(), new_methods);
+                construct_base_dims_typedef(dimensions, powers, field->name(), unit_system, dccl_field_options.units().relative_temperature(), dccl_field_options.units().prefix(), new_methods);
 
                 construct_field_class_plugin(field->name(),
                                              new_methods, 
@@ -237,7 +246,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                     throw(std::runtime_error(std::string("Field must have 'system' defined or message must have 'unit_system' defined when using 'derived_dimensions'.")));
                 const std::string& unit_system = (!dccl_field_options.units().has_system() && message_unit_system) ? *message_unit_system : dccl_field_options.units().system();
   
-                construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system, dccl_field_options.units().relative_temperature(), new_methods);
+                construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system, dccl_field_options.units().relative_temperature(), dccl_field_options.units().prefix(), new_methods);
 
                 construct_field_class_plugin(field->name(),
                                              new_methods, 

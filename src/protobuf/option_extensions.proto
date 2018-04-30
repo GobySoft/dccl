@@ -60,6 +60,7 @@ message DCCLFieldOptions
     optional string system = 3 [default = "si"];
     optional bool relative_temperature = 4 [default = false];
     optional string unit = 5;
+    optional string prefix = 6;
   }
   optional Units units = 30;
   
