@@ -22,8 +22,6 @@ setup(
             "dccl._dccl",
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
-#           include_dirs=['/some/path/to/include/'],
-#           library_dirs=['/some/path/to/include/'],
             extra_compile_args = ["-Wno-write-strings"], # Hide a bunch of c++ warnings.
         )
     ]
