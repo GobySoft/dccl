@@ -8,7 +8,7 @@
 
 namespace gp = google::protobuf;
 
-static PyObject *GPBMessageModule;
+static PyObject *GPBSymbolDB;
 static PyObject *DcclException;
 
 typedef struct {
@@ -55,7 +55,7 @@ static PyObject *Codec_id(Codec *self, PyObject *args) {
     return Py_BuildValue("I", id);
 }
 
-static int python_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
+static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
     // Get typename from the descriptor -- pyMsg.DESCRIPTOR.full_name -- and put in a string.
     PyObject *descriptor = PyObject_GetAttrString(pyMsg, "DESCRIPTOR");
     if (!descriptor) {
@@ -97,12 +97,28 @@ static int python_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
     return 1;
 }
 
+static PyObject* cpp_pbmsg_to_py_pbmsg(gp::Message *cppMsg) {
+    // Create a Protobuf Message by looking up the Python prototype, and calling it to get a message
+    PyObject *cls = PyObject_CallMethod(GPBSymbolDB, "GetSymbol", "s", cppMsg->GetTypeName().c_str());
+    if (!cls) return NULL;
+
+    PyObject *msg = PyObject_CallObject(cls, NULL);
+    Py_DECREF(cls);
+    if (!msg) return NULL;
+    
+    // Populate that python object from the C++ message
+    std::string encoded;
+    cppMsg->SerializeToString(&encoded);
+    PyObject_CallMethod(msg, "ParseFromString", "s#", encoded.c_str(), encoded.size());
+    return msg;
+}
+
 static PyObject *Codec_encode(Codec *self, PyObject *args) {
     std::string bytes;
     gp::Message *msg = NULL;
     int header_only = 0;
     
-    if (!PyArg_ParseTuple(args, "O&|i", &python_pbmsg_to_cpp_pbmsg, &msg, &header_only))
+    if (!PyArg_ParseTuple(args, "O&|i", &py_pbmsg_to_cpp_pbmsg, &msg, &header_only))
         return NULL;
     
     try {
@@ -114,6 +130,28 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
     }
     delete msg;
     return Py_BuildValue("s#", bytes.c_str(), bytes.size());
+}
+
+static PyObject *Codec_decode(Codec *self, PyObject *args) {
+    const char *bytes;
+    int size = 0;
+    int header_only = 0;
+    
+    if (!PyArg_ParseTuple(args, "s#|i", &bytes, &size, &header_only))
+        return NULL;
+
+    std::string bytestr(bytes, size);
+    gp::Message *msg;
+    try {
+        msg = self->codec->decode<gp::Message*>(bytestr, header_only != 0);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    }
+    
+    PyObject* pyMsg = cpp_pbmsg_to_py_pbmsg(msg);
+    delete msg;
+    return pyMsg;
 }
 
 static PyObject *Codec_load(Codec *self, PyObject *args) {
@@ -140,6 +178,7 @@ static PyObject *Codec_load(Codec *self, PyObject *args) {
 static PyMethodDef Codec_methods[] = {
     {"id", (PyCFunction)Codec_id, METH_VARARGS, "Return the ID for a string or message."},
     {"encode", (PyCFunction)Codec_encode, METH_VARARGS, "Encode a DCCL Message."},
+    {"decode", (PyCFunction)Codec_decode, METH_VARARGS, "Decode a DCCL Message."},
     {"load", (PyCFunction)Codec_load, METH_VARARGS, "Load a DCCL type by name."},
     {NULL}  /* Sentinel */
 };
@@ -247,8 +286,14 @@ PyMODINIT_FUNC init_dccl(void) {
     // We're always going to need dynamic support to use this from Python...
     dccl::DynamicProtobufManager::enable_compilation();
     
-    GPBMessageModule = PyImport_ImportModule("google.protobuf.message");
-    if (GPBMessageModule == NULL)
+    // There's no "un-init" function for modules, so no reason to hold onto intermediary objects...
+    // We just want a MessageFromTypeName lookup function.
+    PyObject* GPBSymbolDBModule = PyImport_ImportModule("google.protobuf.symbol_database");
+    if (GPBSymbolDBModule == NULL)
+        return;
+        
+    GPBSymbolDB = PyObject_CallMethod(GPBSymbolDBModule, "Default", NULL);
+    if (GPBSymbolDB == NULL)
         return;
 }
 
