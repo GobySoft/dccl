@@ -362,6 +362,10 @@ inline void construct_units_typedef_from_dimension(const std::string& fieldname,
 
   std::string before;
   std::string after;
+
+  if(absolute && !prefix.empty())
+      throw(std::runtime_error(std::string("'prefix' is not supported with an absolute temperature field")));
+  
   if(absolute)
       add_absolute(before, after);  
 
