@@ -78,6 +78,8 @@ get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
 get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
 
+set(dccl_EXEC_DIR "${dccl_BIN_DIR}" CACHE STRING "Directory where executable DCCL code resides. Change for cross-compilation.")
+
 # symlink these into the build directory for backwards compatibility
 option(ADD_SYMLINKS "Add symlinks to root directory for backwards compatibility." ON)
 if (ADD_SYMLINKS)
