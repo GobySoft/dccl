@@ -99,7 +99,7 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
     list(APPEND ${HDRS} "${FIL_PATH}/${FIL_WE}.pb.h")
 
     if(USE_DCCL)
-      set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_BIN_DIR}/protoc-gen-dccl)
+      set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_EXEC_DIR}/protoc-gen-dccl)
     endif()
 
     add_custom_command(
