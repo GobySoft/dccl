@@ -12,7 +12,16 @@ message CTDTestMessage
                                                     min: 0
                                                     max: 30
                                                     precision: -1 }];
-  required int32 pressure = 4 [(dccl.field).units.derived_dimensions = "pressure"];
+
+    required double micro_temp = 5 [(dccl.field) = { units { base_dimensions: "K"
+                                                             prefix: "micro"
+                                                             relative_temperature: true
+            }
+                                                     min: 0
+                                                     max: 30
+                                                     precision: -1 }];
+
+    required int32 pressure = 4 [(dccl.field).units.derived_dimensions = "pressure"];
   
   required double salinity = 10 [(dccl.field).units.base_dimensions = "-"]; 
   required double sound_speed = 11 [(dccl.field).units.base_dimensions = " LT^-1"]; 
