@@ -1,1 +1,87 @@
-../../protobuf/option_extensions.proto
+@PROTOBUF_SYNTAX_VERSION@
+import "google/protobuf/descriptor.proto";
+
+
+// Email from liujisi@google.com on 10.02.2012: Feel free to use 1012 for all types of options.
+//--------------------------------
+//Project:  Dynamic Compact Control Language
+//Contact:  Toby Schneider <tes@mit.edu>
+//Web site: https://launchpad.net/dccl
+//Extensions: 1012 (all types)
+//--------------------------------
+package dccl;
+
+
+extend .google.protobuf.FieldOptions
+{
+  optional DCCLFieldOptions field = 1012;
+}
+
+extend .google.protobuf.MessageOptions
+{
+  optional DCCLMessageOptions msg = 1012;
+}
+
+
+message DCCLFieldOptions
+{
+  // what encoder / decoder should we use?
+  optional string codec = 1 [default = "dccl.default2"];
+  // leave this field out of DCCL transmissions (has_field() will be false on receipt)
+  optional bool omit = 2 [default = false];
+  // set true for fields in the header (will *not* be encrypte)d
+  optional bool in_head = 3 [default = false];
+  
+  
+  // double, float
+  optional int32 precision = 4 [default = 0];
+  // int, double, float
+  optional double min = 5 [default = 0];
+  optional double max = 6 [default = 0];
+
+  // time ("1 day" can encode times 12h before or after the receiver's time)
+  optional uint32 num_days = 7 [default = 1];
+
+  // static
+  optional string static_value = 8 [default = ""];
+  
+  // string, bytes
+  optional uint32 max_length = 9 [default = 0];  
+
+  // any `repeated` field
+  optional uint32 max_repeat = 10 [default = 1];
+
+  optional string description = 20;
+
+  message Units
+  {
+    // units
+    optional string base_dimensions = 1;
+    optional string derived_dimensions = 2;
+    optional string system = 3 [default = "si"];
+    optional bool relative_temperature = 4 [default = false];
+    optional string unit = 5;
+    optional string prefix = 6;
+  }
+  optional Units units = 30;
+  
+  // ccl = 1000
+  // arithmetic = 1001
+  extensions 1000 to max;
+}
+
+
+message DCCLMessageOptions
+{
+  optional int32 id = 1;
+  optional uint32 max_bytes = 2;
+
+  optional string codec = 3 [default = "dccl.default2"];
+
+  optional string codec_group = 4 [default = "dccl.default2"];
+  optional int32 codec_version = 5 [default = 2];
+
+  optional string unit_system = 30 [default = "si"];
+    
+}
+
