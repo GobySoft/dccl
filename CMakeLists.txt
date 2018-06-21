@@ -197,8 +197,11 @@ endif()
 
 if(${PROTOC_VERSION} VERSION_LESS 2.4.0})
   option(enable_units "Enable static unit-safety functionality" OFF)
+elseif(${PROTOC_VERSION} VERSION_LESS 3.0.0}) 
+  option(enable_units "Enable static unit-safety functionality" ON)
 else()
   option(enable_units "Enable static unit-safety functionality" ON)
+  set(PROTOBUF_SYNTAX_VERSION "syntax = \"proto2\";")
 endif()
 
 ## copy to dccl/include
