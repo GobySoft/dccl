@@ -151,6 +151,11 @@ include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
 message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
 
+# if using protobuf >= 3.6.0, must compile with c++11
+if (NOT "${PROTOC_VERSION}" VERSION_LESS "3.6.0")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
 # Protobuf uses pthread so we need to link it too (if it's here)
 find_package(Threads)
 
