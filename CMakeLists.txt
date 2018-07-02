@@ -210,6 +210,13 @@ endif()
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto)
 foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
+  # if compiling with protobuf 3+, prepend 'syntax = "proto2";' to .proto files
+  # in order to remove compilation warnings
+  if (("${I}" MATCHES ".\\proto$") AND (NOT "${PROTOC_VERSION}" VERSION_LESS "3"))
+    file(READ "${dccl_INC_DIR}/dccl/${I}" temp_proto)
+    string(CONCAT temp_proto "syntax = \"proto2\";\n" "${temp_proto}")
+    file(WRITE "${dccl_INC_DIR}/dccl/${I}" "${temp_proto}")
+  endif()
 endforeach()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
