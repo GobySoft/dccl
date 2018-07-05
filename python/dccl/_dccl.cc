@@ -113,7 +113,12 @@ static PyObject *Codec_id(Codec *self, PyObject *args) {
 
     if (!PyArg_ParseTuple(args, "s#", &bytes, &bytes_len))
         return NULL;
-    id = self->codec->id(std::string(bytes, bytes_len));
+    try {
+        id = self->codec->id(std::string(bytes, bytes_len));
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    }
     return Py_BuildValue("I", id);
 }
 
@@ -136,6 +141,26 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
     }
     delete msg;
     return Py_BuildValue("s#", bytes.c_str(), bytes.size());
+}
+
+static PyObject *Codec_size(Codec *self, PyObject *args) {
+    unsigned size = 0;
+    gp::Message *msg = NULL;
+    
+    // Parse and convert the input into a gp::Message
+    if (!PyArg_ParseTuple(args, "O&", &py_pbmsg_to_cpp_pbmsg, &msg))
+        return NULL;
+    
+    // Do the DCCL Encoding, and return the value as a string.
+    try {
+        size = self->codec->size(*msg);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        delete msg;
+        return NULL;
+    }
+    delete msg;
+    return Py_BuildValue("I", size);
 }
 
 static PyObject *Codec_decode(Codec *self, PyObject *args) {
@@ -184,15 +209,34 @@ static PyObject *Codec_load(Codec *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+static PyObject *Codec_load_library(Codec *self, PyObject *args) {
+    // Get the path as a string
+    const char *path_ch = NULL;
+    if (!PyArg_ParseTuple(args, "s", &path_ch))
+        return NULL;
+    std::string path(path_ch);
+    try {
+        self->codec->load_library(path);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef Codec_methods[] = {
     {"id", (PyCFunction)Codec_id, METH_VARARGS,
      "id(bytes)\n\nReturn the ID for a string or message."},
+    {"size", (PyCFunction)Codec_size, METH_VARARGS,
+     "size(message)\n\nProvide the encoded size (in bytes) of message."},
     {"encode", (PyCFunction)Codec_encode, METH_VARARGS,
      "encode(message[, header_only])\n\nReturn a DCCL-encoded string for message."},
     {"decode", (PyCFunction)Codec_decode, METH_VARARGS,
      "decode(bytes[, header_only])\n\nReturn a protobuf message decoded from bytes."},
     {"load", (PyCFunction)Codec_load, METH_VARARGS,
      "load(type_name)\n\nEnsure that type_name is registered for use with DCCL."},
+    {"load_library", (PyCFunction)Codec_load_library, METH_VARARGS,
+     "load_library(path)\n\nLoad any codecs present in the given shared library name."}, /* Could make support ctypes handles as well... */
     {NULL}  /* Sentinel */
 };
 
