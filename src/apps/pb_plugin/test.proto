@@ -1,3 +1,4 @@
+@PROTOBUF_SYNTAX_VERSION@
 // protoc --cpp_out=. --dccl_out=. test.proto
 
   message Range 
