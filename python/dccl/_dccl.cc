@@ -9,7 +9,7 @@
 namespace gp = google::protobuf;
 
 static PyObject *GPBSymbolDB;
-static PyObject *DcclException;
+static PyObject *DcclException;fff
 
 typedef struct {
     PyObject_HEAD
@@ -224,6 +224,52 @@ static PyObject *Codec_load_library(Codec *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+static PyObject *Codec_set_crypto_passphrase(Codec *self, PyObject *args) {
+    std::set<unsigned> skip_set;
+    PyObject *skip_obj = NULL;
+    const char *passphrase_ch = NULL;
+    if (!PyArg_ParseTuple(args, "s|O", &passphrase_ch, &skip_obj))
+        return NULL;
+    // Convert the passphrase to a C++ string
+    std::string passphrase(passphrase_ch);
+
+    // Now populate the skip_set, if we were passed an iterable
+    if (skip_obj != NULL) {
+        PyObject *iterator = PyObject_GetIter(skip_obj);
+        if (iterator == NULL) {
+            PyErr_SetString(PyExc_TypeError,"ids_to_skip is not an iterable!");
+            return NULL;
+        }
+
+        while (PyObject *item = PyIter_Next(iterator)) {
+           long value = PyInt_AsLong(item);
+           Py_DECREF(item);
+           if (PyErr_Occurred()) {
+               break;
+           } else if (value < 0) {
+               PyErr_SetString(PyExc_TypeError, "ids_to_skip cannot contain negative values");
+               break;
+           } else {
+               skip_set.insert((unsigned)value);
+           }
+        }
+        Py_DECREF(iterator);
+
+        if (PyErr_Occurred()) {
+            return NULL;
+        }
+    }
+
+    try {
+        self->codec->set_crypto_passphrase(passphrase, skip_set);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
 static PyMethodDef Codec_methods[] = {
     {"id", (PyCFunction)Codec_id, METH_VARARGS,
      "id(bytes)\n\nReturn the ID for a string or message."},
@@ -237,6 +283,8 @@ static PyMethodDef Codec_methods[] = {
      "load(type_name)\n\nEnsure that type_name is registered for use with DCCL."},
     {"load_library", (PyCFunction)Codec_load_library, METH_VARARGS,
      "load_library(path)\n\nLoad any codecs present in the given shared library name."}, /* Could make support ctypes handles as well... */
+    {"set_crypto_passphrase", (PyCFunction)Codec_set_crypto_passphrase, METH_VARARGS,
+     "set_crypto_passphrase(phrase[, ids_to_skip])\n\nEnable encryption/decryption, except for ids_to_skip."},
     {NULL}  /* Sentinel */
 };
 
