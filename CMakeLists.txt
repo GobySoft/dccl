@@ -27,7 +27,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "7")
+set(DCCL_VERSION_PATCH "8")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -55,7 +55,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2018.04.09")
+   set(DCCL_VERSION_DATE "2018.07.06")
 endif()
 
 
@@ -195,10 +195,24 @@ else()
   set(DCCL_HAS_B64 "0")
 endif()
 
-if(${PROTOC_VERSION} VERSION_LESS 2.4.0})
+# Protobuf < 2.4.0 does not have plugin capability
+if(${PROTOC_VERSION} VERSION_LESS 2.4.0)
   option(enable_units "Enable static unit-safety functionality" OFF)
 else()
   option(enable_units "Enable static unit-safety functionality" ON)
+endif()
+
+# Protobuf >= 3.0.0. requires a syntax version
+if(NOT ${PROTOC_VERSION} VERSION_LESS 3.0.0) 
+  set(PROTOBUF_SYNTAX_VERSION "syntax = \"proto2\";")
+endif()
+
+# Protobuf >= 3.6.0 requires C++11 or greater
+if((NOT ${PROTOC_VERSION} VERSION_LESS 3.6.0)
+    AND ((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "98")))
+  message ("Setting CMAKE_CXX_STANDARD to 11 as required by Protobuf >= 3.6.0. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
 ## copy to dccl/include

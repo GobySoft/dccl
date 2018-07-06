@@ -181,6 +181,7 @@ if(PROTOBUFDCCL_FOUND)
     string(REPLACE "libprotoc "
       "" PROTOC_VERSION ${PROTOC_VERSION_STRING})
 
+    string(STRIP ${PROTOC_VERSION} PROTOC_VERSION)
 
 endif()
 
