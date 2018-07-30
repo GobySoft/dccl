@@ -28,7 +28,7 @@ message NavigationReport {
 \endcode
 <li> Turn it into a DCCL message. Create bounds on the message and give it a unique identifier number using DCCL extensions:
 \code
-import "dccl/protobuf/option_extensions.proto";
+import "dccl/option_extensions.proto";
 
 message NavigationReport {
   option (dccl.msg) = { codec_version: 3

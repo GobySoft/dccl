@@ -9,7 +9,7 @@
 namespace gp = google::protobuf;
 
 static PyObject *GPBSymbolDB;
-static PyObject *DcclException;fff
+static PyObject *DcclException;
 
 typedef struct {
     PyObject_HEAD
