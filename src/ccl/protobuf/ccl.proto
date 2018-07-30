@@ -1,6 +1,6 @@
 @PROTOBUF_SYNTAX_VERSION@
 import "dccl/ccl/protobuf/ccl_extensions.proto";
-import "dccl/protobuf/option_extensions.proto";
+import "dccl/option_extensions.proto";
 
 package dccl.legacyccl.protobuf;
 
