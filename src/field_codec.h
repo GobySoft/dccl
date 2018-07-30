@@ -34,7 +34,7 @@
 
 #include "common.h"
 #include "exception.h"
-#include "dccl/protobuf/option_extensions.pb.h"
+#include "dccl/option_extensions.pb.h"
 #include "internal/type_helper.h"
 #include "internal/field_codec_message_stack.h"
 #include "dccl/binary.h"

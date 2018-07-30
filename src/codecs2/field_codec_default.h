@@ -35,7 +35,7 @@
 
 #include <google/protobuf/descriptor.h>
 
-#include "dccl/protobuf/option_extensions.pb.h"
+#include "dccl/option_extensions.pb.h"
 
 #include "dccl/codecs2/field_codec_default_message.h"
 #include "dccl/field_codec_fixed.h"

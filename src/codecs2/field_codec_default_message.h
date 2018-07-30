@@ -25,7 +25,7 @@
 #include "dccl/field_codec.h"
 #include "dccl/field_codec_manager.h"
 
-#include "dccl/protobuf/option_extensions.pb.h"
+#include "dccl/option_extensions.pb.h"
 
 namespace dccl
 {

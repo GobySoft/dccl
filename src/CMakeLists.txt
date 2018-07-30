@@ -1,6 +1,6 @@
 set(PROTOS
-  option_extensions.proto            # New Location
-  protobuf/option_extensions.proto   # Legacy Header
+  option_extensions.proto
+  protobuf/option_extensions.proto
  )
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})

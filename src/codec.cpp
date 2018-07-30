@@ -43,7 +43,7 @@
 #include "dccl/codecs3/field_codec_default.h"
 #include "dccl/field_codec_id.h"
 
-#include "dccl/protobuf/option_extensions.pb.h"
+#include "dccl/option_extensions.pb.h"
 
 
 using dccl::hex_encode;
