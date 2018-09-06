@@ -1,7 +1,7 @@
 import os, dccl, navreport_pb2
 
 dccl.addProtoIncludePath(os.path.abspath("."))
-dccl.addProtoIncludePath(os.path.abspath("/path/to/dccl/include"))
+dccl.addProtoIncludePath(os.path.abspath("../../../include"))
 
 dccl.loadProtoFile(os.path.abspath("./navreport.proto"))
 
