@@ -511,8 +511,8 @@ inline void construct_field_class_plugin(const std::string& fieldname, std::ostr
   os <<") * " <<fieldname <<"_unit()); };" <<std::endl;
   os << std::endl;
 
-  //returns syname units only
-  os <<"boost::units::quantity< " <<fieldname <<"_unit > " <<fieldname <<"_with_units(";
+  //returns same units only
+  os <<"boost::units::quantity< " <<fieldname <<"_unit," <<value_type <<" > " <<fieldname <<"_with_units(";
   if(is_repeated)
       os << "int index";
   os <<") const" <<std::endl;
