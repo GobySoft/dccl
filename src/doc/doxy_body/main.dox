@@ -28,7 +28,7 @@ message NavigationReport {
 \endcode
 <li> Turn it into a DCCL message. Create bounds on the message and give it a unique identifier number using DCCL extensions:
 \code
-import "dccl/protobuf/option_extensions.proto";
+import "dccl/option_extensions.proto";
 
 message NavigationReport {
   option (dccl.msg) = { codec_version: 3
@@ -121,7 +121,50 @@ $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode -
 $ cat msg.txt | dccl --decode -f navreport.proto --omit_prefix
 x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 \endcode
+<li> Or skip steps 5-9 and use Python:
+\code
+$ git clone https://github.com/GobySoft/dccl.git
+$ cd dccl
+$ ./build.sh
+$ cd python
+$ python setup.py build
+$ sudo python setup.py install
+\endcode
+<li> Compile the Python output of your DCCL message
+\code
+$ protoc --python_out=. navreport.proto -I . -I /usr/include -I /path/to/dccl/include
+\endcode
+<li> Create a Python script (quick.py):
+\code
+import os, dccl, navreport_pb2
 
+dccl.addProtoIncludePath(os.path.abspath("."))
+dccl.addProtoIncludePath(os.path.abspath("/path/to/dccl/include"))
+
+dccl.loadProtoFile(os.path.abspath("./navreport.proto"))
+
+codec = dccl.Codec()
+codec.load("NavigationReport")
+
+# SENDER
+r_out = navreport_pb2.NavigationReport(x=450, y=550, z=-100, veh_class=navreport_pb2.NavigationReport.AUV, battery_ok=True)
+encoded_bytes = codec.encode(r_out)
+
+# send encoded_bytes across your link
+
+# RECEIVER
+decoded_msg = codec.decode(encoded_bytes)
+print decoded_msg
+\endcode
+<li>Run it:
+\code
+$ python quick.py
+x: 450.0
+y: 550.0
+z: -100.0
+veh_class: AUV
+battery_ok: true
+\endcode
 </ol>
 
 \section code Code
