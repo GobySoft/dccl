@@ -1,4 +1,5 @@
 set(PROTOS
+  option_extensions.proto
   protobuf/option_extensions.proto
  )
 

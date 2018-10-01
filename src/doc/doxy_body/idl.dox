@@ -4,7 +4,7 @@ DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. Th
 
 An example DCCL message is as follows (using Protobuf version 2.4.0 or newer; see \ref idl-old-syntax "old syntax" for older versions):
 \code
-import "dccl/protobuf/option_extensions.proto";
+import "dccl/option_extensions.proto";
 
 message NavigationReport {
   option (dccl.msg) = { codec_version: 3
@@ -181,7 +181,7 @@ The value of <tt>x_nm</tt> is 0.54 nautical miles and <tt>y_nm</tt> is 0.27 naut
 When using older versions of Google Protocol Buffers than 2.4.0, options cannot be aggregated. Thus, the example NavigationReport message would be written as such: 
 
 \code
-import "dccl/protobuf/option_extensions.proto";
+import "dccl/option_extensions.proto";
 
 message NavigationReport {
   option (dccl.msg).codec_version = 3;
