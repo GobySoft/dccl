@@ -173,7 +173,13 @@ namespace dccl
         { return *get_instance()->user_descriptor_pool_; }
         static google::protobuf::SimpleDescriptorDatabase& simple_database()
         { return *get_instance()->simple_database_; }
-            
+
+        static void reset()
+        {
+            inst_.reset(new DynamicProtobufManager);
+        }
+
+        
       private:
         // so we can use shared_ptr to hold the singleton
         template<typename T>
@@ -186,7 +192,8 @@ namespace dccl
                 inst_.reset(new DynamicProtobufManager);
             return inst_.get();
         }
-            
+
+        
       DynamicProtobufManager()
           : generated_database_(new google::protobuf::DescriptorPoolDatabase(*google::protobuf::DescriptorPool::generated_pool())),
             simple_database_(new google::protobuf::SimpleDescriptorDatabase),
@@ -206,11 +213,6 @@ namespace dccl
             
         ~DynamicProtobufManager()
         {
-        }
-
-        void shutdown()
-        {
-
             delete msg_factory_;
             delete user_descriptor_pool_;
             delete merged_database_;
@@ -223,12 +225,16 @@ namespace dccl
                 delete source_database_;
             if(error_collector_)
                 delete error_collector_;
-                
-            google::protobuf::ShutdownProtobufLibrary();
-
+            
             for(std::vector<void *>::iterator it = dl_handles_.begin(),
                     n = dl_handles_.end(); it != n; ++it)
                 dlclose(*it);
+        }
+        
+        void shutdown()
+        {
+            inst_.reset();
+            google::protobuf::ShutdownProtobufLibrary();
         }
             
             
