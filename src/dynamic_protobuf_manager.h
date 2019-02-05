@@ -26,6 +26,7 @@
 
 #include <set>
 #include <stdexcept>
+#include <iostream>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -109,7 +110,7 @@ namespace dccl
             
             
         /// \brief Add a Google Protobuf DescriptorDatabase to the set of databases searched for Message Descriptors.
-        static void add_database(google::protobuf::DescriptorDatabase* database)
+        static void add_database(boost::shared_ptr<google::protobuf::DescriptorDatabase> database)
         {
             get_instance()->databases_.push_back(database);
             get_instance()->update_databases();
@@ -173,7 +174,13 @@ namespace dccl
         { return *get_instance()->user_descriptor_pool_; }
         static google::protobuf::SimpleDescriptorDatabase& simple_database()
         { return *get_instance()->simple_database_; }
-            
+
+        static void reset()
+        {
+            inst_.reset(new DynamicProtobufManager);
+        }
+
+        
       private:
         // so we can use shared_ptr to hold the singleton
         template<typename T>
@@ -186,59 +193,45 @@ namespace dccl
                 inst_.reset(new DynamicProtobufManager);
             return inst_.get();
         }
-            
+
+        
       DynamicProtobufManager()
           : generated_database_(new google::protobuf::DescriptorPoolDatabase(*google::protobuf::DescriptorPool::generated_pool())),
             simple_database_(new google::protobuf::SimpleDescriptorDatabase),
-            msg_factory_(new google::protobuf::DynamicMessageFactory),
-            disk_source_tree_(0),
-            source_database_(0),
-            error_collector_(0)                
+            msg_factory_(new google::protobuf::DynamicMessageFactory)
             {
                 databases_.push_back(simple_database_); 
                 databases_.push_back(generated_database_);
 
                 msg_factory_->SetDelegateToGeneratedFactory(true);
 
-                merged_database_ = new google::protobuf::MergedDescriptorDatabase(databases_);
-                user_descriptor_pool_ = new google::protobuf::DescriptorPool(merged_database_);
+                update_databases();
             }
             
         ~DynamicProtobufManager()
         {
         }
-
+        
+        
         void shutdown()
         {
-
-            delete msg_factory_;
-            delete user_descriptor_pool_;
-            delete merged_database_;
-            delete simple_database_;
-            delete generated_database_;
-
-            if(disk_source_tree_)
-                delete disk_source_tree_;
-            if(source_database_)
-                delete source_database_;
-            if(error_collector_)
-                delete error_collector_;
-                
-            google::protobuf::ShutdownProtobufLibrary();
-
             for(std::vector<void *>::iterator it = dl_handles_.begin(),
                     n = dl_handles_.end(); it != n; ++it)
-                dlclose(*it);
+                dlclose(*it);            
+            google::protobuf::ShutdownProtobufLibrary();
+            inst_.reset();
         }
             
             
         void update_databases()
         {
-            delete user_descriptor_pool_;
-            delete merged_database_;
-                
-            merged_database_ = new google::protobuf::MergedDescriptorDatabase(databases_);
-            user_descriptor_pool_ = new google::protobuf::DescriptorPool(merged_database_);
+            std::vector<google::protobuf::DescriptorDatabase*> databases;
+
+            for(std::vector<boost::shared_ptr<google::protobuf::DescriptorDatabase> >::const_iterator it = databases_.begin(), end = databases_.end(); it != end; ++it)
+                databases.push_back(it->get());
+            
+            merged_database_.reset(new google::protobuf::MergedDescriptorDatabase(databases));
+            user_descriptor_pool_.reset(new google::protobuf::DescriptorPool(merged_database_.get()));
         }
 
         void enable_disk_source_database();
@@ -247,18 +240,18 @@ namespace dccl
         DynamicProtobufManager& operator= (const DynamicProtobufManager&);
             
       private:
-        std::vector<google::protobuf::DescriptorDatabase *> databases_;
+        std::vector<boost::shared_ptr<google::protobuf::DescriptorDatabase> > databases_;
 
         // always used
-        google::protobuf::DescriptorPoolDatabase* generated_database_;
-        google::protobuf::SimpleDescriptorDatabase* simple_database_;
-        google::protobuf::MergedDescriptorDatabase* merged_database_;
-        google::protobuf::DescriptorPool* user_descriptor_pool_;
-        google::protobuf::DynamicMessageFactory* msg_factory_;
+        boost::shared_ptr<google::protobuf::DescriptorPoolDatabase> generated_database_;
+        boost::shared_ptr<google::protobuf::SimpleDescriptorDatabase> simple_database_;
+        boost::shared_ptr<google::protobuf::MergedDescriptorDatabase> merged_database_;
+        boost::shared_ptr<google::protobuf::DescriptorPool> user_descriptor_pool_;
+        boost::shared_ptr<google::protobuf::DynamicMessageFactory> msg_factory_;
 
         // sometimes used
-        google::protobuf::compiler::DiskSourceTree* disk_source_tree_;
-        google::protobuf::compiler::SourceTreeDescriptorDatabase* source_database_;
+        boost::shared_ptr<google::protobuf::compiler::DiskSourceTree> disk_source_tree_;
+        boost::shared_ptr<google::protobuf::compiler::SourceTreeDescriptorDatabase> source_database_;
 
         class DLogMultiFileErrorCollector
             : public google::protobuf::compiler::MultiFileErrorCollector
@@ -267,7 +260,7 @@ namespace dccl
                           const std::string & message);
         };
             
-        DLogMultiFileErrorCollector* error_collector_;
+        boost::shared_ptr<DLogMultiFileErrorCollector> error_collector_;
 
         std::vector<void *> dl_handles_;
     };

@@ -40,11 +40,11 @@ void dccl::DynamicProtobufManager::enable_disk_source_database()
     if(disk_source_tree_)
         return;
     
-    disk_source_tree_ = new google::protobuf::compiler::DiskSourceTree;
-    source_database_ = new google::protobuf::compiler::SourceTreeDescriptorDatabase(disk_source_tree_);
-    error_collector_ = new DLogMultiFileErrorCollector;
+    disk_source_tree_.reset(new google::protobuf::compiler::DiskSourceTree);
+    source_database_.reset(new google::protobuf::compiler::SourceTreeDescriptorDatabase(disk_source_tree_.get()));
+    error_collector_.reset(new DLogMultiFileErrorCollector);
     
-    source_database_->RecordErrorsTo(error_collector_);
+    source_database_->RecordErrorsTo(error_collector_.get());
     disk_source_tree_->MapPath("/", "/");
     disk_source_tree_->MapPath("", "");
     add_database(source_database_);
