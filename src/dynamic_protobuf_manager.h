@@ -215,11 +215,11 @@ namespace dccl
         
         void shutdown()
         {
-            inst_.reset();
-            google::protobuf::ShutdownProtobufLibrary();
             for(std::vector<void *>::iterator it = dl_handles_.begin(),
                     n = dl_handles_.end(); it != n; ++it)
                 dlclose(*it);            
+            google::protobuf::ShutdownProtobufLibrary();
+            inst_.reset();
         }
             
             
