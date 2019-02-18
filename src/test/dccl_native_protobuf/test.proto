@@ -1,0 +1,13 @@
+@PROTOBUF_SYNTAX_VERSION@
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+message NativeProtobufTest
+{
+  option (dccl.msg).id = 1;
+  option (dccl.msg).max_bytes = 32;
+  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_group = "dccl.native_protobuf";
+    
+  required uint32 a_uint32 = 1;  
+}
