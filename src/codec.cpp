@@ -155,7 +155,7 @@ void dccl::Codec::set_default_codecs()
     }
 }
 
-void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only, Bitset& head_bits, Bitset& body_bits)
+void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only, Bitset& head_bits, Bitset& body_bits, int user_id)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -163,13 +163,14 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
 
     try
     {
+        unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
         size_t head_byte_size = 0;
 
         if(!msg.IsInitialized() && !header_only)
             throw(Exception("Message is not properly initialized. All `required` fields must be set."));
         
-        if(!id2desc_.count(id(desc)))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(id(desc)) + " has not been loaded. Call load() before encoding this type."));
+        if(!id2desc_.count(dccl_id))
+            throw(Exception("Message id " + boost::lexical_cast<std::string>(dccl_id) + " has not been loaded. Call load() before encoding this type."));
     
         
         
@@ -179,7 +180,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         if(codec)
         {
             //fixed header
-            id_codec()->field_encode(&head_bits, id(desc), 0);
+            id_codec()->field_encode(&head_bits, dccl_id, 0);
             
             internal::MessageStack msg_stack;
             msg_stack.push(msg.GetDescriptor());
@@ -215,12 +216,12 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
     }
 }
 
-size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::Message& msg, bool header_only /* = false */)
+size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id)
 {
     const Descriptor* desc = msg.GetDescriptor();
     Bitset head_bits;
     Bitset body_bits;
-    encode_internal(msg, header_only, head_bits, body_bits);
+    encode_internal(msg, header_only, head_bits, body_bits, user_id);
 
     size_t head_byte_size = ceil_bits2bytes(head_bits.size());
     if (max_len < head_byte_size)
@@ -247,7 +248,8 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
         dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Body (hex): " << hex_encode(bytes+head_byte_size, bytes+head_byte_size+body_byte_size) << std::endl;
         dlog.is(DEBUG2, ENCODE) && dlog << "Body bytes (bits): " <<  body_byte_size << "(" << body_bits.size() << ")" <<  std::endl;
 
-        if(!crypto_key_.empty() && !skip_crypto_ids_.count(id(desc))) {
+        unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
+        if(!crypto_key_.empty() && !skip_crypto_ids_.count(dccl_id)) {
             std::string head_bytes(bytes, bytes+head_byte_size);
             std::string body_bytes(bytes+head_byte_size, bytes+head_byte_size+body_byte_size);
             encrypt(&body_bytes, head_bytes);
@@ -263,12 +265,12 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
 }
 
 
-void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only /* = false */)
+void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id)
 {
     const Descriptor* desc = msg.GetDescriptor();
     Bitset head_bits;
     Bitset body_bits;
-    encode_internal(msg, header_only, head_bits, body_bits);
+    encode_internal(msg, header_only, head_bits, body_bits, user_id);
 
     std::string head_bytes = head_bits.to_byte_string();
 
@@ -285,7 +287,8 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
         dlog.is(DEBUG3, ENCODE) && dlog << "Unencrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
         dlog.is(DEBUG2, ENCODE) && dlog << "Body bytes (bits): " <<  body_bytes.size() << "(" << body_bits.size() << ")" <<  std::endl;
 
-        if(!crypto_key_.empty() && !skip_crypto_ids_.count(id(desc)))
+        unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
+        if(!crypto_key_.empty() && !skip_crypto_ids_.count(dccl_id))
             encrypt(&body_bytes, head_bytes);
 
         dlog.is(logger::DEBUG3, logger::ENCODE) && dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
@@ -315,11 +318,11 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void dccl::Codec::load(const google::protobuf::Descriptor* desc)
+void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id)
 {    
     try
     {
-        if(!desc->options().GetExtension(dccl::msg).has_id())
+        if(user_id <0 && !desc->options().GetExtension(dccl::msg).has_id())
             throw(Exception("Missing message option `(dccl.msg).id`. Specify a unique id (e.g. 3) in the body of your .proto message using \"option (dccl.msg).id = 3\""));
         if(!desc->options().GetExtension(dccl::msg).has_max_bytes())
             throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum (encoded) message size in bytes (e.g. 32) in the body of your .proto message using \"option (dccl.msg).max_bytes = 32\""));
@@ -329,7 +332,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
         
         boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
 
-        unsigned dccl_id = id(desc);
+        unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
         unsigned head_size_bits, body_size_bits;
         codec->base_max_size(&head_size_bits, desc, HEAD);
         codec->base_max_size(&body_size_bits, desc, BODY);
@@ -374,26 +377,48 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc)
 
 void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
 {
-    unsigned dccl_id = id(desc);
+    unsigned int erased = 0;
+    for (auto it = id2desc_.begin(); it != id2desc_.end();)
+    {
+        if (it->second == desc)
+        {
+            erased++;
+            it = id2desc_.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+        
+    }
+    if (erased == 0)
+    {
+        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": is not loaded. Ignoring unload request." << std::endl;
+    }
+}
+
+
+void dccl::Codec::unload(size_t dccl_id)
+{
     if(id2desc_.count(dccl_id)) 
     {
         id2desc_.erase(dccl_id);
     }
     else
     {
-        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": is not loaded. Ignoring unload request." << std::endl;
+        dlog.is(DEBUG1) && dlog << "Message with id " << dccl_id << ": is not loaded. Ignoring unload request." << std::endl;
         return;
-    }
-    
+    } 
 }
 
-unsigned dccl::Codec::size(const google::protobuf::Message& msg)
+
+unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
     boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
     
-    unsigned dccl_id = id(desc);
+    unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
     unsigned head_size_bits;
     codec->base_size(&head_size_bits, msg, HEAD);
 
@@ -408,6 +433,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg)
     const unsigned body_size_bytes = ceil_bits2bytes(body_size_bits);
     return head_size_bytes + body_size_bytes;
 }
+
 
 unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 {
@@ -449,7 +475,7 @@ unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 
 
 
-void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */ ) const
+void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */, int user_id) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
 
@@ -463,7 +489,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             codec->base_max_size(&config_head_bit_size, desc, HEAD);
             codec->base_max_size(&body_bit_size, desc, BODY);
 
-            unsigned dccl_id = id(desc);
+            unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
             unsigned id_bit_size = 0;
             id_codec()->field_size(&id_bit_size, dccl_id, 0);
     
@@ -632,7 +658,7 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
         *os << "Field sizes are in bits unless otherwise noted." << std::endl;
         
         for(std::map<int32, const google::protobuf::Descriptor*>::const_iterator it = id2desc_.begin(), n = id2desc_.end(); it != n; ++it)
-            info(it->second, os);
+            info(it->second, os, it->first);
         
 //        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
     }
