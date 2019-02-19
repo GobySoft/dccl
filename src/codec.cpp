@@ -378,7 +378,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id)
 void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
 {
     unsigned int erased = 0;
-    for (auto it = id2desc_.begin(); it != id2desc_.end();)
+    for (std::map<int32, const google::protobuf::Descriptor*>::iterator it = id2desc_.begin(); it != id2desc_.end();)
     {
         if (it->second == desc)
         {
