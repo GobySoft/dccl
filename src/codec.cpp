@@ -383,13 +383,12 @@ void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
         if (it->second == desc)
         {
             erased++;
-            it = id2desc_.erase(it);
+            id2desc_.erase(it++);
         }
         else
         {
             it++;
         }
-
     }
     if (erased == 0)
     {
