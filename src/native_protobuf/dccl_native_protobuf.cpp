@@ -34,7 +34,7 @@ extern "C"
         const char* native_pb_group = "dccl.native_protobuf";
         
         FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
-        FieldCodecManager::add<VarIntNumericFieldCodec<dccl::uint32>, FieldDescriptor::TYPE_UINT32>(native_pb_group);
+        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::uint32>, FieldDescriptor::TYPE_UINT32>(native_pb_group);
 
     }
     
@@ -46,7 +46,7 @@ extern "C"
 
         const char* native_pb_group = "dccl.native_protobuf";
 
-        FieldCodecManager::remove<VarIntNumericFieldCodec<dccl::uint32>, FieldDescriptor::TYPE_UINT32>(native_pb_group);
+        FieldCodecManager::remove<PrimitiveTypeFieldCodec<dccl::uint32>, FieldDescriptor::TYPE_UINT32>(native_pb_group);
         FieldCodecManager::remove<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
                     
     }

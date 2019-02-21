@@ -40,7 +40,8 @@ int main(int argc, char* argv[])
     codec.info<NativeProtobufTest>(&dccl::dlog);
 
     NativeProtobufTest msg_in, msg_out;
-    msg_in.set_a_uint32(25);
+    //    msg_in.set_a_uint32(25);
+    msg_in.set_a_uint32(0xFFFFFFFF);
     
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
     std::cout << "Try encode..." << std::endl;
