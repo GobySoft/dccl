@@ -145,7 +145,7 @@ namespace dccl
         /// dccl_id with the message descriptor corresponding to that of msg will be used
         template<typename ProtobufMessage>
             void info(std::ostream* os = 0, int user_id = -1) const
-        { info(ProtobufMessage::descriptor(), os); }
+        { info(ProtobufMessage::descriptor(), os, user_id); }
 
         /// \brief An alterative form for getting information for messages for message types <i>not</i> known at compile-time ("dynamic").
         ///
