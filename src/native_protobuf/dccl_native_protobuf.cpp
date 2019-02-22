@@ -65,6 +65,9 @@ extern "C"
                                FieldDescriptor::TYPE_FLOAT>(native_pb_group);
         FieldCodecManager::add<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
                                FieldDescriptor::TYPE_BOOL>(native_pb_group);
+
+        FieldCodecManager::add<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
+
         
         // ADD ENUM
         
@@ -110,6 +113,7 @@ extern "C"
         FieldCodecManager::remove<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
                                   FieldDescriptor::TYPE_BOOL>(native_pb_group);
         
+        FieldCodecManager::remove<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
 
         
         FieldCodecManager::remove<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);

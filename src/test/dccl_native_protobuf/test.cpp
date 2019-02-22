@@ -45,9 +45,9 @@ void fill_message(NativeProtobufTest& msg_in)
     msg_in.set_sfixed32_default_optional(++i);
     msg_in.set_sfixed64_default_optional(-++i);
 
-        msg_in.set_bool_default_optional(true);
-
-    //    msg_in.set_enum_default_optional(ENUM_C);
+    msg_in.set_bool_default_optional(true);
+    
+    msg_in.set_enum_default_optional(ENUM_C);
 
     msg_in.set_double_default_required(++i + 0.1);
     msg_in.set_float_default_required(++i + 0.2);
@@ -65,7 +65,7 @@ void fill_message(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_required(true);
 
-    //    msg_in.set_enum_default_required(ENUM_C);
+    msg_in.set_enum_default_required(ENUM_C);
     
     
     for(int j = 0; j < 4; ++j)
@@ -106,7 +106,7 @@ void fill_message_partial(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_required(true);
 
-    //    msg_in.set_enum_default_required(ENUM_C);
+    msg_in.set_enum_default_required(ENUM_C);
     
     
     for(int j = 0; j < 2; ++j)
@@ -135,7 +135,7 @@ void fill_message_max(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_optional(true);
 
-    //    msg_in.set_enum_default_optional(ENUM_C);
+    msg_in.set_enum_default_optional(ENUM_C);
 
     msg_in.set_double_default_required(std::numeric_limits<double>::max());
     msg_in.set_float_default_required(std::numeric_limits<float>::max());
@@ -152,7 +152,7 @@ void fill_message_max(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_required(true);
 
-    //    msg_in.set_enum_default_required(ENUM_C);
+    msg_in.set_enum_default_required(ENUM_C);
     
     
     for(int j = 0; j < 4; ++j)
@@ -181,7 +181,7 @@ void fill_message_min(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_optional(true);
 
-    //    msg_in.set_enum_default_optional(ENUM_C);
+    msg_in.set_enum_default_optional(ENUM_A);
 
     msg_in.set_double_default_required(std::numeric_limits<double>::min());
     msg_in.set_float_default_required(std::numeric_limits<float>::min());
@@ -198,7 +198,7 @@ void fill_message_min(NativeProtobufTest& msg_in)
 
     msg_in.set_bool_default_required(true);
 
-    //    msg_in.set_enum_default_required(ENUM_C);
+    msg_in.set_enum_default_required(ENUM_A);
     
     
     for(int j = 0; j < 4; ++j)

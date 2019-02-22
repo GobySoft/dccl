@@ -199,7 +199,6 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFI
     bool is_varint() { return false; }
 };
 
-// https://developers.google.com/protocol-buffers/docs/encoding
 template<typename WireType, google::protobuf::FieldDescriptor::Type DeclaredType, typename FieldType = WireType>
 class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
 {
@@ -301,7 +300,28 @@ private:
     PrimitiveTypeHelper<WireType, DeclaredType> helper_;
 
 };
+
+class EnumFieldCodec : public PrimitiveTypeFieldCodec<int, google::protobuf::FieldDescriptor::TYPE_ENUM, const google::protobuf::EnumValueDescriptor*>
+{
+public:
+    int pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+    { return field_value->index(); }
+    const google::protobuf::EnumValueDescriptor* post_decode(const int& wire_value)
+    {
+        const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
+        
+        if(wire_value < e->value_count())
+        {
+            const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
+            return return_value;
+        }
+        else
+            throw NullValueException();
+    }
     
+};
+    
+
 }
 }
 
