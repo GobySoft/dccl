@@ -28,6 +28,202 @@ using namespace dccl::test;
 
 using dccl::operator<<;
 
+void fill_message(NativeProtobufTest& msg_in)
+{
+    int i = 0;
+     msg_in.set_double_default_optional(++i + 0.1);
+    msg_in.set_float_default_optional(++i + 0.2);
+
+    msg_in.set_int32_default_optional(++i);
+    msg_in.set_int64_default_optional(-++i);
+    msg_in.set_uint32_default_optional(++i);
+    msg_in.set_uint64_default_optional(++i);
+    msg_in.set_sint32_default_optional(-++i);
+    msg_in.set_sint64_default_optional(++i);
+    msg_in.set_fixed32_default_optional(++i);
+    msg_in.set_fixed64_default_optional(++i);
+    msg_in.set_sfixed32_default_optional(++i);
+    msg_in.set_sfixed64_default_optional(-++i);
+
+        msg_in.set_bool_default_optional(true);
+
+    //    msg_in.set_enum_default_optional(ENUM_C);
+
+    msg_in.set_double_default_required(++i + 0.1);
+    msg_in.set_float_default_required(++i + 0.2);
+
+    msg_in.set_int32_default_required(++i);
+    msg_in.set_int64_default_required(-++i);
+    msg_in.set_uint32_default_required(++i);
+    msg_in.set_uint64_default_required(++i);
+    msg_in.set_sint32_default_required(-++i);
+    msg_in.set_sint64_default_required(++i);
+    msg_in.set_fixed32_default_required(++i);
+    msg_in.set_fixed64_default_required(++i);
+    msg_in.set_sfixed32_default_required(++i);
+    msg_in.set_sfixed64_default_required(-++i);
+
+    msg_in.set_bool_default_required(true);
+
+    //    msg_in.set_enum_default_required(ENUM_C);
+    
+    
+    for(int j = 0; j < 4; ++j)
+    {
+        msg_in.add_double_default_repeat(++i + 0.1);
+        msg_in.add_int32_default_repeat(++i);
+    }
+}
+
+void fill_message_partial(NativeProtobufTest& msg_in)
+{
+    int i = 0;
+     msg_in.set_double_default_optional(++i + 0.1);
+    msg_in.set_float_default_optional(++i + 0.2);
+
+    msg_in.set_int32_default_optional(++i);
+    msg_in.set_uint32_default_optional(++i);
+    msg_in.set_uint64_default_optional(++i);
+    msg_in.set_sint64_default_optional(++i);
+    msg_in.set_fixed32_default_optional(++i);
+    msg_in.set_sfixed32_default_optional(++i);
+    msg_in.set_sfixed64_default_optional(-++i);
+
+
+    msg_in.set_double_default_required(++i + 0.1);
+    msg_in.set_float_default_required(++i + 0.2);
+
+    msg_in.set_int32_default_required(++i);
+    msg_in.set_int64_default_required(-++i);
+    msg_in.set_uint32_default_required(++i);
+    msg_in.set_uint64_default_required(++i);
+    msg_in.set_sint32_default_required(-++i);
+    msg_in.set_sint64_default_required(++i);
+    msg_in.set_fixed32_default_required(++i);
+    msg_in.set_fixed64_default_required(++i);
+    msg_in.set_sfixed32_default_required(++i);
+    msg_in.set_sfixed64_default_required(-++i);
+
+    msg_in.set_bool_default_required(true);
+
+    //    msg_in.set_enum_default_required(ENUM_C);
+    
+    
+    for(int j = 0; j < 2; ++j)
+    {
+        msg_in.add_double_default_repeat(++i + 0.1);
+        msg_in.add_int32_default_repeat(++i);
+    }
+}
+
+
+void fill_message_max(NativeProtobufTest& msg_in)
+{
+    msg_in.set_double_default_optional(std::numeric_limits<double>::max());
+    msg_in.set_float_default_optional(std::numeric_limits<float>::max());
+
+    msg_in.set_int32_default_optional(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_int64_default_optional(std::numeric_limits<dccl::int64>::max());
+    msg_in.set_uint32_default_optional(std::numeric_limits<dccl::uint32>::max());
+    msg_in.set_uint64_default_optional(std::numeric_limits<dccl::uint64>::max());
+    msg_in.set_sint32_default_optional(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_sint64_default_optional(std::numeric_limits<dccl::int64>::max());
+    msg_in.set_fixed32_default_optional(std::numeric_limits<dccl::uint32>::max());
+    msg_in.set_fixed64_default_optional(std::numeric_limits<dccl::uint64>::max());
+    msg_in.set_sfixed32_default_optional(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_sfixed64_default_optional(std::numeric_limits<dccl::int64>::max());
+
+    msg_in.set_bool_default_optional(true);
+
+    //    msg_in.set_enum_default_optional(ENUM_C);
+
+    msg_in.set_double_default_required(std::numeric_limits<double>::max());
+    msg_in.set_float_default_required(std::numeric_limits<float>::max());
+    msg_in.set_int32_default_required(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_int64_default_required(std::numeric_limits<dccl::int64>::max());
+    msg_in.set_uint32_default_required(std::numeric_limits<dccl::uint32>::max());
+    msg_in.set_uint64_default_required(std::numeric_limits<dccl::uint64>::max());
+    msg_in.set_sint32_default_required(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_sint64_default_required(std::numeric_limits<dccl::int64>::max());
+    msg_in.set_fixed32_default_required(std::numeric_limits<dccl::uint32>::max());
+    msg_in.set_fixed64_default_required(std::numeric_limits<dccl::uint64>::max());
+    msg_in.set_sfixed32_default_required(std::numeric_limits<dccl::int32>::max());
+    msg_in.set_sfixed64_default_required(std::numeric_limits<dccl::int64>::max());
+
+    msg_in.set_bool_default_required(true);
+
+    //    msg_in.set_enum_default_required(ENUM_C);
+    
+    
+    for(int j = 0; j < 4; ++j)
+    {
+        msg_in.add_double_default_repeat(std::numeric_limits<double>::max());
+        msg_in.add_int32_default_repeat(std::numeric_limits<dccl::int32>::max());
+    }
+}
+
+
+void fill_message_min(NativeProtobufTest& msg_in)
+{
+    msg_in.set_double_default_optional(std::numeric_limits<double>::min());
+    msg_in.set_float_default_optional(std::numeric_limits<float>::min());
+
+    msg_in.set_int32_default_optional(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_int64_default_optional(std::numeric_limits<dccl::int64>::min());
+    msg_in.set_uint32_default_optional(std::numeric_limits<dccl::uint32>::min());
+    msg_in.set_uint64_default_optional(std::numeric_limits<dccl::uint64>::min());
+    msg_in.set_sint32_default_optional(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_sint64_default_optional(std::numeric_limits<dccl::int64>::min());
+    msg_in.set_fixed32_default_optional(std::numeric_limits<dccl::uint32>::min());
+    msg_in.set_fixed64_default_optional(std::numeric_limits<dccl::uint64>::min());
+    msg_in.set_sfixed32_default_optional(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_sfixed64_default_optional(std::numeric_limits<dccl::int64>::min());
+
+    msg_in.set_bool_default_optional(true);
+
+    //    msg_in.set_enum_default_optional(ENUM_C);
+
+    msg_in.set_double_default_required(std::numeric_limits<double>::min());
+    msg_in.set_float_default_required(std::numeric_limits<float>::min());
+    msg_in.set_int32_default_required(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_int64_default_required(std::numeric_limits<dccl::int64>::min());
+    msg_in.set_uint32_default_required(std::numeric_limits<dccl::uint32>::min());
+    msg_in.set_uint64_default_required(std::numeric_limits<dccl::uint64>::min());
+    msg_in.set_sint32_default_required(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_sint64_default_required(std::numeric_limits<dccl::int64>::min());
+    msg_in.set_fixed32_default_required(std::numeric_limits<dccl::uint32>::min());
+    msg_in.set_fixed64_default_required(std::numeric_limits<dccl::uint64>::min());
+    msg_in.set_sfixed32_default_required(std::numeric_limits<dccl::int32>::min());
+    msg_in.set_sfixed64_default_required(std::numeric_limits<dccl::int64>::min());
+
+    msg_in.set_bool_default_required(true);
+
+    //    msg_in.set_enum_default_required(ENUM_C);
+    
+    
+    for(int j = 0; j < 4; ++j)
+    {
+        msg_in.add_double_default_repeat(std::numeric_limits<double>::min());
+        msg_in.add_int32_default_repeat(std::numeric_limits<dccl::int32>::min());
+    }
+}
+
+
+void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
+{
+    NativeProtobufTest msg_out;
+    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    std::cout << "Try encode..." << std::endl;
+    std::string bytes;
+    codec.encode(&bytes, msg_in);
+    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    std::cout << "Try decode..." << std::endl;
+    codec.decode(bytes, &msg_out);
+    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    
+    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -39,21 +235,30 @@ int main(int argc, char* argv[])
     codec.load<NativeProtobufTest>();
     codec.info<NativeProtobufTest>(&dccl::dlog);
 
-    NativeProtobufTest msg_in, msg_out;
-    //    msg_in.set_a_uint32(25);
-    msg_in.set_a_uint32(0xFFFFFFFF);
+    {
+        NativeProtobufTest msg_in;
+        fill_message(msg_in);
+        run_test(codec, msg_in);
+    }
+    {
+        NativeProtobufTest msg_in;
+        fill_message_partial(msg_in);
+        run_test(codec, msg_in);
+    }
+    {
+        NativeProtobufTest msg_in;
+        fill_message_min(msg_in);
+        run_test(codec, msg_in);
+    }
     
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-    std::cout << "Try encode..." << std::endl;
-    std::string bytes;
-    codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
-    std::cout << "Try decode..." << std::endl;
-    codec.decode(bytes, &msg_out);
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
     
-    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-
+    {
+        NativeProtobufTest msg_in;
+        fill_message_max(msg_in);
+        run_test(codec, msg_in);
+    }
+    
+    
     
     std::cout << "all tests passed" << std::endl;
 }
