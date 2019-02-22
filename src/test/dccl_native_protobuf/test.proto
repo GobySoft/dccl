@@ -2,6 +2,13 @@
 import "dccl/option_extensions.proto";
 package dccl.test;
 
+enum Enum1
+{
+  ENUM_A = 1;
+  ENUM_B = 2;
+  ENUM_C = 3;
+}
+
 message NativeProtobufTest
 {
     option (dccl.msg).id = 1;
@@ -24,7 +31,7 @@ message NativeProtobufTest
     optional sfixed64 sfixed64_default_optional = 12; 
 
     optional bool bool_default_optional = 13;
-    //    optional Enum1 enum_default_optional = 16;
+    optional Enum1 enum_default_optional = 16;
 
     required double double_default_required = 21;
     required float float_default_required = 22;
@@ -40,7 +47,7 @@ message NativeProtobufTest
     required sfixed64 sfixed64_default_required = 32; 
 
     required bool bool_default_required = 33;
-    //    optional Enum1 enum_default_required = 34;
+    optional Enum1 enum_default_required = 34;
 
     repeated double double_default_repeat = 101 [(dccl.field).max_repeat=4];
     repeated int32 int32_default_repeat = 103 [(dccl.field).max_repeat=4];
