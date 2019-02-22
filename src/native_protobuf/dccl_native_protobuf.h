@@ -37,9 +37,171 @@ namespace dccl
 namespace native_protobuf
 {
 
-// https://developers.google.com/protocol-buffers/docs/encoding
+template<typename WireType, google::protobuf::internal::WireFormatLite::FieldType DeclaredType>
+struct PrimitiveTypeHelperBase
+{
+    WireType decode(google::protobuf::io::CodedInputStream* input_stream)
+    {
+       WireType value;
+       google::protobuf::internal::WireFormatLite::ReadPrimitive<WireType, DeclaredType>(input_stream, &value);
+       return value;
+    }
+};
+    
+
+template<typename WireType, google::protobuf::FieldDescriptor::Type DeclaredType>
+struct PrimitiveTypeHelper
+{   
+};
+
 template<typename WireType>
-class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_INT64> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_INT64>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::Int64Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteInt64NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_INT32> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_INT32>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::Int32Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteInt32NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_UINT64> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_UINT64>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::UInt64Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteUInt64NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_UINT32> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_UINT32>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::UInt32Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteUInt32NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SINT64> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_SINT64>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::SInt64Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteSInt64NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SINT32> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_SINT32>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::SInt32Size(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteSInt32NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_ENUM> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_ENUM>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::EnumSize(wire_value); }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteEnumNoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return true; }
+};
+
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_DOUBLE> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kDoubleSize; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteDoubleNoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FLOAT> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_FLOAT>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kFloatSize; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteFloatNoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_BOOL> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_BOOL>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kBoolSize; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteBoolNoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIXED64> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_FIXED64>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kFixed64Size; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteFixed64NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIXED32> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_FIXED32>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kFixed32Size; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteFixed32NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFIXED64> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_SFIXED64>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kSFixed64Size; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteSFixed64NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+template<typename WireType>
+struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFIXED32> : public PrimitiveTypeHelperBase<WireType, google::protobuf::internal::WireFormatLite::TYPE_SFIXED32>
+{
+    unsigned byte_size(const WireType& wire_value)
+    { return google::protobuf::internal::WireFormatLite::kSFixed32Size; }
+    void encode(WireType wire_value, std::vector<google::protobuf::uint8>* bytes)
+    { google::protobuf::internal::WireFormatLite::WriteSFixed32NoTagToArray(wire_value, &(*bytes)[0]); }
+    bool is_varint() { return false; }
+};
+
+// https://developers.google.com/protocol-buffers/docs/encoding
+template<typename WireType, google::protobuf::FieldDescriptor::Type DeclaredType, typename FieldType = WireType>
+class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
 {
 private:
     unsigned presence_bit_size()
@@ -49,8 +211,20 @@ private:
     
     unsigned min_size()
         {
-            // minimum size is 1-byte if required, or presence bit if not
-            return this->use_required() ? BITS_IN_BYTE : presence_bit_size();
+            // if required, minimum size is 1-byte (for varint) or full size (for non-varint)
+            if(this->use_required())
+            {
+                if(helper_.is_varint())
+                    return BITS_IN_BYTE;
+                else
+                    return BITS_IN_BYTE*helper_.byte_size(WireType());
+            }
+            // if not required, presence bit
+            else
+            {
+                return presence_bit_size();
+            }
+            
         }
 
     unsigned max_size()
@@ -67,68 +241,11 @@ private:
     
     unsigned size(const WireType& wire_value)
         {
-            unsigned data_bytes = 0;
-            using google::protobuf::FieldDescriptor;
-            switch(this->FieldCodecBase::field_type())
-            {
-                // variable size
-                case FieldDescriptor::TYPE_INT64:
-                    data_bytes = google::protobuf::internal::WireFormatLite::Int64Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_INT32:
-                    data_bytes = google::protobuf::internal::WireFormatLite::Int32Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_UINT64:
-                    data_bytes = google::protobuf::internal::WireFormatLite::UInt64Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_UINT32:
-                    data_bytes = google::protobuf::internal::WireFormatLite::UInt32Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_SINT64:
-                    data_bytes = google::protobuf::internal::WireFormatLite::SInt64Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_SINT32:
-                    data_bytes = google::protobuf::internal::WireFormatLite::SInt32Size(wire_value);
-                    break;
-                case FieldDescriptor::TYPE_ENUM:
-                    data_bytes = google::protobuf::internal::WireFormatLite::EnumSize(wire_value);
-                    break;
-
-                // fixed size
-                case FieldDescriptor::TYPE_DOUBLE:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kDoubleSize;
-                    break;
-                case FieldDescriptor::TYPE_FLOAT:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kFloatSize;
-                    break;
-                case FieldDescriptor::TYPE_FIXED64:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kFixed64Size;
-                    break;
-                case FieldDescriptor::TYPE_FIXED32:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kFixed32Size;
-                    break;
-                case FieldDescriptor::TYPE_BOOL:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kBoolSize;
-                    break;
-                case FieldDescriptor::TYPE_SFIXED32:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kSFixed32Size;
-                    break;
-                case FieldDescriptor::TYPE_SFIXED64:
-                    data_bytes = google::protobuf::internal::WireFormatLite::kSFixed64Size;
-                    break;
-
-                default:
-                    throw_unsupported_type();
-                    break;
-            }
-            return presence_bit_size() + BITS_IN_BYTE*data_bytes;
+            unsigned data_bytes = helper_.byte_size(wire_value);
+            unsigned size = presence_bit_size() + BITS_IN_BYTE*data_bytes;
+            return size;
         }
 
-    void throw_unsupported_type()
-        {
-            throw(dccl::Exception(std::string("Type ") + google::protobuf::FieldDescriptor::TypeName(this->FieldCodecBase::field_type())  + " is not supported by PrimitiveTypeFieldCodec"));
-        }
-    
     Bitset encode()
         {
             // presence bit, not set
@@ -139,99 +256,18 @@ private:
         {
             std::vector<google::protobuf::uint8> bytes(size(wire_value) / BITS_IN_BYTE, 0);
             
-            using google::protobuf::FieldDescriptor;
-            switch(this->FieldCodecBase::field_type())
-            {
-                // variable size
-                case FieldDescriptor::TYPE_INT64:
-                    google::protobuf::internal::WireFormatLite::WriteInt64NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_INT32:
-                    google::protobuf::internal::WireFormatLite::WriteInt32NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_UINT64:
-                    google::protobuf::internal::WireFormatLite::WriteUInt64NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_UINT32:
-                    google::protobuf::internal::WireFormatLite::WriteUInt32NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_SINT64:
-                    google::protobuf::internal::WireFormatLite::WriteSInt64NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_SINT32:
-                    google::protobuf::internal::WireFormatLite::WriteSInt32NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_ENUM:
-                    google::protobuf::internal::WireFormatLite::WriteEnumNoTagToArray(wire_value, &bytes[0]);
-                    break;
-
-                // fixed size
-                case FieldDescriptor::TYPE_DOUBLE:
-                    google::protobuf::internal::WireFormatLite::WriteDoubleNoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_FLOAT:
-                    google::protobuf::internal::WireFormatLite::WriteFloatNoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_FIXED64:
-                    google::protobuf::internal::WireFormatLite::WriteFixed64NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_FIXED32:
-                    google::protobuf::internal::WireFormatLite::WriteFixed32NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_BOOL:
-                    google::protobuf::internal::WireFormatLite::WriteBoolNoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_SFIXED32:
-                    google::protobuf::internal::WireFormatLite::WriteSFixed32NoTagToArray(wire_value, &bytes[0]);
-                    break;
-                case FieldDescriptor::TYPE_SFIXED64:
-                    google::protobuf::internal::WireFormatLite::WriteSFixed64NoTagToArray(wire_value, &bytes[0]);
-                    break;
-
-                default:
-                    throw_unsupported_type();
-                    break;
-            }
+            helper_.encode(wire_value, &bytes);
 
             Bitset data_bits;
             data_bits.from_byte_stream(bytes.begin(), bytes.end());
             if(!this->use_required())
-                data_bits.prepend(Bitset((presence_bit_size(), 1)));
-            
+            {
+                data_bits.resize(data_bits.size() + presence_bit_size());
+                data_bits <<= 1;
+                data_bits.set(0, true); // presence bit
+            }            
             return data_bits;
         }
-
-    bool is_varint()
-        {
-            using google::protobuf::FieldDescriptor;
-            switch(this->FieldCodecBase::field_type())
-            {
-                // variable size
-                case FieldDescriptor::TYPE_INT64:
-                case FieldDescriptor::TYPE_INT32:
-                case FieldDescriptor::TYPE_UINT64:
-                case FieldDescriptor::TYPE_UINT32:
-                case FieldDescriptor::TYPE_SINT64:
-                case FieldDescriptor::TYPE_SINT32:
-                case FieldDescriptor::TYPE_ENUM:
-                    return true;
-                    
-                // fixed size
-                case FieldDescriptor::TYPE_DOUBLE:
-                case FieldDescriptor::TYPE_FLOAT:
-                case FieldDescriptor::TYPE_FIXED64:
-                case FieldDescriptor::TYPE_FIXED32:
-                case FieldDescriptor::TYPE_BOOL:
-                case FieldDescriptor::TYPE_SFIXED32:
-                case FieldDescriptor::TYPE_SFIXED64:
-                    return false;
-                    
-                default:
-                    throw_unsupported_type();
-                    break;
-            }
-        }
-    
 
     
     WireType decode(Bitset* bits)
@@ -241,168 +277,28 @@ private:
                 dccl::uint64 uint_value = (bits->template to<dccl::uint64>)();
                 if(!uint_value) throw NullValueException();
                 bits->resize(0);
-                bits->get_more_bits(BITS_IN_BYTE);
+                
+                if(helper_.is_varint())
+                    bits->get_more_bits(BITS_IN_BYTE);
+                else
+                    bits->get_more_bits(BITS_IN_BYTE*helper_.byte_size(WireType()));
             }
 
-            if(is_varint())
+            if(helper_.is_varint())
             {
                 // most significant bit indicates if more bytes are needed
                 while(bits->test(bits->size()-1))
                     bits->get_more_bits(BITS_IN_BYTE);
             }
-
+                            
             std::string bytes = bits->to_byte_string();
             google::protobuf::io::CodedInputStream input_stream(reinterpret_cast<const google::protobuf::uint8*>(bytes.data()), bytes.size());
 
-            using google::protobuf::FieldDescriptor;
-            using google::protobuf::internal::WireFormatLite;
-            WireType wire_value;
-            switch(this->FieldCodecBase::field_type())
-            {
-                // variable size
-                case FieldDescriptor::TYPE_INT64:
-                {
-                    google::protobuf::int64 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int64,
-                                                  WireFormatLite::TYPE_INT64>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_INT32:
-                {
-                    google::protobuf::int32 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int32,
-                                                  WireFormatLite::TYPE_INT32>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_UINT64:
-                {
-                    google::protobuf::uint64 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::uint64,
-                                                  WireFormatLite::TYPE_UINT64>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_UINT32:
-                {
-                    google::protobuf::uint32 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::uint32,
-                                                  WireFormatLite::TYPE_UINT32>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_SINT64:
-                {
-                    google::protobuf::int64 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int64,
-                                                  WireFormatLite::TYPE_SINT64>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_SINT32:
-                {
-                    google::protobuf::int32 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int32,
-                                                  WireFormatLite::TYPE_SINT32>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                case FieldDescriptor::TYPE_ENUM:
-                {
-                    int value;
-                    WireFormatLite::ReadPrimitive<int,
-                                                  WireFormatLite::TYPE_ENUM>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                // fixed size
-                case FieldDescriptor::TYPE_DOUBLE:
-                {
-                    double value;
-                    WireFormatLite::ReadPrimitive<double,
-                                                  WireFormatLite::TYPE_DOUBLE>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_FLOAT:
-                {
-                    float value;
-                    WireFormatLite::ReadPrimitive<float,
-                                                  WireFormatLite::TYPE_FLOAT>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_FIXED64:
-                {
-                    google::protobuf::uint64 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::uint64,
-                                                  WireFormatLite::TYPE_FIXED64>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_FIXED32:
-                {
-                    google::protobuf::uint32 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::uint32,
-                                                  WireFormatLite::TYPE_FIXED32>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_BOOL:
-                {    
-                    bool value;
-                    WireFormatLite::ReadPrimitive<bool,
-                                                  WireFormatLite::TYPE_BOOL>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_SFIXED32:
-                {
-                    google::protobuf::int32 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int32,
-                                                  WireFormatLite::TYPE_SFIXED32>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                
-                case FieldDescriptor::TYPE_SFIXED64:
-                {
-                    google::protobuf::int64 value;
-                    WireFormatLite::ReadPrimitive<google::protobuf::int64,
-                                                  WireFormatLite::TYPE_SFIXED64>(
-                                                      &input_stream, &value);
-                    wire_value = value;
-                    break;
-                }
-                default:
-                    throw_unsupported_type();
-                    break;
-            }            
-            return wire_value;
+            return helper_.decode(&input_stream);
         }    
 
 private:
-    
+    PrimitiveTypeHelper<WireType, DeclaredType> helper_;
 
 };
     
