@@ -107,7 +107,7 @@ namespace dccl
                   {
                       // strict mode
                       if(this->strict())
-                          throw(dccl::OutOfRangeException(std::string("Value exceeds min/max bounds for field: ") + FieldCodecBase::this_field()->DebugString()));
+                          throw(dccl::OutOfRangeException(std::string("Value exceeds min/max bounds for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
                       // non-strict (default): if out-of-bounds, send as zeros
                       else
                           return Bitset(size());
