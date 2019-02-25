@@ -23,10 +23,15 @@
 
 #include "test.pb.h"
 #include "dccl.h"
+#include "dccl/native_protobuf/dccl_native_protobuf.h"
 
 using namespace dccl::test;
 
 using dccl::operator<<;
+
+// ensure we link in dccl_native_protobuf.so
+dccl::native_protobuf::EnumFieldCodec dummy;
+
 
 void fill_message(NativeProtobufTest& msg_in)
 {
