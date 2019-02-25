@@ -26,6 +26,11 @@ if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
 endif()
 
+if(build_native_protobuf)
+  add_subdirectory(dccl_native_protobuf) 
+endif()
+
+
 add_subdirectory(dccl_v2_all_fields)
 add_subdirectory(dccl_v2_header)
 
