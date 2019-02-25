@@ -23,6 +23,7 @@
 #define Exception20100812H
 
 #include <stdexcept>
+#include <google/protobuf/descriptor.h>
 
 namespace dccl
 {
@@ -47,8 +48,13 @@ namespace dccl
     class OutOfRangeException : public std::out_of_range
     {
       public:
-      OutOfRangeException(const std::string& s) : std::out_of_range(s)
+        OutOfRangeException(const std::string& s, const google::protobuf::FieldDescriptor* field) : std::out_of_range(s), field_(field)
         { }
+
+        const google::protobuf::FieldDescriptor* field() const { return field_; }
+        
+    private:
+        const google::protobuf::FieldDescriptor* field_;
     };
 }
 

@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("d"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
     
@@ -87,6 +88,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("i"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
 
@@ -105,6 +107,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("s2"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
 
@@ -123,6 +126,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("s"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
 
@@ -141,6 +145,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("b"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
     
@@ -159,6 +164,7 @@ int main(int argc, char* argv[])
     }
     catch(dccl::OutOfRangeException& e)
     {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("vb"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
     
