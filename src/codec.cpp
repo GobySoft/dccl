@@ -65,7 +65,7 @@ const unsigned full_width = 60;
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : id_codec_(dccl_id_codec)
+    : id_codec_(dccl_id_codec), strict_(false)
 {
     set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -183,7 +183,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             
             internal::MessageStack msg_stack;
             msg_stack.push(msg.GetDescriptor());
-            codec->base_encode(&head_bits, msg, HEAD);
+            codec->base_encode(&head_bits, msg, HEAD, strict_);
 
             // given header of not even byte size (e.g. 01011), make even byte size (e.g. 00001011)
             head_byte_size = ceil_bits2bytes(head_bits.size());
@@ -195,7 +195,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             }
             else
             {
-                codec->base_encode(&body_bits, msg, BODY);
+                codec->base_encode(&body_bits, msg, BODY, strict_);
             }
         }
         else
