@@ -43,9 +43,14 @@ namespace dccl
           : Exception("NULL Value")
         { }    
     };
-        
-}
 
+    class OutOfRangeException : public std::out_of_range
+    {
+      public:
+      OutOfRangeException(const std::string& s) : std::out_of_range(s)
+        { }
+    };
+}
 
 #endif
 
