@@ -190,6 +190,10 @@ dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
 {
     Bitset bits;
     bits.from_byte_string(wire_value);
+
+    if(bits.size() > max_size() && this->strict())
+        throw(dccl::OutOfRangeException(std::string("Bytes too long for field: ") + FieldCodecBase::this_field()->DebugString()));
+    
     bits.resize(max_size());
     
     if(!use_required())
