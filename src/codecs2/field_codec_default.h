@@ -102,9 +102,16 @@ namespace dccl
                   // round first, before checking bounds
                   WireType wire_value = dccl::round(value, precision());
 
-                  // check bounds, if out-of-bounds, send as zeros
+                  // check bounds
                   if(wire_value < min() || wire_value > max())
-                      return Bitset(size());
+                  {
+                      // strict mode
+                      if(this->strict())
+                          throw(dccl::OutOfRangeException(std::string("Value exceeds min/max bounds for field: ") + FieldCodecBase::this_field()->DebugString()));
+                      // non-strict (default): if out-of-bounds, send as zeros
+                      else
+                          return Bitset(size());
+                  }
           
                   wire_value -= dccl::round((WireType)min(), precision());
 

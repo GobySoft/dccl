@@ -204,6 +204,11 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         }
         
     }
+    catch(dccl::OutOfRangeException& e)
+    {
+        dlog.is(DEBUG1, ENCODE) && dlog << "Message " << desc->full_name() << " failed to encode because a field was out of bounds and strict == true: " << e.what() << std::endl;
+        throw;
+    }
     catch(std::exception& e)
     {
         std::stringstream ss;
