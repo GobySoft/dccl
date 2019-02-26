@@ -116,7 +116,10 @@ namespace dccl
             
         /// \brief the part of the message currently being encoded (head or body).
         static MessagePart part() { return part_; }
-            
+
+        static bool strict() { return strict_; }
+        
+        
         //@}
 
         /// \name Base message functions
@@ -138,7 +141,8 @@ namespace dccl
         /// \param part Part of the message to encode
         void base_encode(Bitset* bits,
                          const google::protobuf::Message& msg,
-                         MessagePart part);
+                         MessagePart part,
+                         bool strict);
 
         /// \brief Calculate the size (in bits) of a part of the base message when it is encoded
         ///
@@ -454,23 +458,28 @@ namespace dccl
         struct BaseRAII
         {
             BaseRAII(MessagePart part,
-                     const google::protobuf::Descriptor* root_descriptor)
+                     const google::protobuf::Descriptor* root_descriptor,
+                     bool strict = false)
                 {
                     FieldCodecBase::part_ = part;
+                    FieldCodecBase::strict_ = strict;
                     FieldCodecBase::root_message_ = 0;
                     FieldCodecBase::root_descriptor_ = root_descriptor;
                 }
 
             BaseRAII(MessagePart part,            
-                     const google::protobuf::Message* root_message)
+                     const google::protobuf::Message* root_message,
+                     bool strict = false)                
                 {
                     FieldCodecBase::part_ = part;
+                    FieldCodecBase::strict_ = strict;
                     FieldCodecBase::root_message_ = root_message;
                     FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();                    
                 }
             ~BaseRAII()
                 {
                     FieldCodecBase::part_ = dccl::UNKNOWN;
+                    FieldCodecBase::strict_ = false;
                     FieldCodecBase::root_message_ = 0;
                     FieldCodecBase::root_descriptor_ = 0;
                 }
@@ -478,6 +487,7 @@ namespace dccl
         
         
         static MessagePart part_;
+        static bool strict_;
         static const google::protobuf::Message* root_message_;
         static const google::protobuf::Descriptor* root_descriptor_;
         
