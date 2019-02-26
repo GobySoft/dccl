@@ -388,7 +388,10 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::ve
 
     unsigned wire_vector_size = dccl_field_options().max_repeat();
 
-    // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat
+    if(wire_values.size() > wire_vector_size)
+        throw(dccl::OutOfRangeException(std::string("Repeated size exceeds max_repeat for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+    
+    // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat)
     if(codec_version() > 2)
     {
         wire_vector_size = std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());    

@@ -49,6 +49,9 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s("foo");
         msg_in.set_b(std::string(9, '1'));
+        msg_in.add_ri(1);
+        msg_in.add_ri(2);
+        msg_in.add_ri(3);
         
         decode_check(msg_in);
     }
@@ -168,7 +171,29 @@ int main(int argc, char* argv[])
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
     
-    
+
+    // repeat size out of range
+    try
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(9, '1'));
+        msg_in.add_ri(1);
+        msg_in.add_ri(2);
+        msg_in.add_ri(3);
+        msg_in.add_ri(4);
+        
+        decode_check(msg_in);
+    }
+    catch(dccl::OutOfRangeException& e)
+    {
+        assert(e.field() == TestMsg::descriptor()->FindFieldByName("ri"));
+        std::cout << "Caught (as expected) " << e.what() << std::endl;
+    }
+
+
     std::cout << "all tests passed" << std::endl;
 }
 
