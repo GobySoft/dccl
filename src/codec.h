@@ -123,7 +123,13 @@ namespace dccl
         /// \param do_not_encrypt_ids_ Optional set of DCCL ids for which to skip encrypting or decrypting
         void set_crypto_passphrase(const std::string& passphrase,
                                    const std::set<unsigned>& do_not_encrypt_ids_ = std::set<unsigned>());
-            
+
+        
+        /// \brief Set "strict" mode where a dccl::OutOfRangeException will be thrown for encode if the value(s) provided are out of range
+        ///
+        /// \param mode "true" sets strict mode, "false" disables strict mode
+        void set_strict(bool mode) { strict_ = mode; }
+        
         //@}
             
         /// \name Informational Methods.
@@ -338,6 +344,9 @@ namespace dccl
         // SHA256 hash of the crypto passphrase
         std::string crypto_key_;
 
+        // strict mode setting
+        bool strict_;
+        
 	// set of DCCL IDs *not* to encrypt        
 	std::set<unsigned> skip_crypto_ids_;
 
