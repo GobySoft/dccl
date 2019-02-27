@@ -14,6 +14,7 @@ add_subdirectory(dccl_user_specified_id)
 add_subdirectory(dccl_numeric_bounds)
 add_subdirectory(dccl_codec_group)
 add_subdirectory(dccl_message_fix)
+add_subdirectory(dccl_strict)
 
 if(enable_units)
   add_subdirectory(dccl_units)

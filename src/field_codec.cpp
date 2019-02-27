@@ -28,6 +28,8 @@
 dccl::MessagePart dccl::FieldCodecBase::part_ =
     dccl::UNKNOWN;
 
+bool dccl::FieldCodecBase::strict_ = false;
+
 const google::protobuf::Message* dccl::FieldCodecBase::root_message_ = 0;
 const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor_ = 0;
 
@@ -41,9 +43,10 @@ dccl::FieldCodecBase::FieldCodecBase() { }
             
 void dccl::FieldCodecBase::base_encode(Bitset* bits,
                                        const google::protobuf::Message& field_value,
-                                       MessagePart part)
+                                       MessagePart part,
+                                       bool strict)
 {
-    BaseRAII scoped_globals(part, &field_value);
+    BaseRAII scoped_globals(part, &field_value, strict);
 
     // we pass this through the FromProtoCppTypeBase to do dynamic_cast (RTTI) for
     // custom message codecs so that these codecs can be written in the derived class (not google::protobuf::Message)
@@ -385,7 +388,10 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits, const std::ve
 
     unsigned wire_vector_size = dccl_field_options().max_repeat();
 
-    // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat
+    if(wire_values.size() > wire_vector_size)
+        throw(dccl::OutOfRangeException(std::string("Repeated size exceeds max_repeat for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+    
+    // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat)
     if(codec_version() > 2)
     {
         wire_vector_size = std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());    
