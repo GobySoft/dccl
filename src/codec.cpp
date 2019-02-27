@@ -216,7 +216,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
     }
 }
 
-size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id)
+size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id /* = -1 */)
 {
     const Descriptor* desc = msg.GetDescriptor();
     Bitset head_bits;
@@ -265,7 +265,7 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
 }
 
 
-void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id)
+void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only /* = false */, int user_id /* = -1 */)
 {
     const Descriptor* desc = msg.GetDescriptor();
     Bitset head_bits;
@@ -318,7 +318,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id)
+void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* = -1 */)
 {
     try
     {
@@ -411,7 +411,7 @@ void dccl::Codec::unload(size_t dccl_id)
 }
 
 
-unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id)
+unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* = -1 */)
 {
     const Descriptor* desc = msg.GetDescriptor();
 
@@ -474,7 +474,7 @@ unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 
 
 
-void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */, int user_id) const
+void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */, int user_id /* = -1 */) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
 
