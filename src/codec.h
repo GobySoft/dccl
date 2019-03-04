@@ -193,16 +193,23 @@ namespace dccl
         /// \param bytes encoded message to get the DCCL ID of
         /// \return DCCL ID
         /// \sa test/acomms/dccl8/test.cpp and test/acomms/dccl8/test.proto
-        unsigned id(const std::string& bytes);
+        unsigned id(const std::string& bytes) const;
 
         /// \brief Provides the DCCL ID given a DCCL type.
         template<typename CharIterator>
-        unsigned id(CharIterator begin, CharIterator end);
+        unsigned id(CharIterator begin, CharIterator end) const;
 
         /// \brief Provides the DCCL ID given a DCCL type.
         unsigned id(const google::protobuf::Descriptor* desc) const {
-            return desc->options().GetExtension(dccl::msg).id();
-        }            
+            Bitset id_bits;
+            dccl::uint32 hardcoded_id = desc->options().GetExtension(dccl::msg).id();
+            // pass the hard coded id, that is, (dccl.msg).id,
+            // through encode/decode to allow a custom ID codec (if in use)
+            // to always take effect.
+            id_codec()->field_encode(&id_bits, hardcoded_id, 0);
+            std::string id_bytes(id_bits.to_byte_string());
+            return id(id_bytes);
+        }      
 
         /// \brief Provides a map of all loaded DCCL IDs to the equivalent Protobuf descriptor
         const std::map<int32, const google::protobuf::Descriptor*>& loaded() const { return id2desc_; }
@@ -407,7 +414,7 @@ GoogleProtobufMessagePointer dccl::Codec::decode(std::string* bytes)
 }
 
 template<typename CharIterator>
-unsigned dccl::Codec::id(CharIterator begin, CharIterator end)
+unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
 {
     unsigned id_min_size = 0, id_max_size = 0;
     id_codec()->field_min_size(&id_min_size, 0);
