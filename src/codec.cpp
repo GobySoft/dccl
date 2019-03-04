@@ -303,7 +303,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
     *bytes += head_bytes + body_bytes;
 }
 
-unsigned dccl::Codec::id(const std::string& bytes)
+unsigned dccl::Codec::id(const std::string& bytes) const
 {
     return id(bytes.begin(), bytes.end());
 }
