@@ -1,0 +1,55 @@
+@PROTOBUF_SYNTAX_VERSION@
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+enum Enum1
+{
+  ENUM_A = 1;
+  ENUM_B = 2;
+  ENUM_C = 3;
+}
+
+message NativeProtobufTest
+{
+    option (dccl.msg).id = 1;
+    option (dccl.msg).max_bytes = 1024;
+    
+    option (dccl.msg).codec_version = 3;
+    option (dccl.msg).codec_group = "dccl.native_protobuf";
+
+    optional double double_default_optional = 1;
+    optional float float_default_optional = 2;
+    optional int32 int32_default_optional = 3;
+    optional int64 int64_default_optional = 4;
+    optional uint32 uint32_default_optional = 5;
+    optional uint64 uint64_default_optional = 6;
+    optional sint32 sint32_default_optional = 7;
+    optional sint64 sint64_default_optional = 8;
+    optional fixed32 fixed32_default_optional = 9;
+    optional fixed64 fixed64_default_optional = 10;
+    optional sfixed32 sfixed32_default_optional = 11; 
+    optional sfixed64 sfixed64_default_optional = 12; 
+
+    optional bool bool_default_optional = 13;
+    optional Enum1 enum_default_optional = 16;
+
+    required double double_default_required = 21;
+    required float float_default_required = 22;
+    required int32 int32_default_required = 23;
+    required int64 int64_default_required = 24;
+    required uint32 uint32_default_required = 25;
+    required uint64 uint64_default_required = 26;
+    required sint32 sint32_default_required = 27;
+    required sint64 sint64_default_required = 28;
+    required fixed32 fixed32_default_required = 29;
+    required fixed64 fixed64_default_required = 30;
+    required sfixed32 sfixed32_default_required = 31; 
+    required sfixed64 sfixed64_default_required = 32; 
+
+    required bool bool_default_required = 33;
+    optional Enum1 enum_default_required = 34;
+
+    repeated double double_default_repeat = 101 [(dccl.field).max_repeat=4];
+    repeated int32 int32_default_repeat = 103 [(dccl.field).max_repeat=4];
+
+}

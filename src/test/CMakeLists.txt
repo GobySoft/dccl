@@ -13,6 +13,7 @@ add_subdirectory(dccl_custom_id)
 add_subdirectory(dccl_numeric_bounds)
 add_subdirectory(dccl_codec_group)
 add_subdirectory(dccl_message_fix)
+add_subdirectory(dccl_strict)
 
 if(enable_units)
   add_subdirectory(dccl_units)
@@ -25,6 +26,11 @@ endif()
 if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
 endif()
+
+if(build_native_protobuf)
+  add_subdirectory(dccl_native_protobuf) 
+endif()
+
 
 add_subdirectory(dccl_v2_all_fields)
 add_subdirectory(dccl_v2_header)
