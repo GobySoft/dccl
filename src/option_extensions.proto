@@ -51,6 +51,9 @@ message DCCLFieldOptions
   // any `repeated` field
   optional uint32 max_repeat = 10 [default = 1];
 
+  // enum
+  optional bool packed_enum = 11 [default = true];
+
   optional string description = 20;
 
   message Units
