@@ -31,6 +31,8 @@
 #define DCCL_HAS_B64 @DCCL_HAS_B64@
 
 #if DCCL_HAS_B64
+#include <cstdio>
+#define BUFFERSIZE BUFSIZ
 #include "b64/encode.h"
 #include "b64/decode.h"
 #endif
