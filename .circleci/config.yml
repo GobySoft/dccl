@@ -12,7 +12,7 @@ workflows:
           filters:
             branches:
               only:
-                - 3.0
+                - "3.0"
     jobs:
       - amd64+scan-bionic-build
       - amd64+asan-bionic-build
