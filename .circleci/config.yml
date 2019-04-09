@@ -46,7 +46,7 @@ job-template-amd64-bionic: &job-template-amd64-bionic
     - checkout
     - run: &run-update-apt
         name: Update apt packages
-        command: apt-get update && apt-get dist-upgrade -y && apt-get install gpg-agent -y
+        command: apt-get update && apt-get dist-upgrade -y
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
@@ -65,7 +65,7 @@ job-template-amd64-bionic: &job-template-amd64-bionic
         command: NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&  COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" && cd debian && dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}"
     - run: &run-build-pkg
         name: Build the Debian package
-        command: DEB_BUILD_OPTIONS="parallel=4" dpkg-buildpackage -b 
+        command: DEB_BUILD_OPTIONS="parallel=4" dpkg-buildpackage -b --sign-key=19478082E2F8D3FE
     - run: &run-store
         name: Store deb files
         command: mkdir /root/deb && cp ../*.deb /root/deb
@@ -99,7 +99,7 @@ job-template-arm64-bionic: &job-template-arm64-bionic
     - run: *run-dch
     - run:
         <<: *run-build-pkg
-        command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.arm64 && export DEB_BUILD_OPTIONS="parallel=4 nocheck" && dpkg-buildpackage -aarm64 -b -us -uc
+        command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.arm64 && export DEB_BUILD_OPTIONS="parallel=4 nocheck" && dpkg-buildpackage -aarm64 -b --sign-key=19478082E2F8D3FE
     - run: *run-store
     - persist_to_workspace: *persist-debs
     - store_artifacts: *store
