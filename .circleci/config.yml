@@ -37,7 +37,7 @@ docker-arm64-bionic: &docker-arm64-bionic
   - image: gobysoft/dccl-ubuntu-build-arm64:18.04.1
     
 job-template-amd64-bionic: &job-template-amd64-bionic
-  working_directory: /root/dccl
+  working_directory: /root/dccl3
   environment: *environment-template-bionic
   docker: *docker-base-bionic
   steps:
@@ -54,7 +54,7 @@ job-template-amd64-bionic: &job-template-amd64-bionic
           echo "No branch in debian called ${CIRCLE_BRANCH}, using $(git rev-parse --abbrev-ref HEAD)"
     - run: &run-nest-deb
         name: Nest debian source into dccl source
-        command: mv /root/debian /root/dccl
+        command: mv /root/debian /root/dccl3
     - run: &run-dch
         name: Add changelog entry
         command: NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&  COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" && cd debian && dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}"
