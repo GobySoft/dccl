@@ -5,6 +5,9 @@ workflows:
     jobs:
       - amd64-bionic-build
       - arm64-bionic-build
+        - requires:
+            # due to dccl3-compiler
+            - amd64-bionic-build
   nightly:
     triggers:
       - schedule:
@@ -63,9 +66,13 @@ job-template-amd64-bionic: &job-template-amd64-bionic
         command: DEB_BUILD_OPTIONS="parallel=4" dpkg-buildpackage -b -us -uc
     - run: &run-store
         name: Store deb files
-        command: mkdir /root/deb && cp ../*.deb /root/deb
+        command: mkdir /root/deb /tmp/amd64-deb && cp ../*.deb /root/deb && cp ../*.deb /tmp/amd64-deb
     - persist_to_workspace: &persist-debs
         root: /root/deb
+        paths:
+          - '*.deb'
+    - persist_to_workspace: 
+        root: /tmp/amd64-deb
         paths:
           - '*.deb'
     - store_artifacts: &store
@@ -76,6 +83,11 @@ job-template-arm64-bionic: &job-template-arm64-bionic
   steps:
     - checkout
     - run: *run-update-apt
+    - attach-workspace:
+        at: /tmp/amd64-deb
+    - run: 
+        name: Install amd64 dccl3-compiler so that we can execute it in this cross-build container
+        command: dpkg -i /tmp/amd64-deb/dccl3-compiler_*amd64.deb
     - run: *run-update-deb
     - run: *run-nest-deb
     - run: *run-dch
