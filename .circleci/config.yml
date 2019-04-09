@@ -65,7 +65,10 @@ job-template-amd64-bionic: &job-template-amd64-bionic
         command: DEB_BUILD_OPTIONS="parallel=4" dpkg-buildpackage -b -us -uc
     - run: &run-store
         name: Store deb files
-        command: mkdir /root/deb /tmp/amd64-deb && cp ../*.deb /root/deb && cp ../*.deb /tmp/amd64-deb
+        command: mkdir /root/deb && cp ../*.deb /root/deb
+    - run: 
+        name: Store amd64 dccl3-compiler deb file for use by cross-compiling jobs
+        command: mkdir /tmp/amd64-deb && cp ../dccl3-compiler_*amd64.deb /tmp/amd64-deb
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
