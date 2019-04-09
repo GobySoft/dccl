@@ -82,7 +82,7 @@ get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
 
 if(CMAKE_CROSSCOMPILING)
-  message("CMake is cross-compiling")
+  message("DCCL is cross-compiling. Target library architecture: ${CMAKE_LIBRARY_ARCHITECTURE}")
   find_program(dccl_PROTOC_GEN_EXEC protoc-gen-dccl)
   if(dccl_PROTOC_GEN_EXEC)
     get_filename_component(dccl_DEFAULT_EXEC_DIR ${dccl_PROTOC_GEN_EXEC} DIRECTORY)
@@ -131,9 +131,18 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
 
 
 ## set instructions for `make install`
+
+# override library version for debian sbuild cross-builds
+if(CMAKE_CROSSCOMPILING)
+  if (EXISTS "/etc/debian_version")
+    set(CMAKE_INSTALL_LIBDIR "lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+  endif()
+endif()
+
 include(GNUInstallDirs)
+
 file(MAKE_DIRECTORY ${dccl_BIN_DIR})
-install(DIRECTORY ${dccl_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin 
+install(DIRECTORY ${dccl_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_BINDIR}
   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
@@ -141,6 +150,8 @@ install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION share/dccl/cmake)
+
+message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LIBDIR}\n\tbinaries: ${CMAKE_INSTALL_FULL_BINDIR}\n\theaders: ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
@@ -246,5 +257,4 @@ endforeach()
 
 ## start adding subdirectories
 add_subdirectory(src)
-
 
