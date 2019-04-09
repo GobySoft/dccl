@@ -44,12 +44,12 @@ job-template-amd64-bionic: &job-template-amd64-bionic
   docker: *docker-base-bionic
   steps:
     - checkout
-    - run: &run-import-gpg
-        name: Import GPG key
-        command: echo -e "$GPG_KEY" | gpg --import
     - run: &run-update-apt
         name: Update apt packages
         command: apt-get update && apt-get dist-upgrade -y && apt-get install gpg-agent      
+    - run: &run-import-gpg
+        name: Import GPG key
+        command: echo -e "$GPG_KEY" | gpg --import
     - run: &run-update-deb
         name: Update the debian source repo and pull the branch with the same name as the dccl branch (if it exists)
         command: >-
@@ -87,8 +87,8 @@ job-template-arm64-bionic: &job-template-arm64-bionic
   docker: *docker-arm64-bionic
   steps:
     - checkout
-    - run: *run-import-gpg
     - run: *run-update-apt
+    - run: *run-import-gpg
     - attach-workspace:
         at: /tmp/amd64-deb
     - run: 
