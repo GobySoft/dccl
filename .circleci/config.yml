@@ -1,10 +1,135 @@
 version: 2
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - amd64-bionic-build
+      - arm64-bionic-build
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 7 * * *"
+          filters:
+            branches:
+              only:
+                - 3.0
+    jobs:
+      - amd64+scan-bionic-build
+      - amd64+asan-bionic-build
+      - amd64+tsan-bionic-build
+#      - amd64+ubsan-build
+
+environment-template-common: &environment-template-common
+  DEBIAN_FRONTEND: "noninteractive"
+  DEBIAN_PRIORITY: "critical"
+  DEBCONF_NOWARNINGS: "yes"
+  DEBFULLNAME: "GobySoft CircleCI"
+  DEBEMAIL: "toby@gobysoft.org"
+
+environment-template-bionic: &environment-template-bionic
+  <<: *environment-template-common
+  DISTRO_RELEASE_CODENAME: "bionic"
+  DISTRO_RELEASE_VERSION: "18.04"
+
+docker-base-bionic: &docker-base-bionic
+  - image: gobysoft/dccl-ubuntu-build-base:18.04.1
+docker-arm64-bionic: &docker-arm64-bionic
+  - image: gobysoft/dccl-ubuntu-build-arm64:18.04.1
+    
+job-template-amd64-bionic: &job-template-amd64-bionic
+  working_directory: /root/dccl
+  environment: *environment-template-bionic
+  docker: *docker-base-bionic
+  steps:
+    - checkout
+    - run: &run-update-apt
+        name: Update apt packages
+        command: apt-get update && apt-get dist-upgrade -y
+    - run: &run-update-deb
+        name: Update the debian source repo and pull the branch with the same name as the dccl branch (if it exists)
+        command: >-
+          cd /root/debian &&
+          git pull &&
+          git checkout origin/${CIRCLE_BRANCH} ||
+          echo "No branch in debian called ${CIRCLE_BRANCH}, using $(git rev-parse --abbrev-ref HEAD)"
+    - run: &run-nest-deb
+        name: Nest debian source into dccl source
+        command: mv /root/debian /root/dccl
+    - run: &run-dch
+        name: Add changelog entry
+        command: NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&  COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" && cd debian && dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}"
+    - run: &run-build-pkg
+        name: Build the Debian package
+        command: DEB_BUILD_OPTIONS="parallel=4" dpkg-buildpackage -b -us -uc
+    - run: &run-store
+        name: Store deb files
+        command: mkdir /root/deb && cp ../*.deb /root/deb
+    - persist_to_workspace: &persist-debs
+        root: /root/deb
+        paths:
+          - '*.deb'
+    - store_artifacts: &store
+        path: /root/deb
+job-template-arm64-bionic: &job-template-arm64-bionic
+  <<: *job-template-amd64-bionic
+  docker: *docker-arm64-bionic
+  steps:
+    - checkout
+    - run: *run-update-apt
+    - run: *run-update-deb
+    - run: *run-nest-deb
+    - run: *run-dch
+    - run:
+        <<: *run-build-pkg
+        command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.arm64 && export DEB_BUILD_OPTIONS="parallel=4 nocheck" && dpkg-buildpackage -aarm64 -b -us -uc
+    - run: *run-store
+    - persist_to_workspace: *persist-debs
+    - store_artifacts: *store
+  
 jobs:
-  build:
-    docker:
-      - image: tsaubergine/dccl-circleci:0.0.1
-    steps: 
+  amd64-bionic-build:
+    <<: *job-template-amd64-bionic
+  arm64-bionic-build: 
+    <<: *job-template-arm64-bionic
+  amd64+scan-bionic-build:
+    <<: *job-template-amd64-bionic
+    steps:
       - checkout
-      - run: apt-get update && apt-get dist-upgrade -y 
-      - run: cd /root/project/build && cmake .. -Denable_testing=ON && make -j4
-      - run: cd /root/project/build && make test
+      - run: *run-update-apt
+      - run:
+          name: Build with static analyzer
+          command: mkdir build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ cmake --build . -- -j2
+      - run:
+          name: Store static analyzer results
+          command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
+      - store_artifacts: 
+          path: /tmp/scan-build.tar.gz
+  amd64+asan-bionic-build:
+    <<: *job-template-amd64-bionic
+    steps:
+      - checkout
+      - run: *run-update-apt
+      - run:
+          name: Build with AddressSanitizer (and LeakSanitizer)
+          command: mkdir build && cd build && cmake -DSANITIZE_ADDRESS=ON .. && cmake --build . -- -j2
+      - run: &run-tests
+          name: Run tests
+          command: cd build && ctest --output-on-failure
+  amd64+tsan-bionic-build:
+    <<: *job-template-amd64-bionic
+    steps:
+      - checkout
+      - run: *run-update-apt
+      - run: 
+          name: Build with ThreadSanitizer
+          command: mkdir build && cd build && cmake -DSANITIZE_THREAD=ON .. && cmake --build . -- -j2
+      - run: *run-tests
+  amd64+ubsan-bionic-build:
+    <<: *job-template-amd64-bionic
+    steps:
+      - checkout
+      - run: *run-update-apt
+      - run:
+          name: Build with UndefinedBehaviorSanitizer
+          command: mkdir build && cd build && cmake -DSANITIZE_UNDEFINED=ON .. && cmake --build . -- -j2
+      - run: *run-tests
