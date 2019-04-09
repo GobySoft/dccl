@@ -81,7 +81,19 @@ get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
 get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
 
-set(dccl_EXEC_DIR "${dccl_BIN_DIR}" CACHE STRING "Directory where executable DCCL code resides. Change for cross-compilation.")
+if(CMAKE_CROSSCOMPILING)
+  message("CMake is cross-compiling")
+  find_program(dccl_PROTOC_GEN_EXEC protoc-gen-dccl)
+  if(dccl_PROTOC_GEN_EXEC)
+    get_filename_component(dccl_DEFAULT_EXEC_DIR ${dccl_PROTOC_GEN_EXEC} DIRECTORY)
+  else()
+    message(FATAL_ERROR "Failed to find protoc-gen-dccl for cross-compiling")
+  endif()
+else()
+  set(dccl_DEFAULT_EXEC_DIR "${dccl_BIN_DIR}")
+endif()
+  
+set(dccl_EXEC_DIR "${dccl_DEFAULT_EXEC_DIR}" CACHE STRING "Directory where executable DCCL code resides. Change for cross-compilation.")
 
 # symlink these into the build directory for backwards compatibility
 option(ADD_SYMLINKS "Add symlinks to root directory for backwards compatibility." ON)
