@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-c"]
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y --no-install-recommends install \
-            git build-essential ssh cmake \
+            git build-essential ssh cmake gpg \
             devscripts equivs ca-certificates
 
 # Allow us to install ARM64 packages as well
