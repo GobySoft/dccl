@@ -18,6 +18,10 @@ environment-template-armhf: &environment-template-armhf
   TARGET_ARCH: "armhf"
   DEB_BUILD_OPTIONS: "parallel=4 nocheck"
   
+environment-template-xenial: &environment-template-stretch
+  DISTRO_RELEASE_CODENAME: "stretch"
+  DISTRO_RELEASE_VERSION: "9"
+
 environment-template-xenial: &environment-template-xenial
   DISTRO_RELEASE_CODENAME: "xenial"
   DISTRO_RELEASE_VERSION: "16.04"
@@ -27,6 +31,13 @@ environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_VERSION: "18.04"
 
 ## Pre-declare Docker containers
+docker-base-stretch: &docker-base-stretch
+  - image: gobysoft/dccl-debian-build-base:9.1
+docker-arm64-stretch: &docker-arm64-stretch
+  - image: gobysoft/dccl-debian-build-arm64:9.1
+docker-armhf-stretch: &docker-armhf-stretch
+  - image: gobysoft/dccl-debian-build-armhf:9.1
+
 docker-base-xenial: &docker-base-xenial
   - image: gobysoft/dccl-ubuntu-build-base:16.04.1
 docker-arm64-xenial: &docker-arm64-xenial
@@ -131,6 +142,14 @@ workflows:
   version: 2
   commit:
     jobs:
+      - amd64-stretch-build
+      - arm64-stretch-build:
+         requires:
+            - amd64-stretch-build
+      - armhf-stretch-build:
+         requires:
+            - arm64-stretch-build
+
       - amd64-xenial-build
       - arm64-xenial-build:
          requires:
@@ -149,6 +168,7 @@ workflows:
 
       - continuous-upload:
           requires:
+            - armhf-stretch-build
             - armhf-bionic-build
             - armhf-xenial-build
             
@@ -166,6 +186,27 @@ workflows:
             - amd64-bionic-build
             
 jobs:
+  amd64-stretch-build:
+    <<: *job-template-amd64
+    docker: *docker-base-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-amd64
+  arm64-stretch-build: 
+    <<: *job-template-arm64
+    docker: *docker-arm64-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-arm64
+  armhf-stretch-build: 
+    <<: *job-template-armhf
+    docker: *docker-armhf-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-armhf
   amd64-xenial-build:
     <<: *job-template-amd64
     docker: *docker-base-xenial
@@ -228,7 +269,7 @@ jobs:
       - run: *run-update-apt
       - run:
           name: Build with AddressSanitizer (and LeakSanitizer)
-          command: mkdir -p build && cd build && cmake -DSANITIZE_ADDRESS=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
+          command: mkdir -p build && cd build && cmake -DSANITIZE_ADDRESS=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure
@@ -239,7 +280,7 @@ jobs:
       - run: *run-update-apt
       - run: 
           name: Build with ThreadSanitizer
-          command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
+          command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
   amd64+ubsan-build:
     <<: *job-template-sanitizers
@@ -248,13 +289,16 @@ jobs:
       - run: *run-update-apt
       - run:
           name: Build with UndefinedBehaviorSanitizer
-          command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
+          command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
   continuous-upload:
     <<: *job-template-upload
     steps:
       - checkout
       - attach-workspace: *attach-deb-workspace
+      - run: &run-install-dput
+          name: Install dput
+          command: apt-get update && apt-get -y install dput
       - run:
           name: Upload packages to packages.gobysoft.org
           command: for change_file in /root/deb/*.changes; do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-continuous $change_file; done      
@@ -263,6 +307,7 @@ jobs:
     steps:
       - checkout
       - attach-workspace: *attach-deb-workspace
+      - run: *run-install-dput
       - run:
           name: Upload packages to packages.gobysoft.org
           command: for change_file in /root/deb/*.changes; do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-release $change_file; done      
