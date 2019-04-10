@@ -142,16 +142,16 @@ workflows:
 #            - armhf-bionic-build
 #            - armhf-xenial-build
             
-      - amd64+scan-bionic-build
+      - amd64+scan-bionic-build:
          requires:
             - amd64-bionic-build
-      - amd64+asan-bionic-build
+      - amd64+asan-bionic-build:
          requires:
             - amd64-bionic-build
-      - amd64+tsan-bionic-build
+      - amd64+tsan-bionic-build:
          requires:
             - amd64-bionic-build
-      - amd64+ubsan-build  
+      - amd64+ubsan-build:
          requires:
             - amd64-bionic-build
             
