@@ -7,15 +7,15 @@ workflows:
       - arm64-bionic-build:
          requires:
             - amd64-bionic-build
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 7 * * *"
-          filters:
-            branches:
-              only:
-                - "3.0"
-    jobs:
+#  nightly:
+#    triggers:
+#      - schedule:
+#          cron: "0 7 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - "3.0"
+#    jobs:
       - amd64+scan-bionic-build
       - amd64+asan-bionic-build
       - amd64+tsan-bionic-build
