@@ -64,14 +64,14 @@ job-template-amd64: &job-template-amd64
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
     - run: &run-update-deb
-        name: Update the debian source repo and pull the branch with the same name as the dccl branch (if it exists)
+        name: Update the debian source repo and pull the branch with the same name as the project branch (if it exists)
         command: >-
           cd /root/debian &&
           git pull &&
           git checkout origin/${CIRCLE_BRANCH} ||
           echo "No branch in debian called ${CIRCLE_BRANCH}, using $(git rev-parse --abbrev-ref HEAD)"
     - run: &run-nest-deb
-        name: Nest debian source into dccl source
+        name: Nest debian source into project source
         command: mv /root/debian ${CIRCLE_WORKING_DIRECTORY}
     - run: &run-dch
         name: Add changelog entry
@@ -81,7 +81,7 @@ job-template-amd64: &job-template-amd64
         command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -k19478082E2F8D3FE -b -a${TARGET_ARCH} 
     - run: &run-store-next-build
         name: Store deb files for next build
-        command: mkdir -p /root/deb && cp ../*.*deb ../*.changes /root/deb
+        command: mkdir -p /root/deb && cp ../*.*deb ../*.changes /root/deb && rm -f /root/deb/*-build-deps*.deb
     - run: &run-store-for-artifacts
         name: Store deb files for storing artifacts
         command: mkdir -p /tmp/deb && cp ../*.deb /tmp/deb
