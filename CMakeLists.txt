@@ -81,6 +81,8 @@ get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
 get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
 
+get_filename_component(dccl_PYTHON_DIR python ABSOLUTE)
+
 if(CMAKE_CROSSCOMPILING)
   message("DCCL is cross-compiling. Target library architecture: ${CMAKE_LIBRARY_ARCHITECTURE}")
   find_program(dccl_PROTOC_GEN_EXEC protoc-gen-dccl)
@@ -167,12 +169,7 @@ if(${APPLE})
 endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-  ${dccl_INC_DIR}/dccl
-  ${dccl_FORMER_BIN_DIR}
-  ${dccl_FORMER_LIB_DIR}
-  ${dccl_FORMER_INC_DIR}
-  ${dccl_FORMER_SHARE_DIR}
-  python/dist
+  "${dccl_INC_DIR};${dccl_FORMER_BIN_DIR};${dccl_FORMER_LIB_DIR};${dccl_FORMER_INC_DIR};${dccl_FORMER_SHARE_DIR};${dccl_PYTHON_DIR}/dccl/option_extensions_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.pyc"
   )
 
 ## boost
