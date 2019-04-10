@@ -248,8 +248,6 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-stretch
       <<: *environment-template-amd64
-      # only one job overall keeps the orig.tar.xz file (or else we get merge conflicts on the final workspace)
-      KEEP_ORIG_SOURCE: "true"
   arm64-stretch-build: 
     <<: *job-template-arm64
     docker: *docker-arm64-stretch
@@ -289,6 +287,8 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-bionic
     environment:
+      # only one distro overall keeps the orig.tar.xz file (or else we get merge conflicts on the final workspace)
+      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-amd64
@@ -296,6 +296,7 @@ jobs:
     <<: *job-template-arm64
     docker: *docker-arm64-bionic
     environment:
+      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-arm64
@@ -303,6 +304,7 @@ jobs:
     <<: *job-template-armhf
     docker: *docker-armhf-bionic
     environment:
+      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-armhf
