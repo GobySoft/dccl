@@ -3,14 +3,14 @@ fqdn = continuous_upload@packages.gobysoft.org
 method = scp
 incoming = /var/cache/archive/continuous/mini-dinstall/incoming
 allow_unsigned_uploads = 0
-post_upload_command = ssh -i /home/toby/gs/research/packages-server/upload_rsa continuous_upload@packages.gobysoft.org /usr/bin/mini-dinstall --batch
-ssh_config_options = IdentityFile=/home/toby/gs/research/packages-server/upload_rsa
+post_upload_command = ssh continuous_upload@packages.gobysoft.org /usr/bin/mini-dinstall --batch
+#ssh_config_options = IdentityFile=/home/toby/gs/research/packages-server/upload_rsa
 
 [gobysoft-release]
 fqdn = release_upload@packages.gobysoft.org
 method = scp
 incoming = /var/cache/archive/release/mini-dinstall/incoming
 allow_unsigned_uploads = 0
-post_upload_command = ssh -i /home/toby/gs/research/packages-server/upload_rsa release_upload@packages.gobysoft.org /usr/bin/mini-dinstall --batch
-ssh_config_options = IdentityFile=/home/toby/gs/research/packages-server/upload_rsa
+post_upload_command = ssh release_upload@packages.gobysoft.org /usr/bin/mini-dinstall --batch
+#ssh_config_options = IdentityFile=/home/toby/gs/research/packages-server/upload_rsa
 
