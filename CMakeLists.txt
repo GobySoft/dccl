@@ -166,7 +166,14 @@ if(${APPLE})
   link_directories(/sw/lib)
 endif()
 
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${dccl_INC_DIR}/dccl)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
+  ${dccl_INC_DIR}/dccl
+  ${dccl_FORMER_BIN_DIR}
+  ${dccl_FORMER_LIB_DIR}
+  ${dccl_FORMER_INC_DIR}
+  ${dccl_FORMER_SHARE_DIR}
+  python/dist
+  )
 
 ## boost
 find_package(Boost 1.40.0)
