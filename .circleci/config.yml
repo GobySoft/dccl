@@ -108,7 +108,7 @@ job-template-amd64: &job-template-amd64
     - run: &remove-orig-source
         name: Remove original source file (unless KEEP_ORIG_SOURCE == true)
         command: |
-          [[ "${KEEP_ORIG_SOURCE}" != "true" ]] && rm /root/deb/*.orig.tar.xz
+          [[ "${KEEP_ORIG_SOURCE}" != "true" ]] && rm -f /root/deb/*.orig.tar.xz || true
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
