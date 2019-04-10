@@ -70,7 +70,7 @@ job-template-amd64: &job-template-amd64
         command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -k19478082E2F8D3FE -b -a${TARGET_ARCH} 
     - run: &run-store-next-build
         name: Store deb files for next build
-        command: mkdir -p /root/deb && cp ../*.deb ../*.ddeb ../*.changes /root/deb
+        command: mkdir -p /root/deb && cp ../*.*deb ../*.changes /root/deb
     - run: &run-store-for-artifacts
         name: Store deb files for storing artifacts
         command: mkdir -p /tmp/deb && cp ../*.deb /tmp/deb
