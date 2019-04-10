@@ -20,15 +20,15 @@ environment-template-armhf: &environment-template-armhf
   
 environment-template-xenial: &environment-template-stretch
   DISTRO_RELEASE_CODENAME: "stretch"
-  DISTRO_RELEASE_VERSION: "9"
+  DISTRO_RELEASE_VERSION: "debian9"
 
 environment-template-xenial: &environment-template-xenial
   DISTRO_RELEASE_CODENAME: "xenial"
-  DISTRO_RELEASE_VERSION: "16.04"
+  DISTRO_RELEASE_VERSION: "ubuntu16.04"
   
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
-  DISTRO_RELEASE_VERSION: "18.04"
+  DISTRO_RELEASE_VERSION: "ubuntu18.04"
 
 ## Pre-declare Docker containers
 docker-base-stretch: &docker-base-stretch
@@ -81,14 +81,14 @@ job-template-amd64: &job-template-amd64
         command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -k19478082E2F8D3FE -b -a${TARGET_ARCH} 
     - run: &run-store-next-build
         name: Store deb files for next build
-        command: mkdir -p /root/deb && cp ../*.*deb ../*.changes /root/deb && rm -f /root/deb/*-build-deps*.deb
+        command: mkdir -p /root/deb && cp ../*.*deb ../*.changes ../*.buildinfo /root/deb && rm -f /root/deb/*-build-deps*.deb
     - run: &run-store-for-artifacts
         name: Store deb files for storing artifacts
-        command: mkdir -p /tmp/deb && cp ../*.deb /tmp/deb
+        command: mkdir -p /tmp/deb && cp /root/deb/* /tmp/deb 
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
-          - '*.deb'
+          - '*'
     - store_artifacts: &store
         path: /tmp/deb
         
