@@ -8,7 +8,9 @@ RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y --no-install-recommends install \
             git build-essential ssh cmake gpg gpg-agent \
-            devscripts equivs ca-certificates
+            devscripts equivs ca-certificates \
+            clang clang-tools \
+            && rm -rf /var/lib/apt/lists/*
 
 # Allow us to install ARM64 packages as well
 RUN ARCHS=(arm64 armhf) && \
@@ -23,4 +25,5 @@ RUN ARCHS=(arm64 armhf) && \
 RUN git clone \
     https://github.com/GobySoft/dccl-debian -b 3.0 debian
 RUN apt-get update && \
-    mk-build-deps -t "apt-get -y --no-install-recommends" -i "debian/control"
+    mk-build-deps -t "apt-get -y --no-install-recommends" -i "debian/control" \
+        && rm -rf /var/lib/apt/lists/*

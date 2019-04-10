@@ -1,29 +1,4 @@
-version: 2
-workflows:
-  version: 2
-  commit:
-    jobs:
-      - amd64-bionic-build
-      - arm64-bionic-build:
-         requires:
-            - amd64-bionic-build
-      - armhf-bionic-build:
-         requires:
-            - arm64-bionic-build
-#  nightly:
-#    triggers:
-#      - schedule:
-#          cron: "0 7 * * *"
-#          filters:
-#            branches:
-#              only:
-#                - "3.0"
-#    jobs:
-      - amd64+scan-bionic-build
-      - amd64+asan-bionic-build
-      - amd64+tsan-bionic-build
-#      - amd64+ubsan-build
-
+## Pre-declare environmental variables
 environment-template-common: &environment-template-common
   DEBIAN_FRONTEND: "noninteractive"
   DEBIAN_PRIORITY: "critical"
@@ -31,25 +6,44 @@ environment-template-common: &environment-template-common
   DEBFULLNAME: "GobySoft CircleCI"
   DEBEMAIL: "toby@gobysoft.org"
 
+environment-template-amd64: &environment-template-amd64
+  TARGET_ARCH: "amd64"
+  DEB_BUILD_OPTIONS: "parallel=4"
+
+environment-template-arm64: &environment-template-arm64
+  TARGET_ARCH: "arm64"
+  DEB_BUILD_OPTIONS: "parallel=4 nocheck"
+  
+environment-template-armhf: &environment-template-armhf
+  TARGET_ARCH: "armhf"
+  DEB_BUILD_OPTIONS: "parallel=4 nocheck"
+  
+environment-template-xenial: &environment-template-xenial
+  DISTRO_RELEASE_CODENAME: "xenial"
+  DISTRO_RELEASE_VERSION: "16.04"
+  
 environment-template-bionic: &environment-template-bionic
-  <<: *environment-template-common
   DISTRO_RELEASE_CODENAME: "bionic"
   DISTRO_RELEASE_VERSION: "18.04"
 
+## Pre-declare Docker containers
+docker-base-xenial: &docker-base-xenial
+  - image: gobysoft/dccl-ubuntu-build-base:16.04.1
+docker-arm64-xenial: &docker-arm64-xenial
+  - image: gobysoft/dccl-ubuntu-build-arm64:16.04.1
+docker-armhf-xenial: &docker-armhf-xenial
+  - image: gobysoft/dccl-ubuntu-build-armhf:16.04.1
+  
 docker-base-bionic: &docker-base-bionic
   - image: gobysoft/dccl-ubuntu-build-base:18.04.1
 docker-arm64-bionic: &docker-arm64-bionic
   - image: gobysoft/dccl-ubuntu-build-arm64:18.04.1
 docker-armhf-bionic: &docker-armhf-bionic
   - image: gobysoft/dccl-ubuntu-build-armhf:18.04.1
-    
-job-template-amd64-bionic: &job-template-amd64-bionic
+
+## Pre-declare job templates
+job-template-amd64: &job-template-amd64
   working_directory: /root/dccl3
-  environment:
-    <<: *environment-template-bionic
-    TARGET_ARCH: "amd64"
-    DEB_BUILD_OPTIONS: "parallel=4"
-  docker: *docker-base-bionic
   steps:
     - checkout
     - run: &run-update-apt
@@ -74,22 +68,21 @@ job-template-amd64-bionic: &job-template-amd64-bionic
     - run: &run-build-pkg
         name: Build the Debian package
         command: export CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -b -a${TARGET_ARCH} --sign-key=19478082E2F8D3FE
-    - run: &run-store
-        name: Store deb files
+    - run: &run-store-next-build
+        name: Store deb files for next build
         command: mkdir -p /root/deb && cp ../*.deb ../*.ddeb ../*.changes /root/deb
+    - run: &run-store-for-artifacts
+        name: Store deb files for storing artifacts
+        command: mkdir -p /tmp/deb && cp ../*.deb /tmp/deb
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
           - '*.deb'
     - store_artifacts: &store
-        path: /root/deb
-job-template-arm64-bionic: &job-template-arm64-bionic
-  <<: *job-template-amd64-bionic
-  environment:
-    <<: *environment-template-bionic
-    TARGET_ARCH: "arm64"
-    DEB_BUILD_OPTIONS: "parallel=4 nocheck"
-  docker: *docker-arm64-bionic
+        path: /tmp/deb
+        
+job-template-arm64: &job-template-arm64
+  <<: *job-template-amd64
   steps: &steps-cross-compile
     - checkout
     - run: *run-update-apt
@@ -103,65 +96,147 @@ job-template-arm64-bionic: &job-template-arm64-bionic
     - run: *run-nest-deb
     - run: *run-dch
     - run: *run-build-pkg
-    - run: *run-store
+    - run: *run-store-next-build
+    - run: *run-store-for-artifacts
     - persist_to_workspace: *persist-debs
     - store_artifacts: *store
 
-job-template-armhf-bionic: &job-template-armhf-bionic
-  <<: *job-template-amd64-bionic
-  environment:
-    <<: *environment-template-bionic
-    TARGET_ARCH: "armhf"
-    DEB_BUILD_OPTIONS: "parallel=4 nocheck"
-  docker: *docker-armhf-bionic
+job-template-armhf: &job-template-armhf
+  <<: *job-template-amd64
   steps: *steps-cross-compile
-      
+
+# base sanitizers off Bionic build
+job-template-sanitizers: &job-template-sanitizers
+  <<: *job-template-amd64
+  environment:
+    <<: *environment-template-common
+    <<: *environment-template-bionic
+    <<: *environment-template-amd64
+    SANITIZER_NUM_JOBS: 2
+  docker: *docker-base-bionic
+  
+## Begin actual config
+version: 2
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - amd64-xenial-build
+      - arm64-xenial-build:
+         requires:
+            - amd64-xenial-build
+      - armhf-xenial-build:
+         requires:
+            - arm64-xenial-build
+            
+      - amd64-bionic-build
+      - arm64-bionic-build:
+         requires:
+            - amd64-bionic-build
+      - armhf-bionic-build:
+         requires:
+            - arm64-bionic-build
+
+#      - continuous-upload:
+#          requires:
+#            - armhf-bionic-build
+#            - armhf-xenial-build
+            
+      - amd64+scan-bionic-build
+         requires:
+            - amd64-bionic-build
+      - amd64+asan-bionic-build
+         requires:
+            - amd64-bionic-build
+      - amd64+tsan-bionic-build
+         requires:
+            - amd64-bionic-build
+      - amd64+ubsan-build  
+         requires:
+            - amd64-bionic-build
+            
 jobs:
+  amd64-xenial-build:
+    <<: *job-template-amd64
+    docker: *docker-base-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-amd64
+  arm64-xenial-build: 
+    <<: *job-template-arm64
+    docker: *docker-arm64-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-arm64
+  armhf-xenial-build: 
+    <<: *job-template-armhf
+    docker: *docker-armhf-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-armhf
   amd64-bionic-build:
-    <<: *job-template-amd64-bionic
+    <<: *job-template-amd64
+    docker: *docker-base-bionic
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-amd64
   arm64-bionic-build: 
-    <<: *job-template-arm64-bionic
+    <<: *job-template-arm64
+    docker: *docker-arm64-bionic
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-arm64
   armhf-bionic-build: 
-    <<: *job-template-armhf-bionic
+    <<: *job-template-armhf
+    docker: *docker-armhf-bionic
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-armhf
   amd64+scan-bionic-build:
-    <<: *job-template-amd64-bionic
+    <<: *job-template-sanitizers
     steps:
       - checkout
       - run: *run-update-apt
       - run:
           name: Build with static analyzer
-          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ cmake --build . -- -j2
+          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run:
           name: Store static analyzer results
           command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
       - store_artifacts: 
           path: /tmp/scan-build.tar.gz
   amd64+asan-bionic-build:
-    <<: *job-template-amd64-bionic
+    <<: *job-template-sanitizers
     steps:
       - checkout
       - run: *run-update-apt
       - run:
           name: Build with AddressSanitizer (and LeakSanitizer)
-          command: mkdir -p build && cd build && cmake -DSANITIZE_ADDRESS=ON .. && cmake --build . -- -j2
+          command: mkdir -p build && cd build && cmake -DSANITIZE_ADDRESS=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure
   amd64+tsan-bionic-build:
-    <<: *job-template-amd64-bionic
+    <<: *job-template-sanitizers
     steps:
       - checkout
       - run: *run-update-apt
       - run: 
           name: Build with ThreadSanitizer
-          command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON .. && cmake --build . -- -j2
+          command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
   amd64+ubsan-bionic-build:
-    <<: *job-template-amd64-bionic
+    <<: *job-template-sanitizers
     steps:
       - checkout
       - run: *run-update-apt
       - run:
           name: Build with UndefinedBehaviorSanitizer
-          command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON .. && cmake --build . -- -j2
+          command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
