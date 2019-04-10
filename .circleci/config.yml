@@ -124,7 +124,7 @@ steps-cross-compile: &steps-cross-compile
   
 job-template-arm64: &job-template-arm64
   <<: *job-template-amd64
-  steps:
+  steps: &steps-cross-compile
     - attach-workspace: &attach-deb-workspace
         at: /root/deb
     - run: &install-amd64-dccl-compiler
