@@ -76,18 +76,28 @@ job-template-amd64: &job-template-amd64
     - run: &run-dch
         name: Generate original source tarball and add changelog entry 
         command: |
-          NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&
-          COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" &&
+          export NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')"
+
+          [ "${DO_SOURCE_BUILD}" == "true" ] &&
           git config tar.tar.xz.command "xz -c" &&
-          git archive --prefix=dccl3-${NEWVERSION}/ -o ${CIRCLE_WORKING_DIRECTORY}/../dccl3_${NEWVERSION}.orig.tar.xz HEAD &&
+          git archive --prefix=dccl3-${NEWVERSION}/ -o ${CIRCLE_WORKING_DIRECTORY}/../dccl3_${NEWVERSION}.orig.tar.xz HEAD;
+          
+          COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" &&
           cd debian &&
           dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}" 
     - run: &run-build-pkg
         name: Build the Debian package (source, any, all)
-        command: dpkg-buildpackage -k19478082E2F8D3FE 
+        command: |
+          export DPKG_BUILDPACKAGE_BUILD_TYPE="-B"
+          # default is to do source and binary build
+          [ "${DO_SOURCE_BUILD}" == "true" ] && DPKG_BUILDPACKAGE_BUILD_TYPE=""        
+          CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -k19478082E2F8D3FE -a${TARGET_ARCH} ${DPKG_BUILDPACKAGE_BUILD_TYPE}
     - run: &run-store-next-build
         name: Store deb files for next build
-        command: mkdir -p /root/deb && find .. -maxdepth 1 -type f -exec cp {}  /root/deb \; && rm -f /root/deb/*-build-deps*.deb
+        command: |
+          mkdir -p /root/deb &&
+          find .. -maxdepth 1 -type f -exec cp {}  /root/deb \; &&
+          rm -f /root/deb/*-build-deps*.deb
     - run: &run-store-for-artifacts
         name: Store deb files for storing artifacts
         command: mkdir -p /tmp/deb && cp /root/deb/* /tmp/deb 
@@ -227,6 +237,8 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-stretch
     environment:
+      # one job only must do the source build
+      DO_SOURCE_BUILD: "true"
       <<: *environment-template-common
       <<: *environment-template-stretch
       <<: *environment-template-amd64
@@ -293,12 +305,14 @@ jobs:
       - run: *run-update-apt
       - run:
           name: Build with static analyzer
-          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ cmake --build . -- -j${SANITIZER_NUM_JOBS}
+          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ --status-bugs cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run:
           name: Store static analyzer results
           command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
-      - store_artifacts: 
+          when: always
+      - store_artifacts:          
           path: /tmp/scan-build.tar.gz
+          when: always
   amd64+asan-build:
     <<: *job-template-sanitizers
     steps:
