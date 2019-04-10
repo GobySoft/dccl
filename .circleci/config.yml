@@ -18,7 +18,7 @@ environment-template-armhf: &environment-template-armhf
   TARGET_ARCH: "armhf"
   DEB_BUILD_OPTIONS: "parallel=4 nocheck"
   
-environment-template-xenial: &environment-template-stretch
+environment-template-stretch: &environment-template-stretch
   DISTRO_RELEASE_CODENAME: "stretch"
   DISTRO_RELEASE_VERSION: "debian9"
 
@@ -88,7 +88,10 @@ job-template-amd64: &job-template-amd64
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
-          - '*'
+          - '*.deb'
+          - '*.ddeb'
+          - '*.changes'
+          - '*.buildinfo'
     - store_artifacts: &store
         path: /tmp/deb
         
@@ -135,6 +138,10 @@ job-template-upload: &job-template-upload
     SANITIZER_NUM_JOBS: 2
   docker: *docker-base-bionic
 
+filter-template-all-tags: &filter-template-all-tags
+  filters:
+    tags:
+      only: /.*/
   
 ## Begin actual config
 version: 2
@@ -142,28 +149,37 @@ workflows:
   version: 2
   commit:
     jobs:
-      - amd64-stretch-build
+      - amd64-stretch-build:
+          <<: *filter-template-all-tags
       - arm64-stretch-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - amd64-stretch-build
       - armhf-stretch-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - arm64-stretch-build
-
-      - amd64-xenial-build
+            
+      - amd64-xenial-build:
+          <<: *filter-template-all-tags
       - arm64-xenial-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - amd64-xenial-build
       - armhf-xenial-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - arm64-xenial-build
             
-      - amd64-bionic-build
+      - amd64-bionic-build:
+          <<: *filter-template-all-tags
       - arm64-bionic-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - amd64-bionic-build
       - armhf-bionic-build:
-         requires:
+          <<: *filter-template-all-tags
+          requires:
             - arm64-bionic-build
 
       - continuous-upload:
@@ -171,18 +187,29 @@ workflows:
             - armhf-stretch-build
             - armhf-bionic-build
             - armhf-xenial-build
+
+      - release-upload:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - armhf-stretch-build
+            - armhf-bionic-build
+            - armhf-xenial-build
             
       - amd64+scan-build:
-         requires:
+          requires:
             - amd64-bionic-build
       - amd64+asan-build:
-         requires:
+          requires:
             - amd64-bionic-build
       - amd64+tsan-build:
-         requires:
+          requires:
             - amd64-bionic-build
       - amd64+ubsan-build:
-         requires:
+          requires:
             - amd64-bionic-build
             
 jobs:
