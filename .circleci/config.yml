@@ -80,7 +80,7 @@ job-template-amd64: &job-template-amd64
         command: |
           export NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')"
           
-          [ "${DO_SOURCE_BUILD}" -eq "true" ] &&
+          [[ "${DO_SOURCE_BUILD}" == "true" ]] &&
           git config tar.tar.xz.command "xz -c" &&
           git archive --prefix=dccl3-${NEWVERSION}/ -o ${CIRCLE_WORKING_DIRECTORY}/../dccl3_${NEWVERSION}.orig.tar.xz HEAD;
           
@@ -92,7 +92,7 @@ job-template-amd64: &job-template-amd64
         command: |
           export DPKG_BUILDPACKAGE_BUILD_TYPE="-B"
           # default is to do source and binary build
-          [ "${DO_SOURCE_BUILD}" -eq "true" ] && DPKG_BUILDPACKAGE_BUILD_TYPE=""        
+          [[ "${DO_SOURCE_BUILD}" == "true" ]] && DPKG_BUILDPACKAGE_BUILD_TYPE=""        
           CONFIG_SITE=/etc/dpkg-cross/cross-config.${TARGET_ARCH} && dpkg-buildpackage -k19478082E2F8D3FE -a${TARGET_ARCH} ${DPKG_BUILDPACKAGE_BUILD_TYPE}
     - run: &run-store-next-build
         name: Store deb files for next build
@@ -108,7 +108,7 @@ job-template-amd64: &job-template-amd64
     - run: &remove-orig-source
         name: Remove original source file (unless KEEP_ORIG_SOURCE == true)
         command: |
-          [ "${KEEP_ORIG_SOURCE}" -ne "true" ] && rm /root/deb/*.orig.tar.xz
+          [[ "${KEEP_ORIG_SOURCE}" != "true" ]] && rm /root/deb/*.orig.tar.xz
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
