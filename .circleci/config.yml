@@ -61,7 +61,7 @@ job-template-amd64: &job-template-amd64
           echo "No branch in debian called ${CIRCLE_BRANCH}, using $(git rev-parse --abbrev-ref HEAD)"
     - run: &run-nest-deb
         name: Nest debian source into dccl source
-        command: mv /root/debian /root/dccl3
+        command: mv /root/debian ${CIRCLE_WORKING_DIRECTORY}
     - run: &run-dch
         name: Add changelog entry
         command: NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&  COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" && cd debian && dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}"
@@ -105,7 +105,7 @@ job-template-armhf: &job-template-armhf
   <<: *job-template-amd64
   steps: *steps-cross-compile
 
-# base sanitizers off Bionic build
+# base sanitizer and upload off Bionic build
 job-template-sanitizers: &job-template-sanitizers
   <<: *job-template-amd64
   environment:
@@ -114,6 +114,16 @@ job-template-sanitizers: &job-template-sanitizers
     <<: *environment-template-amd64
     SANITIZER_NUM_JOBS: 2
   docker: *docker-base-bionic
+
+job-template-upload: &job-template-upload
+  <<: *job-template-amd64
+  environment:
+    <<: *environment-template-common
+    <<: *environment-template-bionic
+    <<: *environment-template-amd64
+    SANITIZER_NUM_JOBS: 2
+  docker: *docker-base-bionic
+
   
 ## Begin actual config
 version: 2
@@ -137,18 +147,18 @@ workflows:
          requires:
             - arm64-bionic-build
 
-#      - continuous-upload:
-#          requires:
-#            - armhf-bionic-build
-#            - armhf-xenial-build
+      - continuous-upload:
+          requires:
+            - armhf-bionic-build
+            - armhf-xenial-build
             
-      - amd64+scan-bionic-build:
+      - amd64+scan-build:
          requires:
             - amd64-bionic-build
-      - amd64+asan-bionic-build:
+      - amd64+asan-build:
          requires:
             - amd64-bionic-build
-      - amd64+tsan-bionic-build:
+      - amd64+tsan-build:
          requires:
             - amd64-bionic-build
       - amd64+ubsan-build:
@@ -198,7 +208,7 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-armhf
-  amd64+scan-bionic-build:
+  amd64+scan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -211,7 +221,7 @@ jobs:
           command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
       - store_artifacts: 
           path: /tmp/scan-build.tar.gz
-  amd64+asan-bionic-build:
+  amd64+asan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -222,7 +232,7 @@ jobs:
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure
-  amd64+tsan-bionic-build:
+  amd64+tsan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -231,7 +241,7 @@ jobs:
           name: Build with ThreadSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
-  amd64+ubsan-bionic-build:
+  amd64+ubsan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -240,3 +250,19 @@ jobs:
           name: Build with UndefinedBehaviorSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
+  continuous-upload:
+    <<: *job-template-upload
+    steps:
+      - checkout
+      - attach-workspace: *attach-deb-workspace
+      - run:
+          name: Upload packages to packages.gobysoft.org
+          command: for change_file in /root/deb/*.changes; do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-continuous $change_file; done      
+  release-upload:
+    <<: *job-template-upload
+    steps:
+      - checkout
+      - attach-workspace: *attach-deb-workspace
+      - run:
+          name: Upload packages to packages.gobysoft.org
+          command: for change_file in /root/deb/*.changes; do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-release $change_file; done      
