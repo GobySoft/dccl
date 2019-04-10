@@ -78,6 +78,7 @@ job-template-amd64: &job-template-amd64
         command: |
           NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')" &&
           COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" &&
+          git config tar.tar.xz.command "xz -c" &&
           git archive --prefix=dccl3-${NEWVERSION}/ -o ${CIRCLE_WORKING_DIRECTORY}/../dccl3_${NEWVERSION}.orig.tar.xz HEAD &&
           cd debian &&
           dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}" 
