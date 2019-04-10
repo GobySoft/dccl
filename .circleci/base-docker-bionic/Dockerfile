@@ -11,7 +11,7 @@ RUN apt-get update && \
             devscripts equivs ca-certificates
 
 # Allow us to install ARM64 packages as well
-RUN ARCHS=(arm64) && \
+RUN ARCHS=(arm64 armhf) && \
     ARCHS_LIST=$(IFS=,; echo "${ARCHS[*]}") && \
     for ARCH in "${ARCHS[@]}"; do dpkg --add-architecture "$ARCH"; done && \
     sed -i 's/deb /deb [arch=amd64] /' /etc/apt/sources.list && \
