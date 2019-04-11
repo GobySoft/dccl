@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Setuptools build script for DCCL Bindings."""
 __author__ = "Chris Murphy, Toby Schneider"
-__copyright__ = "Copyright 2018, The DCCL Project"
+__copyright__ = "Copyright 2018-2019, The DCCL Project"
 __license__ = "LGPL"
-__version__ = "3.0.8"
+__version__ = "3.0.11"
 
 from setuptools import setup, find_packages
 from setuptools.extension import Extension

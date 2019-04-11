@@ -30,7 +30,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "10")
+set(DCCL_VERSION_PATCH "11")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -58,7 +58,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2019.02.05")
+   set(DCCL_VERSION_DATE "2019.04.11")
 endif()
 
 
