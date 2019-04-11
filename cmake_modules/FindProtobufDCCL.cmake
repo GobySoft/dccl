@@ -107,9 +107,13 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
              "${FIL_PATH}/${FIL_WE}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
       ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR} ${DCCL_PROTOC_ARGS}
+      # add guards for Clang static analyzer (scan-build)
+      COMMAND /bin/bash
+      ARGS -c "FILE=${FIL_PATH}/${FIL_WE}.pb.cc && TMPFILE=\${FILE}.\${RANDOM} && cat <(echo '#ifndef __clang_analyzer__') \${FILE} <(echo -e '\\n#endif // __clang_analyzer__') > \${TMPFILE} && mv \${TMPFILE} \${FILE}"
       DEPENDS ${ABS_FIL}
       COMMENT "Running C++ protocol buffer compiler on ${FIL}"
       VERBATIM )
+
   endforeach()
 
   # copy headers for generated headers

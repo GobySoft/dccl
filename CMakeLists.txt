@@ -16,7 +16,10 @@ project(dccl)
 ## allows us to write custom modules or modifying existing ones
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
+# enable sanitizers (e.g., Address Sanitizer)
+find_package(Sanitizers)
 
+# enable testing (CTest)
 option(enable_testing "Enable building of tests using CTest (if set to ON, you can run tests with 'make test')" OFF)
 if(enable_testing)
   enable_testing()
@@ -78,7 +81,21 @@ get_filename_component(dccl_BIN_DIR ${dccl_BUILD_DIR}/bin ABSOLUTE)
 get_filename_component(dccl_INC_DIR ${dccl_BUILD_DIR}/include ABSOLUTE)
 get_filename_component(dccl_SHARE_DIR ${dccl_BUILD_DIR}/share ABSOLUTE)
 
-set(dccl_EXEC_DIR "${dccl_BIN_DIR}" CACHE STRING "Directory where executable DCCL code resides. Change for cross-compilation.")
+get_filename_component(dccl_PYTHON_DIR python ABSOLUTE)
+
+if(CMAKE_CROSSCOMPILING)
+  message("DCCL is cross-compiling. Target library architecture: ${CMAKE_LIBRARY_ARCHITECTURE}")
+  find_program(dccl_PROTOC_GEN_EXEC protoc-gen-dccl)
+  if(dccl_PROTOC_GEN_EXEC)
+    get_filename_component(dccl_DEFAULT_EXEC_DIR ${dccl_PROTOC_GEN_EXEC} DIRECTORY)
+  else()
+    message(FATAL_ERROR "Failed to find protoc-gen-dccl for cross-compiling")
+  endif()
+else()
+  set(dccl_DEFAULT_EXEC_DIR "${dccl_BIN_DIR}")
+endif()
+  
+set(dccl_EXEC_DIR "${dccl_DEFAULT_EXEC_DIR}" CACHE STRING "Directory where executable DCCL code resides. Change for cross-compilation.")
 
 # symlink these into the build directory for backwards compatibility
 option(ADD_SYMLINKS "Add symlinks to root directory for backwards compatibility." ON)
@@ -116,9 +133,18 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${dccl_LIB_DIR})
 
 
 ## set instructions for `make install`
+
+# override library version for debian sbuild cross-builds
+if(CMAKE_CROSSCOMPILING)
+  if (EXISTS "/etc/debian_version")
+    set(CMAKE_INSTALL_LIBDIR "lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+  endif()
+endif()
+
 include(GNUInstallDirs)
+
 file(MAKE_DIRECTORY ${dccl_BIN_DIR})
-install(DIRECTORY ${dccl_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin 
+install(DIRECTORY ${dccl_BIN_DIR}/ DESTINATION ${CMAKE_INSTALL_BINDIR}
   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
@@ -126,6 +152,8 @@ install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION share/dccl/cmake)
+
+message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LIBDIR}\n\tbinaries: ${CMAKE_INSTALL_FULL_BINDIR}\n\theaders: ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
@@ -140,7 +168,9 @@ if(${APPLE})
   link_directories(/sw/lib)
 endif()
 
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${dccl_INC_DIR}/dccl)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
+  "${dccl_INC_DIR};${dccl_FORMER_BIN_DIR};${dccl_FORMER_LIB_DIR};${dccl_FORMER_INC_DIR};${dccl_FORMER_SHARE_DIR};${dccl_PYTHON_DIR}/dccl/option_extensions_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.pyc"
+  )
 
 ## boost
 find_package(Boost 1.40.0)
@@ -231,5 +261,4 @@ endforeach()
 
 ## start adding subdirectories
 add_subdirectory(src)
-
 
