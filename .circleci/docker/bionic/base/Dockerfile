@@ -10,6 +10,7 @@ RUN apt-get update && \
             git build-essential ssh cmake gpg gpg-agent \
             devscripts equivs ca-certificates \
             clang clang-tools \
+            dput \
             && rm -rf /var/lib/apt/lists/*
 
 # Allow us to install ARM64 packages as well
