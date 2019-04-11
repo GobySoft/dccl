@@ -58,16 +58,22 @@ docker-armhf-bionic: &docker-armhf-bionic
 job-template-amd64: &job-template-amd64
   working_directory: /root/dccl3
   steps:
-    - checkout
     - run: &run-update-apt
         name: Update apt packages
         command: apt-get update && apt-get dist-upgrade -y
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
+    - attach-workspace: &attach-src-workspace
+        at: /root/src
+    - run: &run-extract-src
+        name: Extract the original source tarball
+        command: |
+          cp /root/src/*.orig.tar.xz ${CIRCLE_WORKING_DIRECTORY}/.. &&
+          tar xfJ ../*.orig.tar.xz --strip-components=1
     - run: &run-update-deb
         name: Update the debian source repo and pull the branch with the same name as the project branch (if it exists)
-        command: >-
+        command: |        
           cd /root/debian &&
           git pull &&
           git checkout origin/${CIRCLE_BRANCH} ||
@@ -78,13 +84,8 @@ job-template-amd64: &job-template-amd64
     - run: &run-dch
         name: Generate original source tarball and add changelog entry 
         command: |
-          export NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')"
-          
-          [[ "${DO_SOURCE_BUILD}" == "true" ]] &&
-          git config tar.tar.xz.command "xz -c" &&
-          git archive --prefix=dccl3-${NEWVERSION}/ -o ${CIRCLE_WORKING_DIRECTORY}/../dccl3_${NEWVERSION}.orig.tar.xz HEAD;
-          
-          COMMENT="Autobuild for commit $(git log -1 --pretty=oneline)" &&
+          export NEWVERSION="$(echo ../*.orig.tar.xz | sed 's/.*_\(.*\)\.orig\.tar\.xz/\1/')"          
+          COMMENT="Autobuild for version ${NEWVERSION}" &&
           cd debian &&
           dch --newversion=${NEWVERSION}-0~${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}" 
     - run: &run-build-pkg
@@ -106,9 +107,9 @@ job-template-amd64: &job-template-amd64
     - store_artifacts: &store
         path: /tmp/deb
     - run: &remove-orig-source
-        name: Remove original source file (unless KEEP_ORIG_SOURCE == true)
-        command: |
-          [[ "${KEEP_ORIG_SOURCE}" != "true" ]] && rm -f /root/deb/*.orig.tar.xz || true
+        name: Remove original source file to avoid conflicts in merging
+        command: |        
+          rm -f /root/deb/*.orig.tar.xz || true
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
@@ -118,11 +119,8 @@ job-template-amd64: &job-template-amd64
           - '*.ddeb'
           - '*.changes'
           - '*.buildinfo'
-
-steps-cross-compile: &steps-cross-compile
   
-  
-job-template-arm64: &job-template-arm64
+job-template-cross: &job-template-cross
   <<: *job-template-amd64
   steps: &steps-cross-compile
     - attach-workspace: &attach-deb-workspace
@@ -130,9 +128,10 @@ job-template-arm64: &job-template-arm64
     - run: &install-amd64-dccl-compiler
         name: Install amd64 dccl3-compiler so that we can execute it in this cross-build container
         command: dpkg -i /root/deb/dccl3-compiler_*amd64.deb
-    - checkout
     - run: *run-update-apt
     - run: *run-import-gpg
+    - attach-workspace: *attach-src-workspace
+    - run: *run-extract-src
     - run: *run-update-deb
     - run: *run-nest-deb
     - run: *run-dch
@@ -141,11 +140,7 @@ job-template-arm64: &job-template-arm64
     - run: *run-store-for-artifacts
     - store_artifacts: *store
     - run: *remove-orig-source
-    - persist_to_workspace: *persist-debs
-        
-job-template-armhf: &job-template-armhf
-  <<: *job-template-amd64
-  steps: *steps-cross-compile
+    - persist_to_workspace: *persist-debs        
 
 # base sanitizer and upload off Bionic build
 job-template-sanitizers: &job-template-sanitizers
@@ -159,11 +154,6 @@ job-template-sanitizers: &job-template-sanitizers
 
 job-template-upload: &job-template-upload
   <<: *job-template-amd64
-  environment:
-    <<: *environment-template-common
-    <<: *environment-template-bionic
-    <<: *environment-template-amd64
-    SANITIZER_NUM_JOBS: 2
   docker: *docker-base-bionic
 
 filter-template-all-tags: &filter-template-all-tags
@@ -177,8 +167,13 @@ workflows:
   version: 2
   commit:
     jobs:
+      - get-orig-source:
+          <<: *filter-template-all-tags
+          
       - amd64-stretch-build:
           <<: *filter-template-all-tags
+          requires:
+            - get-orig-source
       - arm64-stretch-build:
           <<: *filter-template-all-tags
           requires:
@@ -190,6 +185,8 @@ workflows:
             
       - amd64-xenial-build:
           <<: *filter-template-all-tags
+          requires:
+            - get-orig-source
       - arm64-xenial-build:
           <<: *filter-template-all-tags
           requires:
@@ -201,6 +198,8 @@ workflows:
             
       - amd64-bionic-build:
           <<: *filter-template-all-tags
+          requires:
+            - get-orig-source
       - arm64-bionic-build:
           <<: *filter-template-all-tags
           requires:
@@ -227,20 +226,36 @@ workflows:
             - armhf-bionic-build
             - armhf-xenial-build
             
-#      - amd64+scan-build:
-#          requires:
-#            - amd64-bionic-build
-      - amd64+asan-build:
-          requires:
-            - amd64-bionic-build
-      - amd64+tsan-build:
-          requires:
-            - amd64-bionic-build
-      - amd64+ubsan-build:
-          requires:
-            - amd64-bionic-build
+#      - amd64+scan-build
+      - amd64+asan-build
+      - amd64+tsan-build
+      - amd64+ubsan-build
             
 jobs:
+
+  get-orig-source:
+    <<: *job-template-amd64
+    docker: *docker-base-bionic
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-amd64
+    steps:
+      - checkout
+      - run:
+          name: Get original source tarball
+          command: |
+            export NEWVERSION="$(git describe --tags HEAD | sed 's/_/~/' | sed 's/-/+/g')"          
+            git config tar.tar.xz.command "xz -c" &&
+            mkdir -p /root/src &&
+            git archive --prefix=dccl3-${NEWVERSION}/ -o /root/src/dccl3_${NEWVERSION}.orig.tar.xz HEAD;
+      - store_artifacts:
+          path: /root/src
+      - persist_to_workspace:
+          root: /root/src
+          paths:
+            - '*.tar.xz'
+            
   amd64-stretch-build:
     <<: *job-template-amd64
     docker: *docker-base-stretch
@@ -249,14 +264,14 @@ jobs:
       <<: *environment-template-stretch
       <<: *environment-template-amd64
   arm64-stretch-build: 
-    <<: *job-template-arm64
+    <<: *job-template-cross
     docker: *docker-arm64-stretch
     environment:
       <<: *environment-template-common
       <<: *environment-template-stretch
       <<: *environment-template-arm64
   armhf-stretch-build: 
-    <<: *job-template-armhf
+    <<: *job-template-cross
     docker: *docker-armhf-stretch
     environment:
       <<: *environment-template-common
@@ -270,14 +285,14 @@ jobs:
       <<: *environment-template-xenial
       <<: *environment-template-amd64
   arm64-xenial-build: 
-    <<: *job-template-arm64
+    <<: *job-template-cross
     docker: *docker-arm64-xenial
     environment:
       <<: *environment-template-common
       <<: *environment-template-xenial
       <<: *environment-template-arm64
   armhf-xenial-build: 
-    <<: *job-template-armhf
+    <<: *job-template-cross
     docker: *docker-armhf-xenial
     environment:
       <<: *environment-template-common
@@ -287,24 +302,20 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-bionic
     environment:
-      # only one distro overall keeps the orig.tar.xz file (or else we get merge conflicts on the final workspace)
-      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-amd64
   arm64-bionic-build: 
-    <<: *job-template-arm64
+    <<: *job-template-cross
     docker: *docker-arm64-bionic
     environment:
-      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-arm64
   armhf-bionic-build: 
-    <<: *job-template-armhf
+    <<: *job-template-cross
     docker: *docker-armhf-bionic
     environment:
-      KEEP_ORIG_SOURCE: "true"
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-armhf
@@ -354,41 +365,40 @@ jobs:
       - run: *run-tests
   continuous-upload:
     <<: *job-template-upload
-    steps:
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-amd64
+      UPLOAD_DESTINATION: "gobysoft-continuous"
+    steps: &steps-upload
       - checkout
       - add_ssh_keys:
           fingerprints:
             - "cd:15:c9:43:48:20:c9:56:58:9e:91:01:74:0d:fe:d2"
       - run: *run-import-gpg
       - attach-workspace: *attach-deb-workspace
-      - run: &run-install-dput
+      - attach-workspace: *attach-src-workspace      
+      - run:
           name: Install dput
           command: apt-get update && apt-get -y install dput
+      - run:
+          name: Move original source into output directory
+          command: mv /root/src/* /root/deb
       - run:
           name: Upload packages to packages.gobysoft.org
           command: |
             echo 'trusted-key A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE' >> ~/.gnupg/gpg.conf
             echo '|1|HjIjI40ko7XtgqXNK8DNuiVcy4Q=|7PEGcXNRmsj1tzGeRjb9UgWIWwE= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8LmTLyo7inmKCa28F2JZBSpQFT1VrwnFpeV1v6PlQE' >> ~/.ssh/known_hosts
             for change_file in /root/deb/*.changes;
-            do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-continuous $change_file;
+            do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf ${UPLOAD_DESTINATION} $change_file;
             done
           
 
   release-upload:
     <<: *job-template-upload
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "cd:15:c9:43:48:20:c9:56:58:9e:91:01:74:0d:fe:d2"
-      - run: *run-import-gpg
-      - attach-workspace: *attach-deb-workspace
-      - run: *run-install-dput
-      - run:
-          name: Upload packages to packages.gobysoft.org
-          command: |
-            echo 'trusted-key A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE' >> ~/.gnupg/gpg.conf
-            echo '|1|HjIjI40ko7XtgqXNK8DNuiVcy4Q=|7PEGcXNRmsj1tzGeRjb9UgWIWwE= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8LmTLyo7inmKCa28F2JZBSpQFT1VrwnFpeV1v6PlQE' >> ~/.ssh/known_hosts
-            for change_file in /root/deb/*.changes;
-            do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf gobysoft-continuous $change_file;
-            done
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bionic
+      <<: *environment-template-amd64
+      UPLOAD_DESTINATION: "gobysoft-release"
+    steps: *steps-upload
