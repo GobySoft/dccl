@@ -174,7 +174,8 @@ filter-template-deb-build: &filter-template-deb-build
     tags:
       only: /.*/
     branches:
-      ignore: /^pull\/.*$/
+      only:
+        - "3.0"
   
 ## Begin actual config
 version: 2
@@ -243,7 +244,7 @@ workflows:
             - armhf-bionic-build
             - armhf-xenial-build
             
-#      - amd64+scan-build
+      - amd64+scan-build
       - amd64+asan-build
       - amd64+tsan-build
       - amd64+ubsan-build
