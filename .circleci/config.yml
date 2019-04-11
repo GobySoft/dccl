@@ -344,14 +344,14 @@ jobs:
       - run: *run-update-apt
       - run:
           name: Build with static analyzer
-          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=OFF && scan-build --use-c++=/usr/bin/clang++ --status-bugs cmake --build . -- -j${SANITIZER_NUM_JOBS}
+          command: mkdir -p build && cd build && scan-build cmake .. -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug && scan-build --use-c++=/usr/bin/clang++ --status-bugs cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run:
           name: Store static analyzer results
           command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
-          when: always
-      - store_artifacts:          
+          when: on_fail
+      - store_artifacts:
           path: /tmp/scan-build.tar.gz
-          when: always
+          when: on_fail
   amd64+asan-build:
     <<: *job-template-sanitizers
     steps:
