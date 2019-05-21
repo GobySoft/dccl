@@ -64,8 +64,7 @@ int main(int argc, char *argv[]) {
     // test non-existent
     try {
       boost::shared_ptr<google::protobuf::Message> cdyn_msg =
-          dccl::DynamicProtobufManager::new_protobuf_message<
-              boost::shared_ptr<google::protobuf::Message>>("C");
+          dccl::DynamicProtobufManager::new_protobuf_message("C");
       // should throw
       assert(false);
     } catch (std::exception &e) {
