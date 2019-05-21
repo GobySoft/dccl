@@ -29,13 +29,19 @@
 
 #include "test_a.pb.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-    void* dl_handle = dlopen("libtest_dyn_protobuf" SHARED_LIBRARY_SUFFIX, RTLD_LAZY);
+    if(argc != 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " /path/to/libtest_dyn_protobuf" << std::endl;
+        exit(1);
+    }
+    
+    void* dl_handle = dlopen(argv[1], RTLD_LAZY);
 
     if (!dl_handle)
     {
-        std::cerr << "Failed to open libtest_dyn_protobuf" SHARED_LIBRARY_SUFFIX << std::endl;
+        std::cerr << "Failed to open libtest_dyn_protobuf" SHARED_LIBRARY_SUFFIX << ", error: " << dlerror() << std::endl;
         exit(1);
     }
 
