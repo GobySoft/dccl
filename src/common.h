@@ -75,9 +75,9 @@ namespace dccl
     { return std::floor(d + 0.5); }
     
     /// round 'value' to 'precision' number of decimal places
-    /// \param r value to round
-    /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
-    /// \return r rounded
+    /// \param value value to round
+    /// \param precision number of places past the decimal to round (e.g. dec=1 rounds to tenths)
+    /// \return rounded value
     template<typename Float>
         typename boost::enable_if<boost::is_floating_point<Float>, Float>::type round(Float value, int precision)
     {
@@ -90,9 +90,9 @@ namespace dccl
       Int abs(Int i) { return (i < 0) ? -i : i; }
 
     /// round 'value' to 'precision' number of decimal places
-    /// \param r value to round
-    /// \param dec number of places past the decimal to round (e.g. dec=1 rounds to tenths)
-    /// \return r rounded
+    /// \param value value to round
+    /// \param precision number of places past the decimal to round (e.g. dec=1 rounds to tenths)
+    /// \return rounded value
     template<typename Int>
         typename boost::enable_if<boost::is_integral<Int>, Int>::type round(Int value, int precision)
     {

@@ -120,8 +120,9 @@ namespace dccl
 
             
             /// \brief Add a new entry for a repeated field to the back.
-            /// \param msg Message to set value in.
-            /// \return boost::any containing the value. The type is usually the type returned by google::protobuf::Reflection::Add<i>Type</i> where <i>Type</i> is the corresponding google::protobuf::FieldDescriptor::CppType. (See http://code.google.com/apis/protocolbuffers/docs/reference/cpp/google.protobuf.message.html#Reflection).
+            /// \param field Field to add value to.
+            /// \param msg Message to which this field belongs.
+            /// \param value Value to add.
             void add_value(const google::protobuf::FieldDescriptor* field,
                            google::protobuf::Message* msg,
                            boost::any value)
