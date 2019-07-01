@@ -102,7 +102,7 @@ namespace dccl
             
         /// \brief Create a new (empty) Google Protobuf message of a given type by name.
         ///
-        /// \param desc The Google Protobuf Descriptor of the message to create.
+        /// \param protobuf_type_name The full name (including package) of the Google Protobuf message to create (e.g. "package.MyMessage").
         /// \return A boost::shared_ptr to the newly created object.
         static boost::shared_ptr<google::protobuf::Message> new_protobuf_message(
             const std::string& protobuf_type_name)

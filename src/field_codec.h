@@ -248,7 +248,7 @@ namespace dccl
         /// \param bit_size Location to <i>add</i> calculated bit size to. Be sure to zero `bit_size` if you want only the size of this field.
         /// \param field_values Values to calculate size of (FieldType)
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-        void field_size_repeated(unsigned* bit_size, const std::vector<boost::any>& wire_values,
+        void field_size_repeated(unsigned* bit_size, const std::vector<boost::any>& field_values,
                                  const google::protobuf::FieldDescriptor* field);
 
         // traverse mutable
@@ -392,7 +392,7 @@ namespace dccl
 
         /// \brief Virtual method for calculating the size of a field (in bits).
         ///
-        /// \param field_value Value to calculate size of
+        /// \param wire_value Value to calculate size of
         /// \return Size of field (in bits)
         virtual unsigned any_size(const boost::any& wire_value) = 0;
 
