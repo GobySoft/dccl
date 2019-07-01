@@ -65,7 +65,7 @@ const unsigned full_width = 60;
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : id_codec_(dccl_id_codec), strict_(false)
+    : strict_(false), id_codec_(dccl_id_codec)
 {
     set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
