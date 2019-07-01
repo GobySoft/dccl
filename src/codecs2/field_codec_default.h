@@ -241,11 +241,10 @@ namespace dccl
         };
         
         
+        typedef double time_wire_type;
         /// \brief Encodes time of day (default: second precision, but can be set with (dccl.field).precision extension) 
         ///
         /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
-
-        typedef double time_wire_type;
         template<typename TimeType, int conversion_factor>
             class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
         {
