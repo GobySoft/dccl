@@ -72,7 +72,7 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     {
         
         google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);
-
+        
         if(is_optional())      
         {
             if(!bits->to_ulong())
@@ -148,8 +148,7 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
         std::vector< const google::protobuf::FieldDescriptor* > set_fields;
         refl->ListFields(*msg, &set_fields);
-        if(set_fields.empty() && this_field()) *wire_value = boost::any();
-        else *wire_value = msg;
+        *wire_value = msg;
     }
     catch(boost::bad_any_cast& e)
     {
