@@ -210,8 +210,6 @@ workflows:
           <<: *filter-template-non-master
       - amd64-bionic-build:
           <<: *filter-template-non-master
-      - amd64-bionic-minimal-build:
-          <<: *filter-template-non-master          
       
       - get-orig-source:
           <<: *filter-template-master-only
