@@ -151,7 +151,7 @@ install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/d
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
-install(EXPORT dccl-config DESTINATION share/dccl/cmake)
+install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
 
 message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LIBDIR}\n\tbinaries: ${CMAKE_INSTALL_FULL_BINDIR}\n\theaders: ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 

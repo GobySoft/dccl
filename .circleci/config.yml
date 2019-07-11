@@ -60,6 +60,20 @@ docker-armhf-bionic: &docker-armhf-bionic
 job-template-amd64: &job-template-amd64
   working_directory: /root/dccl3
   steps:
+    - checkout
+    - run: &run-update-apt
+        name: Update apt packages
+        command: apt-get update && apt-get dist-upgrade -y
+    - run: &run-build
+        name: Build
+        command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+    - run: &run-tests
+        name: Run tests
+        command: cd build && ctest --output-on-failure -j4
+
+job-template-deb-amd64: &job-template-deb-amd64
+  <<: *job-template-amd64
+  steps:
     - run: &run-update-apt
         name: Update apt packages
         command: apt-get update && apt-get dist-upgrade -y
@@ -131,8 +145,8 @@ job-template-amd64: &job-template-amd64
           - '*.changes'
           - '*.buildinfo'
   
-job-template-cross: &job-template-cross
-  <<: *job-template-amd64
+job-template-deb-cross: &job-template-deb-cross
+  <<: *job-template-deb-amd64
   steps: &steps-cross-compile
     - attach-workspace: &attach-deb-workspace
         at: /root/deb
@@ -156,7 +170,7 @@ job-template-cross: &job-template-cross
 
 # base sanitizer and upload off Bionic build
 job-template-sanitizers: &job-template-sanitizers
-  <<: *job-template-amd64
+  <<: *job-template-deb-amd64
   environment:
     <<: *environment-template-common
     <<: *environment-template-bionic
@@ -165,61 +179,85 @@ job-template-sanitizers: &job-template-sanitizers
   docker: *docker-base-bionic
 
 job-template-upload: &job-template-upload
-  <<: *job-template-amd64
+  <<: *job-template-deb-amd64
   docker: *docker-base-bionic
 
 # which branches to run the Debian upload on
-filter-template-deb-upload: &filter-template-deb-upload
+filter-template-master-only: &filter-template-master-only
   filters:
     tags:
       only: /.*/
     branches:
       only:
         - "3.0"
-  
+
+filter-template-non-master: &filter-template-non-master
+  filters:
+    branches:
+      ignore:
+        - "3.0"
+        
 ## Begin actual config
 version: 2
 workflows:
   version: 2
   commit:
     jobs:
-      - get-orig-source          
-      - amd64-stretch-build:
-          requires:
-            - get-orig-source
-      - arm64-stretch-build:
-          requires:
-            - amd64-stretch-build
-      - armhf-stretch-build:
-          requires:
-            - arm64-stretch-build
-            
-      - amd64-xenial-build:
-          requires:
-            - get-orig-source
-      - arm64-xenial-build:
-          requires:
-            - amd64-xenial-build
-      - armhf-xenial-build:
-          requires:
-            - arm64-xenial-build
-            
-      - amd64-bionic-build:
-          requires:
-            - get-orig-source
-      - arm64-bionic-build:
-          requires:
-            - amd64-bionic-build
-      - armhf-bionic-build:
-          requires:
-            - arm64-bionic-build
 
-      - continuous-upload:
-          <<: *filter-template-deb-upload
+      - amd64-stretch-build:
+          <<: *filter-template-non-master
+      - amd64-xenial-build:
+          <<: *filter-template-non-master
+      - amd64-bionic-build:
+          <<: *filter-template-non-master
+      
+      - get-orig-source:
+          <<: *filter-template-master-only
+      - amd64-stretch-deb-build:
+          <<: *filter-template-master-only
           requires:
-            - armhf-stretch-build
-            - armhf-bionic-build
-            - armhf-xenial-build
+            - get-orig-source
+      - arm64-stretch-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-stretch-deb-build
+      - armhf-stretch-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - arm64-stretch-deb-build
+            
+      - amd64-xenial-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-xenial-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-xenial-deb-build
+      - armhf-xenial-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - arm64-xenial-deb-build
+            
+      - amd64-bionic-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-bionic-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-bionic-deb-build
+      - armhf-bionic-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - arm64-bionic-deb-build
+
+      # always do the continuous upload if we did the deb builds
+      - continuous-upload:
+          requires:
+            - armhf-stretch-deb-build
+            - armhf-bionic-deb-build
+            - armhf-xenial-deb-build
 
       # only do the release upload on tagged builds
       - release-upload:
@@ -229,19 +267,19 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - armhf-stretch-build
-            - armhf-bionic-build
-            - armhf-xenial-build
+            - armhf-stretch-deb-build
+            - armhf-bionic-deb-build
+            - armhf-xenial-deb-build
             
       - amd64+scan-build
-      - amd64+asan-build
+      - amd64+asan-build        
       - amd64+tsan-build
       - amd64+ubsan-build
             
 jobs:
 
   get-orig-source:
-    <<: *job-template-amd64
+    <<: *job-template-deb-amd64
     docker: *docker-base-bionic
     environment:
       <<: *environment-template-common
@@ -262,65 +300,83 @@ jobs:
           root: /root/src
           paths:
             - '*.tar.xz'
-            
+
   amd64-stretch-build:
     <<: *job-template-amd64
     docker: *docker-base-stretch
     environment:
       <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-amd64
-  arm64-stretch-build: 
-    <<: *job-template-cross
-    docker: *docker-arm64-stretch
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-arm64
-  armhf-stretch-build: 
-    <<: *job-template-cross
-    docker: *docker-armhf-stretch
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-armhf
+
   amd64-xenial-build:
     <<: *job-template-amd64
     docker: *docker-base-xenial
     environment:
       <<: *environment-template-common
-      <<: *environment-template-xenial
-      <<: *environment-template-amd64
-  arm64-xenial-build: 
-    <<: *job-template-cross
-    docker: *docker-arm64-xenial
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-xenial
-      <<: *environment-template-arm64
-  armhf-xenial-build: 
-    <<: *job-template-cross
-    docker: *docker-armhf-xenial
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-xenial
-      <<: *environment-template-armhf
+
   amd64-bionic-build:
     <<: *job-template-amd64
     docker: *docker-base-bionic
     environment:
       <<: *environment-template-common
+            
+  amd64-stretch-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-amd64
+  arm64-stretch-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-arm64-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-arm64
+  armhf-stretch-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-armhf-stretch
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-stretch
+      <<: *environment-template-armhf
+  amd64-xenial-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-amd64
+  arm64-xenial-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-arm64-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-arm64
+  armhf-xenial-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-armhf-xenial
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-xenial
+      <<: *environment-template-armhf
+  amd64-bionic-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-bionic
+    environment:
+      <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-amd64
-  arm64-bionic-build: 
-    <<: *job-template-cross
+  arm64-bionic-deb-build: 
+    <<: *job-template-deb-cross
     docker: *docker-arm64-bionic
     environment:
       <<: *environment-template-common
       <<: *environment-template-bionic
       <<: *environment-template-arm64
-  armhf-bionic-build: 
-    <<: *job-template-cross
+  armhf-bionic-deb-build: 
+    <<: *job-template-deb-cross
     docker: *docker-armhf-bionic
     environment:
       <<: *environment-template-common
