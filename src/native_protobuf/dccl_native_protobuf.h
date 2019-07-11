@@ -26,7 +26,9 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/wire_format_lite.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#if PROTOBUF_VERSION < 3008000
+#include <google/protobuf/wire_format_lite_inl.h> // this .h has been removed in protobuf 3.8
+#endif
 
 #include "dccl/field_codec_fixed.h"
 #include "dccl/field_codec_typed.h"
