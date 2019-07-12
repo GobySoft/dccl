@@ -4,7 +4,7 @@
 __author__ = "Chris Murphy, Toby Schneider"
 __copyright__ = "Copyright 2018-2019, The DCCL Project"
 __license__ = "LGPL"
-__version__ = "3.0.11"
+__version__ = "3.0.12"
 
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
