@@ -30,7 +30,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 
 set(DCCL_VERSION_MAJOR "3")
 set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "11")
+set(DCCL_VERSION_PATCH "12")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -58,7 +58,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2019.04.11")
+   set(DCCL_VERSION_DATE "2019.07.12")
 endif()
 
 
@@ -69,7 +69,7 @@ include(today)
 today(DCCL_COMPILE_DATE)
 
 # give Dccl 2 series a few more soversions
-set(DCCL_SOVERSION "30")
+set(DCCL_SOVERSION "31")
 
 # fetch all the local directories for generated code
 get_filename_component(dccl_SRC_DIR src ABSOLUTE)
