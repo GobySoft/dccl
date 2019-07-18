@@ -11,6 +11,7 @@ from setuptools.extension import Extension
 from distutils.command.clean import clean as _clean
 from distutils.command.build_py import build_py as _build_py
 import subprocess
+import os, sys
 
 class clean(_clean):
   def run(self):
