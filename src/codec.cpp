@@ -42,6 +42,7 @@
 #include "dccl/codecs2/field_codec_default.h"
 #include "dccl/codecs3/field_codec_default.h"
 #include "dccl/codecs3/field_codec_var_bytes.h"
+#include "dccl/codecs3/field_codec_presence.h"
 #include "dccl/field_codec_id.h"
 
 #include "dccl/option_extensions.pb.h"
@@ -133,6 +134,15 @@ void dccl::Codec::set_default_codecs()
         FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(3));
         FieldCodecManager::add<v3::DefaultEnumCodec >(default_codec_name(3));
         FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
+
+        // presence bit codec, which encode empty optional fields with a single bit
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64> > >("dccl.presence");
+        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultEnumCodec > >("dccl.presence");
 
         // alternative bytes codec that more efficiently encodes variable length bytes fields
         FieldCodecManager::add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
