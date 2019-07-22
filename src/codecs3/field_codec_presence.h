@@ -47,16 +47,16 @@ namespace dccl
 
         public:
 
-            using Base = TypedFieldCodec<typename WrappedType::wire_type, typename WrappedType::field_type>;
+            typedef TypedFieldCodec<typename WrappedType::wire_type, typename WrappedType::field_type> Base;
 
             /// The codec type of the "wrapped" codec
-            using wrapped_type = WrappedType;
+            typedef WrappedType wrapped_type;
 
             /// The wire_type of the "wrapped" codec
-            using wire_type = typename Base::wire_type;
+            typedef typename Base::wire_type wire_type;
 
             /// The field_type of the "wrapped" codec
-            using field_type = typename Base::field_type;
+            typedef typename Base::field_type field_type;
 
         protected:
 
@@ -77,7 +77,7 @@ namespace dccl
             }
 
             /// Calls _inner_codec.validate()
-            virtual void validate() override
+            virtual void validate()
             {
                 _inner_codec.validate();
             }
@@ -100,7 +100,7 @@ namespace dccl
             }
 
             /// Decodes a field, first evaluating the presence bit if necessary
-            virtual wire_type decode(Bitset* bits) override
+            virtual wire_type decode(Bitset* bits)
             {
                 if (!this->use_required())
                 {
@@ -119,20 +119,20 @@ namespace dccl
             }
 
             /// Size of an empty field (1 bit)
-            virtual unsigned size() override
+            virtual unsigned size()
             {
                 // empty field is always 1 bit (only occurs for optional fields)
                 return 1;
             }
 
             /// Size of a non-empty field; gets size from "wrapped" codec, adds 1 for optional fields
-            virtual unsigned size(const wire_type& wire_value) override
+            virtual unsigned size(const wire_type& wire_value)
             {
                 int presence_bits = this->use_required() ? 0 : 1;
                 return presence_bits + _inner_codec.size(wire_value);
             }
 
-            virtual unsigned max_size() override
+            virtual unsigned max_size()
             {
                 if (this->use_required())
                 {
@@ -145,7 +145,7 @@ namespace dccl
                 }
             }
 
-            virtual unsigned min_size() override
+            virtual unsigned min_size()
             {
                 if (this->use_required())
                 {
