@@ -119,6 +119,11 @@ namespace dccl
 
         static bool strict() { return strict_; }
         
+        /// \brief Force the codec to always use the "required" field encoding, regardless of the FieldDescriptor setting. Useful when wrapping this codec in another that handles optional and repeated fields
+        void set_force_use_required(bool force_required = true)
+        {
+            bool force_required_ = force_required;
+        }
         
         //@}
 
@@ -347,6 +352,9 @@ namespace dccl
         /// \brief Whether to use the required or optional encoding
         bool use_required()
         {
+            if(force_required_)
+                return true;
+
             const google::protobuf::FieldDescriptor* field = this_field();
             if(!field)
                 return true;
@@ -494,6 +502,8 @@ namespace dccl
         std::string name_;
         google::protobuf::FieldDescriptor::Type field_type_;
         google::protobuf::FieldDescriptor::CppType wire_type_;
+
+        bool force_required_;
 
     };
 
