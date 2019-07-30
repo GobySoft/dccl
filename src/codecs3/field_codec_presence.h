@@ -64,6 +64,10 @@ namespace dccl
             WrappedType _inner_codec;
 
         public:
+            PresenceBitCodec() {
+                _inner_codec.set_force_use_required(true);
+            }
+
             // required when wire_type != field_type
             virtual wire_type pre_encode(const field_type& field_value)
             {
