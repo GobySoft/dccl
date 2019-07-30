@@ -122,7 +122,7 @@ namespace dccl
         /// \brief Force the codec to always use the "required" field encoding, regardless of the FieldDescriptor setting. Useful when wrapping this codec in another that handles optional and repeated fields
         void set_force_use_required(bool force_required = true)
         {
-            bool force_required_ = force_required;
+            force_required_ = force_required;
         }
         
         //@}
