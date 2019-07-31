@@ -39,7 +39,7 @@ using namespace dccl::logger;
 //
 // FieldCodecBase public
 //
-dccl::FieldCodecBase::FieldCodecBase() { }
+dccl::FieldCodecBase::FieldCodecBase() : force_required_(false) { }
             
 void dccl::FieldCodecBase::base_encode(Bitset* bits,
                                        const google::protobuf::Message& field_value,

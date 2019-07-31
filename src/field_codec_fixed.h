@@ -33,11 +33,11 @@ namespace dccl
     template<typename WireType, typename FieldType = WireType>
         class TypedFixedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     {
-      protected:
+      public:
       /// \brief The size of the encoded message in bits. Use TypedFieldCodec if the size depends on the data.
       virtual unsigned size() = 0;
           
-      private:
+      public:
       unsigned size(const WireType& wire_value)
       { return size(); }
           
