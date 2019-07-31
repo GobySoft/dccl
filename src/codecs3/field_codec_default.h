@@ -51,10 +51,10 @@ namespace dccl
           public:
             int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
             const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value);
+            void validate() { }
 
           private:
-            void validate() { }
-            
+
             double max();
             double min();
         };
@@ -77,7 +77,7 @@ namespace dccl
         /// [length of following string size: ceil(log2(max_length))][string]
         class DefaultStringCodec : public TypedFieldCodec<std::string>
         {
-          private:
+        private:
             Bitset encode();
             Bitset encode(const std::string& wire_value);
             std::string decode(Bitset* bits);

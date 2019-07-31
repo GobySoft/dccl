@@ -41,7 +41,7 @@ namespace dccl
     template <typename WireType, typename FieldType, class Enable = void> 
         class FieldCodecSelector : public FieldCodecBase
         {
-          protected:
+        public:
 /// \brief Convert from the FieldType representation (used in the Google Protobuf message) to the WireType representation (used with encode() and decode(), i.e. "on the wire").
           /// 
           /// \param field_value Value to convert
@@ -62,7 +62,7 @@ namespace dccl
         typename boost::enable_if<boost::is_same<WireType, FieldType> >::type>
         : public FieldCodecBase
     {
-      protected:
+      public:
         /// \brief No-op version of pre_encode (since FieldType == WireType)
         virtual WireType pre_encode(const FieldType& field_value)
         { return field_value; }
