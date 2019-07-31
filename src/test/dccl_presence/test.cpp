@@ -116,7 +116,7 @@ void test2(dccl::Codec& codec)
     std::string encoded;
     codec.encode(&encoded, msg_in);
 
-    assert(encoded.size() == 34);
+    assert(encoded.size() == 33);
 
     PresenceMsg msg_out;
     codec.decode(encoded, &msg_out);
