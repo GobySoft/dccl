@@ -28,9 +28,10 @@ endif()
 
 option(build_apps "Build supporting tools and other binary applications" ON)
 
-set(DCCL_VERSION_MAJOR "3")
-set(DCCL_VERSION_MINOR "0")
-set(DCCL_VERSION_PATCH "12")
+file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
+string(REGEX REPLACE "^([0-9]+).*$" "\\1" DCCL_VERSION_MAJOR "${DCCL_VERSION_STRING}")
+string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_MINOR  "${DCCL_VERSION_STRING}")
+string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
