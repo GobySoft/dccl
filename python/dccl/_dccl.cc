@@ -1,10 +1,14 @@
 #include <Python.h>
 #include "structmember.h"
-
+#include "bytesobject.h"
 #include <dccl.h>
 #include <google/protobuf/message.h>
 
 #include <string>
+
+#if PY_MAJOR_VERSION >= 3
+#define PyString_AS_STRING PyUnicode_AsUTF8
+#endif
 
 namespace gp = google::protobuf;
 
@@ -30,7 +34,13 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
         PyErr_SetString(PyExc_TypeError, "Message DESCRIPTOR had no full name.");
         return 0;
     }
-    char *ch_full_name = PyString_AsString(py_full_name);
+
+    const char *ch_full_name = PyString_AS_STRING(py_full_name);
+    if (!ch_full_name) {
+        PyErr_SetString(PyExc_TypeError, "Message full_name was not a string.");
+        return 0;
+    }
+
     std::string full_name(ch_full_name); 
     Py_DECREF(py_full_name);
     if (full_name.empty()) {
@@ -49,12 +59,12 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
     
     // Now that we have the C++ type, serialize the python data, and populate the C++ object.
     PyObject *result = PyObject_CallMethod(pyMsg, "SerializeToString", NULL);
-    if (!result || !PyString_Check(result)) {
+    if (!result || !PyBytes_Check(result)) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to Serialize python protobuf message.");
         delete msg;
         return 0;
     }
-    msg->ParseFromArray(PyString_AsString(result), PyString_Size(result));
+    msg->ParseFromArray(PyBytes_AsString(result), PyBytes_Size(result));
 
     // If we made it here we were successful, and can set the pointer.
     *cppMsg = msg;
@@ -73,7 +83,12 @@ static PyObject* cpp_pbmsg_to_py_pbmsg(gp::Message *cppMsg) {
     // Populate the python object from the C++ message
     std::string encoded;
     cppMsg->SerializeToString(&encoded);
+#if PY_MAJOR_VERSION >= 3
+    PyObject_CallMethod(msg, "ParseFromString", "y#", encoded.c_str(), encoded.size());
+#else
     PyObject_CallMethod(msg, "ParseFromString", "s#", encoded.c_str(), encoded.size());
+#endif
+
     return msg;
 }
 
@@ -143,7 +158,12 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
         return NULL;
     }
     delete msg;
+#if PY_MAJOR_VERSION >= 3
+    return Py_BuildValue("y#", bytes.c_str(), bytes.size());
+#else
     return Py_BuildValue("s#", bytes.c_str(), bytes.size());
+#endif
+
 }
 
 static PyObject *Codec_size(Codec *self, PyObject *args) {
@@ -245,7 +265,7 @@ static PyObject *Codec_set_crypto_passphrase(Codec *self, PyObject *args) {
         }
 
         while (PyObject *item = PyIter_Next(iterator)) {
-           long value = PyInt_AsLong(item);
+           long value = PyLong_AsLong(item);
            Py_DECREF(item);
            if (PyErr_Occurred()) {
                break;
@@ -380,38 +400,76 @@ static PyMethodDef DcclMethods[] = {
 };
 
 
-extern "C" {
-// Initialize the Python Module
-PyMODINIT_FUNC init_dccl(void) {
-    PyObject *m;
-    
-    dccl_CodecType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&dccl_CodecType) < 0)
-        return;
+#if PY_MAJOR_VERSION >= 3
 
-    m = Py_InitModule3("_dccl", DcclMethods, "DCCL Bindings - C++ Module.");
-    if (m == NULL)
-        return;
+static struct PyModuleDef DcclModule = {
+        PyModuleDef_HEAD_INIT,
+        "_dccl",
+        "DCCL Bindings - C++ Module.",
+        -1,
+        DcclMethods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit__dccl(void)
+
+#else
+#define INITERROR return
+
+extern "C"
+void
+init_dccl(void)
+#endif
+{
+
+  dccl_CodecType.tp_new = PyType_GenericNew;
+  if (PyType_Ready(&dccl_CodecType) < 0) {
+    INITERROR;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&DcclModule);
+#else
+    PyObject *module = Py_InitModule3("_dccl", DcclMethods, "DCCL Bindings - C++ Module.");
+#endif
+
+    if (module == NULL) {
+        INITERROR;
+    }
 
     Py_INCREF(&dccl_CodecType);
-    PyModule_AddObject(m, "Codec", (PyObject *)&dccl_CodecType);
+    PyModule_AddObject(module, "Codec", (PyObject *)&dccl_CodecType);
 
-    // Register a Python DCCL Exception    
+    // Register a Python DCCL Exception
     DcclException = PyErr_NewException("dccl.DcclException", NULL, NULL);
     Py_INCREF(DcclException);
-    PyModule_AddObject(m, "DcclException", DcclException);
-    
+    PyModule_AddObject(module, "DcclException", DcclException);
+
     // We're always going to need dynamic support to use this from Python, so enable it with DCCL
     // and get a reference to the default Symbol Database to facilitate type lookups.
     dccl::DynamicProtobufManager::enable_compilation();
     PyObject* GPBSymbolDBModule = PyImport_ImportModule("google.protobuf.symbol_database");
-    if (GPBSymbolDBModule == NULL)
-        return;
-        
+    if (GPBSymbolDBModule == NULL) {
+        Py_DECREF(module);
+        INITERROR;
+    }
+
     GPBSymbolDB = PyObject_CallMethod(GPBSymbolDBModule, "Default", NULL);
     Py_DECREF(GPBSymbolDBModule);
-    if (GPBSymbolDB == NULL)
-        return;
+    if (GPBSymbolDB == NULL) {
+        Py_DECREF(module);
+        INITERROR;
+    }
+
+
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
 }
 
-}
