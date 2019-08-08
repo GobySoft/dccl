@@ -4,13 +4,14 @@
 __author__ = "Chris Murphy, Toby Schneider"
 __copyright__ = "Copyright 2018-2019, The DCCL Project"
 __license__ = "LGPL"
-__version__ = "3.0.11"
+__version__ = "3.0.12"
 
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from distutils.command.clean import clean as _clean
 from distutils.command.build_py import build_py as _build_py
 import subprocess
+import os, sys
 
 class clean(_clean):
   def run(self):

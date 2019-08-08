@@ -53,7 +53,7 @@ namespace dccl
         template<typename WireType, typename FieldType = WireType>
             class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType>
             {
-              protected:
+            public:
 
               virtual double max()
               { return FieldCodecBase::dccl_field_options().max(); }
@@ -162,6 +162,9 @@ namespace dccl
 
                   return wire_value;
               }
+
+              // bring size(const WireType&) into scope so callers can access it
+              using TypedFixedFieldCodec<WireType, FieldType>::size;
 
               unsigned size()
               {
