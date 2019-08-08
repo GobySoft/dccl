@@ -14,6 +14,7 @@ static PyObject *DcclException;
 typedef struct {
     PyObject_HEAD
     dccl::Codec *codec;
+    PyObject *codec_capsule;
 } Codec;
 
 static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
@@ -82,6 +83,7 @@ static PyObject *Codec_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 static void Codec_dealloc(Codec* self) {
+    Py_XDECREF(self->codec_capsule);
     if (self->codec) { delete self->codec; }
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
@@ -98,6 +100,7 @@ static int Codec_init(Codec *self, PyObject *args, PyObject *kwds) {
 
     try {
         self->codec = new dccl::Codec(id_codec_str, library_path_str);
+        self->codec_capsule = PyCapsule_New(self->codec, "_dccl.Codec._CODEC", NULL);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
     }
@@ -289,6 +292,8 @@ static PyMethodDef Codec_methods[] = {
 };
 
 static PyMemberDef Codec_members[] = {
+    {"_CODEC", T_OBJECT_EX, offsetof(Codec, codec_capsule), 1,
+     "PyCapsule around pointer to underlying dccl::Codec*."},
     {NULL}  /* Sentinel */
 };
 
