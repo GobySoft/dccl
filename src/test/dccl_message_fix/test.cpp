@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     
     {
         TestMsg msg_in, msg_out;
-        int i = 0;
+        //        int i = 0;
 
 
         std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;

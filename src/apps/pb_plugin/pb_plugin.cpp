@@ -191,7 +191,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         else if(dccl_field_options.units().has_unit())
         {
             std::stringstream new_methods;
-
+            
             construct_units_typedef_from_base_unit(field->name(), dccl_field_options.units().unit(), dccl_field_options.units().relative_temperature(), dccl_field_options.units().prefix(), new_methods);
             construct_field_class_plugin(field->name(),
                                          new_methods, 
