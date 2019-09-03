@@ -52,8 +52,12 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
     gp::Message *msg;
     try {
         msg = dccl::DynamicProtobufManager::new_protobuf_message<gp::Message*>(full_name);
-    } catch (dccl::Exception &e) {
+    } catch (std::runtime_error &e) {
+        // new_protobuf_message() throws a runtime_error instead of dccl::Exception
         PyErr_SetString(DcclException, "Could not convert to a known DCCL protobuf type.");
+        return 0;
+    } catch (...) {
+        PyErr_SetString(DcclException, "Unexpected exception");
         return 0;
     }
     
@@ -118,6 +122,10 @@ static int Codec_init(Codec *self, PyObject *args, PyObject *kwds) {
         self->codec_capsule = PyCapsule_New(self->codec, "_dccl.Codec._CODEC", NULL);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        return -1;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
+        return -1;
     }
 
     return 0;
@@ -136,7 +144,11 @@ static PyObject *Codec_id(Codec *self, PyObject *args) {
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
         return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
+        return NULL;
     }
+
     return Py_BuildValue("I", id);
 }
 
@@ -154,6 +166,10 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
         self->codec->encode(&bytes, *msg, header_only != 0);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        delete msg;
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
         delete msg;
         return NULL;
     }
@@ -179,6 +195,10 @@ static PyObject *Codec_size(Codec *self, PyObject *args) {
         size = self->codec->size(*msg);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        delete msg;
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
         delete msg;
         return NULL;
     }
@@ -228,6 +248,9 @@ static PyObject *Codec_load(Codec *self, PyObject *args) {
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
         return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
+        return NULL;
     }
     Py_RETURN_NONE;
 }
@@ -242,6 +265,9 @@ static PyObject *Codec_load_library(Codec *self, PyObject *args) {
         self->codec->load_library(path);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
         return NULL;
     }
     Py_RETURN_NONE;
@@ -287,6 +313,9 @@ static PyObject *Codec_set_crypto_passphrase(Codec *self, PyObject *args) {
         self->codec->set_crypto_passphrase(passphrase, skip_set);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
         return NULL;
     }
     Py_RETURN_NONE;
@@ -386,6 +415,9 @@ static PyObject *dccl_loadProtoFile(PyObject *self, PyObject *args) {
         dccl::DynamicProtobufManager::load_from_proto_file(filenamestr);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
         return NULL;
     }
     Py_RETURN_NONE;
