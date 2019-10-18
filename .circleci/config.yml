@@ -28,7 +28,7 @@ environment-template-stretch: &environment-template-stretch
 
 environment-template-buster: &environment-template-buster
   DISTRO_RELEASE_CODENAME: "buster"
-  DISTRO_RELEASE_VERSION: "debian9"
+  DISTRO_RELEASE_VERSION: "debian10"
   
 environment-template-xenial: &environment-template-xenial
   DISTRO_RELEASE_CODENAME: "xenial"
@@ -47,11 +47,11 @@ docker-armhf-stretch: &docker-armhf-stretch
   - image: gobysoft/dccl-debian-build-armhf:9.1
 
 docker-base-buster: &docker-base-buster
-  - image: gobysoft/dccl-debian-build-base:9.1
+  - image: gobysoft/dccl-debian-build-base:10.1
 docker-arm64-buster: &docker-arm64-buster
-  - image: gobysoft/dccl-debian-build-arm64:9.1
+  - image: gobysoft/dccl-debian-build-arm64:10.1
 docker-armhf-buster: &docker-armhf-buster
-  - image: gobysoft/dccl-debian-build-armhf:9.1
+  - image: gobysoft/dccl-debian-build-armhf:10.1
     
 docker-base-xenial: &docker-base-xenial
   - image: gobysoft/dccl-ubuntu-build-base:16.04.1
