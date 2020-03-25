@@ -88,8 +88,13 @@ namespace dccl
             
           public:
             // so we can use shared_ptr to hold the singleton
-            template<typename T>
-                friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
+#if BOOST_VERSION >= 107000
+        template<typename T>
+            friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
+#else
+        template<typename T>
+            friend void boost::checked_delete(T*);
+#endif
             static boost::shared_ptr<TypeHelper> inst_;
             
             typedef std::map<google::protobuf::FieldDescriptor::Type,
