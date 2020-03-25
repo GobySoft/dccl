@@ -200,9 +200,10 @@ job-template-sanitizers: &job-template-sanitizers
     SANITIZER_NUM_JOBS: 2
   docker: *docker-base-focal
 
+# gpg regression in focal?  
 job-template-upload: &job-template-upload
   <<: *job-template-deb-amd64
-  docker: *docker-base-focal
+  docker: *docker-base-bionic
 
 # which branches to run the Debian upload on
 filter-template-master-only: &filter-template-master-only
@@ -328,6 +329,7 @@ workflows:
             - armhf-focal-deb-build
             - armhf-bionic-deb-build
             - armhf-xenial-deb-build
+            - continuous-upload
             
       - amd64+scan-build
       - amd64+asan-build        
@@ -544,7 +546,7 @@ jobs:
     <<: *job-template-upload
     environment:
       <<: *environment-template-common
-      <<: *environment-template-focal
+      <<: *environment-template-bionic
       <<: *environment-template-amd64
       UPLOAD_DESTINATION: "gobysoft-continuous"
     steps: &steps-upload
@@ -572,7 +574,7 @@ jobs:
     <<: *job-template-upload
     environment:
       <<: *environment-template-common
-      <<: *environment-template-focal
+      <<: *environment-template-bionic
       <<: *environment-template-amd64
       UPLOAD_DESTINATION: "gobysoft-release"
     steps: *steps-upload
