@@ -181,10 +181,17 @@ namespace dccl
         }
 
         
-      private:
+    private:
+        
         // so we can use shared_ptr to hold the singleton
+#if BOOST_VERSION >= 107000
         template<typename T>
             friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
+#else
+        template<typename T>
+            friend void boost::checked_delete(T*);
+#endif
+        
         static boost::shared_ptr<DynamicProtobufManager> inst_;
 
         static DynamicProtobufManager* get_instance()
