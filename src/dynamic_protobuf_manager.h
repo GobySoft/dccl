@@ -184,7 +184,7 @@ namespace dccl
       private:
         // so we can use shared_ptr to hold the singleton
         template<typename T>
-            friend void boost::checked_delete(T*);
+            friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
         static boost::shared_ptr<DynamicProtobufManager> inst_;
 
         static DynamicProtobufManager* get_instance()
