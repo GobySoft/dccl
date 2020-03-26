@@ -231,8 +231,11 @@ workflows:
           <<: *filter-template-non-master
       - amd64-buster-build:
           <<: *filter-template-non-master
-      - amd64-xenial-build:
-          <<: *filter-template-non-master
+
+# No longer do Xenial build routinely to minimize CircleCI jobs
+#      - amd64-xenial-build:
+#          <<: *filter-template-non-master
+
       - amd64-bionic-build:
           <<: *filter-template-non-master
       - amd64-focal-build:
