@@ -35,6 +35,7 @@
 #include <google/protobuf/compiler/importer.h>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/version.hpp>
 
 namespace dccl
 {
