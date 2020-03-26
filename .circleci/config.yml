@@ -37,6 +37,10 @@ environment-template-xenial: &environment-template-xenial
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
   DISTRO_RELEASE_VERSION: "ubuntu18.04"
+ 
+environment-template-focal: &environment-template-focal
+  DISTRO_RELEASE_CODENAME: "focal"
+  DISTRO_RELEASE_VERSION: "ubuntu20.04"
 
 ## Pre-declare Docker containers
 docker-base-stretch: &docker-base-stretch
@@ -66,6 +70,13 @@ docker-arm64-bionic: &docker-arm64-bionic
   - image: gobysoft/dccl-ubuntu-build-arm64:18.04.1
 docker-armhf-bionic: &docker-armhf-bionic
   - image: gobysoft/dccl-ubuntu-build-armhf:18.04.1
+
+docker-base-focal: &docker-base-focal
+  - image: gobysoft/dccl-ubuntu-build-base:20.04.1
+docker-arm64-focal: &docker-arm64-focal
+  - image: gobysoft/dccl-ubuntu-build-arm64:20.04.1
+docker-armhf-focal: &docker-armhf-focal
+  - image: gobysoft/dccl-ubuntu-build-armhf:20.04.1
 
 ## Pre-declare job templates
 job-template-amd64: &job-template-amd64
@@ -179,16 +190,17 @@ job-template-deb-cross: &job-template-deb-cross
     - run: *remove-orig-source
     - persist_to_workspace: *persist-debs        
 
-# base sanitizer and upload off Bionic build
+# base sanitizer and upload off Focal build
 job-template-sanitizers: &job-template-sanitizers
   <<: *job-template-deb-amd64
   environment:
     <<: *environment-template-common
-    <<: *environment-template-bionic
+    <<: *environment-template-focal
     <<: *environment-template-amd64
     SANITIZER_NUM_JOBS: 2
-  docker: *docker-base-bionic
+  docker: *docker-base-focal
 
+# gpg regression in focal?  
 job-template-upload: &job-template-upload
   <<: *job-template-deb-amd64
   docker: *docker-base-bionic
@@ -219,9 +231,14 @@ workflows:
           <<: *filter-template-non-master
       - amd64-buster-build:
           <<: *filter-template-non-master
-      - amd64-xenial-build:
-          <<: *filter-template-non-master
+
+# No longer do Xenial build routinely to minimize CircleCI jobs
+#      - amd64-xenial-build:
+#          <<: *filter-template-non-master
+
       - amd64-bionic-build:
+          <<: *filter-template-non-master
+      - amd64-focal-build:
           <<: *filter-template-non-master
       
       - get-orig-source:
@@ -279,12 +296,27 @@ workflows:
           requires:
             - arm64-bionic-deb-build
 
+      - amd64-focal-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-focal-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-focal-deb-build
+      - armhf-focal-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - arm64-focal-deb-build
+
+            
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
             - armhf-stretch-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
+            - armhf-focal-deb-build
             - armhf-xenial-deb-build
 
       # only do the release upload on tagged builds
@@ -297,8 +329,10 @@ workflows:
           requires:
             - armhf-stretch-deb-build
             - armhf-buster-deb-build
+            - armhf-focal-deb-build
             - armhf-bionic-deb-build
             - armhf-xenial-deb-build
+            - continuous-upload
             
       - amd64+scan-build
       - amd64+asan-build        
@@ -309,10 +343,10 @@ jobs:
 
   get-orig-source:
     <<: *job-template-deb-amd64
-    docker: *docker-base-bionic
+    docker: *docker-base-focal
     environment:
       <<: *environment-template-common
-      <<: *environment-template-bionic
+      <<: *environment-template-focal
       <<: *environment-template-amd64
     steps:
       - checkout
@@ -354,7 +388,14 @@ jobs:
     docker: *docker-base-bionic
     environment:
       <<: *environment-template-common
-            
+
+  amd64-focal-build:
+    <<: *job-template-amd64
+    docker: *docker-base-focal
+    environment:
+      <<: *environment-template-common
+
+      
   amd64-stretch-deb-build:
     <<: *job-template-deb-amd64
     docker: *docker-base-stretch
@@ -438,6 +479,27 @@ jobs:
     environment:
       <<: *environment-template-common
       <<: *environment-template-bionic
+      <<: *environment-template-armhf
+  amd64-focal-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-focal
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-focal
+      <<: *environment-template-amd64
+  arm64-focal-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-arm64-focal
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-focal
+      <<: *environment-template-arm64
+  armhf-focal-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-armhf-focal
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-focal
       <<: *environment-template-armhf
   amd64+scan-build:
     <<: *job-template-sanitizers
