@@ -35,6 +35,10 @@ extern "C"
         using namespace dccl::legacyccl;
         
         FieldCodecManager::add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");   
+
+        if(dccl->get_id_codec() != "dccl.ccl.id")
+            dccl->set_id_codec("dccl.ccl.id");
+
         FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
         FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
         FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
