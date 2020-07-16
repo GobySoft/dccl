@@ -103,6 +103,9 @@ namespace dccl
             void unload()
         { unload(ProtobufMessage::descriptor()); }
 
+
+        void unload_all()
+        { id2desc_.clear(); }
         
         /// \brief An alterative form for loading and validating messages for message types <i>not</i> known at compile-time ("dynamic").
         ///
@@ -124,6 +127,11 @@ namespace dccl
         /// \throw dccl::Exception if message is invalid.
         void unload(size_t dccl_id);
 
+        /// \brief Set a different ID codec name (note that is calls unload_all() so all messages must be reloaded)
+        void set_id_codec(const std::string& id_codec_name);
+        std::string get_id_codec() { return id_codec_; }
+
+        
         /// \brief Set a passphrase to be used when encoded messages to encrypt them and to decrypt messages after decoding them.
         ///
         /// Encryption is performed using AES via the opertional Crypto++ library. If this library is not compiled in, no encryption will be performed.

@@ -678,3 +678,13 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
     }
 
 }
+
+void dccl::Codec::set_id_codec(const std::string& id_codec_name)
+{
+    // we must reload messages after setting the id_codec
+    unload_all();
+    
+    id_codec_ = id_codec_name;
+    // make sure the id codec exists
+    id_codec();
+}
