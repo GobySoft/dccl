@@ -509,7 +509,7 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
     if(!root_descriptor_)
         return;
 
-    if(dlog.is(INFO, SIZE))
+    if(dlog.is(DEBUG2, SIZE))
     {   
         std::string name = ((field) ? field->name() : root_descriptor_->full_name());
         if(vector_size >= 0)
