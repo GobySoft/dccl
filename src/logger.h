@@ -172,7 +172,7 @@ namespace dccl {
             void connect(
                 int verbosity_mask, Obj* obj,
                 void(Obj::*mem_func)(const std::string& msg, logger::Verbosity vrb, logger::Group grp))
-        { connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2, _3)); }
+        { connect(verbosity_mask, boost::bind(mem_func, obj, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)); }
 
         /// \brief Connect the output of one or more given verbosities to a std::ostream
         ///
@@ -182,7 +182,7 @@ namespace dccl {
         void connect(int verbosity_mask, std::ostream* os,
                      bool add_timestamp = true)
         {
-            buf_.connect(verbosity_mask, boost::bind(to_ostream, _1, _2, _3, os, add_timestamp));
+            buf_.connect(verbosity_mask, boost::bind(to_ostream, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3, os, add_timestamp));
         }
 
         /// \brief Disconnect all slots for one or more given verbosities
