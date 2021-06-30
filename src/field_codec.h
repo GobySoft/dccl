@@ -116,7 +116,15 @@ namespace dccl
             
         /// \brief the part of the message currently being encoded (head or body).
         static MessagePart part() { return part_; }
-            
+
+        static bool strict() { return strict_; }
+        
+        /// \brief Force the codec to always use the "required" field encoding, regardless of the FieldDescriptor setting. Useful when wrapping this codec in another that handles optional and repeated fields
+        void set_force_use_required(bool force_required = true)
+        {
+            force_required_ = force_required;
+        }
+        
         //@}
 
         /// \name Base message functions
@@ -138,7 +146,8 @@ namespace dccl
         /// \param part Part of the message to encode
         void base_encode(Bitset* bits,
                          const google::protobuf::Message& msg,
-                         MessagePart part);
+                         MessagePart part,
+                         bool strict);
 
         /// \brief Calculate the size (in bits) of a part of the base message when it is encoded
         ///
@@ -244,7 +253,7 @@ namespace dccl
         /// \param bit_size Location to <i>add</i> calculated bit size to. Be sure to zero `bit_size` if you want only the size of this field.
         /// \param field_values Values to calculate size of (FieldType)
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-        void field_size_repeated(unsigned* bit_size, const std::vector<boost::any>& wire_values,
+        void field_size_repeated(unsigned* bit_size, const std::vector<boost::any>& field_values,
                                  const google::protobuf::FieldDescriptor* field);
 
         // traverse mutable
@@ -343,6 +352,9 @@ namespace dccl
         /// \brief Whether to use the required or optional encoding
         bool use_required()
         {
+            if(force_required_)
+                return true;
+
             const google::protobuf::FieldDescriptor* field = this_field();
             if(!field)
                 return true;
@@ -388,7 +400,7 @@ namespace dccl
 
         /// \brief Virtual method for calculating the size of a field (in bits).
         ///
-        /// \param field_value Value to calculate size of
+        /// \param wire_value Value to calculate size of
         /// \return Size of field (in bits)
         virtual unsigned any_size(const boost::any& wire_value) = 0;
 
@@ -454,23 +466,28 @@ namespace dccl
         struct BaseRAII
         {
             BaseRAII(MessagePart part,
-                     const google::protobuf::Descriptor* root_descriptor)
+                     const google::protobuf::Descriptor* root_descriptor,
+                     bool strict = false)
                 {
                     FieldCodecBase::part_ = part;
+                    FieldCodecBase::strict_ = strict;
                     FieldCodecBase::root_message_ = 0;
                     FieldCodecBase::root_descriptor_ = root_descriptor;
                 }
 
             BaseRAII(MessagePart part,            
-                     const google::protobuf::Message* root_message)
+                     const google::protobuf::Message* root_message,
+                     bool strict = false)                
                 {
                     FieldCodecBase::part_ = part;
+                    FieldCodecBase::strict_ = strict;
                     FieldCodecBase::root_message_ = root_message;
                     FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();                    
                 }
             ~BaseRAII()
                 {
                     FieldCodecBase::part_ = dccl::UNKNOWN;
+                    FieldCodecBase::strict_ = false;
                     FieldCodecBase::root_message_ = 0;
                     FieldCodecBase::root_descriptor_ = 0;
                 }
@@ -478,12 +495,15 @@ namespace dccl
         
         
         static MessagePart part_;
+        static bool strict_;
         static const google::protobuf::Message* root_message_;
         static const google::protobuf::Descriptor* root_descriptor_;
         
         std::string name_;
         google::protobuf::FieldDescriptor::Type field_type_;
         google::protobuf::FieldDescriptor::CppType wire_type_;
+
+        bool force_required_;
 
     };
 

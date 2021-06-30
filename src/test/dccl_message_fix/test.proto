@@ -28,6 +28,6 @@ message TestMsg
   // in DCCL v2, these will always be set upon receipt since it has required children. This test validates the fix in v3
   optional EmbeddedMsgRequired msg2 = 2;
   repeated EmbeddedMsgRequired msg2_repeat = 4 [(dccl.field).max_repeat=5];
-
+    
 }
 

@@ -35,6 +35,7 @@
 #include <google/protobuf/compiler/importer.h>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/version.hpp>
 
 namespace dccl
 {
@@ -102,7 +103,7 @@ namespace dccl
             
         /// \brief Create a new (empty) Google Protobuf message of a given type by name.
         ///
-        /// \param desc The Google Protobuf Descriptor of the message to create.
+        /// \param protobuf_type_name The full name (including package) of the Google Protobuf message to create (e.g. "package.MyMessage").
         /// \return A boost::shared_ptr to the newly created object.
         static boost::shared_ptr<google::protobuf::Message> new_protobuf_message(
             const std::string& protobuf_type_name)
@@ -181,10 +182,17 @@ namespace dccl
         }
 
         
-      private:
+    private:
+        
         // so we can use shared_ptr to hold the singleton
+#if BOOST_VERSION >= 107000
+        template<typename T>
+            friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
+#else
         template<typename T>
             friend void boost::checked_delete(T*);
+#endif
+        
         static boost::shared_ptr<DynamicProtobufManager> inst_;
 
         static DynamicProtobufManager* get_instance()

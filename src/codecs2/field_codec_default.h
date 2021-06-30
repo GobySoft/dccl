@@ -53,7 +53,7 @@ namespace dccl
         template<typename WireType, typename FieldType = WireType>
             class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType>
             {
-              protected:
+            public:
 
               virtual double max()
               { return FieldCodecBase::dccl_field_options().max(); }
@@ -102,9 +102,16 @@ namespace dccl
                   // round first, before checking bounds
                   WireType wire_value = dccl::round(value, precision());
 
-                  // check bounds, if out-of-bounds, send as zeros
+                  // check bounds
                   if(wire_value < min() || wire_value > max())
-                      return Bitset(size());
+                  {
+                      // strict mode
+                      if(this->strict())
+                          throw(dccl::OutOfRangeException(std::string("Value exceeds min/max bounds for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+                      // non-strict (default): if out-of-bounds, send as zeros
+                      else
+                          return Bitset(size());
+                  }
           
                   wire_value -= dccl::round((WireType)min(), precision());
 
@@ -155,6 +162,9 @@ namespace dccl
 
                   return wire_value;
               }
+
+              // bring size(const WireType&) into scope so callers can access it
+              using TypedFixedFieldCodec<WireType, FieldType>::size;
 
               unsigned size()
               {
@@ -234,11 +244,10 @@ namespace dccl
         };
         
         
+        typedef double time_wire_type;
         /// \brief Encodes time of day (default: second precision, but can be set with (dccl.field).precision extension) 
         ///
         /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
-
-        typedef double time_wire_type;
         template<typename TimeType, int conversion_factor>
             class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
         {
