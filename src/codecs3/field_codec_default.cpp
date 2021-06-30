@@ -37,6 +37,9 @@ dccl::Bitset dccl::v3::DefaultStringCodec::encode(const std::string& wire_value)
     std::string s = wire_value;
     if(s.size() > dccl_field_options().max_length())
     {
+        if(this->strict())
+            throw(dccl::OutOfRangeException(std::string("String too long for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+                
         dccl::dlog.is(DEBUG2) && dccl::dlog << "String " << s <<  " exceeds `dccl.max_length`, truncating" << std::endl;
         s.resize(dccl_field_options().max_length()); 
     }
@@ -119,4 +122,68 @@ unsigned dccl::v3::DefaultStringCodec::min_size()
 void dccl::v3::DefaultStringCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
+}
+
+//
+// DefaultEnumCodec
+//
+double dccl::v3::DefaultEnumCodec::max()
+{
+    const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
+
+    if (dccl_field_options().packed_enum()) {
+        return e->value_count()-1;
+    } else {
+        const google::protobuf::EnumValueDescriptor* value = e->value(0);
+        int32 maxVal = value->number();
+        for (int i=1; i < e->value_count(); ++i) {
+            value = e->value(i);
+            if (value->number() > maxVal) { maxVal = value->number(); }
+        }
+        return maxVal;
+    }
+}
+
+double dccl::v3::DefaultEnumCodec::min()
+{
+    if (dccl_field_options().packed_enum()) {
+        return 0;
+    } else {
+        const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
+        const google::protobuf::EnumValueDescriptor* value = e->value(0);
+        int32 minVal = value->number();
+        for (int i=1; i < e->value_count(); ++i) {
+            value = e->value(i);
+            if (value->number() < minVal) { minVal = value->number(); }
+        }
+        return minVal;
+    }
+}
+
+dccl::int32 dccl::v3::DefaultEnumCodec::pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+{
+    if (dccl_field_options().packed_enum())
+        return field_value->index();
+    else
+        return field_value->number();
+}
+
+const google::protobuf::EnumValueDescriptor* dccl::v3::DefaultEnumCodec::post_decode(const dccl::int32& wire_value)
+{
+    const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
+
+    if (dccl_field_options().packed_enum()) {
+        if(wire_value < e->value_count()) {
+            const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
+            return return_value;
+        }
+        else
+            throw NullValueException();
+    } else {
+        const google::protobuf::EnumValueDescriptor* return_value = e->FindValueByNumber(wire_value);
+        if(return_value != NULL)
+            return return_value;
+        else
+            throw NullValueException();
+    }
 }

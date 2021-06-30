@@ -88,6 +88,9 @@ dccl::Bitset dccl::v2::DefaultStringCodec::encode(const std::string& wire_value)
     std::string s = wire_value;
     if(s.size() > dccl_field_options().max_length())
     {
+        if(this->strict())
+            throw(dccl::OutOfRangeException(std::string("String too long for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+        
         dccl::dlog.is(DEBUG2) && dccl::dlog << "String " << s <<  " exceeds `dccl.max_length`, truncating" << std::endl;
         s.resize(dccl_field_options().max_length()); 
     }
@@ -187,6 +190,10 @@ dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
 {
     Bitset bits;
     bits.from_byte_string(wire_value);
+
+    if(bits.size() > max_size() && this->strict())
+        throw(dccl::OutOfRangeException(std::string("Bytes too long for field: ") + FieldCodecBase::this_field()->DebugString(), this->this_field()));
+    
     bits.resize(max_size());
     
     if(!use_required())

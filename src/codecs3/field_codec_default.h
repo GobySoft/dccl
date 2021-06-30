@@ -35,10 +35,29 @@ namespace dccl
         template<typename WireType, typename FieldType = WireType>
             class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, FieldType> { };
 
-	typedef v2::DefaultBoolCodec DefaultBoolCodec;
-	typedef v2::DefaultBytesCodec DefaultBytesCodec;
-        typedef v2::DefaultEnumCodec DefaultEnumCodec;
+        typedef v2::DefaultBoolCodec DefaultBoolCodec;
+        typedef v2::DefaultBytesCodec DefaultBytesCodec;
+        // Enum Codec is identical to v2, except when packed_enum is set to false.
 
+        /// \brief Provides an enum encoder. This converts the enumeration to an integer and uses
+        /// DefaultNumericFieldCodec to encode the integer.  Note that by default, the value is
+        /// based on the enumeration <i>index</i> (<b>not</b> its <i>value</i>.  If you wish to 
+        /// allocate space for all values between a lower and upper bound (for future expansion
+        /// of the enumeration values, for instance) then set the (dccl.field).packed_enum
+        /// extension to false.  The enumerate value will then be used for encoding.
+        class DefaultEnumCodec
+            : public DefaultNumericFieldCodec<int32, const google::protobuf::EnumValueDescriptor*>
+        {
+          public:
+            int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
+            const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value);
+            void validate() { }
+
+          private:
+
+            double max();
+            double min();
+        };
         
         template<typename TimeType>
             class TimeCodec : public v2::TimeCodecBase<TimeType, 0>
@@ -58,7 +77,7 @@ namespace dccl
         /// [length of following string size: ceil(log2(max_length))][string]
         class DefaultStringCodec : public TypedFieldCodec<std::string>
         {
-          private:
+        private:
             Bitset encode();
             Bitset encode(const std::string& wire_value);
             std::string decode(Bitset* bits);

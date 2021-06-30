@@ -25,6 +25,7 @@
 #include <map>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/version.hpp>
 
 #include "protobuf_cpp_type_helpers.h"
 
@@ -88,8 +89,13 @@ namespace dccl
             
           public:
             // so we can use shared_ptr to hold the singleton
-            template<typename T>
-                friend void boost::checked_delete(T*);
+#if BOOST_VERSION >= 107000
+        template<typename T>
+            friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
+#else
+        template<typename T>
+            friend void boost::checked_delete(T*);
+#endif
             static boost::shared_ptr<TypeHelper> inst_;
             
             typedef std::map<google::protobuf::FieldDescriptor::Type,
