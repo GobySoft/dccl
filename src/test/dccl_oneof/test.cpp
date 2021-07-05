@@ -42,9 +42,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        bool dccl_version_3_does_not_support_oneof = false;
         codec.load(msg_in.GetDescriptor());
-        assert(dccl_version_3_does_not_support_oneof);
         codec.info(msg_in.GetDescriptor());
         
         std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;

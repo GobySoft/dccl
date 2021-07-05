@@ -317,8 +317,6 @@ namespace dccl
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
         void field_info(std::ostream* os, const google::protobuf::FieldDescriptor* field);
         //@}
-            
-      protected:
 
         /// \brief Get the DCCL field option extension value for the current field
         ///
@@ -348,6 +346,8 @@ namespace dccl
             }
                 
         }
+
+    protected:
 
         /// \brief Whether to use the required or optional encoding
         bool use_required()
