@@ -39,7 +39,7 @@ void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
     {
         *bits = traverse_const_message<Encoder, Bitset>(wire_value);
         
-        if(is_optional())
+        if(is_optional() && !is_part_of_oneof(this_field()))
             bits->push_front(true); // presence bit
         
     }  
@@ -54,7 +54,7 @@ unsigned dccl::v4::DefaultMessageCodec::any_size(const boost::any& wire_value)
     else
     {
         unsigned size = traverse_const_message<Size, unsigned>(wire_value);
-        if(is_optional())
+        if(is_optional() && !is_part_of_oneof(this_field()))
         {
             const unsigned presence_bit = 1;
             size += presence_bit;
@@ -71,7 +71,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     {
         google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);
         
-        if(is_optional())      
+        if(is_optional() && !is_part_of_oneof(this_field()))
         {
             if(!bits->to_ulong())
             {
