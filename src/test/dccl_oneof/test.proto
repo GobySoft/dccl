@@ -14,7 +14,7 @@ message TestMsg
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 3;
+    option (dccl.msg).codec_version = 4;
     
     oneof test_oneof1 {
         double double_oneof1 = 118 [(dccl.field).min=-100,
