@@ -150,13 +150,13 @@ namespace dccl
 
             struct MaxSize
             {
+                // Keeps track of the maximum size of each oneof
+                static std::unordered_map<std::string, unsigned> oneofs_max_size;
+
                 static void field(boost::shared_ptr<FieldCodecBase> codec,
                                   unsigned* return_value,
                                   const google::protobuf::FieldDescriptor* field_desc)
                     {
-                        // Keeps track of the maximum size of each oneof
-                        static std::unordered_map<std::string, unsigned> oneofs_max_size;
-
                         if(!is_part_of_oneof(field_desc))
                             codec->field_max_size(return_value, field_desc);
                         else
@@ -188,6 +188,8 @@ namespace dccl
                     {
                         // Add the bits needed to encode the case enumerator
                         *return_value += oneof_size(oneof_desc);
+                        // Add the maximum size among the fields (0 if not initialised0
+                        *return_value += oneofs_max_size[oneof_desc->full_name()];
                     }
             };
 
