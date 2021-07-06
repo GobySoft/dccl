@@ -25,6 +25,8 @@
 
 using dccl::dlog;
 
+std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
+
 //
 // DefaultMessageCodec
 //
