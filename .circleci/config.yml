@@ -30,10 +30,6 @@ environment-template-buster: &environment-template-buster
   DISTRO_RELEASE_CODENAME: "buster"
   DISTRO_RELEASE_VERSION: "debian10"
   
-environment-template-xenial: &environment-template-xenial
-  DISTRO_RELEASE_CODENAME: "xenial"
-  DISTRO_RELEASE_VERSION: "ubuntu16.04"
-  
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
   DISTRO_RELEASE_VERSION: "ubuntu18.04"
@@ -57,13 +53,6 @@ docker-arm64-buster: &docker-arm64-buster
 docker-armhf-buster: &docker-armhf-buster
   - image: gobysoft/dccl-debian-build-armhf:10.1
     
-docker-base-xenial: &docker-base-xenial
-  - image: gobysoft/dccl-ubuntu-build-base:16.04.1
-docker-arm64-xenial: &docker-arm64-xenial
-  - image: gobysoft/dccl-ubuntu-build-arm64:16.04.1
-docker-armhf-xenial: &docker-armhf-xenial
-  - image: gobysoft/dccl-ubuntu-build-armhf:16.04.1
-  
 docker-base-bionic: &docker-base-bionic
   - image: gobysoft/dccl-ubuntu-build-base:18.04.1
 docker-arm64-bionic: &docker-arm64-bionic
@@ -232,10 +221,6 @@ workflows:
       - amd64-buster-build:
           <<: *filter-template-non-master
 
-# No longer do Xenial build routinely to minimize CircleCI jobs
-#      - amd64-xenial-build:
-#          <<: *filter-template-non-master
-
       - amd64-bionic-build:
           <<: *filter-template-non-master
       - amd64-focal-build:
@@ -268,20 +253,6 @@ workflows:
           <<: *filter-template-master-only
           requires:
             - arm64-buster-deb-build
-
-            
-      - amd64-xenial-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - get-orig-source
-      - arm64-xenial-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-xenial-deb-build
-      - armhf-xenial-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - arm64-xenial-deb-build
             
       - amd64-bionic-deb-build:
           <<: *filter-template-master-only
@@ -317,7 +288,6 @@ workflows:
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
             - armhf-focal-deb-build
-            - armhf-xenial-deb-build
 
       # only do the release upload on tagged builds
       - release-upload:
@@ -331,7 +301,6 @@ workflows:
             - armhf-buster-deb-build
             - armhf-focal-deb-build
             - armhf-bionic-deb-build
-            - armhf-xenial-deb-build
             - continuous-upload
             
       - amd64+scan-build
@@ -374,14 +343,7 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-buster
     environment:
-      <<: *environment-template-common
-
-      
-  amd64-xenial-build:
-    <<: *job-template-amd64
-    docker: *docker-base-xenial
-    environment:
-      <<: *environment-template-common
+      <<: *environment-template-common      
 
   amd64-bionic-build:
     <<: *job-template-amd64
@@ -437,27 +399,6 @@ jobs:
     environment:
       <<: *environment-template-common
       <<: *environment-template-buster
-      <<: *environment-template-armhf
-  amd64-xenial-deb-build:
-    <<: *job-template-deb-amd64
-    docker: *docker-base-xenial
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-xenial
-      <<: *environment-template-amd64
-  arm64-xenial-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-arm64-xenial
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-xenial
-      <<: *environment-template-arm64
-  armhf-xenial-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-armhf-xenial
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-xenial
       <<: *environment-template-armhf
   amd64-bionic-deb-build:
     <<: *job-template-deb-amd64
