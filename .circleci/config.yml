@@ -104,7 +104,7 @@ job-template-deb-amd64: &job-template-deb-amd64
           cd /root/debian &&
           git pull &&
           git checkout origin/${CIRCLE_BRANCH} ||
-          echo "No branch in debian called ${CIRCLE_BRANCH}, using $(git rev-parse --abbrev-ref HEAD)"
+          ( echo "No branch in debian called ${CIRCLE_BRANCH}, using 4.0" && git checkout origin/4.0 )
     - run: &run-nest-deb
         name: Nest debian source into project source
         command: mv /root/debian ${CIRCLE_WORKING_DIRECTORY}
