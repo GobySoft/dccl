@@ -222,7 +222,6 @@ void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
                                           const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(field);
-    
     if(this_field())
         *bit_size += this_field()->is_repeated() ? max_size_repeated() : max_size();
     else

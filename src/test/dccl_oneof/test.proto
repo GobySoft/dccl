@@ -15,19 +15,19 @@ message TestMsg
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
     option (dccl.msg).codec_version = 4;
-    
+
     oneof test_oneof1 {
         double double_oneof1 = 118 [(dccl.field).min=-100,
-                                            (dccl.field).max=126,
-                                            (dccl.field).precision=2];
-      
+                                    (dccl.field).max=126,
+                                    (dccl.field).precision=2];
+
         EmbeddedMsg1 msg_oneof1 = 119;
     }
 
     oneof test_oneof2 {
         int32 int32_oneof2 = 120 [(dccl.field).min=-20,
-                                          (dccl.field).max=3000];
-        EmbeddedMsg1 msg_oneof2 = 121;  
-    }    
+                                  (dccl.field).max=3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
 }
 
