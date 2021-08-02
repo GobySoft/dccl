@@ -222,7 +222,6 @@ void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
                                           const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(field);
-    
     if(this_field())
         *bit_size += this_field()->is_repeated() ? max_size_repeated() : max_size();
     else
@@ -284,6 +283,9 @@ void dccl::FieldCodecBase::field_validate(bool* b,
 
     if(field && dccl_field_options().in_head() && variable_size())
         throw(Exception("Variable size codec used in header - header fields must be encoded with fixed size codec."));
+
+    if(field && dccl_field_options().in_head() && is_part_of_oneof(field))
+        throw(Exception("Oneof field used in header - oneof fields cannot be encoded in the header."));
     
     validate();
 }
@@ -320,7 +322,7 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
         depth -= 1;
 
     const int spaces = 8;
-    std::string indent = std::string(spaces*(depth),' ');
+    std::string indent = std::string(spaces*(depth) + spaces/2*(field && is_part_of_oneof(field)),' ');  // Add 4 spaces of indentation for fields belonging to oneofs
     
     const int full_width = 40;
     
