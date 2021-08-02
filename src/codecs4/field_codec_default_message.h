@@ -245,7 +245,7 @@ namespace dccl
                     FieldCodecBase::this_descriptor();
 
                 // First, process the oneof definitions...
-                for(auto i = 0, n = desc->oneof_decl_count(); i < n; ++i)
+                for(auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
                     Action::oneof(return_value, desc->oneof_decl(i));
 
                 // ... then, process the fields
@@ -273,7 +273,7 @@ namespace dccl
                     const google::protobuf::Reflection* refl = msg->GetReflection();
 
                     // First, process the oneof definitions...
-                    for(auto i = 0, n = desc->oneof_decl_count(); i < n; ++i)
+                    for(auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
                         Action::oneof(&return_value, desc->oneof_decl(i), *msg);
 
                     // ... then, process the fields
