@@ -6,14 +6,15 @@ The Dynamic Compact Control Language (DCCL) is a language for marshalling (or ro
 
 DCCL provides two main components: 1) an \ref idl "interface descriptor language (IDL)" for defining messages based as an extension to Google Protocol Buffers (GPB); and 2) a set of \ref codecs "built-in encoders and decoders" ("codecs") that operate on the messages defined in the DCCL IDL. In addition to the built-in codecs, further field codecs can be defined as extensions to the DCCL library to optimally encode specific sources of data. For example, two sets of these codecs are included with the core DCCL distribution as plugin shared libraries: an arithmetic encoder and a collection of REMUS CCL compatible codecs. DCCL can be thought of as an alternative encoder to the one that is included with the GPB library. DCCL will produce more compact messages than GPB, but at the cost of additional design and CPU time.
 
-\section quick Quick Start
+\section quick Quick Start (Ubuntu or Debian)
 
 <ol>
 <li> Grab dependencies:
 \code
-# apt-add-repository ppa:dccl-dev/ppa
-# apt-get update
-# apt-get install libdccl3-dev
+echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
+sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt update
+sudo apt install libdccl3-dev
 \endcode
 <li> Find or create a plain GPB message (navreport.proto):
 \code
@@ -114,7 +115,7 @@ g++ quick.cpp -o quick navreport.pb.cc -ldccl -lprotobuf
 $ ./quick                                                                   
 x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 \endcode
-<li> Or skip steps 5-8 and use the command line tool 'dccl' instead (apt-get install dccl3-apps):
+<li> Or skip steps 5-8 and use the command line tool 'dccl' instead (apt install dccl3-apps):
 \code
 $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
 0000000: f834 9871 7046 3213                      .4.qpF2.
@@ -178,21 +179,23 @@ git clone https://github.com/GobySoft/dccl.git
 \endcode
 To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. On Debian/Ubuntu systems, this would be
 \code
-sudo apt-get install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
+sudo apt install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
 cd dccl
 ./build.sh
 \endcode
-<li> Compiled release binary packages for Ubuntu: https://launchpad.net/~dccl-dev/+archive/ubuntu/ppa
+<li> Compiled release binary packages for Ubuntu LTS and Debian stable/oldstable: https://packages.gobysoft.org/ubuntu/release/
 \code
-sudo apt-add-repository ppa:dccl-dev/ppa
-sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
+echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
+sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt update
+sudo apt install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
 \endcode
-<li> Daily builds binary packages for Ubuntu: https://launchpad.net/~tes/+archive/ubuntu/dccl-daily
+<li> Compiled continuous (latest HEAD of the 3.0 branch) binary packages for Ubuntu / Debian: https://packages.gobysoft.org/ubuntu/continuous/
 \code
-sudo apt-add-repository ppa:tes/dccl-daily
-sudo apt-get update
-sudo apt-get install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
+echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
+sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt update
+sudo apt install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
 \endcode
 <li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
 \code
