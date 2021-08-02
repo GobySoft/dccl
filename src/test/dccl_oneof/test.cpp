@@ -31,37 +31,47 @@
 using namespace dccl::test;
 
 dccl::Codec codec;
-TestMsg msg_in;
 
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    msg_in.set_double_oneof1(10.56);
-    msg_in.mutable_msg_oneof2()->set_val(100.123);
-
-    try
     {
+        TestMsg msg_in;
+        msg_in.set_double_oneof1(10.56);
+        msg_in.mutable_msg_oneof2()->set_val(100.123);
+
         codec.load(msg_in.GetDescriptor());
         codec.info(msg_in.GetDescriptor());
-        
+
         std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
         std::cout << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
         std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
-        
+
         std::cout << "Try decode..." << std::endl;
-        
+        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+
         TestMsg msg_out;
         codec.decode(bytes, &msg_out);
-        
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;    
+
+        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    }
+
+    // Test exception thrown for in_head oneof fields
+    try {
+        InvalidTestMsg msg_in;
+        msg_in.set_double_oneof1(10.56);
+        msg_in.mutable_msg_oneof2()->set_val(100.123);
+
+        codec.load(msg_in.GetDescriptor());
+        codec.info(msg_in.GetDescriptor());
     }
     catch(dccl::Exception& e)
     {
-        // expect throw dccl::Exception in codec_version == 3
+        // expect throw dccl::Exception with in_head == true
+        assert(strcmp(e.what(), "Oneof field used in header - oneof fields cannot be encoded in the header.") == 0);
     }
-    
 }
