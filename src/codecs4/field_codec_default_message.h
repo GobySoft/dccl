@@ -52,7 +52,7 @@ namespace dccl
             }
         
             bool is_optional()
-            { return this_field() && this_field()->is_optional(); }
+            { return this_field() && this_field()->is_optional() && !use_required(); }
             
             void validate();
             std::string info();
@@ -80,11 +80,7 @@ namespace dccl
                             // If the field belongs to a oneof, do nothing if the value is empty,
                             // or add the size of the fiels as if it were required otherwise
                             if(!field_value.empty())
-                            {
-                                codec->set_force_use_required();
                                 codec->field_size(return_value, field_value, field_desc);
-                                codec->set_force_use_required(false);
-                            }
                         }
                     }
 
@@ -120,11 +116,7 @@ namespace dccl
                             // If the field belongs to a oneof, do nothing if the value is empty,
                             // or encode the fiels as if it were required otherwise
                             if(!field_value.empty())
-                            {
-                                codec->set_force_use_required();
                                 codec->field_encode(return_value, field_value, field_desc);
-                                codec->set_force_use_required(false);
-                            }
                         }
                     }
 
@@ -164,12 +156,9 @@ namespace dccl
                             // For oneof fields the max size is the size of the largest field belonging
                             // to the oneof itself, considering all of them required.
 
-                            // Force the codec of the oneof's field to be required, get the max size of the field
-                            // and restore the codec of oneof fields to the original type
-                            codec->set_force_use_required();
+                            // Get the max size of the field
                             auto fld_max_size = 0u;
                             codec->field_max_size(&fld_max_size, field_desc);
-                            codec->set_force_use_required(false);
 
                             auto parent_oneof_name = field_desc->containing_oneof()->full_name();
 

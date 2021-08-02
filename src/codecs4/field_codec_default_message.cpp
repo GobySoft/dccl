@@ -41,9 +41,8 @@ void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
     {
         *bits = traverse_const_message<Encoder, Bitset>(wire_value);
         
-        if(is_optional() && !is_part_of_oneof(this_field()))
+        if(is_optional())
             bits->push_front(true); // presence bit
-        
     }  
 }
  
@@ -56,7 +55,7 @@ unsigned dccl::v4::DefaultMessageCodec::any_size(const boost::any& wire_value)
     else
     {
         unsigned size = traverse_const_message<Size, unsigned>(wire_value);
-        if(is_optional() && !is_part_of_oneof(this_field()))
+        if(is_optional())
         {
             const unsigned presence_bit = 1;
             size += presence_bit;
@@ -73,7 +72,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
     {
         google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);
         
-        if(is_optional() && !is_part_of_oneof(this_field()))
+        if(is_optional())
         {
             if(!bits->to_ulong())
             {
@@ -142,12 +141,10 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             {
 
                 if(is_part_of_oneof(field_desc))
-                {   // If the field belongs to a oneof and its index is the one stored for the containing
-                    // oneof, decode it as if it were required; otherwise, skip the field.
+                {
+                    // If the field belongs to a oneof and its index is the one stored for the containing
+                    // oneof, decode it; otherwise, skip the field.
                     if (field_desc->index_in_oneof() != oneof_cases[containing_oneof_index(field_desc)]) continue;
-                    else {
-                        codec->set_force_use_required();
-                    }
                 }
 
                 boost::any field_value;
@@ -164,9 +161,6 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
                     codec->field_decode(bits, &field_value, field_desc);
                     helper->set_value(field_desc, msg, field_value);
                 }
-
-                // Restore the original coded for the oneof field
-                if(is_part_of_oneof(field_desc)) codec->set_force_use_required(false);
             } 
         }
 
@@ -250,7 +244,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             return false;
         else
             return true;
-    }    
+    }
 }
 
 
