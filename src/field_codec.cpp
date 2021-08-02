@@ -283,6 +283,9 @@ void dccl::FieldCodecBase::field_validate(bool* b,
 
     if(field && dccl_field_options().in_head() && variable_size())
         throw(Exception("Variable size codec used in header - header fields must be encoded with fixed size codec."));
+
+    if(field && dccl_field_options().in_head() && is_part_of_oneof(field))
+        throw(Exception("Oneof field used in header - oneof fields cannot be encoded in the header."));
     
     validate();
 }
