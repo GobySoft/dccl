@@ -90,7 +90,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
         // First, process the oneof definitions, storing the case value...
         std::vector<int> oneof_cases(desc->oneof_decl_count());
-        for(auto i = 0, n = desc->oneof_decl_count(); i < n; ++i)
+        for(auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
         {
             Bitset case_bits(bits);
             case_bits.get_more_bits(oneof_size(desc->oneof_decl(i)));
