@@ -229,12 +229,45 @@ namespace dccl
                     {
                         if(!is_part_of_oneof(field_desc))
                             codec->field_info(return_value, field_desc);
-                        // else // ##DF: don't know how to print a field belonging to oneof
                     }
 
-                static void oneof(std::stringstream*,
-                                  const google::protobuf::OneofDescriptor*)
-                    { /* Do nothing - ##DF: not sure how we want to print this */ }
+                static void oneof(std::stringstream* return_value,
+                                  const google::protobuf::OneofDescriptor* oneof_desc) {
+                        // Do nothing if the oneof descriptor is null
+                        if(!oneof_desc) return;
+
+                        // Print it otherwise
+                        internal::MessageStack msg_handler;
+                        std::stringstream ss;
+                        int depth = msg_handler.count();
+
+                        std::string name = boost::lexical_cast<std::string>(oneof_desc->index()) + ". " + oneof_desc->name() + " [oneof]";
+
+                        // Calculate indentation
+                        const int spaces = 8;
+                        std::string indent = std::string(spaces * (depth), ' ');
+                        const int full_width = 40;
+
+                        int width = full_width - name.size();
+
+                        std::stringstream range;
+                        unsigned max_sz = 0, min_sz = 0;
+                        MaxSize::oneof(&max_sz, oneof_desc);
+                        MinSize::oneof(&min_sz, oneof_desc);
+                        range << min_sz << "-" << max_sz;
+
+                        ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str();
+
+                        *return_value << ss.str() << " {\n";
+                        // Add oneof field's info
+                        for(auto i=0; i < oneof_desc->field_count(); ++i) {
+                            auto codec = FieldCodecManager::find(oneof_desc->field(i), FieldCodecBase::has_codec_group(),
+                                    FieldCodecBase::codec_group());
+                            codec->field_info(return_value, oneof_desc->field(i));
+                        }
+
+                        *return_value << indent << "}\n";
+                }
             };
             
             

@@ -319,7 +319,7 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
         depth -= 1;
 
     const int spaces = 8;
-    std::string indent = std::string(spaces*(depth),' ');
+    std::string indent = std::string(spaces*(depth) + spaces/2*(field && is_part_of_oneof(field)),' ');  // Add 4 spaces of indentation for fields belonging to oneofs
     
     const int full_width = 40;
     
