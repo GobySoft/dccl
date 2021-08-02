@@ -20,15 +20,18 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "dccl/codec.h"
-#include "dccl/codecs3/field_codec_default_message.h"
+#include "dccl/codecs4/field_codec_default_message.h"
+#include "dccl/oneof.h"
 
 using dccl::dlog;
+
+std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
 
 //
 // DefaultMessageCodec
 //
 
-void dccl::v3::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
+void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
 {    
     if(wire_value.empty())
     {
@@ -40,11 +43,10 @@ void dccl::v3::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
         
         if(is_optional())
             bits->push_front(true); // presence bit
-        
     }  
 }
  
-unsigned dccl::v3::DefaultMessageCodec::any_size(const boost::any& wire_value)
+unsigned dccl::v4::DefaultMessageCodec::any_size(const boost::any& wire_value)
 {
     if(wire_value.empty())
     {
@@ -64,14 +66,13 @@ unsigned dccl::v3::DefaultMessageCodec::any_size(const boost::any& wire_value)
 }
 
 
-void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
+void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
 {
     try
     {
-        
         google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message* >(*wire_value);
         
-        if(is_optional())      
+        if(is_optional())
         {
             if(!bits->to_ulong())
             {
@@ -86,7 +87,19 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
         
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();
         const google::protobuf::Reflection* refl = msg->GetReflection();
-        
+
+        // First, process the oneof definitions, storing the case value...
+        std::vector<int> oneof_cases(desc->oneof_decl_count());
+        for(auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
+        {
+            Bitset case_bits(bits);
+            case_bits.get_more_bits(oneof_size(desc->oneof_decl(i)));
+
+            // Store the index of the field set for the i-th oneof (if unset, it will be -1)
+            oneof_cases[i] = static_cast<int>(case_bits.to_ulong())-1;
+        }
+
+        // ... then, process the fields
         for(int i = 0, n = desc->field_count(); i < n; ++i)
         {
         
@@ -95,7 +108,6 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             if(!check_field(field_desc))
                 continue;
 
-            
             boost::shared_ptr<FieldCodecBase> codec = find(field_desc);            
             boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
                 internal::TypeHelper::find(field_desc);
@@ -127,6 +139,14 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             }
             else
             {
+
+                if(is_part_of_oneof(field_desc))
+                {
+                    // If the field belongs to a oneof and its index is the one stored for the containing
+                    // oneof, decode it; otherwise, skip the field.
+                    if (field_desc->index_in_oneof() != oneof_cases[containing_oneof_index(field_desc)]) continue;
+                }
+
                 boost::any field_value;
                 if(field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
@@ -156,7 +176,7 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 }
 
 
-unsigned dccl::v3::DefaultMessageCodec::max_size()
+unsigned dccl::v4::DefaultMessageCodec::max_size()
 {
     unsigned u = 0;
     traverse_descriptor<MaxSize>(&u);
@@ -170,7 +190,7 @@ unsigned dccl::v3::DefaultMessageCodec::max_size()
     return u;
 }
 
-unsigned dccl::v3::DefaultMessageCodec::min_size()
+unsigned dccl::v4::DefaultMessageCodec::min_size()
 {
     if(is_optional())
     {
@@ -186,27 +206,20 @@ unsigned dccl::v3::DefaultMessageCodec::min_size()
 }
 
 
-void dccl::v3::DefaultMessageCodec::validate()
+void dccl::v4::DefaultMessageCodec::validate()
 {
     bool b = false;
-
-    const google::protobuf::Descriptor* desc =
-        FieldCodecBase::this_descriptor();
-
-    if(desc->oneof_decl_count() != 0)
-        throw(Exception("DCCL Codec Version 3 does not support 'oneof' declarations"));        
-
     traverse_descriptor<Validate>(&b);
 }
 
-std::string dccl::v3::DefaultMessageCodec::info()
+std::string dccl::v4::DefaultMessageCodec::info()
 {
     std::stringstream ss;
     traverse_descriptor<Info>(&ss);
     return ss.str();
 }
 
-bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
+bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
 {
     if(!field)
     {
@@ -231,7 +244,7 @@ bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             return false;
         else
             return true;
-    }    
+    }
 }
 
 

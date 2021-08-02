@@ -18,6 +18,7 @@ add_library(dccl
   codecs3/field_codec_default_message.cpp
   codecs3/field_codec_default.cpp
   codecs3/field_codec_var_bytes.cpp
+  codecs4/field_codec_default_message.cpp
   internal/type_helper.cpp
   internal/field_codec_message_stack.cpp
   ${PROTO_SRCS} ${PROTO_HDRS}

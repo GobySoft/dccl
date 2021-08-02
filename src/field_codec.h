@@ -38,6 +38,7 @@
 #include "internal/type_helper.h"
 #include "internal/field_codec_message_stack.h"
 #include "dccl/binary.h"
+#include "oneof.h"
 
 namespace dccl
 {
@@ -317,8 +318,6 @@ namespace dccl
         /// \param field Protobuf descriptor to the field. Set to 0 for base message.
         void field_info(std::ostream* os, const google::protobuf::FieldDescriptor* field);
         //@}
-            
-      protected:
 
         /// \brief Get the DCCL field option extension value for the current field
         ///
@@ -349,6 +348,8 @@ namespace dccl
                 
         }
 
+    protected:
+
         /// \brief Whether to use the required or optional encoding
         bool use_required()
         {
@@ -358,6 +359,8 @@ namespace dccl
             const google::protobuf::FieldDescriptor* field = this_field();
             if(!field)
                 return true;
+            else if(codec_version() > 3) // use required for repeated, required and oneof fields
+                return field->is_required() || field->is_repeated() || is_part_of_oneof(field);
             else if(codec_version() > 2) // use required for both repeated and required fields
                 return field->is_required() || field->is_repeated();
             else // use required only for required fields

@@ -4,16 +4,18 @@ DCCL messages are encoded and decoded using a set of "field codecs" that are res
 
 \section codecs-encode Encoding algorithm
 
-The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v3::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. Keep in mind that DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
+The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v4::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. Keep in mind that DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
 
 \code
 function Encode(DCCL Message)
 1: Initialize global Bits to an empty bitset
 2: Encode the identifier by calling EncodeId with the value of dccl.msg.id
 3: Encode the header by calling EncodeFields with all fields in the DCCL Message where in_head is true
-4: Encode the body by calling EncodeFields with all fields in the DCCL Message where in_head is false
-5: Optionally encrypt the body using the header as a nonce
-6: Convert Bits to a string of bytes and return this string
+5: Encode the body by calling in sequence
+     EncodeOneof with all the oneofs defined in the DCCL Message, when present
+     EncodeFields with all fields in the DCCL Message where in_head is false
+6: Optionally encrypt the body using the header as a nonce
+7: Convert Bits to a string of bytes and return this string
 \endcode
 
 
@@ -24,6 +26,11 @@ function EncodeId(dccl.msg.id)
 \endcode
 
 \code
+function EncodeOneof(oneofs)
+1: For each oneof in oneofs
+2:   Encode the size of oneof (equal to the number of the possible cases, including the one where no field is set) as an unsigned integer and append result to Bits.
+
+\code
 function EncodeFields(fields)
 1: For each field in fields
 2:   Find the correct FieldCodec by the name given to dccl::FieldCodecManager::add()
@@ -31,7 +38,7 @@ function EncodeFields(fields)
        Else if this is an embedded message type and (dccl.msg).codec is explicitly set in that message definition, then use that name.
        Else if (dccl.msg).codec_group is set in the root message, use that name.
        Else use the name "dccl.defaultN", where (dccl.msg).codec_version = N (set in the root message or defaults to 2)
-3:   Encode field and append result to Bits. If field is an embedded Message, EncodeFields is called recursively with the fields of the embedded Message.
+3:   Encode field and append result to Bits. If field belongs to a oneof, it is encoded as a required field if and only if it is set. If field is an embedded Message, EncodeFields is called recursively with the fields of the embedded Message.
 4: Append zero bits to Bits until the length of Bits is an integer number of bytes
 \endcode
 
