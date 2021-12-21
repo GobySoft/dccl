@@ -51,7 +51,7 @@ setup(
             "dccl._dccl",
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
-            extra_compile_args = ["-Wno-write-strings"], # Hide a bunch of c++ warnings.
+            extra_compile_args = ["-Wno-write-strings", "-std=c++11"], # Hide a bunch of c++ warnings.
         )
     ],
 
