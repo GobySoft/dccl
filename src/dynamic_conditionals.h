@@ -57,17 +57,29 @@ class DynamicConditions
 
     const dccl::DCCLFieldOptions::Conditions& conditions();
 
-    bool has_required_if() { return conditions().has_required_if(); }
-    bool has_omit_if() { return conditions().has_omit_if(); }
+    bool has_required_if() { return conditions().has_required_if() || conditions().has_only_if(); }
+    bool has_omit_if() { return conditions().has_omit_if() || conditions().has_only_if(); }
+    bool has_only_if() { return conditions().has_only_if(); }
     bool has_min() { return conditions().has_min(); }
     bool has_max() { return conditions().has_max(); }
 
     bool required();
     bool omit();
+
+    // required if true, omit if false
+    bool only();
     double min();
     double max();
 
   private:
+    std::string return_prefix(const std::string& script)
+    {
+        if (script.find("return") == std::string::npos)
+            return "return " + script;
+        else
+            return script;
+    }
+
     const google::protobuf::FieldDescriptor* field_desc_{nullptr};
     const google::protobuf::Message* msg_{nullptr};
 
