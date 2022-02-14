@@ -142,6 +142,7 @@ namespace dccl
             {
                 const google::protobuf::Descriptor* desc =
                     FieldCodecBase::this_descriptor();
+
                 for(int i = 0, n = desc->field_count(); i < n; ++i)
                 {
                     const google::protobuf::FieldDescriptor* field_desc = desc->field(i);
