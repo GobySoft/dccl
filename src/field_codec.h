@@ -358,18 +358,20 @@ class FieldCodecBase
             return true;
 
         const google::protobuf::FieldDescriptor* field = this_field();
-
-        dynamic_conditions_.set_field(this_field());
-        dynamic_conditions_.set_message(root_message());
+        auto& dc = dynamic_conditions();
+        dc.set_field(this_field());
+        dc.set_message(root_message());
 
         if (!field)
             return true;
         else if (codec_version() > 2) // use required for both repeated and required fields
             return field->is_required() || field->is_repeated() ||
-                   (dynamic_conditions_.has_required_if() && dynamic_conditions_.required());
+                   (dc.has_required_if() && dc.required());
         else // use required only for required fields
             return field->is_required();
     }
+
+    DynamicConditions& dynamic_conditions() { return dynamic_conditions_; }
 
     //
     // VIRTUAL

@@ -39,9 +39,11 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    msg_in.set_state(1);
+    msg_in.set_state(TestMsg::STATE_1);
     msg_in.set_a(40);
-
+    msg_in.set_b(50);
+    msg_in.set_c(60);
+    
     codec.info(msg_in.GetDescriptor());
 
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
@@ -54,6 +56,11 @@ int main(int argc, char* argv[])
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
     std::cout << "Try decode..." << std::endl;
+
+    // b and c are omitted
+    msg_in.clear_b();
+    msg_in.clear_c();
+    
     decode_check(bytes);
 
     std::cout << "all tests passed" << std::endl;

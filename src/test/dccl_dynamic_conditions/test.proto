@@ -12,30 +12,43 @@ message TestMsg
         codec_version: 3
     };
 
-    //    enum State
-    //    {
-    //        STATE_1 = 1;
-    //        STATE_2 = 2;
-    //        STATE_3 = 3;
-    //    }
+    enum State
+    {
+        STATE_1 = 1;
+        STATE_2 = 2;
+        STATE_3 = 3;
+    }
 
-    required int32 state = 1 [(dccl.field) = { min: 1 max: 3 }];
+    required State state = 1;
 
     optional int32 a = 2 [(dccl.field) = {
         min: 0
         max: 200
-        dynamic_conditions { required_if: "print(serpent.block(this)); return this.state == 1" }
+        dynamic_conditions {
+            // can use "return"
+            required_if: "print(serpent.block(this)); return this.state == 'STATE_1'"
+            omit_if: "return this.state ~= 'STATE_1'"
+        }
     }];
 
     optional int32 b = 3 [(dccl.field) = {
         min: 0
         max: 300
-        dynamic_conditions { required_if: "print(serpent.block(this)); return this.state == 2" }
+        dynamic_conditions {
+            // if no return in script, assume it is implicit - DCCL will prefix
+            // with "return "
+            required_if: "this.state == 'STATE_2'"
+            omit_if: "this.state ~= 'STATE_2'"
+        }
     }];
 
     optional int32 c = 4 [(dccl.field) = {
         min: 0
         max: 400
-        dynamic_conditions { required_if: "print(serpent.block(this)); return this.state == 3" }
+        dynamic_conditions {
+            // same as required_if: "this.state == 'STATE_3'" and omit_if ==
+            // 'STATE_3'"
+            only_if: "this.state == 'STATE_3'"
+        }
     }];
 }

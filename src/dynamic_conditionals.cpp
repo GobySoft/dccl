@@ -88,11 +88,24 @@ const dccl::DCCLFieldOptions::Conditions& dccl::DynamicConditions::conditions()
 bool dccl::DynamicConditions::required()
 {
 #if DCCL_HAS_LUA
-    if (msg_)
+    if (msg_ && field_desc_)
     {
-        const auto& condition_script = conditions().required_if();
-        bool required = lua_.script(condition_script);
-        return required;
+        if (conditions().has_required_if())
+        {
+            auto condition_script = return_prefix(conditions().required_if());
+            bool required = lua_.script(condition_script);
+            return required;
+        }
+        else if (conditions().has_only_if())
+        {
+            auto condition_script = return_prefix(conditions().only_if());
+            bool only = lua_.script(condition_script);
+            return only;
+        }
+        else
+        {
+            return false;
+        }
     }
     else
     {
@@ -107,11 +120,24 @@ bool dccl::DynamicConditions::required()
 bool dccl::DynamicConditions::omit()
 {
 #if DCCL_HAS_LUA
-    if (msg_)
+    if (msg_ && field_desc_)
     {
-        const auto& condition_script = conditions().omit_if();
-        bool omit = lua_.script(condition_script);
-        return omit;
+        if (conditions().has_omit_if())
+        {
+            auto condition_script = return_prefix(conditions().omit_if());
+            bool omit = lua_.script(condition_script);
+            return omit;
+        }
+        else if (conditions().has_only_if())
+        {
+            auto condition_script = return_prefix(conditions().only_if());
+            bool only = lua_.script(condition_script);
+            return !only;
+        }
+        else
+        {
+            return false;
+        }
     }
     else
     {

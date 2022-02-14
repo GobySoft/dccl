@@ -72,8 +72,9 @@ message DCCLFieldOptions
     {
         optional string required_if = 1;
         optional string omit_if = 2;
-        optional string min = 3;
-        optional string max = 4;
+        optional string only_if = 3;
+        optional string min = 10;
+        optional string max = 11;
     }
 
     optional Conditions dynamic_conditions = 40;
