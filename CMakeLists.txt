@@ -146,7 +146,7 @@ include(GNUInstallDirs)
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
+  FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
 
@@ -222,6 +222,30 @@ else()
   set(DCCL_HAS_B64 "0")
 endif()
 
+
+## LUA for dynamic conditionals
+find_package(Lua QUIET)
+set(LUA_DOC_STRING "Enable LUA functionality (requires liblua5.3-dev")
+if(LUA_FOUND)
+  option(enable_lua ${LUA_DOC_STRING} ON)
+else()
+  option(enable_lua ${LUA_DOC_STRING} OFF)
+  message(">> setting enable_lua to OFF ... if you need this functionality: 1) install liblua5.3-dev; 2) run cmake -Denable_lua=ON")
+endif()
+
+if(enable_lua)
+  find_package(Lua REQUIRED)
+  set(DCCL_HAS_LUA "1")
+  include_directories(${LUA_INCLUDE_DIR})
+
+  # SOL requires c++17
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+else()
+  set(DCCL_HAS_LUA "0")
+endif()
+
+
 # Protobuf < 2.4.0 does not have plugin capability
 if(${PROTOC_VERSION} VERSION_LESS 2.4.0)
   option(enable_units "Enable static unit-safety functionality" OFF)
@@ -242,8 +266,9 @@ if((NOT ${PROTOC_VERSION} VERSION_LESS 3.6.0)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
+  
 ## copy to dccl/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto)
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()

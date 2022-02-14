@@ -13,6 +13,7 @@ add_library(dccl
   field_codec_id.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp
+  dynamic_conditionals.cpp
   codecs2/field_codec_default.cpp
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
@@ -37,6 +38,9 @@ if(enable_cryptography)
   target_link_libraries(dccl ${Cryptopp_LIBRARIES})
 endif()
 
+if(enable_lua)  
+  target_link_libraries(dccl ${LUA_LIBRARY})
+endif()
 
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
