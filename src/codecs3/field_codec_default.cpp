@@ -43,8 +43,7 @@ dccl::Bitset dccl::v3::DefaultStringCodec::encode(const std::string& wire_value)
         dccl::dlog.is(DEBUG2) && dccl::dlog << "String " << s <<  " exceeds `dccl.max_length`, truncating" << std::endl;
         s.resize(dccl_field_options().max_length()); 
     }
-        
-            
+    
     Bitset value_bits;
     value_bits.from_byte_string(s);
     
