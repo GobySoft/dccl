@@ -25,10 +25,12 @@
 
 #if DCCL_HAS_LUA
 #include "dccl/thirdparty/sol/sol.hpp"
-#endif
-
+// symbol in lua-protobuf/pb.c so we can load this using sol's require call
+LUALIB_API int luaopen_pb(lua_State *L);
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1
+#endif
+
 
 void build_file_desc_set(const google::protobuf::FileDescriptor* file_desc,
                          google::protobuf::FileDescriptorSet& file_desc_set)
@@ -60,9 +62,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         {
             lua_ = new sol::state;
             lua_->open_libraries();
-
-            lua_->require_script("pb", "return require \"pb\"");
-            lua_->require_script("serpent", "return require \"serpent\"");
+            lua_->require("pb", luaopen_pb);
         }
 
         sol::load_result desc_load = lua_->load(R"(local desc = ...; return pb.load(desc) )");
