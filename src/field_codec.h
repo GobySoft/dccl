@@ -39,6 +39,7 @@
 #include "exception.h"
 #include "internal/field_codec_message_stack.h"
 #include "internal/type_helper.h"
+#include "oneof.h"
 
 namespace dccl
 {
@@ -320,7 +321,6 @@ class FieldCodecBase
     void field_info(std::ostream* os, const google::protobuf::FieldDescriptor* field);
     //@}
 
-  protected:
     /// \brief Get the DCCL field option extension value for the current field
     ///
     /// dccl::DCCLFieldOptions is defined in acomms_option_extensions.proto
@@ -351,6 +351,7 @@ class FieldCodecBase
         }
     }
 
+  protected:
     /// \brief Whether to use the required or optional encoding
     bool use_required()
     {
@@ -364,6 +365,9 @@ class FieldCodecBase
 
         if (!field)
             return true;
+        else if (codec_version() > 3) // use required for repeated, required and oneof fields
+            return field->is_required() || field->is_repeated() || is_part_of_oneof(field) ||
+                   (dc.has_required_if() && dc.required());
         else if (codec_version() > 2) // use required for both repeated and required fields
             return field->is_required() || field->is_repeated() ||
                    (dc.has_required_if() && dc.required());
