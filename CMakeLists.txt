@@ -13,6 +13,12 @@ cmake_policy(SET CMP0009 NEW)
 
 project(dccl)
 
+if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
+  message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
 ## allows us to write custom modules or modifying existing ones
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
@@ -237,10 +243,6 @@ if(enable_lua)
   find_package(Lua REQUIRED)
   set(DCCL_HAS_LUA "1")
   include_directories(${LUA_INCLUDE_DIR})
-
-  # SOL requires c++17
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 else()
   set(DCCL_HAS_LUA "0")
 endif()
@@ -257,15 +259,6 @@ endif()
 if(NOT ${PROTOC_VERSION} VERSION_LESS 3.0.0) 
   set(PROTOBUF_SYNTAX_VERSION "syntax = \"proto2\";")
 endif()
-
-# Protobuf >= 3.6.0 requires C++11 or greater
-if((NOT ${PROTOC_VERSION} VERSION_LESS 3.6.0)
-    AND ((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "98")))
-  message ("Setting CMAKE_CXX_STANDARD to 11 as required by Protobuf >= 3.6.0. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
   
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
