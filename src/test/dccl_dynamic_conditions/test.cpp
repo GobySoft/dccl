@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     msg_in.set_a(40);
     msg_in.set_b(50);
     msg_in.set_c(60);
+    msg_in.set_c_center(50);
     
     codec.info(msg_in.GetDescriptor());
 
@@ -57,9 +58,8 @@ int main(int argc, char* argv[])
 
     std::cout << "Try decode..." << std::endl;
 
-    // b and c are omitted
+    // b is omitted
     msg_in.clear_b();
-    msg_in.clear_c();
     
     decode_check(bytes);
 

@@ -34,7 +34,7 @@
 
 #include "common.h"
 #include "dccl/binary.h"
-#include "dccl/dynamic_conditionals.h"
+#include "dccl/dynamic_conditions.h"
 #include "dccl/option_extensions.pb.h"
 #include "exception.h"
 #include "internal/field_codec_message_stack.h"
@@ -358,7 +358,7 @@ class FieldCodecBase
             return true;
 
         const google::protobuf::FieldDescriptor* field = this_field();
-        auto& dc = dynamic_conditions();
+        DynamicConditions& dc = dynamic_conditions();
         dc.set_field(this_field());
         dc.set_message(root_message());
 

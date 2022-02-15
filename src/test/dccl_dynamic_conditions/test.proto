@@ -42,13 +42,17 @@ message TestMsg
         }
     }];
 
-    optional int32 c = 4 [(dccl.field) = {
+    optional int32 c_center = 4 [(dccl.field) = { min: 0 max: 300}, default = 199];
+
+    optional int32 c = 6 [(dccl.field) = {
         min: 0
         max: 400
         dynamic_conditions {
-            // same as required_if: "this.state == 'STATE_3'" and omit_if ==
+            // same as required_if: "this.state == 'STATE_3'" and omit_if ~=
             // 'STATE_3'"
-            only_if: "this.state == 'STATE_3'"
+            only_if: "this.state == 'STATE_1'"
+            min: "this.c_center-100"
+            max: "this.c_center+100"
         }
     }];
 }
