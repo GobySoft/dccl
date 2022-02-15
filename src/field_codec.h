@@ -359,9 +359,10 @@ class FieldCodecBase
             return true;
 
         const google::protobuf::FieldDescriptor* field = this_field();
-        DynamicConditions& dc = dynamic_conditions();
-        dc.set_field(this_field());
-        dc.set_message(root_message());
+        DynamicConditions& dc = dynamic_conditions(field);
+        // expensive, so don't do this unless we're going to use it
+        if (dc.has_required_if())
+            dc.set_message(root_message());
 
         if (!field)
             return true;
@@ -375,7 +376,11 @@ class FieldCodecBase
             return field->is_required();
     }
 
-    DynamicConditions& dynamic_conditions() { return dynamic_conditions_; }
+    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
+    {
+        dynamic_conditions_.set_field(field);
+        return dynamic_conditions_;
+    }
 
     //
     // VIRTUAL
