@@ -57,13 +57,12 @@ namespace dccl
 
               virtual double max()
               {
-                  DynamicConditions& dc = this->dynamic_conditions();
-                  dc.set_field(this->this_field());
-                  dc.set_message(this->root_message());
+                  DynamicConditions& dc = this->dynamic_conditions(this->this_field());
 
                   double static_max = this->dccl_field_options().max();
                   if(dc.has_max())
                   {
+                      dc.set_message(this->root_message());
                       // don't let dynamic conditions breach static bounds
                       return std::min(dc.max(), static_max);
                   }
@@ -76,13 +75,12 @@ namespace dccl
       
               virtual double min()
               {
-                  DynamicConditions& dc = this->dynamic_conditions();
-                  dc.set_field(this->this_field());
-                  dc.set_message(this->root_message());
-
+                  DynamicConditions& dc = this->dynamic_conditions(this->this_field());
                   double static_min = this->dccl_field_options().min();
-                  if(dc.has_min())
+                  if (dc.has_min())
                   {
+                      dc.set_message(this->root_message());
+                      
                       // don't let dynamic conditions breach static bounds
                       return std::max(dc.min(), static_min);
                   }

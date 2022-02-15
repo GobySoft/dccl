@@ -40,26 +40,15 @@ void build_file_desc_set(const google::protobuf::FileDescriptor* file_desc,
     file_desc->CopyTo(file_desc_proto);
 }
 
-dccl::DynamicConditions::DynamicConditions()
-{
-#if DCCL_HAS_LUA
-    lua_ = new sol::state;
-    lua_->open_libraries();
-
-    lua_->require_script("pb", "return require \"pb\"");
-    lua_->require_script("serpent", "return require \"serpent\"");
-
-#endif
-}
+dccl::DynamicConditions::DynamicConditions() {}
 
 dccl::DynamicConditions::~DynamicConditions()
 {
 #if DCCL_HAS_LUA
-    delete lua_;
+    if (lua_)
+        delete lua_;
 #endif
 }
-
-
 
 void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 {
@@ -67,6 +56,15 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 #if DCCL_HAS_LUA
     if (msg_)
     {
+        if (!lua_)
+        {
+            lua_ = new sol::state;
+            lua_->open_libraries();
+
+            lua_->require_script("pb", "return require \"pb\"");
+            lua_->require_script("serpent", "return require \"serpent\"");
+        }
+
         sol::load_result desc_load = lua_->load(R"(local desc = ...; return pb.load(desc) )");
 
         google::protobuf::FileDescriptorSet file_desc_set;
@@ -75,7 +73,8 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         std::tuple<bool, int> desc_load_result = desc_load(file_desc_set.SerializeAsString());
         assert(std::get<0>(desc_load_result));
         const auto& decode_script =
-            "local encoded_msg, type = ...; pb.option('use_default_metatable'); this = pb.decode(type, encoded_msg); return this";
+            "local encoded_msg, type = ...; pb.option('use_default_metatable'); this = "
+            "pb.decode(type, encoded_msg); return this";
 
         sol::load_result decode_message = lua_->load(decode_script);
         if (!decode_message.valid())

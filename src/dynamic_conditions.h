@@ -81,7 +81,7 @@ class DynamicConditions
     const google::protobuf::Message* msg_{nullptr};
 
 #if DCCL_HAS_LUA
-    sol::state* lua_;
+    sol::state* lua_{nullptr};
 #endif
 };
 
