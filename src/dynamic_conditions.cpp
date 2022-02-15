@@ -20,7 +20,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "dccl/dynamic_conditionals.h"
+#include "dccl/dynamic_conditions.h"
 #include "dccl/exception.h"
 
 #define SOL_ALL_SAFETIES_ON 1
@@ -61,7 +61,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         std::tuple<bool, int> desc_load_result = desc_load(file_desc_set.SerializeAsString());
         assert(std::get<0>(desc_load_result));
         const auto& decode_script =
-            "local encoded_msg, type = ...; this = pb.decode(type, encoded_msg); return this";
+            "local encoded_msg, type = ...; pb.option('use_default_metatable'); this = pb.decode(type, encoded_msg); return this";
 
         sol::load_result decode_message = lua_.load(decode_script);
         if (!decode_message.valid())
@@ -151,7 +151,16 @@ bool dccl::DynamicConditions::omit()
 double dccl::DynamicConditions::min()
 {
 #if DCCL_HAS_LUA
-    return 0.0;
+    if (msg_ && field_desc_)
+    {
+        auto condition_script = return_prefix(conditions().min());
+        double v = lua_.script(condition_script);
+        return v;
+    }
+    else
+    {
+        return -std::numeric_limits<double>::infinity();
+    }
 #else
     throw(Exception("DCCL built without Lua support: cannot use dynamic_conditions"));
 #endif
@@ -160,7 +169,16 @@ double dccl::DynamicConditions::min()
 double dccl::DynamicConditions::max()
 {
 #if DCCL_HAS_LUA
-    return 0.0;
+    if (msg_ && field_desc_)
+    {
+        auto condition_script = return_prefix(conditions().max());
+        double v = lua_.script(condition_script);
+        return v;
+    }
+    else
+    {
+        return std::numeric_limits<double>::infinity();
+    }
 #else
     throw(Exception("DCCL built without Lua support: cannot use dynamic_conditions"));
 #endif

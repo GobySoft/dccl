@@ -203,7 +203,7 @@ bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
     {
         dccl::DCCLFieldOptions dccl_field_options = field->options().GetExtension(dccl::field);
 
-        auto& dc = dynamic_conditions();
+        DynamicConditions& dc = dynamic_conditions();
         dc.set_field(field);
         dc.set_message(root_message());
 

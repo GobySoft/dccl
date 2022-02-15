@@ -13,7 +13,7 @@ add_library(dccl
   field_codec_id.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp
-  dynamic_conditionals.cpp
+  dynamic_conditions.cpp
   codecs2/field_codec_default.cpp
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
