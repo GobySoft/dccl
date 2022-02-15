@@ -23,6 +23,10 @@
 #include "dccl/dynamic_conditions.h"
 #include "dccl/exception.h"
 
+#if DCCL_HAS_LUA
+#include "dccl/thirdparty/sol/sol.hpp"
+#endif
+
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1
 
@@ -39,13 +43,23 @@ void build_file_desc_set(const google::protobuf::FileDescriptor* file_desc,
 dccl::DynamicConditions::DynamicConditions()
 {
 #if DCCL_HAS_LUA
-    lua_.open_libraries();
+    lua_ = new sol::state;
+    lua_->open_libraries();
 
-    lua_.require_script("pb", "return require \"pb\"");
-    lua_.require_script("serpent", "return require \"serpent\"");
+    lua_->require_script("pb", "return require \"pb\"");
+    lua_->require_script("serpent", "return require \"serpent\"");
 
 #endif
 }
+
+dccl::DynamicConditions::~DynamicConditions()
+{
+#if DCCL_HAS_LUA
+    delete lua_;
+#endif
+}
+
+
 
 void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 {
@@ -53,7 +67,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 #if DCCL_HAS_LUA
     if (msg_)
     {
-        sol::load_result desc_load = lua_.load(R"(local desc = ...; return pb.load(desc) )");
+        sol::load_result desc_load = lua_->load(R"(local desc = ...; return pb.load(desc) )");
 
         google::protobuf::FileDescriptorSet file_desc_set;
         build_file_desc_set(msg_->GetDescriptor()->file(), file_desc_set);
@@ -63,7 +77,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         const auto& decode_script =
             "local encoded_msg, type = ...; pb.option('use_default_metatable'); this = pb.decode(type, encoded_msg); return this";
 
-        sol::load_result decode_message = lua_.load(decode_script);
+        sol::load_result decode_message = lua_->load(decode_script);
         if (!decode_message.valid())
         {
             sol::error err = decode_message;
@@ -93,13 +107,13 @@ bool dccl::DynamicConditions::required()
         if (conditions().has_required_if())
         {
             auto condition_script = return_prefix(conditions().required_if());
-            bool required = lua_.script(condition_script);
+            bool required = lua_->script(condition_script);
             return required;
         }
         else if (conditions().has_only_if())
         {
             auto condition_script = return_prefix(conditions().only_if());
-            bool only = lua_.script(condition_script);
+            bool only = lua_->script(condition_script);
             return only;
         }
         else
@@ -125,13 +139,13 @@ bool dccl::DynamicConditions::omit()
         if (conditions().has_omit_if())
         {
             auto condition_script = return_prefix(conditions().omit_if());
-            bool omit = lua_.script(condition_script);
+            bool omit = lua_->script(condition_script);
             return omit;
         }
         else if (conditions().has_only_if())
         {
             auto condition_script = return_prefix(conditions().only_if());
-            bool only = lua_.script(condition_script);
+            bool only = lua_->script(condition_script);
             return !only;
         }
         else
@@ -154,7 +168,7 @@ double dccl::DynamicConditions::min()
     if (msg_ && field_desc_)
     {
         auto condition_script = return_prefix(conditions().min());
-        double v = lua_.script(condition_script);
+        double v = lua_->script(condition_script);
         return v;
     }
     else
@@ -172,7 +186,7 @@ double dccl::DynamicConditions::max()
     if (msg_ && field_desc_)
     {
         auto condition_script = return_prefix(conditions().max());
-        double v = lua_.script(condition_script);
+        double v = lua_->script(condition_script);
         return v;
     }
     else

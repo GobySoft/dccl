@@ -32,10 +32,6 @@
 #define DCCL_HAS_LUA @DCCL_HAS_LUA@
 // clang-format on
 
-#if DCCL_HAS_LUA
-#include "dccl/thirdparty/sol/sol.hpp"
-#endif
-
 namespace sol
 {
 class state;
@@ -47,6 +43,7 @@ class DynamicConditions
 {
   public:
     DynamicConditions();
+    ~DynamicConditions();
 
     void set_field(const google::protobuf::FieldDescriptor* field_desc)
     {
@@ -84,7 +81,7 @@ class DynamicConditions
     const google::protobuf::Message* msg_{nullptr};
 
 #if DCCL_HAS_LUA
-    sol::state lua_;
+    sol::state* lua_;
 #endif
 };
 
