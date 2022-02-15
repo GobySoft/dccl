@@ -26,7 +26,7 @@ message TestMsg
         max: 200
         dynamic_conditions {
             // can use "return"
-            required_if: "print(serpent.block(this)); return this.state == 'STATE_1'"
+            required_if: "return this.state == 'STATE_1'"
             omit_if: "return this.state ~= 'STATE_1'"
         }
     }];
