@@ -90,6 +90,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 #endif
 }
 
+
 const dccl::DCCLFieldOptions::Conditions& dccl::DynamicConditions::conditions()
 {
     if (field_desc_)
