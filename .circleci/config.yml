@@ -32,7 +32,7 @@ environment-template-buster: &environment-template-buster
 
 environment-template-bullseye: &environment-template-bullseye
   DISTRO_RELEASE_CODENAME: "bullseye"
-  DISTRO_RELEASE_VERSION: "debian10"
+  DISTRO_RELEASE_VERSION: "debian11"
   
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
