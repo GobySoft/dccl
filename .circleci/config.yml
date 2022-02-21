@@ -29,6 +29,10 @@ environment-template-stretch: &environment-template-stretch
 environment-template-buster: &environment-template-buster
   DISTRO_RELEASE_CODENAME: "buster"
   DISTRO_RELEASE_VERSION: "debian10"
+
+environment-template-bullseye: &environment-template-bullseye
+  DISTRO_RELEASE_CODENAME: "bullseye"
+  DISTRO_RELEASE_VERSION: "debian10"
   
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
@@ -52,6 +56,9 @@ docker-arm64-buster: &docker-arm64-buster
   - image: gobysoft/dccl-debian-build-arm64:10.1
 docker-armhf-buster: &docker-armhf-buster
   - image: gobysoft/dccl-debian-build-armhf:10.1
+
+docker-base-bullseye: &docker-base-bullseye
+  - image: gobysoft/dccl-debian-build-base:11.1
     
 docker-base-bionic: &docker-base-bionic
   - image: gobysoft/dccl-ubuntu-build-base:18.04.1
@@ -220,7 +227,8 @@ workflows:
           <<: *filter-template-non-master
       - amd64-buster-build:
           <<: *filter-template-non-master
-
+      - amd64-bullseye-build:
+          <<: *filter-template-non-master
       - amd64-bionic-build:
           <<: *filter-template-non-master
       - amd64-focal-build:
@@ -235,11 +243,11 @@ workflows:
       - arm64-stretch-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-stretch-deb-build
+            - get-orig-source
       - armhf-stretch-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-stretch-deb-build
+            - get-orig-source
 
       - amd64-buster-deb-build:
           <<: *filter-template-master-only
@@ -248,11 +256,25 @@ workflows:
       - arm64-buster-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-buster-deb-build
+            - get-orig-source
       - armhf-buster-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-buster-deb-build
+            - get-orig-source
+
+      - amd64-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - armhf-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+
             
       - amd64-bionic-deb-build:
           <<: *filter-template-master-only
@@ -261,11 +283,11 @@ workflows:
       - arm64-bionic-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-bionic-deb-build
+            - get-orig-source
       - armhf-bionic-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-bionic-deb-build
+            - get-orig-source
 
       - amd64-focal-deb-build:
           <<: *filter-template-master-only
@@ -274,17 +296,28 @@ workflows:
       - arm64-focal-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-focal-deb-build
+            - get-orig-source
       - armhf-focal-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-focal-deb-build
+            - get-orig-source
 
             
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
+            - amd64-stretch-deb-build
+            - amd64-bullseye-deb-build
+            - amd64-buster-deb-build
+            - amd64-bionic-deb-build
+            - amd64-focal-deb-build            
+            - arm64-stretch-deb-build
+            - arm64-bullseye-deb-build
+            - arm64-buster-deb-build
+            - arm64-bionic-deb-build
+            - arm64-focal-deb-build
             - armhf-stretch-deb-build
+            - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
             - armhf-focal-deb-build
@@ -297,7 +330,18 @@ workflows:
             branches:
               ignore: /.*/
           requires:
+            - amd64-stretch-deb-build
+            - amd64-bullseye-deb-build
+            - amd64-buster-deb-build
+            - amd64-bionic-deb-build
+            - amd64-focal-deb-build            
+            - arm64-stretch-deb-build
+            - arm64-bullseye-deb-build
+            - arm64-buster-deb-build
+            - arm64-bionic-deb-build
+            - arm64-focal-deb-build
             - armhf-stretch-deb-build
+            - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-focal-deb-build
             - armhf-bionic-deb-build
@@ -345,6 +389,13 @@ jobs:
     environment:
       <<: *environment-template-common      
 
+  amd64-bullseye-build:
+    <<: *job-template-amd64
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common      
+
+      
   amd64-bionic-build:
     <<: *job-template-amd64
     docker: *docker-base-bionic
@@ -400,6 +451,29 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-buster
       <<: *environment-template-armhf
+  amd64-bullseye-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-amd64
+  arm64-bullseye-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-arm64
+  armhf-bullseye-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-armhf
+
+
   amd64-bionic-deb-build:
     <<: *job-template-deb-amd64
     docker: *docker-base-bionic
