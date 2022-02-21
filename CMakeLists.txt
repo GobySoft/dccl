@@ -37,7 +37,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
 string(REGEX REPLACE "^([0-9]+).*$" "\\1" DCCL_VERSION_MAJOR "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_MINOR  "${DCCL_VERSION_STRING}")
-string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
+string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9~a-z]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -48,7 +48,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
      OUTPUT_VARIABLE DCCL_LAST_REV)
    string(STRIP ${DCCL_LAST_REV} DCCL_LAST_REV)
 
-   execute_process(COMMAND git rev-list ${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}..HEAD --count
+   string(REPLACE "~" "_" DCCL_GIT_VERSION ${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}) 
+
+   execute_process(COMMAND git rev-list ${DCCL_GIT_VERSION}..HEAD --count
      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
      OUTPUT_VARIABLE DCCL_REVS_SINCE_TAG)
    string(STRIP ${DCCL_REVS_SINCE_TAG} DCCL_REVS_SINCE_TAG)
