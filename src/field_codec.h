@@ -44,6 +44,11 @@
 namespace dccl
 {
 class Codec;
+namespace internal
+{
+class MessageStack;
+}
+
 
 /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
 class FieldCodecBase
@@ -94,6 +99,12 @@ class FieldCodecBase
     static const google::protobuf::Descriptor* this_descriptor()
     {
         return !internal::MessageStack::desc_.empty() ? internal::MessageStack::desc_.back() : 0;
+    }
+
+    static const google::protobuf::Message* this_message()
+    {
+        return !internal::MessageStack::messages_.empty() ? internal::MessageStack::messages_.back()
+                                                          : 0;
     }
 
     // currently encoded or (partially) decoded root message
@@ -368,7 +379,7 @@ class FieldCodecBase
         DynamicConditions& dc = dynamic_conditions(field);
         // expensive, so don't do this unless we're going to use it
         if (dc.has_required_if())
-            dc.set_message(root_message());
+            dc.set_message(this_message(), root_message());
 
         if (!field)
             return true;
@@ -444,7 +455,7 @@ class FieldCodecBase
 
     virtual void any_encode_repeated(Bitset* bits, const std::vector<boost::any>& wire_values);
     virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* field_values);
-
+    
     virtual void any_pre_encode_repeated(std::vector<boost::any>* wire_values,
                                          const std::vector<boost::any>& field_values);
 

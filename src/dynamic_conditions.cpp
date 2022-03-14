@@ -31,7 +31,6 @@ LUALIB_API int luaopen_pb(lua_State* L);
 #define SOL_PRINT_ERRORS 1
 #endif
 
-
 void build_file_desc_set(const google::protobuf::FileDescriptor* file_desc,
                          google::protobuf::FileDescriptorSet& file_desc_set)
 {
@@ -52,11 +51,16 @@ dccl::DynamicConditions::~DynamicConditions()
 #endif
 }
 
-void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
+void dccl::DynamicConditions::set_message(const google::protobuf::Message* this_msg,
+                                          const google::protobuf::Message* root_msg)
 {
-    msg_ = msg;
+    this_msg_ = this_msg;
+    root_msg_ = root_msg;
+    if (!this_msg_)
+        this_msg_ = root_msg_;
+
 #if DCCL_HAS_LUA
-    if (msg_)
+    if (this_msg_ && root_msg_)
     {
         if (!lua_)
         {
@@ -68,13 +72,17 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         sol::load_result desc_load = lua_->load(R"(local desc = ...; return pb.load(desc) )");
 
         google::protobuf::FileDescriptorSet file_desc_set;
-        build_file_desc_set(msg_->GetDescriptor()->file(), file_desc_set);
+        build_file_desc_set(root_msg_->GetDescriptor()->file(), file_desc_set);
 
         std::tuple<bool, int> desc_load_result = desc_load(file_desc_set.SerializeAsString());
         assert(std::get<0>(desc_load_result));
-        const auto& decode_script =
-            "local encoded_msg, type, cpp_index = ...; pb.option('use_default_metatable'); this = "
-            "pb.decode(type, encoded_msg); this_index = cpp_index+1; return this";
+        const auto& decode_script = R"(
+         local this_encoded_msg, this_type, root_encoded_msg, root_type, cpp_index = ...;
+         pb.option('use_default_metatable');
+         root = pb.decode(root_type, root_encoded_msg);
+         this = pb.decode(this_type, this_encoded_msg); this_index = cpp_index+1;
+         return this;
+        )";
 
         sol::load_result decode_message = lua_->load(decode_script);
         if (!decode_message.valid())
@@ -86,12 +94,15 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
 
         auto index = index_;
 
-        sol::table decoded_message = decode_message(msg_->SerializePartialAsString(),
-                                                    msg_->GetDescriptor()->full_name(), index);
+        std::cout << "Root: " << root_msg_->ShortDebugString() << "\n"
+                  << "This: " << this_msg_->ShortDebugString() << std::endl;
+
+        sol::table decoded_message = decode_message(
+            this_msg_->SerializePartialAsString(), this_msg_->GetDescriptor()->full_name(),
+            root_msg_->SerializePartialAsString(), root_msg_->GetDescriptor()->full_name(), index);
     }
 #endif
 }
-
 
 const dccl::DCCLFieldOptions::Conditions& dccl::DynamicConditions::conditions()
 {
@@ -104,7 +115,7 @@ const dccl::DCCLFieldOptions::Conditions& dccl::DynamicConditions::conditions()
 bool dccl::DynamicConditions::required()
 {
 #if DCCL_HAS_LUA
-    if (msg_ && field_desc_)
+    if (is_initialized())
     {
         if (conditions().has_required_if())
         {
@@ -136,7 +147,7 @@ bool dccl::DynamicConditions::required()
 bool dccl::DynamicConditions::omit()
 {
 #if DCCL_HAS_LUA
-    if (msg_ && field_desc_)
+    if (is_initialized())
     {
         if (conditions().has_omit_if())
         {
@@ -167,7 +178,7 @@ bool dccl::DynamicConditions::omit()
 double dccl::DynamicConditions::min()
 {
 #if DCCL_HAS_LUA
-    if (msg_ && field_desc_)
+    if (is_initialized())
     {
         auto condition_script = return_prefix(conditions().min());
         double v = lua_->script(condition_script);
@@ -185,7 +196,7 @@ double dccl::DynamicConditions::min()
 double dccl::DynamicConditions::max()
 {
 #if DCCL_HAS_LUA
-    if (msg_ && field_desc_)
+    if (is_initialized())
     {
         auto condition_script = return_prefix(conditions().max());
         double v = lua_->script(condition_script);

@@ -148,6 +148,7 @@ class DefaultMessageCodec : public FieldCodecBase
     template <typename Action, typename ReturnType>
     ReturnType traverse_const_message(const boost::any& wire_value)
     {
+
         try
         {
             ReturnType return_value = ReturnType();
@@ -160,6 +161,7 @@ class DefaultMessageCodec : public FieldCodecBase
             for (int i = 0, n = desc->field_count(); i < n; ++i)
             {
                 const google::protobuf::FieldDescriptor* field_desc = desc->field(i);
+
                 if (!check_field(field_desc))
                     continue;
 
@@ -182,7 +184,7 @@ class DefaultMessageCodec : public FieldCodecBase
                     if (dc.has_omit_if())
                     {
                         // expensive, so don't do this unless we're going to use it
-                        dc.set_message(root_message());
+                        dc.set_message(this_message(), root_message());
                         if (dc.omit())
                             continue;
                     }

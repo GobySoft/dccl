@@ -50,12 +50,10 @@ class DynamicConditions
         field_desc_ = field_desc;
     }
 
-    void set_message(const google::protobuf::Message* msg);
+    void set_message(const google::protobuf::Message* this_msg,
+                     const google::protobuf::Message* root_msg);
 
-    void set_repeated_index(int index)
-    {
-        index_ = index;
-    }
+    void set_repeated_index(int index) { index_ = index; }
 
     const dccl::DCCLFieldOptions::Conditions& conditions();
 
@@ -82,8 +80,10 @@ class DynamicConditions
             return script;
     }
 
+    bool is_initialized() { return root_msg_ && this_msg_ && field_desc_; }
     const google::protobuf::FieldDescriptor* field_desc_{nullptr};
-    const google::protobuf::Message* msg_{nullptr};
+    const google::protobuf::Message* this_msg_{nullptr};
+    const google::protobuf::Message* root_msg_{nullptr};
     int index_{0};
 
 #if DCCL_HAS_LUA

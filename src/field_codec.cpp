@@ -397,13 +397,16 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
                                         << size_bits.size() << " bits: " << size_bits << std::endl;
     }
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+
         DynamicConditions& dc = this->dynamic_conditions(this->this_field());
         dc.set_repeated_index(i);
         if (dc.has_omit_if())
         {
-            dc.set_message(root_message());
+            dc.set_message(this_message(), root_message());
             if (dc.omit())
                 continue;
         }
@@ -431,13 +434,16 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
 
     wire_values->resize(wire_vector_size);
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+
         DynamicConditions& dc = this->dynamic_conditions(this->this_field());
         dc.set_repeated_index(i);
         if (dc.has_omit_if())
         {
-            dc.set_message(root_message());
+            dc.set_message(this_message(), root_message());
             if (dc.omit())
                 continue;
         }

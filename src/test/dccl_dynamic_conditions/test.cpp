@@ -59,16 +59,19 @@ int main(int argc, char* argv[])
         auto c = msg_in.add_child();
         c->set_include_i(TestMsg::Child::NO);
         c->set_i(25);
+        c->set_i2(25);
     }
     {
         auto c = msg_in.add_child();
         c->set_include_i(TestMsg::Child::YES);
         c->set_i(45);
+        c->set_i2(45);
     }
     {
         auto c = msg_in.add_child();
         c->set_include_i(TestMsg::Child::NO);
         c->set_i(15);
+        c->set_i2(15);
     }
 
     {
@@ -80,6 +83,10 @@ int main(int argc, char* argv[])
         auto c = msg_in.mutable_child3();
         c->set_include_i(TestMsg::Child3::YES);
         c->set_i(14);
+
+        auto sc = c->mutable_subchild();
+        sc->set_include_i(TestMsg::Child2::YES);
+        sc->set_i(15);
     }
 
     codec.info(msg_in.GetDescriptor());
@@ -103,9 +110,12 @@ int main(int argc, char* argv[])
 
     // child[0].i is omitted
     msg_in.mutable_child(0)->clear_i();
+    msg_in.mutable_child(0)->clear_i2();
 
     // child[2].i is omitted
     msg_in.mutable_child(2)->clear_i();
+    msg_in.mutable_child(2)->clear_i2();
+
     msg_in.mutable_child2()->clear_i();
 
     decode_check(bytes);

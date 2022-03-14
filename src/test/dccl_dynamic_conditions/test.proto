@@ -79,8 +79,6 @@ message TestMsg
     }];
 
     repeated Child child = 10 [(dccl.field) = { max_repeat: 10 }];
-    required Child2 child2 = 11;
-    optional Child3 child3 = 12;
 
     message Child
     {
@@ -95,15 +93,19 @@ message TestMsg
         optional int32 i = 2 [(dccl.field) = {
             min: 0
             max: 255
-            dynamic_conditions {
-                //                only_if: "s = require 'serpent';
-                //                print(s.block(this)); print('child this_index:
-                //                '..this_index); print('yes/no:
-                //                '..this.child[this_index].include_i); return
-                //                this.child[this_index].include_i == 'YES'"
-                only_if: "this.child[this_index].include_i == 'YES'"
-            }
+            // within the embedded message, 'this' refers to the embedded
+            // message (innermost scope) ...
+            dynamic_conditions { only_if: "this.include_i == 'YES'" }
+        }];
 
+        optional int32 i2 = 3 [(dccl.field) = {
+            min: 0
+            max: 255
+            // ... but the entire message is still accessible with 'root', and
+            // 'this_index' refers to the current repeated message index
+            dynamic_conditions {
+                only_if: "root.child[this_index].include_i == 'YES'"
+            }
         }];
     }
 
@@ -120,10 +122,12 @@ message TestMsg
         optional int32 i = 2 [(dccl.field) = {
             min: 0
             max: 255
-            dynamic_conditions { only_if: "this.child2.include_i == 'YES'" }
+            dynamic_conditions { only_if: "this.include_i == 'YES'" }
 
         }];
     }
+
+    required Child2 child2 = 11;
 
     message Child3
     {
@@ -138,8 +142,13 @@ message TestMsg
         optional int32 i = 2 [(dccl.field) = {
             min: 0
             max: 255
-            dynamic_conditions { only_if: "this.child3.include_i == 'YES'" }
+            // check that root works correctly here
+            dynamic_conditions { only_if: "root.child3.include_i == 'YES'" }
 
         }];
+
+        // since this message uses local scoping only, we can include it again
+        optional Child2 subchild = 3;
     }
+    optional Child3 child3 = 12;
 }
