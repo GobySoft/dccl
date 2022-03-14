@@ -70,9 +70,16 @@ class MessageStack
     static std::vector<const google::protobuf::FieldDescriptor*> field_;
     static std::vector<MessagePart> parts_;
 
-    static std::vector<const google::protobuf::Message*> messages_;
-    // unique fields that correspond exactly to messages_;
-    static std::vector<const google::protobuf::FieldDescriptor*> message_fields_;
+
+    struct MessageAndField
+    {
+        // latest depth of message
+        const google::protobuf::Message* msg;
+        // field corresponding to this message (or nullptr for the first)
+        const google::protobuf::FieldDescriptor* field{nullptr};
+    };
+        
+    static std::vector<MessageAndField> messages_;
     
 
     int descriptors_pushed_;
