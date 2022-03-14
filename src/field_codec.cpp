@@ -466,8 +466,19 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
         out += repeated_vector_field_size(dccl_field_options().max_repeat());
     }
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+        DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+        dc.set_repeated_index(i);
+        if (dc.has_omit_if())
+        {
+            dc.regenerate(this_message(), root_message(), i);
+            if (dc.omit())
+                continue;
+        }
+        
         if (i < wire_values.size())
             out += any_size(wire_values[i]);
         else
