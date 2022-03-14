@@ -40,11 +40,21 @@ dccl::Codec codec;
 TestMsg msg_in;
 
 void decode_check(const std::string& encoded);
+void test0();
+void test1();
+void test2();
 
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    test0();
+    test1();
+    test2();
+    std::cout << "all tests passed" << std::endl;
+}
 
+void test0()
+{
     msg_in.set_state(TestMsg::STATE_1);
     msg_in.set_a(40);
     msg_in.set_b(50);
@@ -125,8 +135,97 @@ int main(int argc, char* argv[])
     msg_in.mutable_child2()->clear_i();
 
     decode_check(bytes);
+}
 
-    std::cout << "all tests passed" << std::endl;
+void test1()
+{
+    msg_in.set_state(TestMsg::STATE_2);
+    msg_in.set_b(15);
+    msg_in.add_d(100);
+    msg_in.add_d(150);
+    msg_in.add_d(200);
+
+    msg_in.add_d(0);
+
+    msg_in.add_d(250);
+    msg_in.add_d(300);
+
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::YES);
+        c->set_i(50);
+        c->set_i2(45);
+    }
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::NO);
+    }
+    {
+        auto c = msg_in.mutable_child2();
+        c->set_include_i(TestMsg::Child2::YES);
+        c->set_i(15);
+    }
+
+    codec.info(msg_in.GetDescriptor());
+
+    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+
+    codec.load(msg_in.GetDescriptor());
+
+    std::cout << "Try encode..." << std::endl;
+    std::string bytes;
+    codec.encode(&bytes, msg_in);
+    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+    std::cout << "Try decode..." << std::endl;
+
+    msg_in.mutable_d()->erase(msg_in.mutable_d()->begin() + 3);
+
+    decode_check(bytes);
+}
+
+void test2()
+{
+    msg_in.set_state(TestMsg::STATE_2);
+    msg_in.set_b(31);
+
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::YES);
+        c->set_i(23);
+        c->set_i2(13);
+    }
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::NO);
+    }
+    {
+        auto c = msg_in.mutable_child2();
+        c->set_include_i(TestMsg::Child2::NO);
+    }
+
+    codec.info(msg_in.GetDescriptor());
+
+    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+
+    codec.load(msg_in.GetDescriptor());
+
+    std::cout << "Try encode..." << std::endl;
+    std::cout << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
+    std::cout << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+    std::vector<char> bytes(codec.size(msg_in), 0);
+
+    int s = codec.size(msg_in);
+    std::cout << "Size: " << s << std::endl;
+    std::cout << "Bytes Size: " << bytes.size() << std::endl;
+
+    codec.encode(bytes.data(), bytes.size(), msg_in);
+    std::cout << "... got bytes (hex): "
+              << dccl::hex_encode(std::string(bytes.begin(), bytes.end())) << std::endl;
+
+    std::cout << "Try decode..." << std::endl;
+
+    decode_check(std::string(bytes.begin(), bytes.end()));
 }
 
 void decode_check(const std::string& encoded)
@@ -137,4 +236,6 @@ void decode_check(const std::string& encoded)
     std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+
+    msg_in.Clear();
 }
