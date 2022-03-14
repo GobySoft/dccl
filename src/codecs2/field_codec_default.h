@@ -64,7 +64,7 @@ namespace dccl
                   {
                       dc.set_message(this->root_message());
                       // don't let dynamic conditions breach static bounds
-                      return std::min(dc.max(), static_max);
+                      return std::max(this->dccl_field_options().min(), std::min(dc.max(), static_max));
                   }
                   else
                   {
@@ -82,7 +82,7 @@ namespace dccl
                       dc.set_message(this->root_message());
                       
                       // don't let dynamic conditions breach static bounds
-                      return std::max(dc.min(), static_min);
+                      return std::min(this->dccl_field_options().max(), std::max(dc.min(), static_min));
                   }
                   else
                   {
@@ -129,7 +129,7 @@ namespace dccl
           
               virtual Bitset encode(const WireType& value)
               {
-                  dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::ENCODE) && dlog << "Encode with bounds: [" << min() << "," << max() << "]" << std::endl;
+                  dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::ENCODE) && dlog << "Encode " << value << " with bounds: [" << min() << "," << max() << "]" << std::endl;
 
                   
                   // round first, before checking bounds
@@ -371,7 +371,7 @@ namespace dccl
             void validate()
             {
                 FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
-
+                
                 std::string t = FieldCodecBase::dccl_field_options().static_value();
                 try
                 {

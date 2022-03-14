@@ -65,4 +65,81 @@ message TestMsg
             max: "this.c_center+100"
         }
     }];
+
+    repeated int32 d = 7 [(dccl.field) = {
+        min: 0
+        max: 300
+        max_repeat: 6
+        dynamic_conditions {
+            // LUA indexes from 1
+            only_if: "this_index ~= 4"
+            min: "this_index*50"
+            max: "this_index*50+100"
+        }
+    }];
+
+    repeated Child child = 10 [(dccl.field) = { max_repeat: 10 }];
+    required Child2 child2 = 11;
+    optional Child3 child3 = 12;
+
+    message Child
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions {
+                //                only_if: "s = require 'serpent';
+                //                print(s.block(this)); print('child this_index:
+                //                '..this_index); print('yes/no:
+                //                '..this.child[this_index].include_i); return
+                //                this.child[this_index].include_i == 'YES'"
+                only_if: "this.child[this_index].include_i == 'YES'"
+            }
+
+        }];
+    }
+
+    message Child2
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.child2.include_i == 'YES'" }
+
+        }];
+    }
+
+    message Child3
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.child3.include_i == 'YES'" }
+
+        }];
+    }
 }

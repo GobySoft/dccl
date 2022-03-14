@@ -44,7 +44,44 @@ int main(int argc, char* argv[])
     msg_in.set_b(50);
     msg_in.set_c(60);
     msg_in.set_c_center(50);
-    
+    msg_in.add_d(50);
+    msg_in.add_d(100);
+    msg_in.add_d(150);
+    msg_in.add_d(200);
+    msg_in.add_d(250);
+    msg_in.add_d(300);
+    // {
+    //     auto c = msg_in.add_child();
+    //     c->set_include_i(TestMsg::Child::YES);
+    //     c->set_i(1);
+    // }
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::NO);
+        c->set_i(25);
+    }
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::YES);
+        c->set_i(45);
+    }
+    {
+        auto c = msg_in.add_child();
+        c->set_include_i(TestMsg::Child::NO);
+        c->set_i(15);
+    }
+
+    {
+        auto c = msg_in.mutable_child2();
+        c->set_include_i(TestMsg::Child2::NO);
+        c->set_i(13);
+    }
+    {
+        auto c = msg_in.mutable_child3();
+        c->set_include_i(TestMsg::Child3::YES);
+        c->set_i(14);
+    }
+
     codec.info(msg_in.GetDescriptor());
 
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
@@ -60,7 +97,17 @@ int main(int argc, char* argv[])
 
     // b is omitted
     msg_in.clear_b();
-    
+
+    // d[3] is omitted
+    msg_in.mutable_d()->erase(msg_in.mutable_d()->begin() + 3);
+
+    // child[0].i is omitted
+    msg_in.mutable_child(0)->clear_i();
+
+    // child[2].i is omitted
+    msg_in.mutable_child(2)->clear_i();
+    msg_in.mutable_child2()->clear_i();
+
     decode_check(bytes);
 
     std::cout << "all tests passed" << std::endl;

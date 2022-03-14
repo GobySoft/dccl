@@ -351,6 +351,12 @@ class FieldCodecBase
         }
     }
 
+    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
+    {
+        dynamic_conditions_.set_field(field);
+        return dynamic_conditions_;
+    }
+
   protected:
     /// \brief Whether to use the required or optional encoding
     bool use_required()
@@ -374,12 +380,6 @@ class FieldCodecBase
                    (dc.has_required_if() && dc.required());
         else // use required only for required fields
             return field->is_required();
-    }
-
-    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
-    {
-        dynamic_conditions_.set_field(field);
-        return dynamic_conditions_;
     }
 
     //
@@ -518,7 +518,7 @@ class FieldCodecBase
 
     bool force_required_;
 
-    DynamicConditions dynamic_conditions_;
+    static DynamicConditions dynamic_conditions_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec)
