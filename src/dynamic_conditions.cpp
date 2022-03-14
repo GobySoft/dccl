@@ -26,7 +26,7 @@
 #if DCCL_HAS_LUA
 #include "dccl/thirdparty/sol/sol.hpp"
 // symbol in lua-protobuf/pb.c so we can load this using sol's require call
-LUALIB_API int luaopen_pb(lua_State *L);
+LUALIB_API int luaopen_pb(lua_State* L);
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1
 #endif
@@ -73,8 +73,8 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
         std::tuple<bool, int> desc_load_result = desc_load(file_desc_set.SerializeAsString());
         assert(std::get<0>(desc_load_result));
         const auto& decode_script =
-            "local encoded_msg, type = ...; pb.option('use_default_metatable'); this = "
-            "pb.decode(type, encoded_msg); return this";
+            "local encoded_msg, type, cpp_index = ...; pb.option('use_default_metatable'); this = "
+            "pb.decode(type, encoded_msg); this_index = cpp_index+1; return this";
 
         sol::load_result decode_message = lua_->load(decode_script);
         if (!decode_message.valid())
@@ -84,8 +84,10 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* msg)
                             err.what()));
         }
 
-        sol::table decoded_message =
-            decode_message(msg_->SerializePartialAsString(), msg_->GetDescriptor()->full_name());
+        auto index = index_;
+
+        sol::table decoded_message = decode_message(msg_->SerializePartialAsString(),
+                                                    msg_->GetDescriptor()->full_name(), index);
     }
 #endif
 }

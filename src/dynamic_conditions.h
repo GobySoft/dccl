@@ -52,6 +52,11 @@ class DynamicConditions
 
     void set_message(const google::protobuf::Message* msg);
 
+    void set_repeated_index(int index)
+    {
+        index_ = index;
+    }
+
     const dccl::DCCLFieldOptions::Conditions& conditions();
 
     bool has_required_if() { return conditions().has_required_if() || conditions().has_only_if(); }
@@ -79,6 +84,7 @@ class DynamicConditions
 
     const google::protobuf::FieldDescriptor* field_desc_{nullptr};
     const google::protobuf::Message* msg_{nullptr};
+    int index_{0};
 
 #if DCCL_HAS_LUA
     sol::state* lua_{nullptr};
