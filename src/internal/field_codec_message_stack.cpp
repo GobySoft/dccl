@@ -26,8 +26,7 @@ std::vector<const google::protobuf::FieldDescriptor*> dccl::internal::MessageSta
 std::vector<const google::protobuf::Descriptor*> dccl::internal::MessageStack::desc_;
 std::vector<dccl::MessagePart> dccl::internal::MessageStack::parts_;
 
-std::vector<const google::protobuf::Message*> dccl::internal::MessageStack::messages_;
-std::vector<const google::protobuf::FieldDescriptor*> dccl::internal::MessageStack::message_fields_;
+std::vector<dccl::internal::MessageStack::MessageAndField> dccl::internal::MessageStack::messages_;
 
 // MessageStack
 //
@@ -75,11 +74,7 @@ void dccl::internal::MessageStack::__pop_parts()
 void dccl::internal::MessageStack::__pop_messages()
 {
     if (!messages_.empty())
-    {
-        std::cout << "POP: " << messages_.back()->GetDescriptor()->full_name() << std::endl;
         messages_.pop_back();
-        message_fields_.pop_back();
-    }
     --messages_pushed_;
 }
 
@@ -112,7 +107,6 @@ dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescript
 void dccl::internal::MessageStack::update_index(const google::protobuf::FieldDescriptor* field,
                                                 int index)
 {
-    std::cout << "Update index: " << index << std::endl;
     push_message(field, index);
 }
 
@@ -121,52 +115,36 @@ void dccl::internal::MessageStack::push_message(const google::protobuf::FieldDes
 {
     if (messages_.empty() && dccl::FieldCodecBase::root_message())
     {
-        messages_.push_back(dccl::FieldCodecBase::root_message());
-        std::cout << "PUSH: " << messages_.back()->GetDescriptor()->full_name() << std::endl;
-        message_fields_.push_back(nullptr);
+        messages_.push_back({dccl::FieldCodecBase::root_message(), nullptr});
         ++messages_pushed_;
     }
 
     if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
     {
-        if (index >= 0 && message_fields_.size() && message_fields_.back())
+        // replace if the previous push was the same field
+        if (!messages_.empty() && field == messages_.back().field && !messages_.empty())
         {
-            std::cout << "Update index: " << field->full_name() << " index: " << index << std::endl;
-            std::cout << "field.back: " << message_fields_.back()->full_name() << std::endl;
-        }
-
-        // replace
-        if (!message_fields_.empty() && field == message_fields_.back() && !messages_.empty())
-        {
-            std::cout << "POP: " << messages_.back()->GetDescriptor()->full_name() << std::endl;
             messages_.pop_back();
-            message_fields_.pop_back();
             --messages_pushed_;
         }
 
-        if (messages_.size() && messages_.back()->GetDescriptor() == field->containing_type())
+        // add the new message + field if possible
+        if (messages_.size() && messages_.back().msg->GetDescriptor() == field->containing_type())
         {
-            const auto* refl = messages_.back()->GetReflection();
+            const auto* refl = messages_.back().msg->GetReflection();
             if (field->is_repeated())
             {
-                std::cout << "0 < " << index << " < " << refl->FieldSize(*messages_.back(), field)
-                          << std::endl;
-                if (index >= 0 && index < refl->FieldSize(*messages_.back(), field))
+                if (index >= 0 && index < refl->FieldSize(*messages_.back().msg, field))
                 {
-                    messages_.push_back(&refl->GetRepeatedMessage(*messages_.back(), field, index));
-                    std::cout << "PUSH: " << messages_.back()->GetDescriptor()->full_name()
-                              << std::endl;
+                    messages_.push_back(
+                        {&refl->GetRepeatedMessage(*messages_.back().msg, field, index), field});
                     ++messages_pushed_;
-                    message_fields_.push_back(field);
                 }
             }
             else
             {
-                messages_.push_back(&refl->GetMessage(*messages_.back(), field));
-                std::cout << "PUSH: " << messages_.back()->GetDescriptor()->full_name()
-                          << std::endl;
+                messages_.push_back({&refl->GetMessage(*messages_.back().msg, field), field});
                 ++messages_pushed_;
-                message_fields_.push_back(field);
             }
         }
     }

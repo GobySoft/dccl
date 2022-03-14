@@ -93,10 +93,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* this_
         }
 
         auto index = index_;
-
-        std::cout << "Root: " << root_msg_->ShortDebugString() << "\n"
-                  << "This: " << this_msg_->ShortDebugString() << std::endl;
-
+        
         sol::table decoded_message = decode_message(
             this_msg_->SerializePartialAsString(), this_msg_->GetDescriptor()->full_name(),
             root_msg_->SerializePartialAsString(), root_msg_->GetDescriptor()->full_name(), index);

@@ -49,7 +49,6 @@ namespace internal
 class MessageStack;
 }
 
-
 /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
 class FieldCodecBase
 {
@@ -103,8 +102,9 @@ class FieldCodecBase
 
     static const google::protobuf::Message* this_message()
     {
-        return !internal::MessageStack::messages_.empty() ? internal::MessageStack::messages_.back()
-                                                          : 0;
+        return !internal::MessageStack::messages_.empty()
+                   ? internal::MessageStack::messages_.back().msg
+                   : 0;
     }
 
     // currently encoded or (partially) decoded root message
@@ -455,7 +455,7 @@ class FieldCodecBase
 
     virtual void any_encode_repeated(Bitset* bits, const std::vector<boost::any>& wire_values);
     virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* field_values);
-    
+
     virtual void any_pre_encode_repeated(std::vector<boost::any>* wire_values,
                                          const std::vector<boost::any>& field_values);
 
