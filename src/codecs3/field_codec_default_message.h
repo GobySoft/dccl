@@ -184,7 +184,7 @@ class DefaultMessageCodec : public FieldCodecBase
                     if (dc.has_omit_if())
                     {
                         // expensive, so don't do this unless we're going to use it
-                        dc.set_message(this_message(), root_message());
+                        dc.regenerate(this_message(), root_message());
                         if (dc.omit())
                             continue;
                     }

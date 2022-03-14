@@ -104,7 +104,7 @@ message TestMsg
             // ... but the entire message is still accessible with 'root', and
             // 'this_index' refers to the current repeated message index
             dynamic_conditions {
-                only_if: "root.child[this_index].include_i == 'YES'"
+                only_if: "print(this_index); return root.child[this_index].include_i == 'YES'"
             }
         }];
     }
