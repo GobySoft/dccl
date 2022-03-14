@@ -27,7 +27,13 @@
 
 #include "dccl/binary.h"
 #include "dccl/codec.h"
-#include "test.pb.h"
+
+#if CODEC_VERSION == 3
+#include "test3.pb.h"
+#elif CODEC_VERSION == 4
+#include "test4.pb.h"
+#endif
+
 using namespace dccl::test;
 
 dccl::Codec codec;

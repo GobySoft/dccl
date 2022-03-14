@@ -9,7 +9,7 @@ message TestMsg
     option (dccl.msg) = {
         id: 2,
         max_bytes: 512,
-        codec_version: 3
+        codec_version: @DCCL_CODEC_VERSION@
     };
 
     enum State

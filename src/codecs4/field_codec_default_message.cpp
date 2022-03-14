@@ -145,6 +145,16 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
                         continue;
                 }
 
+                // singular field dynamic conditions - repeated fields handled in any_decode_repeated
+                DynamicConditions& dc = dynamic_conditions(field_desc);
+                if (dc.has_omit_if())
+                {
+                    // expensive, so don't do this unless we're going to use it
+                    dc.regenerate(this_message(), root_message());
+                    if (dc.omit())
+                        continue;
+                }
+
                 boost::any field_value;
                 if (field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
@@ -226,13 +236,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
     else
     {
         dccl::DCCLFieldOptions dccl_field_options = field->options().GetExtension(dccl::field);
-
-        DynamicConditions& dc = dynamic_conditions(field);
-        // expensive, so don't do this unless we're going to use it
-        if (dc.has_omit_if())
-            dc.regenerate(this_message(), root_message());
-
-        if (dccl_field_options.omit() || (dc.has_omit_if() && dc.omit())) // omit
+        if (dccl_field_options.omit()) // omit
         {
             return false;
         }
