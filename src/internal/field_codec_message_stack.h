@@ -26,45 +26,61 @@
 
 namespace dccl
 {
-    class FieldCodecBase;
-    enum MessagePart { HEAD, BODY, UNKNOWN };
+class FieldCodecBase;
+enum MessagePart
+{
+    HEAD,
+    BODY,
+    UNKNOWN
+};
 
-    /// Namespace for objects used internally by DCCL
-    namespace internal
-    {
-        //RAII handler for the current Message recursion stack
-        class MessageStack
-        {
-          public:
-            MessageStack(const google::protobuf::FieldDescriptor* field = 0);
-                
-            ~MessageStack();
-            
-            bool first() 
-            { return desc_.empty(); }
-            int count() 
-            { return desc_.size(); }
+/// Namespace for objects used internally by DCCL
+namespace internal
+{
+//RAII handler for the current Message recursion stack
+class MessageStack
+{
+  public:
+    MessageStack(const google::protobuf::FieldDescriptor* field = 0);
 
-            void push(const google::protobuf::Descriptor* desc);
-            void push(const google::protobuf::FieldDescriptor* field);
-            void push(MessagePart part);
+    ~MessageStack();
 
-            static MessagePart current_part() { return parts_.empty() ? UNKNOWN : parts_.back(); }
-        
-            friend class ::dccl::FieldCodecBase;
-          private:
-            void __pop_desc();
-            void __pop_field();
-            void __pop_parts();
-                
-            static std::vector<const google::protobuf::Descriptor*> desc_;
-            static std::vector<const google::protobuf::FieldDescriptor*> field_;
-            static std::vector<MessagePart> parts_;
-            int descriptors_pushed_;
-            int fields_pushed_;
-            int parts_pushed_;
-        };
-    }
-}
+    bool first() { return desc_.empty(); }
+    int count() { return desc_.size(); }
+
+    void push(const google::protobuf::Descriptor* desc);
+    void push(const google::protobuf::FieldDescriptor* field);
+    void push(MessagePart part);
+
+    void update_index(const google::protobuf::FieldDescriptor* field, int index);
+    void push_message(const google::protobuf::FieldDescriptor* field,int index=-1);
+
+    static MessagePart current_part() {
+        return parts_.empty() ? UNKNOWN : parts_.back(); }
+
+    friend class ::dccl::FieldCodecBase;
+
+  private:
+    void __pop_desc();
+    void __pop_field();
+    void __pop_parts();
+    void __pop_messages();
+
+    static std::vector<const google::protobuf::Descriptor*> desc_;
+    static std::vector<const google::protobuf::FieldDescriptor*> field_;
+    static std::vector<MessagePart> parts_;
+
+    static std::vector<const google::protobuf::Message*> messages_;
+    // unique fields that correspond exactly to messages_;
+    static std::vector<const google::protobuf::FieldDescriptor*> message_fields_;
+    
+
+    int descriptors_pushed_;
+    int fields_pushed_;
+    int parts_pushed_;
+    int messages_pushed_;
+};
+} // namespace internal
+} // namespace dccl
 
 #endif
