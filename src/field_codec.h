@@ -379,7 +379,7 @@ class FieldCodecBase
         DynamicConditions& dc = dynamic_conditions(field);
         // expensive, so don't do this unless we're going to use it
         if (dc.has_required_if())
-            dc.set_message(this_message(), root_message());
+            dc.regenerate(this_message(), root_message());
 
         if (!field)
             return true;

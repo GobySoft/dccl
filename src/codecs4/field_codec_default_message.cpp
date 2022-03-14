@@ -230,7 +230,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         DynamicConditions& dc = dynamic_conditions(field);
         // expensive, so don't do this unless we're going to use it
         if (dc.has_omit_if())
-            dc.set_message(this_message(), root_message());
+            dc.regenerate(this_message(), root_message());
 
         if (dccl_field_options.omit() || (dc.has_omit_if() && dc.omit())) // omit
         {

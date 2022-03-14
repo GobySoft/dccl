@@ -406,7 +406,7 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
         dc.set_repeated_index(i);
         if (dc.has_omit_if())
         {
-            dc.set_message(this_message(), root_message());
+            dc.regenerate(this_message(), root_message(), i);
             if (dc.omit())
                 continue;
         }
@@ -443,7 +443,7 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
         dc.set_repeated_index(i);
         if (dc.has_omit_if())
         {
-            dc.set_message(this_message(), root_message());
+            dc.regenerate(this_message(), root_message(), i);
             if (dc.omit())
                 continue;
         }

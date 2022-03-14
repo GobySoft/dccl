@@ -51,9 +51,12 @@ dccl::DynamicConditions::~DynamicConditions()
 #endif
 }
 
-void dccl::DynamicConditions::set_message(const google::protobuf::Message* this_msg,
-                                          const google::protobuf::Message* root_msg)
+void dccl::DynamicConditions::regenerate(const google::protobuf::Message* this_msg,
+                                         const google::protobuf::Message* root_msg, int index)
 {
+    if (index >= 0)
+        set_repeated_index(index);
+
     this_msg_ = this_msg;
     root_msg_ = root_msg;
     if (!this_msg_)
@@ -93,7 +96,7 @@ void dccl::DynamicConditions::set_message(const google::protobuf::Message* this_
         }
 
         auto index = index_;
-        
+
         sol::table decoded_message = decode_message(
             this_msg_->SerializePartialAsString(), this_msg_->GetDescriptor()->full_name(),
             root_msg_->SerializePartialAsString(), root_msg_->GetDescriptor()->full_name(), index);

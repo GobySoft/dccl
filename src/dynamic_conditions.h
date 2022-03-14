@@ -50,10 +50,10 @@ class DynamicConditions
         field_desc_ = field_desc;
     }
 
-    void set_message(const google::protobuf::Message* this_msg,
-                     const google::protobuf::Message* root_msg);
-
     void set_repeated_index(int index) { index_ = index; }
+
+    void regenerate(const google::protobuf::Message* this_msg,
+                    const google::protobuf::Message* root_msg, int repeated_index = -1);
 
     const dccl::DCCLFieldOptions::Conditions& conditions();
 

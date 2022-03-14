@@ -62,7 +62,7 @@ namespace dccl
                   double static_max = this->dccl_field_options().max();
                   if(dc.has_max())
                   {
-                      dc.set_message(this->this_message(), this->root_message());
+                      dc.regenerate(this->this_message(), this->root_message());
                       // don't let dynamic conditions breach static bounds
                       return std::max(this->dccl_field_options().min(), std::min(dc.max(), static_max));
                   }
@@ -79,7 +79,7 @@ namespace dccl
                   double static_min = this->dccl_field_options().min();
                   if (dc.has_min())
                   {
-                      dc.set_message(this->this_message(), this->root_message());
+                      dc.regenerate(this->this_message(), this->root_message());
                       
                       // don't let dynamic conditions breach static bounds
                       return std::min(this->dccl_field_options().max(), std::max(dc.min(), static_min));
