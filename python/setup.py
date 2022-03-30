@@ -11,9 +11,10 @@ from distutils.command.clean import clean as _clean
 from distutils.command.build_py import build_py as _build_py
 import subprocess
 import os, sys
+import time
 
 def get_version():
-    return open('../version.txt', 'r').readline().strip()
+    return open('version.txt', 'r').readline().strip()
 
 class clean(_clean):
   def run(self):
@@ -30,7 +31,7 @@ class clean(_clean):
 class build_py(_build_py):
   def run(self):
     # Generate option_extension.proto file.
-    protoc_command = ['protoc', '-I../build/include/', '-I/usr/include', '--python_out=.', '../build/include/dccl/option_extensions.proto']
+    protoc_command = ['protoc', '-Iinclude/', '-I/usr/include', '--python_out=.', 'include/dccl/option_extensions.proto']
     if subprocess.call(protoc_command) != 0:
       sys.exit(-1)
 
@@ -51,7 +52,7 @@ setup(
             "dccl._dccl",
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
-            extra_compile_args = ["-Wno-write-strings"], # Hide a bunch of c++ warnings.
+            extra_compile_args = ["-Wno-write-strings", "-std=c++11"], # Hide a bunch of c++ warnings.
         )
     ],
 
