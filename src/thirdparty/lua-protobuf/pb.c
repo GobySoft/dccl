@@ -1,3 +1,5 @@
+#ifndef __clang_analyzer__
+
 #ifdef _MSC_VER
 # define _CRT_SECURE_NO_WARNINGS
 # define _CRT_NONSTDC_NO_WARNINGS
@@ -1969,4 +1971,6 @@ PB_NS_END
 /* cc: flags+='-O3 -ggdb -pedantic -std=c90 -Wall -Wextra --coverage'
  * maccc: flags+='-ggdb -shared -undefined dynamic_lookup' output='pb.so'
  * win32cc: flags+='-s -mdll -DLUA_BUILD_AS_DLL ' output='pb.dll' libs+='-llua54' */
+
+#endif
 

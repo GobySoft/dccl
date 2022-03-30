@@ -1,3 +1,5 @@
+#ifndef __clang_analyzer__
+
 #ifndef pb_h
 #define pb_h
 
@@ -1703,3 +1705,5 @@ PB_NS_END
 
 /* cc: flags+='-shared -DPB_IMPLEMENTATION -xc' output='pb.so' */
 
+
+#endif

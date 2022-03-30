@@ -14,7 +14,7 @@ DCCL provides two main components: 1) an \ref idl "interface descriptor language
 echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
 sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
 sudo apt update
-sudo apt install libdccl3-dev
+sudo apt install libdccl4-dev
 \endcode
 <li> Find or create a plain GPB message (navreport.proto):
 \code
@@ -43,7 +43,7 @@ message NavigationReport {
   optional bool battery_ok = 5;
 }
 \endcode
-<li> (Optional, requires dccl3-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
+<li> (Optional, requires dccl4-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
 \code
 $ dccl --analyze -f navreport.proto
 ||||||| Dynamic Compact Control Language (DCCL) Codec |||||||
@@ -115,7 +115,7 @@ g++ quick.cpp -o quick navreport.pb.cc -ldccl -lprotobuf
 $ ./quick                                                                   
 x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 \endcode
-<li> Or skip steps 5-8 and use the command line tool 'dccl' instead (apt install dccl3-apps):
+<li> Or skip steps 5-8 and use the command line tool 'dccl' instead (apt install dccl4-apps):
 \code
 $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
 0000000: f834 9871 7046 3213                      .4.qpF2.
@@ -188,14 +188,14 @@ cd dccl
 echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
 sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
 sudo apt update
-sudo apt install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
+sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
 \endcode
 <li> Compiled continuous (latest HEAD of the 3.0 branch) binary packages for Ubuntu / Debian: https://packages.gobysoft.org/ubuntu/continuous/
 \code
 echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
 sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
 sudo apt update
-sudo apt install libdccl3-dev dccl3-apps dccl3-doc dccl3-apps dccl3-compiler
+sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
 \endcode
 <li> Debian packaging files (for Debian or derivatives): https://code.launchpad.net/~dccl-dev/dccl/debian3
 \code
