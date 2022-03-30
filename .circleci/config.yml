@@ -94,7 +94,8 @@ job-template-deb-amd64: &job-template-deb-amd64
   steps:
     - run: &run-update-apt
         name: Update apt packages
-        command: apt-get update && apt-get dist-upgrade -y
+        # remove Lua when we rebuild Docker containers
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install liblua5.3-dev -y
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
