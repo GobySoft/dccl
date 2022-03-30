@@ -208,14 +208,12 @@ filter-template-master-only: &filter-template-master-only
       only: /.*/
     branches:
       only:
-        - "3.0"
         - "4.0"
 
 filter-template-non-master: &filter-template-non-master
   filters:
     branches:
       ignore:
-        - "3.0"
         - "4.0"
         
 ## Begin actual config
@@ -249,7 +247,7 @@ workflows:
       - armhf-stretch-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-stretch-deb-build
+            - arm64-stretch-deb-build
 
       - amd64-buster-deb-build:
           <<: *filter-template-master-only
@@ -262,7 +260,7 @@ workflows:
       - armhf-buster-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-buster-deb-build
+            - arm64-buster-deb-build
 
       - amd64-bullseye-deb-build:
           <<: *filter-template-master-only
@@ -275,7 +273,7 @@ workflows:
       - armhf-bullseye-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-bullseye-deb-build
+            - arm64-bullseye-deb-build
 
             
       - amd64-bionic-deb-build:
@@ -289,7 +287,7 @@ workflows:
       - armhf-bionic-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-bionic-deb-build
+            - arm64-bionic-deb-build
 
       - amd64-focal-deb-build:
           <<: *filter-template-master-only
@@ -302,22 +300,12 @@ workflows:
       - armhf-focal-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-focal-deb-build
+            - arm64-focal-deb-build
 
             
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
-            - amd64-stretch-deb-build
-            - amd64-bullseye-deb-build
-            - amd64-buster-deb-build
-            - amd64-bionic-deb-build
-            - amd64-focal-deb-build            
-            - arm64-stretch-deb-build
-            - arm64-bullseye-deb-build
-            - arm64-buster-deb-build
-            - arm64-bionic-deb-build
-            - arm64-focal-deb-build
             - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
@@ -332,16 +320,6 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - amd64-stretch-deb-build
-            - amd64-bullseye-deb-build
-            - amd64-buster-deb-build
-            - amd64-bionic-deb-build
-            - amd64-focal-deb-build            
-            - arm64-stretch-deb-build
-            - arm64-bullseye-deb-build
-            - arm64-buster-deb-build
-            - arm64-bionic-deb-build
-            - arm64-focal-deb-build
             - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
@@ -585,6 +563,7 @@ jobs:
           command: |
             echo 'trusted-key A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE' >> ~/.gnupg/gpg.conf
             echo '|1|HjIjI40ko7XtgqXNK8DNuiVcy4Q=|7PEGcXNRmsj1tzGeRjb9UgWIWwE= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8LmTLyo7inmKCa28F2JZBSpQFT1VrwnFpeV1v6PlQE' >> ~/.ssh/known_hosts
+            rm /root/deb/*build-deps*.changes
             for change_file in /root/deb/*.changes;
             do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf ${UPLOAD_DESTINATION} $change_file;
             done
