@@ -56,10 +56,40 @@ namespace dccl
             public:
 
               virtual double max()
-              { return FieldCodecBase::dccl_field_options().max(); }
+              {
+                  DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+
+                  double static_max = this->dccl_field_options().max();
+                  if(dc.has_max())
+                  {
+                      dc.regenerate(this->this_message(), this->root_message());
+                      // don't let dynamic conditions breach static bounds
+                      return std::max(this->dccl_field_options().min(), std::min(dc.max(), static_max));
+                  }
+                  else
+                  {
+                      return static_max;
+                  }
+                  
+              }
       
               virtual double min()
-              { return FieldCodecBase::dccl_field_options().min(); }
+              {
+                  DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+                  double static_min = this->dccl_field_options().min();
+                  if (dc.has_min())
+                  {
+                      dc.regenerate(this->this_message(), this->root_message());
+                      
+                      // don't let dynamic conditions breach static bounds
+                      return std::min(this->dccl_field_options().max(), std::max(dc.min(), static_min));
+                  }
+                  else
+                  {
+                      return static_min;
+                  }
+                  
+              }
 
               virtual double precision()
               { return FieldCodecBase::dccl_field_options().precision(); }
@@ -99,6 +129,9 @@ namespace dccl
           
               virtual Bitset encode(const WireType& value)
               {
+                  dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::ENCODE) && dlog << "Encode " << value << " with bounds: [" << min() << "," << max() << "]" << std::endl;
+
+                  
                   // round first, before checking bounds
                   WireType wire_value = dccl::round(value, precision());
 
@@ -135,6 +168,9 @@ namespace dccl
           
               virtual WireType decode(Bitset* bits)
               {
+                  dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::DECODE) && dlog << "Decode with bounds: [" << min() << "," << max() << "]" << std::endl;
+
+
                   // The line below SHOULD BE:
                   // dccl::uint64 t = bits->to<dccl::uint64>();
                   // But GCC3.3 requires an explicit template modifier on the method.
@@ -335,7 +371,7 @@ namespace dccl
             void validate()
             {
                 FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_static_value(), "missing (dccl.field).static_value");
-
+                
                 std::string t = FieldCodecBase::dccl_field_options().static_value();
                 try
                 {

@@ -31,6 +31,7 @@ bool dccl::FieldCodecBase::strict_ = false;
 
 const google::protobuf::Message* dccl::FieldCodecBase::root_message_ = 0;
 const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor_ = 0;
+dccl::DynamicConditions dccl::FieldCodecBase::dynamic_conditions_;
 
 using dccl::dlog;
 using namespace dccl::logger;
@@ -67,6 +68,10 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_va
     any_encode(&new_bits, wire_value);
     disp_size(field, new_bits, msg_handler.field_.size());
     bits->append(new_bits);
+
+    if (field)
+        dlog.is(DEBUG2, ENCODE) && dlog << "... produced these " << new_bits.size()
+                                        << " bits: " << new_bits << std::endl;
 }
 
 void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
@@ -149,7 +154,8 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, boost::any* field_value,
     field_min_size(&bits_to_transfer, field);
     these_bits.get_more_bits(bits_to_transfer);
 
-    dlog.is(DEBUG2, DECODE) && dlog << "... using these bits: " << these_bits << std::endl;
+    if (field)
+        dlog.is(DEBUG2, DECODE) && dlog << "... using these bits: " << these_bits << std::endl;
 
     boost::any wire_value = *field_value;
 
@@ -170,8 +176,8 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
         throw(Exception("Decode called with NULL Bitset"));
 
     if (field)
-        dlog.is(DEBUG2, DECODE) && dlog << "Starting repeated decode for field: "
-                                        << field->DebugString();
+        dlog.is(DEBUG2, DECODE) &&
+            dlog << "Starting repeated decode for field: " << field->DebugString() << std::endl;
 
     Bitset these_bits(bits);
 
@@ -208,6 +214,7 @@ void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
                                           const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(field);
+
     if (this_field())
         *bit_size += this_field()->is_repeated() ? max_size_repeated() : max_size();
     else
@@ -385,10 +392,25 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
         Bitset size_bits(repeated_vector_field_size(dccl_field_options().max_repeat()),
                          wire_values.size());
         bits->append(size_bits);
+
+        dlog.is(DEBUG2, ENCODE) && dlog << "repeated size field ... produced these "
+                                        << size_bits.size() << " bits: " << size_bits << std::endl;
     }
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+
+        DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+        dc.set_repeated_index(i);
+        if (dc.has_omit_if())
+        {
+            dc.regenerate(this_message(), root_message(), i);
+            if (dc.omit())
+                continue;
+        }
+
         Bitset new_bits;
         if (i < wire_values.size())
             any_encode(&new_bits, wire_values[i]);
@@ -412,8 +434,20 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
 
     wire_values->resize(wire_vector_size);
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+
+        DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+        dc.set_repeated_index(i);
+        if (dc.has_omit_if())
+        {
+            dc.regenerate(this_message(), root_message(), i);
+            if (dc.omit())
+                continue;
+        }
+
         Bitset these_bits(repeated_bits);
         these_bits.get_more_bits(min_size());
         any_decode(&these_bits, &(*wire_values)[i]);
@@ -432,8 +466,19 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
         out += repeated_vector_field_size(dccl_field_options().max_repeat());
     }
 
+    internal::MessageStack msg_handler(this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
+        msg_handler.update_index(this->this_field(), i);
+        DynamicConditions& dc = this->dynamic_conditions(this->this_field());
+        dc.set_repeated_index(i);
+        if (dc.has_omit_if())
+        {
+            dc.regenerate(this_message(), root_message(), i);
+            if (dc.omit())
+                continue;
+        }
+        
         if (i < wire_values.size())
             out += any_size(wire_values[i]);
         else

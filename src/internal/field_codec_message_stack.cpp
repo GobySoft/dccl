@@ -26,12 +26,13 @@ std::vector<const google::protobuf::FieldDescriptor*> dccl::internal::MessageSta
 std::vector<const google::protobuf::Descriptor*> dccl::internal::MessageStack::desc_;
 std::vector<dccl::MessagePart> dccl::internal::MessageStack::parts_;
 
-//
+std::vector<dccl::internal::MessageStack::MessageAndField> dccl::internal::MessageStack::messages_;
+
 // MessageStack
 //
 
 void dccl::internal::MessageStack::push(const google::protobuf::Descriptor* desc)
- 
+
 {
     desc_.push_back(desc);
     ++descriptors_pushed_;
@@ -49,37 +50,43 @@ void dccl::internal::MessageStack::push(MessagePart part)
     ++parts_pushed_;
 }
 
-
 void dccl::internal::MessageStack::__pop_desc()
 {
-    if(!desc_.empty())
+    if (!desc_.empty())
         desc_.pop_back();
+    --descriptors_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_field()
 {
-    if(!field_.empty())
+    if (!field_.empty())
         field_.pop_back();
+    --fields_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_parts()
 {
-    if(!parts_.empty())
+    if (!parts_.empty())
         parts_.pop_back();
+    --parts_pushed_;
 }
 
+void dccl::internal::MessageStack::__pop_messages()
+{
+    if (!messages_.empty())
+        messages_.pop_back();
+    --messages_pushed_;
+}
 
 dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
-    : descriptors_pushed_(0),
-      fields_pushed_(0),
-      parts_pushed_(0)
+    : descriptors_pushed_(0), fields_pushed_(0), parts_pushed_(0), messages_pushed_(0)
 {
-    if(field)
+    if (field)
     {
-        if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
+        if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
         {
             MessagePart part = UNKNOWN;
-            if(field->options().GetExtension(dccl::field).has_in_head())
+            if (field->options().GetExtension(dccl::field).has_in_head())
             {
                 // if explicitly set, set part (HEAD or BODY) of message for all children of this message
                 part = field->options().GetExtension(dccl::field).in_head() ? HEAD : BODY;
@@ -90,22 +97,63 @@ dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescript
                 part = current_part();
             }
             push(part);
-            
             push(field->message_type());
         }
+        push_message(field);
         push(field);
     }
-    
+}
+
+void dccl::internal::MessageStack::update_index(const google::protobuf::FieldDescriptor* field,
+                                                int index)
+{
+    push_message(field, index);
+}
+
+void dccl::internal::MessageStack::push_message(const google::protobuf::FieldDescriptor* field,
+                                                int index)
+{
+    if (messages_.empty() && dccl::FieldCodecBase::root_message())
+    {
+        messages_.push_back({dccl::FieldCodecBase::root_message(), nullptr});
+        ++messages_pushed_;
+    }
+
+    if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
+    {
+        // replace if the previous push was the same field
+        if (!messages_.empty() && field == messages_.back().field && !messages_.empty())
+        {
+            messages_.pop_back();
+            --messages_pushed_;
+        }
+
+        // add the new message + field if possible
+        if (messages_.size() && messages_.back().msg->GetDescriptor() == field->containing_type())
+        {
+            const auto* refl = messages_.back().msg->GetReflection();
+            if (field->is_repeated())
+            {
+                if (index >= 0 && index < refl->FieldSize(*messages_.back().msg, field))
+                {
+                    messages_.push_back(
+                        {&refl->GetRepeatedMessage(*messages_.back().msg, field, index), field});
+                    ++messages_pushed_;
+                }
+            }
+            else
+            {
+                messages_.push_back({&refl->GetMessage(*messages_.back().msg, field), field});
+                ++messages_pushed_;
+            }
+        }
+    }
 }
 
 dccl::internal::MessageStack::~MessageStack()
 {
-    for(int i = 0; i < fields_pushed_; ++i)
-        __pop_field();
-
-    for(int i = 0; i < descriptors_pushed_; ++i)
-        __pop_desc();
-
-    for(int i = 0; i < parts_pushed_; ++i)
-        __pop_parts();    
+    while (fields_pushed_ > 0) __pop_field();
+    while (descriptors_pushed_ > 0) __pop_desc();
+    while (parts_pushed_ > 0) __pop_parts();
+    while (messages_pushed_ > 0) __pop_messages();
 }

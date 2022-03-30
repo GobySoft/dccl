@@ -5,7 +5,7 @@ set(PROTOS
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
-add_library(dccl 
+set(SRC
   logger.cpp
   codec.cpp
   field_codec.cpp
@@ -13,6 +13,7 @@ add_library(dccl
   field_codec_id.cpp
   bitset.cpp
   dynamic_protobuf_manager.cpp
+  dynamic_conditions.cpp
   codecs2/field_codec_default.cpp
   codecs2/field_codec_default_message.cpp
   codecs3/field_codec_default_message.cpp
@@ -22,6 +23,19 @@ add_library(dccl
   internal/type_helper.cpp
   internal/field_codec_message_stack.cpp
   ${PROTO_SRCS} ${PROTO_HDRS}
+  ) 
+
+
+# embed lua-protobuf directly into libdccl.so to avoid require path headaches
+if(enable_lua)
+  set(SRC
+    ${SRC}
+    thirdparty/lua-protobuf/pb.c
+    )
+endif()
+
+add_library(dccl 
+  ${SRC}
   )
 
 target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
@@ -38,6 +52,9 @@ if(enable_cryptography)
   target_link_libraries(dccl ${Cryptopp_LIBRARIES})
 endif()
 
+if(enable_lua)
+  target_link_libraries(dccl ${LUA_LIBRARY})
+endif()
 
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 

@@ -13,6 +13,12 @@ cmake_policy(SET CMP0009 NEW)
 
 project(dccl)
 
+if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
+  message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
 ## allows us to write custom modules or modifying existing ones
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
@@ -31,7 +37,7 @@ option(build_apps "Build supporting tools and other binary applications" ON)
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
 string(REGEX REPLACE "^([0-9]+).*$" "\\1" DCCL_VERSION_MAJOR "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_MINOR  "${DCCL_VERSION_STRING}")
-string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
+string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9~a-z]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -42,7 +48,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
      OUTPUT_VARIABLE DCCL_LAST_REV)
    string(STRIP ${DCCL_LAST_REV} DCCL_LAST_REV)
 
-   execute_process(COMMAND git rev-list ${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}..HEAD --count
+   string(REPLACE "~" "_" DCCL_GIT_VERSION ${DCCL_VERSION_MAJOR}.${DCCL_VERSION_MINOR}.${DCCL_VERSION_PATCH}) 
+
+   execute_process(COMMAND git rev-list ${DCCL_GIT_VERSION}..HEAD --count
      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
      OUTPUT_VARIABLE DCCL_REVS_SINCE_TAG)
    string(STRIP ${DCCL_REVS_SINCE_TAG} DCCL_REVS_SINCE_TAG)
@@ -59,7 +67,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2022.03.07")
+   set(DCCL_VERSION_DATE "2021.07.21")
 endif()
 
 
@@ -146,7 +154,7 @@ include(GNUInstallDirs)
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING PATTERN  "*.h" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
+  FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
 
@@ -222,6 +230,26 @@ else()
   set(DCCL_HAS_B64 "0")
 endif()
 
+
+## LUA for dynamic conditionals
+find_package(Lua QUIET)
+set(LUA_DOC_STRING "Enable LUA functionality (requires liblua5.3-dev")
+if(LUA_FOUND)
+  option(enable_lua ${LUA_DOC_STRING} ON)
+else()
+  option(enable_lua ${LUA_DOC_STRING} OFF)
+  message(">> setting enable_lua to OFF ... if you need this functionality: 1) install liblua5.3-dev; 2) run cmake -Denable_lua=ON")
+endif()
+
+if(enable_lua)
+  find_package(Lua REQUIRED)
+  set(DCCL_HAS_LUA "1")
+  include_directories(${LUA_INCLUDE_DIR})
+else()
+  set(DCCL_HAS_LUA "0")
+endif()
+
+
 # Protobuf < 2.4.0 does not have plugin capability
 if(${PROTOC_VERSION} VERSION_LESS 2.4.0)
   option(enable_units "Enable static unit-safety functionality" OFF)
@@ -233,17 +261,9 @@ endif()
 if(NOT ${PROTOC_VERSION} VERSION_LESS 3.0.0) 
   set(PROTOBUF_SYNTAX_VERSION "syntax = \"proto2\";")
 endif()
-
-# Protobuf >= 3.6.0 requires C++11 or greater
-if((NOT ${PROTOC_VERSION} VERSION_LESS 3.6.0)
-    AND ((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "98")))
-  message ("Setting CMAKE_CXX_STANDARD to 11 as required by Protobuf >= 3.6.0. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
-
+  
 ## copy to dccl/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto)
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
