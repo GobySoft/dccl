@@ -29,6 +29,10 @@ environment-template-stretch: &environment-template-stretch
 environment-template-buster: &environment-template-buster
   DISTRO_RELEASE_CODENAME: "buster"
   DISTRO_RELEASE_VERSION: "debian10"
+
+environment-template-bullseye: &environment-template-bullseye
+  DISTRO_RELEASE_CODENAME: "bullseye"
+  DISTRO_RELEASE_VERSION: "debian11"
   
 environment-template-bionic: &environment-template-bionic
   DISTRO_RELEASE_CODENAME: "bionic"
@@ -52,6 +56,9 @@ docker-arm64-buster: &docker-arm64-buster
   - image: gobysoft/dccl-debian-build-arm64:10.1
 docker-armhf-buster: &docker-armhf-buster
   - image: gobysoft/dccl-debian-build-armhf:10.1
+
+docker-base-bullseye: &docker-base-bullseye
+  - image: gobysoft/dccl-debian-build-base:11.1
     
 docker-base-bionic: &docker-base-bionic
   - image: gobysoft/dccl-ubuntu-build-base:18.04.1
@@ -220,7 +227,8 @@ workflows:
           <<: *filter-template-non-master
       - amd64-buster-build:
           <<: *filter-template-non-master
-
+      - amd64-bullseye-build:
+          <<: *filter-template-non-master
       - amd64-bionic-build:
           <<: *filter-template-non-master
       - amd64-focal-build:
@@ -253,6 +261,20 @@ workflows:
           <<: *filter-template-master-only
           requires:
             - arm64-buster-deb-build
+
+      - amd64-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-bullseye-deb-build
+      - armhf-bullseye-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - arm64-bullseye-deb-build
+
             
       - amd64-bionic-deb-build:
           <<: *filter-template-master-only
@@ -285,6 +307,7 @@ workflows:
       - continuous-upload:
           requires:
             - armhf-stretch-deb-build
+            - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
             - armhf-focal-deb-build
@@ -298,6 +321,7 @@ workflows:
               ignore: /.*/
           requires:
             - armhf-stretch-deb-build
+            - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-focal-deb-build
             - armhf-bionic-deb-build
@@ -345,6 +369,13 @@ jobs:
     environment:
       <<: *environment-template-common      
 
+  amd64-bullseye-build:
+    <<: *job-template-amd64
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common      
+
+      
   amd64-bionic-build:
     <<: *job-template-amd64
     docker: *docker-base-bionic
@@ -400,6 +431,29 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-buster
       <<: *environment-template-armhf
+  amd64-bullseye-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-amd64
+  arm64-bullseye-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-arm64
+  armhf-bullseye-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-bullseye
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-bullseye
+      <<: *environment-template-armhf
+
+
   amd64-bionic-deb-build:
     <<: *job-template-deb-amd64
     docker: *docker-base-bionic
@@ -509,6 +563,7 @@ jobs:
           command: |
             echo 'trusted-key A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE' >> ~/.gnupg/gpg.conf
             echo '|1|HjIjI40ko7XtgqXNK8DNuiVcy4Q=|7PEGcXNRmsj1tzGeRjb9UgWIWwE= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8LmTLyo7inmKCa28F2JZBSpQFT1VrwnFpeV1v6PlQE' >> ~/.ssh/known_hosts
+            rm /root/deb/*build-deps*.changes
             for change_file in /root/deb/*.changes;
             do dput -c ${CIRCLE_WORKING_DIRECTORY}/.circleci/dput.cf ${UPLOAD_DESTINATION} $change_file;
             done
