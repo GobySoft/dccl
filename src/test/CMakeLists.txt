@@ -44,3 +44,7 @@ add_subdirectory(bitset1)
 
 add_subdirectory(logger1)
 add_subdirectory(round1)
+
+if(enable_lua)
+  add_subdirectory(dccl_dynamic_conditions)
+endif()

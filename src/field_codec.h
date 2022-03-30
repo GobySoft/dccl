@@ -34,6 +34,7 @@
 
 #include "common.h"
 #include "dccl/binary.h"
+#include "dccl/dynamic_conditions.h"
 #include "dccl/option_extensions.pb.h"
 #include "exception.h"
 #include "internal/field_codec_message_stack.h"
@@ -43,6 +44,10 @@
 namespace dccl
 {
 class Codec;
+namespace internal
+{
+class MessageStack;
+}
 
 /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
 class FieldCodecBase
@@ -93,6 +98,13 @@ class FieldCodecBase
     static const google::protobuf::Descriptor* this_descriptor()
     {
         return !internal::MessageStack::desc_.empty() ? internal::MessageStack::desc_.back() : 0;
+    }
+
+    static const google::protobuf::Message* this_message()
+    {
+        return !internal::MessageStack::messages_.empty()
+                   ? internal::MessageStack::messages_.back().msg
+                   : 0;
     }
 
     // currently encoded or (partially) decoded root message
@@ -350,6 +362,12 @@ class FieldCodecBase
         }
     }
 
+    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
+    {
+        dynamic_conditions_.set_field(field);
+        return dynamic_conditions_;
+    }
+
   protected:
     /// \brief Whether to use the required or optional encoding
     bool use_required()
@@ -358,12 +376,19 @@ class FieldCodecBase
             return true;
 
         const google::protobuf::FieldDescriptor* field = this_field();
+        DynamicConditions& dc = dynamic_conditions(field);
+        // expensive, so don't do this unless we're going to use it
+        if (dc.has_required_if())
+            dc.regenerate(this_message(), root_message());
+
         if (!field)
             return true;
         else if (codec_version() > 3) // use required for repeated, required and oneof fields
-            return field->is_required() || field->is_repeated() || is_part_of_oneof(field);
+            return field->is_required() || field->is_repeated() || is_part_of_oneof(field) ||
+                   (dc.has_required_if() && dc.required());
         else if (codec_version() > 2) // use required for both repeated and required fields
-            return field->is_required() || field->is_repeated();
+            return field->is_required() || field->is_repeated() ||
+                   (dc.has_required_if() && dc.required());
         else // use required only for required fields
             return field->is_required();
     }
@@ -503,6 +528,8 @@ class FieldCodecBase
     google::protobuf::FieldDescriptor::CppType wire_type_;
 
     bool force_required_;
+
+    static DynamicConditions dynamic_conditions_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec)
