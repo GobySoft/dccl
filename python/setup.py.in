@@ -31,7 +31,7 @@ class clean(_clean):
 class build_py(_build_py):
   def run(self):
     # Generate option_extension.proto file.
-    protoc_command = ['protoc', '-Iinclude/', '-I/usr/include', '--python_out=.', 'include/dccl/option_extensions.proto']
+    protoc_command = ['protoc', '-I@dccl_INC_DIR@/', '-I/usr/include', '--python_out=.', '@dccl_INC_DIR@/dccl/option_extensions.proto']
     if subprocess.call(protoc_command) != 0:
       sys.exit(-1)
 
