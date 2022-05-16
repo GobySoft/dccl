@@ -14,7 +14,7 @@ import os, sys
 import time
 
 def get_version():
-    return open('../version.txt', 'r').readline().strip()
+    return open('@CMAKE_SOURCE_DIR@/version.txt', 'r').readline().strip()
 
 class clean(_clean):
   def run(self):
