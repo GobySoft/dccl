@@ -18,6 +18,7 @@ sudo apt install libdccl4-dev
 \endcode
 <li> Find or create a plain GPB message (navreport.proto):
 \code
+syntax="proto2";
 message NavigationReport {
   required double x = 1;
   required double y = 2;
@@ -29,6 +30,7 @@ message NavigationReport {
 \endcode
 <li> Turn it into a DCCL message. Create bounds on the message and give it a unique identifier number using DCCL extensions:
 \code
+syntax="proto2";
 import "dccl/option_extensions.proto";
 
 message NavigationReport {

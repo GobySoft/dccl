@@ -1,3 +1,5 @@
+#define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 #include "structmember.h"
 #include "bytesobject.h"
@@ -134,7 +136,7 @@ static int Codec_init(Codec *self, PyObject *args, PyObject *kwds) {
 // Get the ID for an encoded message
 static PyObject *Codec_id(Codec *self, PyObject *args) {
     const char *bytes;
-    int bytes_len;
+    Py_ssize_t bytes_len;
     unsigned id;
 
     if (!PyArg_ParseTuple(args, "s#", &bytes, &bytes_len))
@@ -208,7 +210,7 @@ static PyObject *Codec_size(Codec *self, PyObject *args) {
 
 static PyObject *Codec_decode(Codec *self, PyObject *args) {
     const char *bytes;
-    int size = 0;
+    Py_ssize_t size = 0;
     int header_only = 0;
     
     // Parse inputs and convert to string
