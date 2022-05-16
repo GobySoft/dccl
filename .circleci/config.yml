@@ -211,7 +211,6 @@ filter-template-master-only: &filter-template-master-only
       only:
         - "3.0"
         - "4.0"
-        - "3.0-python"
 
 filter-template-non-master: &filter-template-non-master
   filters:
@@ -219,7 +218,6 @@ filter-template-non-master: &filter-template-non-master
       ignore:
         - "3.0"
         - "4.0"
-        - "3.0-python"
         
 ## Begin actual config
 version: 2
