@@ -14,7 +14,7 @@ import os, sys
 import time
 
 def get_version():
-    return open('version.txt', 'r').readline().strip()
+    return open('../version.txt', 'r').readline().strip()
 
 class clean(_clean):
   def run(self):
@@ -52,6 +52,8 @@ setup(
             "dccl._dccl",
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
+            include_dirs=['../build/include'],
+            library_dirs=['../build/lib'],
             extra_compile_args = ["-Wno-write-strings", "-std=c++11"], # Hide a bunch of c++ warnings.
         )
     ],
