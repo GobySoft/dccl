@@ -124,12 +124,12 @@ x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
 \endcode
 <li> Or skip steps 5-9 and use Python:
 \code
+$ sudo apt install python3 python3-dev python3-pip python3-protobuf
 $ git clone https://github.com/GobySoft/dccl.git
 $ cd dccl
 $ ./build.sh
 $ cd python
-$ python setup.py build
-$ sudo python setup.py install
+$ pip3 install .
 \endcode
 <li> Compile the Python output of your DCCL message
 \code
@@ -155,11 +155,11 @@ encoded_bytes = codec.encode(r_out)
 
 # RECEIVER
 decoded_msg = codec.decode(encoded_bytes)
-print decoded_msg
+print(decoded_msg)
 \endcode
 <li>Run it:
 \code
-$ python quick.py
+$ LD_LIBRARY_PATH=/path/to/dccl/lib python3 quick.py
 x: 450.0
 y: 550.0
 z: -100.0
