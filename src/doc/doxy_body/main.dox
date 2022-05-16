@@ -139,9 +139,6 @@ $ protoc --python_out=. navreport.proto -I . -I /usr/include -I /path/to/dccl/in
 \code
 import os, dccl, navreport_pb2
 
-dccl.addProtoIncludePath(os.path.abspath("."))
-dccl.addProtoIncludePath(os.path.abspath("/path/to/dccl/include"))
-
 dccl.loadProtoFile(os.path.abspath("./navreport.proto"))
 
 codec = dccl.Codec()
