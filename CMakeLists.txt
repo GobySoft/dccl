@@ -270,6 +270,10 @@ endforeach()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
+
+configure_file(${dccl_PYTHON_DIR}/setup.py.in ${dccl_PYTHON_DIR}/setup.py @ONLY)
+
+
 ## copy to build/share
 file(GLOB SHARE_FILES RELATIVE ${dccl_SRC_DIR} src/share/*)
 foreach(I ${SHARE_FILES})
