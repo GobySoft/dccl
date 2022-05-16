@@ -94,7 +94,8 @@ job-template-deb-amd64: &job-template-deb-amd64
   steps:
     - run: &run-update-apt
         name: Update apt packages
-        command: apt-get update && apt-get dist-upgrade -y
+        # remove apt install python packages once we rebuild the Dockers
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y dh-python python3-all-dev
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
@@ -210,6 +211,7 @@ filter-template-master-only: &filter-template-master-only
       only:
         - "3.0"
         - "4.0"
+        - "3.0-python"
 
 filter-template-non-master: &filter-template-non-master
   filters:
@@ -217,6 +219,7 @@ filter-template-non-master: &filter-template-non-master
       ignore:
         - "3.0"
         - "4.0"
+        - "3.0-python"
         
 ## Begin actual config
 version: 2
