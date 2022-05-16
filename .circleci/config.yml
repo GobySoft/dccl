@@ -95,7 +95,8 @@ job-template-deb-amd64: &job-template-deb-amd64
     - run: &run-update-apt
         name: Update apt packages
         # remove Lua when we rebuild Docker containers
-        command: apt-get update && apt-get dist-upgrade -y && apt-get install liblua5.3-dev:${TARGET_ARCH} -y
+        # remove apt install python packages once we rebuild the Dockers
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y dh-python python3-all-dev:amd64 libpython3-all-dev:${TARGET_ARCH} python3-setuptools liblua5.3-dev:${TARGET_ARCH}
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import

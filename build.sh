@@ -19,7 +19,3 @@ echo "make ${DCCL_MAKE_FLAGS} $@"
 make ${DCCL_MAKE_FLAGS} $@
 popd >& /dev/null
 
-# Copy files for python module
-cp -rf version.txt python
-cp -rf build/include python
-
