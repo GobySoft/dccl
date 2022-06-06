@@ -151,4 +151,18 @@ message TestMsg
         optional Child2 subchild = 3;
     }
     optional Child3 child3 = 12;
+
+    oneof example_oneof
+    {
+        int32 x = 20 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.state == 'STATE_1'" }
+        }];
+        int32 y = 21 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.state == 'STATE_2'" }
+        }];
+    }
 }
