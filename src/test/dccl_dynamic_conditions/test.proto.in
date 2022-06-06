@@ -151,4 +151,7 @@ message TestMsg
         optional Child2 subchild = 3;
     }
     optional Child3 child3 = 12;
+
+
+    @TEST_ONEOF@
 }

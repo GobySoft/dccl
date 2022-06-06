@@ -43,6 +43,9 @@ void decode_check(const std::string& encoded);
 void test0();
 void test1();
 void test2();
+#if CODEC_VERSION == 4
+void test3();
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -50,6 +53,10 @@ int main(int argc, char* argv[])
     test0();
     test1();
     test2();
+#if CODEC_VERSION == 4
+    // oneof
+    test3();
+#endif
     std::cout << "all tests passed" << std::endl;
 }
 
@@ -227,6 +234,48 @@ void test2()
 
     decode_check(std::string(bytes.begin(), bytes.end()));
 }
+
+#if CODEC_VERSION == 4
+void test3()
+{
+    msg_in.set_state(TestMsg::STATE_1);
+    msg_in.set_a(10);
+    msg_in.set_c_center(100);
+    msg_in.set_c(100);
+    
+    
+    msg_in.set_y(13);
+    {
+        auto c = msg_in.mutable_child2();
+        c->set_include_i(TestMsg::Child2::NO);
+    }
+    
+    codec.info(msg_in.GetDescriptor());
+
+    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+
+    codec.load(msg_in.GetDescriptor());
+
+    std::cout << "Try encode..." << std::endl;
+    std::cout << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
+    std::cout << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+    std::vector<char> bytes(codec.size(msg_in), 0);
+
+    int s = codec.size(msg_in);
+    std::cout << "Size: " << s << std::endl;
+    std::cout << "Bytes Size: " << bytes.size() << std::endl;
+
+    codec.encode(bytes.data(), bytes.size(), msg_in);
+    std::cout << "... got bytes (hex): "
+              << dccl::hex_encode(std::string(bytes.begin(), bytes.end())) << std::endl;
+
+    std::cout << "Try decode..." << std::endl;
+
+    // y is omitted
+    msg_in.clear_y();
+    decode_check(std::string(bytes.begin(), bytes.end()));
+}
+#endif
 
 void decode_check(const std::string& encoded)
 {

@@ -143,6 +143,12 @@ unsigned dccl::v2::DefaultMessageCodec::min_size()
 void dccl::v2::DefaultMessageCodec::validate()
 {
     bool b = false;
+    
+    const google::protobuf::Descriptor* desc = FieldCodecBase::this_descriptor();
+
+    if (desc->oneof_decl_count() != 0)
+        throw(Exception("DCCL Codec Version 2 does not support 'oneof' declarations"));
+    
     traverse_descriptor<Validate>(&b);
 }
 
