@@ -4,6 +4,20 @@ configure_file(test.proto.in ${dccl_INC_DIR}/dccl/test/dccl_dynamic_conditions/t
 protobuf_generate_cpp(PROTO_SRCS3 PROTO_HDRS3 test3.proto)
 
 set(DCCL_CODEC_VERSION 4)
+set(TEST_ONEOF
+  "oneof example_oneof
+    {
+        int32 x = 20 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: \"this.state == 'STATE_1'\" }
+        }];
+        int32 y = 21 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: \"this.state == 'STATE_2'\" }
+        }];
+    }")
 configure_file(test.proto.in ${CMAKE_CURRENT_SOURCE_DIR}/test4.proto)
 configure_file(test.proto.in ${dccl_INC_DIR}/dccl/test/dccl_dynamic_conditions/test4.proto)
 protobuf_generate_cpp(PROTO_SRCS4 PROTO_HDRS4 test4.proto)

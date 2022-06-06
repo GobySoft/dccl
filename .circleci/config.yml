@@ -196,6 +196,7 @@ job-template-sanitizers: &job-template-sanitizers
     <<: *environment-template-focal
     <<: *environment-template-amd64
     SANITIZER_NUM_JOBS: 2
+    LSAN_OPTIONS: "suppressions=/root/dccl4/src/test/suppressions.lsan.txt"       
   docker: *docker-base-focal
 
 # gpg regression in focal?  
