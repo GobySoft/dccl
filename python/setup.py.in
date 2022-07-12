@@ -19,7 +19,8 @@ os.environ["CC"]='@CMAKE_C_COMPILER@'
 os.environ["CXX"]='@CMAKE_CXX_COMPILER@'
 
 def get_version():
-    return open('@CMAKE_SOURCE_DIR@/version.txt', 'r').readline().strip()
+  # Resolves a PEP 440 warning for invalid versions when, e.g., version is 4.0.0~alpha0.
+  return open('@CMAKE_SOURCE_DIR@/version.txt', 'r').readline().strip().split('~')[0]
 
 class clean(_clean):
   def run(self):
