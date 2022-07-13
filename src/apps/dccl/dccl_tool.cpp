@@ -537,7 +537,15 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int &console
                 }
                 else if ((errno == 0) && optarg && !*end_ptr)
                 {
-                    console_width_ = number;
+                    if (number >= 0)
+                    {
+                        console_width_ = number;
+                    }
+                    else
+                    {
+                        std::cerr << "Option -w value \'" << optarg << "\' was invalid (negative number)." << std::endl;
+                        exit(EXIT_FAILURE);
+                    }
                 }
                 else
                 {
