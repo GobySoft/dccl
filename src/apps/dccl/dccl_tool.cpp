@@ -87,14 +87,15 @@ void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 
         
 void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, const std::string& name);
-void parse_options(int argc, char* argv[], dccl::tool::Config* cfg);
+void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int &console_width_);
 
 
 int main(int argc, char* argv[])
 {
     {
         dccl::tool::Config cfg;
-        parse_options(argc, argv, &cfg);
+        int console_width = -1;
+        parse_options(argc, argv, &cfg, console_width);
 
         if(!cfg.verbose)
             dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
@@ -114,6 +115,11 @@ int main(int argc, char* argv[])
             first_dl = cfg.dlopen[0];
         
         dccl::Codec dccl(cfg.id_codec, first_dl);
+
+        if (console_width >= 0)
+        {
+            dccl.set_console_width(console_width);
+        }
 
         if(cfg.dlopen.size() > 1)
         {
@@ -393,7 +399,7 @@ void load_desc(dccl::Codec* dccl,  const google::protobuf::Descriptor* desc, con
     }
 }
 
-void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
+void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int &console_width_)
 {
     std::vector<dccl::Option> options;
     options.push_back(dccl::Option('e', "encode", no_argument, "Encode a DCCL message to STDOUT from STDIN"));
@@ -410,6 +416,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
     options.push_back(dccl::Option('o', "omit_prefix", no_argument, "Omit the DCCL type name prefix from the output of decode."));
     options.push_back(dccl::Option('i', "id_codec", required_argument, "(Advanced) name for a nonstandard DCCL ID codec to use"));
     options.push_back(dccl::Option('V', "version", no_argument, "DCCL Version"));
+    options.push_back(dccl::Option('w', "console_width", required_argument, "Maximum number of characters used for prettifying console outputs."));
     
     std::vector<option> long_options; 
     std::string opt_string;
@@ -491,6 +498,55 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg)
                 exit(EXIT_SUCCESS);
                 break;
 
+            case 'w':
+            {
+                // Robust error checking inspired by https://stackoverflow.com/a/26083517.
+                char* end_ptr = NULL;
+                errno = 0;
+                int number = strtol(optarg, &end_ptr, 10);
+
+                if (optarg == end_ptr)
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (no digits found, 0 returned)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if ((errno == ERANGE) && (number == LONG_MIN))
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (underflow occurred)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if ((errno == ERANGE) && (number == LONG_MAX))
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (overflow occurred)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if (errno == EINVAL)
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (base contains unsupported value)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if ((errno != 0) && (number == 0))
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (unspecified error occurred)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if ((errno == 0) && optarg && (*end_ptr != 0))
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (contains additional characters)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                else if ((errno == 0) && optarg && !*end_ptr)
+                {
+                    console_width_ = number;
+                }
+                else
+                {
+                    std::cerr << "Option -w value \'" << optarg << "\' was invalid (unknown error)." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+
+                break;
+            }
                 
             case '?':
                 std::cerr << "Try --help for valid options." << std::endl;
