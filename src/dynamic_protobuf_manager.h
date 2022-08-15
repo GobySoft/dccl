@@ -64,7 +64,7 @@ namespace dccl
             }
 
             // try the generated pool
-            google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(protobuf_type_name);
+            desc = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(protobuf_type_name);
             if(desc) return desc;
             
             if(!user_pool_first)

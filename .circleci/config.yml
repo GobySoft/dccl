@@ -161,9 +161,10 @@ job-template-deb-amd64: &job-template-deb-amd64
     - store_artifacts: &store
         path: /tmp/deb
     - run: &remove-orig-source
-        name: Remove original source file to avoid conflicts in merging
+        name: Remove files to avoid conflicts in merging workspaces at upload time
         command: |        
           rm -f /root/deb/*.orig.tar.xz || true
+          [[ "${TARGET_ARCH}" != "amd64" ]] && rm -f /root/deb/*amd64* /root/deb/*.changes /root/deb/*.dsc /root/deb/*.tar.xz /root/deb/*all.deb || true
     - persist_to_workspace: &persist-debs
         root: /root/deb
         paths:
