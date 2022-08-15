@@ -27,7 +27,7 @@ message ArithmeticDoubleTestMsg
 {
   option (dccl.msg).id = 1;
   option (dccl.msg).max_bytes = 512;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
     
   repeated double value = 101 [(dccl.field).codec = "_arithmetic",
                                (dccl.field).(arithmetic).model = "model",
@@ -38,7 +38,7 @@ message ArithmeticEnumTestMsg
 {
   option (dccl.msg).id = 2;
   option (dccl.msg).max_bytes = 512;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   repeated Enum1 value = 114 [(dccl.field).codec = "_arithmetic",
                               (dccl.field).(arithmetic).model = "model",
@@ -51,7 +51,7 @@ message ArithmeticSingleEnumTestMsg
 {
   option (dccl.msg).id = 3;
   option (dccl.msg).max_bytes = 512;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   required Enum1 value = 114 [(dccl.field).codec = "_arithmetic",
                               (dccl.field).(arithmetic).model = "model",
@@ -63,7 +63,7 @@ message ArithmeticEnum2TestMsg
 {
   option (dccl.msg).id = 4;
   option (dccl.msg).max_bytes = 512;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   repeated Enum2 value = 114 [(dccl.field).codec = "_arithmetic",
                               (dccl.field).(arithmetic).model = "model",
@@ -76,7 +76,7 @@ message ArithmeticDouble2TestMsg
 {
   option (dccl.msg).id = 5;
   option (dccl.msg).max_bytes = 10000;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   repeated int32 value = 101 [(dccl.field).codec = "_arithmetic",
                               (dccl.field).(arithmetic).model = "model",
@@ -89,7 +89,7 @@ message ArithmeticDouble3TestMsg
 {
   option (dccl.msg).id = 6;
   option (dccl.msg).max_bytes = 10000;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   repeated int32 value = 101 [(dccl.field).codec = "_arithmetic",
                               (dccl.field).(arithmetic).model = "model",

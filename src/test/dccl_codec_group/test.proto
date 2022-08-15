@@ -27,7 +27,7 @@ message TestMsg
 {
   option (dccl.msg).id = 1;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   optional double d = 1 [(dccl.field).min=-100,
                          (dccl.field).max=126,
@@ -46,7 +46,7 @@ message TestMsgGroup
   option (dccl.msg).id = 2;
   option (dccl.msg).max_bytes = 32;
   option (dccl.msg).codec_group = "test.grouptest";
-  option (dccl.msg).codec_version = 3; 
+  option (dccl.msg).codec_version = 4; 
   
   optional double d = 1 [(dccl.field).min=-100,
                          (dccl.field).max=126,

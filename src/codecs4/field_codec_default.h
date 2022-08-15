@@ -25,6 +25,7 @@
 #define DCCLV4FIELDCODECDEFAULT20210701H
 
 #include "dccl/codecs3/field_codec_default.h"
+#include "dccl/codecs3/field_codec_var_bytes.h"
 
 namespace dccl
 {
@@ -36,10 +37,10 @@ namespace dccl
         using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
 
         using DefaultBoolCodec = v3::DefaultBoolCodec;
-        using DefaultBytesCodec = v3::DefaultBytesCodec;
         using DefaultEnumCodec = v3::DefaultEnumCodec;
 
-        using DefaultStringCodec = v3::DefaultStringCodec;
+        using DefaultBytesCodec = v3::VarBytesCodec;
+        using DefaultStringCodec = v3::VarBytesCodec;
     }
 }
 
