@@ -14,7 +14,7 @@ message PresenceMsg
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 54;
-    option (dccl.msg).codec_version = 3;
+    option (dccl.msg).codec_version = 4;
 
     // optional fields gain an extra bit set to 1
     required int32 req_i32 = 1 [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500 } ];
