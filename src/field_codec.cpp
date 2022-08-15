@@ -378,7 +378,7 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
 
     unsigned wire_vector_size = dccl_field_options().max_repeat();
 
-    if (wire_values.size() > wire_vector_size)
+    if (wire_values.size() > wire_vector_size && strict())
         throw(
             dccl::OutOfRangeException(std::string("Repeated size exceeds max_repeat for field: ") +
                                           FieldCodecBase::this_field()->DebugString(),
@@ -390,7 +390,7 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
         wire_vector_size =
             std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());
         Bitset size_bits(repeated_vector_field_size(dccl_field_options().max_repeat()),
-                         wire_values.size());
+                         wire_vector_size);
         bits->append(size_bits);
 
         dlog.is(DEBUG2, ENCODE) && dlog << "repeated size field ... produced these "
@@ -478,7 +478,7 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
             if (dc.omit())
                 continue;
         }
-        
+
         if (i < wire_values.size())
             out += any_size(wire_values[i]);
         else

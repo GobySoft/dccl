@@ -6,7 +6,7 @@ message NumericMsg
 {
   option (dccl.msg).id = 10;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
 
   optional double a = 1 [(dccl.field).max = 180,
                          (dccl.field).min = -180,
@@ -33,7 +33,7 @@ message NegativePrecisionNumericMsg
 {
   option (dccl.msg).id = 10;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
 
   optional double a = 1 [(dccl.field).min = -20,
                          (dccl.field).max = 20,
@@ -49,7 +49,7 @@ message TooBigNumericMsg
 {
   option (dccl.msg).id = 11;
   option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
 
   optional double a = 1 [(dccl.field).max = 180,
                          (dccl.field).min = -180,

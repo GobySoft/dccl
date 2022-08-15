@@ -7,7 +7,7 @@ message TestMsg
 {
   option (dccl.msg).id = 2;
   option (dccl.msg).max_bytes = 64;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
 
     // test default enc/dec
     required double d = 1 [(dccl.field).min=-100,

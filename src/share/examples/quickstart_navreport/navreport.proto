@@ -1,7 +1,7 @@
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
-  option (dccl.msg) = { codec_version: 3
+  option (dccl.msg) = { codec_version: 4
                         id: 124
                         max_bytes: 32 };
   required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];

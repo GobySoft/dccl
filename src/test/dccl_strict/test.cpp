@@ -25,9 +25,9 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
+#include "dccl/binary.h"
 #include "dccl/codec.h"
 #include "test.pb.h"
-#include "dccl/binary.h"
 using namespace dccl::test;
 
 void decode_check(const TestMsg& msg_in);
@@ -52,10 +52,9 @@ int main(int argc, char* argv[])
         msg_in.add_ri(1);
         msg_in.add_ri(2);
         msg_in.add_ri(3);
-        
+
         decode_check(msg_in);
     }
-
 
     // double out of range
     try
@@ -65,17 +64,17 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s("foo");
         msg_in.set_b(std::string(9, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("d"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
-    
+
     // int out of range
     try
     {
@@ -84,12 +83,12 @@ int main(int argc, char* argv[])
         msg_in.set_i(-30);
         msg_in.set_s("foo");
         msg_in.set_b(std::string(9, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("i"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
@@ -103,12 +102,12 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s2("foobar1234546789");
         msg_in.set_b(std::string(9, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("s2"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
@@ -122,12 +121,12 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s("foobar1234546789");
         msg_in.set_b(std::string(9, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("s"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
@@ -141,17 +140,17 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s("foo");
         msg_in.set_b(std::string(12, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("b"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
-    
+
     // var bytes out of range
     try
     {
@@ -160,17 +159,16 @@ int main(int argc, char* argv[])
         msg_in.set_i(1000);
         msg_in.set_s("foo");
         msg_in.set_vb(std::string(12, '1'));
-        
+
         decode_check(msg_in);
         bool expected_out_of_range_exception = false;
         assert(expected_out_of_range_exception);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("vb"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
-    
 
     // repeat size out of range
     try
@@ -184,36 +182,128 @@ int main(int argc, char* argv[])
         msg_in.add_ri(2);
         msg_in.add_ri(3);
         msg_in.add_ri(4);
-        
+
         decode_check(msg_in);
     }
-    catch(dccl::OutOfRangeException& e)
+    catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("ri"));
         std::cout << "Caught (as expected) " << e.what() << std::endl;
     }
 
+    // disable strict mode
+    codec.set_strict(false);
+
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(9, '1'));
+        msg_in.add_ri(1);
+        msg_in.add_ri(2);
+        msg_in.add_ri(3);
+
+        decode_check(msg_in);
+    }
+
+    // double out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(150);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(9, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // int out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(-30);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(9, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // string (version 2) out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s2("foobar1234546789");
+        msg_in.set_b(std::string(9, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // string (version 3) out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foobar1234546789");
+        msg_in.set_b(std::string(9, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // bytes out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(12, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // var bytes out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_vb(std::string(12, '1'));
+
+        decode_check(msg_in);
+    }
+
+    // repeat size out of range
+    {
+        TestMsg msg_in;
+        msg_in.set_d(10.0);
+        msg_in.set_i(1000);
+        msg_in.set_s("foo");
+        msg_in.set_b(std::string(9, '1'));
+        msg_in.add_ri(1);
+        msg_in.add_ri(2);
+        msg_in.add_ri(3);
+        msg_in.add_ri(4);
+
+        decode_check(msg_in);
+    }
 
     std::cout << "all tests passed" << std::endl;
 }
 
-
 void decode_check(const TestMsg& msg_in)
 {
-    
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-    
+
     std::cout << "Try encode (in bounds)..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
-    
+
     std::cout << "Try decode..." << std::endl;
-        
+
     TestMsg msg_out;
     codec.decode(bytes, &msg_out);
-    
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
-    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 }

@@ -2,12 +2,12 @@
 
 DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf usage before reading the rest of this document: see <http://code.google.com/apis/protocolbuffers/docs/overview.html>.
 
-An example DCCL message is as follows (using Protobuf version 2.4.0 or newer; see \ref idl-old-syntax "old syntax" for older versions):
+An example DCCL message is as follows:
 \code
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
-  option (dccl.msg) = { codec_version: 3
+  option (dccl.msg) = { codec_version: 4
                         id: 124
                         max_bytes: 32 };
   required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
@@ -19,7 +19,7 @@ message NavigationReport {
 }
 \endcode
 
-In the above message, the snippet \code option (dccl.msg) = { codec_version: 3  id: 124  max_bytes: 32 }; \endcode represents the <b>message</b> options extensions since they affect the design of the entire DCCL message (in this case "NavigationReport"). The <b>field</b> options affect a given field, e.g. \code [(dccl.field) = { min: -10000 max: 10000 precision: 1 }]; \endcode
+In the above message, the snippet \code option (dccl.msg) = { codec_version: 4  id: 124  max_bytes: 32 }; \endcode represents the <b>message</b> options extensions since they affect the design of the entire DCCL message (in this case "NavigationReport"). The <b>field</b> options affect a given field, e.g. \code [(dccl.field) = { min: -10000 max: 10000 precision: 1 }]; \endcode
 
 
 The full Protobuf definition of the DCCL extensions is given in option_extensions.proto (as messages DCCLFieldOptions and DCCLMessageOptions).
@@ -41,7 +41,7 @@ This value is the maximum message size before you get an error from DCCL. This i
 
 \subsection idl-options-codecversion DCCL Codec Version: (dccl.msg).codec_version
 
-This option sets the default codec version (which is not wire-compatibility between Goby/DCCL 2 and DCCL 3). Hence, the default is "2" to preserve backwards-compatibility on a message-by-message basis, but this should always be set to "3" when you are able to use DCCL v3 for all nodes that deploy this message.
+This option sets the default codec version (which is not wire-compatibility between Goby/DCCL 2, DCCL 3, and DCCL 4). This should always be set to "4" when you are able to use DCCL v4 for all nodes that deploy this message, or an earlier version if required (e.g., if one of the nodes has access only to DCCL3, use "3").
 
 \section idl-units DCCL Static Units
 
@@ -211,7 +211,7 @@ message TestMsg
     option (dccl.msg) = {
         id: 2,
         max_bytes: 512,
-        codec_version: 3
+        codec_version: 4
     };
 
     enum State
@@ -245,7 +245,7 @@ message TestMsg
     option (dccl.msg) = {
         id: 2,
         max_bytes: 512,
-        codec_version: 3
+        codec_version: 4
     };
 
     message Child
@@ -292,32 +292,4 @@ The Lua Protobuf functionality uses this wonderful Github project: https://githu
 
 For more details, and an example usage, see the dccl_dynamic_conditions unit test.
 
-\section idl-old-syntax DCCL Syntax for older Protobuf versions (< 2.4.0)
-
-When using older versions of Google Protocol Buffers than 2.4.0, options cannot be aggregated. Thus, the example NavigationReport message would be written as such: 
-
-\code
-import "dccl/option_extensions.proto";
-
-message NavigationReport {
-  option (dccl.msg).codec_version = 3;
-  option (dccl.msg).id = 124;
-  option (dccl.msg).max_bytes = 32;
-
-  required double x = 1 [(dccl.field).min = -10000,
-                         (dccl.field).max = 10000,
-                         (dccl.field).precision = 1];
-  required double y = 2 [(dccl.field).min = -10000,
-                         (dccl.field).max = 10000,
-                         (dccl.field).precision = 1];
-  required double z = 3 [(dccl.field).min = -5000,
-                         (dccl.field).max = 0,
-                         (dccl.field).precision = 0];
-  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
-  optional VehicleClass veh_class = 4;
-  optional bool battery_ok = 5;
-}
-\endcode
-
-Note that this syntax is valid for newer versions of Protobuf as well, so it's the choice to use if you are concerned about portability over readability.
 */

@@ -4,7 +4,7 @@ import "dccl/option_extensions.proto";
 message AUVStatus { 
   option (dccl.msg) = { id: 122
                         max_bytes: 32
-                        codec_version: 3 };
+                        codec_version: 4 };
   
   // Header
   required double timestamp = 1  [(dccl.field) = { codec: "_time"   in_head: true }];
