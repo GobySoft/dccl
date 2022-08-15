@@ -6,7 +6,7 @@ message MiniUser
 {
   option (dccl.msg).id = 1000001;
   option (dccl.msg).max_bytes = 2;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   required uint32 user = 1 [(dccl.field).min=0,
                             (dccl.field).max=0x03FF,
@@ -17,7 +17,7 @@ message MiniOWTT
 {
   option (dccl.msg).id = 1000002;
   option (dccl.msg).max_bytes = 2;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   required uint32 clock_mode = 1 [(dccl.field).min=0,
                                   (dccl.field).max=3,
@@ -36,7 +36,7 @@ message MiniAbort
 {
   option (dccl.msg).id = 1000003;
   option (dccl.msg).max_bytes = 2;
-  option (dccl.msg).codec_version = 3;
+  option (dccl.msg).codec_version = 4;
   
   required uint32 user = 1 [(dccl.field).min=0,
                             (dccl.field).max=0x03FF,
