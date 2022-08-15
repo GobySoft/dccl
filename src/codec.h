@@ -146,6 +146,12 @@ namespace dccl
         /// \param mode "true" sets strict mode, "false" disables strict mode
         void set_strict(bool mode) { strict_ = mode; }
         
+
+        /// \brief Set the number of characters used in programmatic generation of console outputs.
+        ///
+        /// \param num_chars Character limit for line widths on console outputs
+        void set_console_width(unsigned num_chars) { console_width_ = num_chars; }
+
         //@}
             
         /// \name Informational Methods.
@@ -365,6 +371,7 @@ namespace dccl
             return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32,
                                            id_codec_);
         }
+
         
       private:
         // SHA256 hash of the crypto passphrase
@@ -372,6 +379,9 @@ namespace dccl
 
         // strict mode setting
         bool strict_;
+
+        // console outputting format width
+        unsigned console_width_;
         
 	// set of DCCL IDs *not* to encrypt        
 	std::set<unsigned> skip_crypto_ids_;
@@ -381,7 +391,8 @@ namespace dccl
         std::string id_codec_;
 
         std::vector<void *> dl_handles_;
-        
+
+        std::string build_guard_for_console_output(std::string& base, char guard_char) const;
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Codec& codec)

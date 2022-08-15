@@ -59,14 +59,13 @@ using google::protobuf::Descriptor;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 
-const unsigned full_width = 60;
 
 //
 // Codec
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : strict_(false), id_codec_(dccl_id_codec)
+    : strict_(false), id_codec_(dccl_id_codec), console_width_(60)
 {
     set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -576,10 +575,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name =
-                boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
-            std::string guard = std::string((full_width - message_name.size()) / 2, '=');
-
+            std::string message_name = boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
             std::string bits_body_str = "body";
@@ -605,7 +602,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
                 << allowed_bit_size << " bits\n";
 
             std::string header_str = "Header";
-            std::string header_guard = std::string((full_width - header_str.size()) / 2, '-');
+            std::string header_guard = build_guard_for_console_output(header_str, '-');
+
             *os << header_guard << " " << header_str << " " << header_guard << std::endl;
             *os << bits_dccl_head_str << std::setfill('.')
                 << std::setw(bits_width - bits_dccl_head_str.size() + spaces) << id_bit_size << " {"
@@ -614,7 +612,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << std::endl;
 
             std::string body_str = "Body";
-            std::string body_guard = std::string((full_width - body_str.size()) / 2, '-');
+            std::string body_guard = build_guard_for_console_output(body_str, '-');
+
             *os << body_guard << " " << body_str << " " << body_guard << std::endl;
             codec->base_info(os, desc, BODY);
             //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << std::endl;
@@ -737,9 +736,9 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
     if (param_os || dlog.is(INFO))
     {
         std::string codec_str = "Dynamic Compact Control Language (DCCL) Codec";
-        std::string codec_guard = std::string((full_width - codec_str.size()) / 2, '|');
-        *os << codec_guard << " " << codec_str << " " << codec_guard << std::endl;
+        std::string codec_guard = build_guard_for_console_output(codec_str, '|');
 
+        *os << codec_guard << " " << codec_str << " " << codec_guard << std::endl;
         *os << id2desc_.size() << " messages loaded.\n";
         *os << "Field sizes are in bits unless otherwise noted." << std::endl;
 
@@ -761,4 +760,11 @@ void dccl::Codec::set_id_codec(const std::string& id_codec_name)
     id_codec_ = id_codec_name;
     // make sure the id codec exists
     id_codec();
+}
+
+
+std::string dccl::Codec::build_guard_for_console_output(std::string& base, char guard_char) const
+{
+    // Only guard if possible, otherwise return an empty string rather than throwing a std::length_error.
+    return (base.size() < console_width_) ? std::string((console_width_-base.size())/2, guard_char) : std::string();
 }

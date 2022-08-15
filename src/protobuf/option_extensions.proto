@@ -6,5 +6,6 @@
   which dccl/protobuf/... did not.
   --------------------------------------------------------------------*/
 
+syntax = "proto2";
 import public "dccl/option_extensions.proto";
 package dccl;
