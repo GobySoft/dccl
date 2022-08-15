@@ -26,9 +26,9 @@ In both cases, then run:
 sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
 sudo apt update
 # minimal
-sudo apt install libdccl3-dev
+sudo apt install libdccl4-dev
 # full
-sudo apt install libdccl3-dev dccl3-compiler dccl3-apps
+sudo apt install libdccl4-dev dccl4-compiler dccl4-apps
 ```
 
 Instead of the release repository, you can use the continuous repository (every commit to the main branch build) by adding to your apt sources:
