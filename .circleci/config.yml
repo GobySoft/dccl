@@ -42,6 +42,11 @@ environment-template-focal: &environment-template-focal
   DISTRO_RELEASE_CODENAME: "focal"
   DISTRO_RELEASE_VERSION: "ubuntu20.04"
 
+environment-template-jammy: &environment-template-jammy
+  DISTRO_RELEASE_CODENAME: "jammy"
+  DISTRO_RELEASE_VERSION: "ubuntu22.04"
+
+  
 ## Pre-declare Docker containers
 docker-base-stretch: &docker-base-stretch
   - image: gobysoft/dccl-debian-build-base:9.1
@@ -74,9 +79,13 @@ docker-arm64-focal: &docker-arm64-focal
 docker-armhf-focal: &docker-armhf-focal
   - image: gobysoft/dccl-ubuntu-build-armhf:20.04.1
 
+docker-base-jammy: &docker-base-jammy
+  - image: gobysoft/dccl-ubuntu-build-base:22.04.1
+    
 ## Pre-declare job templates
 job-template-amd64: &job-template-amd64
   working_directory: /root/dccl4
+  resource_class: large
   steps:
     - checkout
     - run: &run-update-apt
@@ -188,21 +197,22 @@ job-template-deb-cross: &job-template-deb-cross
     - run: *remove-orig-source
     - persist_to_workspace: *persist-debs        
 
-# base sanitizer and upload off Focal build
+# base sanitizer and upload off Jammy build
 job-template-sanitizers: &job-template-sanitizers
   <<: *job-template-deb-amd64
   environment:
     <<: *environment-template-common
-    <<: *environment-template-focal
+    <<: *environment-template-jammy
     <<: *environment-template-amd64
     SANITIZER_NUM_JOBS: 2
     LSAN_OPTIONS: "suppressions=/root/dccl4/src/test/suppressions.lsan.txt"       
-  docker: *docker-base-focal
+  docker: *docker-base-jammy
 
-# gpg regression in focal?  
+# gpg regression in focal?
 job-template-upload: &job-template-upload
   <<: *job-template-deb-amd64
   docker: *docker-base-bionic
+  resource_class: small
 
 # which branches to run the Debian upload on
 filter-template-master-only: &filter-template-master-only
@@ -236,6 +246,8 @@ workflows:
           <<: *filter-template-non-master
       - amd64-focal-build:
           <<: *filter-template-non-master
+      - amd64-jammy-build:
+          <<: *filter-template-non-master
       
       - get-orig-source:
           <<: *filter-template-master-only
@@ -250,7 +262,7 @@ workflows:
       - armhf-stretch-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-stretch-deb-build
+            - amd64-stretch-deb-build
 
       - amd64-buster-deb-build:
           <<: *filter-template-master-only
@@ -263,7 +275,7 @@ workflows:
       - armhf-buster-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-buster-deb-build
+            - amd64-buster-deb-build
 
       - amd64-bullseye-deb-build:
           <<: *filter-template-master-only
@@ -276,7 +288,7 @@ workflows:
       - armhf-bullseye-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-bullseye-deb-build
+            - amd64-bullseye-deb-build
 
             
       - amd64-bionic-deb-build:
@@ -290,7 +302,7 @@ workflows:
       - armhf-bionic-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-bionic-deb-build
+            - amd64-bionic-deb-build
 
       - amd64-focal-deb-build:
           <<: *filter-template-master-only
@@ -303,17 +315,46 @@ workflows:
       - armhf-focal-deb-build:
           <<: *filter-template-master-only
           requires:
-            - arm64-focal-deb-build
+            - amd64-focal-deb-build
 
+      - amd64-jammy-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-jammy-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-jammy-deb-build
+      - armhf-jammy-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-jammy-deb-build
+
+            
             
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
+            - amd64-stretch-deb-build
+            - amd64-bullseye-deb-build
+            - amd64-buster-deb-build
+            - amd64-bionic-deb-build
+            - amd64-focal-deb-build
+            - amd64-jammy-deb-build
+
+            - arm64-stretch-deb-build
+            - arm64-bullseye-deb-build
+            - arm64-buster-deb-build
+            - arm64-bionic-deb-build
+            - arm64-focal-deb-build
+            - arm64-jammy-deb-build
+
             - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
             - armhf-focal-deb-build
+            - armhf-jammy-deb-build
 
       # only do the release upload on tagged builds
       - release-upload:
@@ -323,11 +364,26 @@ workflows:
             branches:
               ignore: /.*/
           requires:
+            - amd64-stretch-deb-build
+            - amd64-bullseye-deb-build
+            - amd64-buster-deb-build
+            - amd64-bionic-deb-build
+            - amd64-focal-deb-build
+            - amd64-jammy-deb-build
+
+            - arm64-stretch-deb-build
+            - arm64-bullseye-deb-build
+            - arm64-buster-deb-build
+            - arm64-bionic-deb-build
+            - arm64-focal-deb-build
+            - arm64-jammy-deb-build
+
             - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
-            - armhf-focal-deb-build
             - armhf-bionic-deb-build
+            - armhf-focal-deb-build
+            - armhf-jammy-deb-build
             - continuous-upload
             
       - amd64+scan-build
@@ -339,10 +395,10 @@ jobs:
 
   get-orig-source:
     <<: *job-template-deb-amd64
-    docker: *docker-base-focal
+    docker: *docker-base-jammy
     environment:
       <<: *environment-template-common
-      <<: *environment-template-focal
+      <<: *environment-template-jammy
       <<: *environment-template-amd64
     steps:
       - checkout
@@ -391,6 +447,13 @@ jobs:
     environment:
       <<: *environment-template-common
 
+  amd64-jammy-build:
+    <<: *job-template-amd64
+    docker: *docker-base-jammy
+    environment:
+      <<: *environment-template-common
+
+      
       
   amd64-stretch-deb-build:
     <<: *job-template-deb-amd64
@@ -499,6 +562,31 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-focal
       <<: *environment-template-armhf
+
+
+  amd64-jammy-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-jammy
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-jammy
+      <<: *environment-template-amd64
+  arm64-jammy-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-jammy
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-jammy
+      <<: *environment-template-arm64
+  armhf-jammy-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-jammy
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-jammy
+      <<: *environment-template-armhf
+
+
   amd64+scan-build:
     <<: *job-template-sanitizers
     steps:
