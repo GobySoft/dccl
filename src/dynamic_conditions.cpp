@@ -47,7 +47,11 @@ dccl::DynamicConditions::~DynamicConditions()
 {
 #if DCCL_HAS_LUA
     if (lua_)
+    {
+        // without this, we get a segfault in Ubuntu jammy
+        lua_->script("pb.clear()");
         delete lua_;
+    }
 #endif
 }
 
