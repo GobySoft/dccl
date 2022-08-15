@@ -34,7 +34,7 @@ syntax="proto2";
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
-  option (dccl.msg) = { codec_version: 3
+  option (dccl.msg) = { codec_version: 4
                         id: 124
                         max_bytes: 32 };
   required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
@@ -61,12 +61,12 @@ Allowed maximum size of message: 32 bytes / 256 bits
 --------------------------- Header ---------------------------
 dccl.id head...................................8 {dccl.default.id}
 ---------------------------- Body ----------------------------
-NavigationReport..............................53 {dccl.default3}
-        1. x..................................18 {dccl.default3}
-        2. y..................................18 {dccl.default3}
-        3. z..................................13 {dccl.default3}
-        4. veh_class...........................2 {dccl.default3}
-        5. battery_ok..........................2 {dccl.default3}
+NavigationReport..............................53 {dccl.default4}
+        1. x..................................18 {dccl.default4}
+        2. y..................................18 {dccl.default4}
+        3. z..................................13 {dccl.default4}
+        4. veh_class...........................2 {dccl.default4}
+        5. battery_ok..........................2 {dccl.default4}
 \endcode
 <li> Run protoc to generate navreport.pb.h and navreport.pb.cc C++ files from your navreport.proto file.
 \code
@@ -213,7 +213,7 @@ git clone https://github.com/GobySoft/dccl-debian
 </ul>
 
 \section history History
-DCCL grew out of the Goby project (<https://launchpad.net/goby>), where versions 1.0 and 2.0 still reside (in the equivalent Goby version). Goby 2.1 is the first version of that project to use the standalone DCCL version 3. DCCL v3 messages are compatible with Goby/DCCL v2 when messages are defined with codec_version = 2 (the default). Goby/DCCL v1 uses XML for the IDL definition language, which can be converted to DCCL v2 messages using the dccl_xml_to_dccl_proto tool included in Goby. 
+DCCL grew out of the Goby project (<https://launchpad.net/goby>), where versions 1.0 and 2.0 still reside (in the equivalent Goby version). Goby 2.1 is the first version of that project to use the standalone DCCL version 3. DCCL v3 messages are compatible with Goby/DCCL v2 when messages are defined with codec_version = 2 (the default). Goby/DCCL v1 uses XML for the IDL definition language, which can be converted to DCCL v2 messages using the dccl_xml_to_dccl_proto tool included in Goby. DCCL 4 changes the wire protocol slightly to fix usability bugs in the string and bytes fields. 
 
 \section authors Authors
 DCCL is a collaboration of those in the DCCL Developers group (https://github.com/orgs/GobySoft/teams/dccl-dev). The original author and lead developer is Toby Schneider (GobySoft, LLC <http://gobysoft.org>). 

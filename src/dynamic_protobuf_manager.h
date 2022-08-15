@@ -51,14 +51,28 @@ namespace dccl
         /// message A { }
         /// \endcode
         /// would result in protobuf_type_name == "dccl.protobuf.A"
-        static const google::protobuf::Descriptor* find_descriptor(const std::string& protobuf_type_name)
+        /// \param user_pool_first Search the user pool first, then the generated (compiled-in) pool (useful in case the generated pool is missing extensions that are in the user pool)
+        /// \return A pointer to the google::protobuf::Descriptor (or nullptr if not found)
+        static const google::protobuf::Descriptor* find_descriptor(const std::string& protobuf_type_name, bool user_pool_first = false)
         {
+            const google::protobuf::Descriptor* desc = nullptr;
+            if(user_pool_first)
+            {
+                // try the user pool
+                desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
+                if(desc) return desc;
+            }
+
             // try the generated pool
-            const google::protobuf::Descriptor* desc = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(protobuf_type_name);
+            google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(protobuf_type_name);
             if(desc) return desc;
-                
-            // try the user pool
-            desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
+            
+            if(!user_pool_first)
+            {
+                // try the user pool
+                desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
+            }
+            
             return desc;
         }
 
@@ -74,9 +88,9 @@ namespace dccl
         /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. boost::shared_ptr<google::protobuf::Message>) are recommended.
         template<typename GoogleProtobufMessagePointer>
             static GoogleProtobufMessagePointer new_protobuf_message(
-                const std::string& protobuf_type_name)
+                const std::string& protobuf_type_name, bool user_pool_first = false)
         {
-            const google::protobuf::Descriptor* desc = find_descriptor(protobuf_type_name);
+            const google::protobuf::Descriptor* desc = find_descriptor(protobuf_type_name, user_pool_first);
             if(desc)
                 return new_protobuf_message<GoogleProtobufMessagePointer>(desc);
             else
