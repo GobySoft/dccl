@@ -3,7 +3,7 @@ import "dccl/option_extensions.proto";
 
 message CommandMessage
 {
-    option (dccl.msg) = { id:  125  max_bytes:  32  codec_version: 3  unit_system: "si"};
+    option (dccl.msg) = { id:  125  max_bytes:  32  codec_version: 4  unit_system: "si"};
   
 
     required int32 destination = 1 [(dccl.field)  = { max: 31 min: 0 in_head: true }];  
