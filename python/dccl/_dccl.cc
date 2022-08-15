@@ -16,6 +16,7 @@ namespace gp = google::protobuf;
 
 static PyObject *GPBSymbolDB;
 static PyObject *DcclException;
+static PyObject *DcclOutOfRangeException;
 
 typedef struct {
     PyObject_HEAD
@@ -168,6 +169,10 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
         self->codec->encode(&bytes, *msg, header_only != 0);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
+        delete msg;
+        return NULL;
+    } catch (dccl::OutOfRangeException &e) {
+        PyErr_SetString(DcclOutOfRangeException, e.what());
         delete msg;
         return NULL;
     } catch (...) {
@@ -324,6 +329,24 @@ static PyObject *Codec_set_crypto_passphrase(Codec *self, PyObject *args) {
 }
 
 
+static PyObject *Codec_set_strict(Codec *self, PyObject *args) {
+    int enabled = 0;
+    if (!PyArg_ParseTuple(args, "i", &enabled))
+        return NULL;
+    try {
+        // dccl::Codec instantiates with strict=false, so behaviour should be safe if the parsing above fails.
+        self->codec->set_strict(enabled);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(DcclException, "unexpected exception");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
 static PyMethodDef Codec_methods[] = {
     {"id", (PyCFunction)Codec_id, METH_VARARGS,
      "id(bytes)\n\nReturn the ID for a string or message."},
@@ -339,6 +362,8 @@ static PyMethodDef Codec_methods[] = {
      "load_library(path)\n\nLoad any codecs present in the given shared library name."}, /* Could make support ctypes handles as well... */
     {"set_crypto_passphrase", (PyCFunction)Codec_set_crypto_passphrase, METH_VARARGS,
      "set_crypto_passphrase(phrase[, ids_to_skip])\n\nEnable encryption/decryption, except for ids_to_skip."},
+    {"set_strict", (PyCFunction)Codec_set_strict, METH_VARARGS,
+     "set_strict(enabled)\n\nDisable/Enable DCCL strict mode for boundary checking on encode."},
     {NULL}  /* Sentinel */
 };
 
@@ -484,6 +509,10 @@ init_dccl(void)
     DcclException = PyErr_NewException("dccl.DcclException", NULL, NULL);
     Py_INCREF(DcclException);
     PyModule_AddObject(module, "DcclException", DcclException);
+
+    DcclOutOfRangeException = PyErr_NewException("dccl.OutOfRangeException", NULL, NULL);
+    Py_INCREF(DcclOutOfRangeException);
+    PyModule_AddObject(module, "DcclOutOfRangeException", DcclOutOfRangeException);
 
     // We're always going to need dynamic support to use this from Python, so enable it with DCCL
     // and get a reference to the default Symbol Database to facilitate type lookups.
