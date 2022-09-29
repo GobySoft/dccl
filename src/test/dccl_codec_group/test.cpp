@@ -47,7 +47,8 @@ namespace dccl
         {
             double max() { return 100; }
             double min() { return -100; }
-            double precision() { return 1; }
+            double precision() { return 1; }    // Deprecated
+            double resolution() { return 0.1; }
             void validate() { }    
         };
     }
