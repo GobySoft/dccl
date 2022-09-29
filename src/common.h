@@ -73,7 +73,7 @@ namespace dccl
     template<typename Float>
         Float round(Float d)
     { return std::floor(d + 0.5); }
-    
+
     /// round 'value' to 'precision' number of decimal places
     /// \param value value to round
     /// \param precision number of places past the decimal to round (e.g. dec=1 rounds to tenths)
@@ -84,7 +84,23 @@ namespace dccl
         Float scaling = std::pow(10.0, precision);
         return round(value*scaling)/scaling;        
     }
-    
+
+    /// approximate 'value' to the nearest quantile defined by 'interval'
+    /// \param value value to round
+    /// \param interval number defining the quantization step
+    /// \return quantized value
+    template <typename Float>
+    typename boost::enable_if<boost::is_floating_point<Float>, Float>::type quantize(Float value, double interval)
+    {
+        if(interval >= 1)
+            return round(value / interval) * interval;
+        else
+        {
+            double interval_inv = 1.0 / interval;
+            return round(value * interval_inv) / interval_inv;
+        }
+    }
+
     // C++98 has no long long overload for abs
     template<typename Int>
       Int abs(Int i) { return (i < 0) ? -i : i; }
@@ -113,7 +129,25 @@ namespace dccl
             return value;
         }
     }
-    
-    
+
+    /// approximate 'value' to the nearest quantile defined by 'interval'
+    /// \param value value to round
+    /// \param interval number defining the quantization step
+    /// \return quantized value
+    template<typename Int>
+    typename boost::enable_if<boost::is_integral<Int>, Int>::type quantize(Int value, double interval)
+    {
+        if((interval-static_cast<uint64_t>(interval)) >= std::numeric_limits<double>::epsilon())
+        {
+            // doesn't mean anything to quantize an integer with a fractional interval
+            return value;
+        }
+
+        Int remainder = value % static_cast<Int>(interval);
+        value -= remainder;
+        if(remainder >= interval/2)
+            value += interval;
+        return value;
+    }
 }
 #endif
