@@ -130,8 +130,8 @@ namespace dccl
 
                   // ensure value fits into double
                   // TODO: adapt this check to the new resolution field
-                  FieldCodecBase::require((precision() + std::ceil(std::log10(max() - min()))) <= std::numeric_limits<double>::digits10,
-                                          "[(dccl.field).max-(dccl.field).min]*10^(dccl.field).precision must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision.");
+                  FieldCodecBase::require(std::log2(max() - min()) - std::log2(resolution()) <= std::numeric_limits<double>::digits,
+                                          "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision.");
 
               }
 
