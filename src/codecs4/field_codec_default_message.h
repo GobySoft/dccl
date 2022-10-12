@@ -202,11 +202,6 @@ class DefaultMessageCodec : public FieldCodecBase
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_validate(return_value, field_desc);
-
-            // If the field belongs to a oneof, check also that no codec has been specified
-            if (is_part_of_oneof(field_desc))
-                codec->require(!field_desc->options().GetExtension(dccl::field).has_codec(),
-                               "fields belonging to a oneof cannot specify a codec.");
         }
 
         static void oneof(bool*, const google::protobuf::OneofDescriptor*)

@@ -36,6 +36,9 @@ int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
+    codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);
+
+    
     {
         TestMsg msg_in;
         msg_in.set_double_oneof1(10.56);
@@ -60,6 +63,29 @@ int main(int argc, char* argv[])
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
+    // test non standard codec
+    {
+        TestMsg msg_in;
+        msg_in.set_non_default_double(1200.56);
+        msg_in.mutable_msg_oneof2()->set_val(100.123);
+
+        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+        std::cout << "Try decode..." << std::endl;
+        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+
+        TestMsg msg_out;
+        codec.decode(bytes, &msg_out);
+
+        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    }
+
+    
     // Test exception thrown for in_head oneof fields
     try {
         InvalidTestMsg msg_in;
