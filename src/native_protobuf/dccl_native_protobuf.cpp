@@ -22,6 +22,7 @@
 
 #include "dccl_native_protobuf.h"
 #include "dccl/codec.h"
+#include "dccl/codecs4/field_codec_default_message.h"
 
 extern "C"
 {
@@ -33,7 +34,7 @@ extern "C"
 
         const char* native_pb_group = "dccl.native_protobuf";
         
-        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
+        FieldCodecManager::add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
         FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_INT64>,
                                FieldDescriptor::TYPE_INT64>(native_pb_group);
         FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_INT32>,
@@ -116,7 +117,7 @@ extern "C"
         FieldCodecManager::remove<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
 
         
-        FieldCodecManager::remove<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
+        FieldCodecManager::remove<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(native_pb_group);
                     
     }
 }
