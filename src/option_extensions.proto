@@ -33,25 +33,26 @@ message DCCLFieldOptions
     optional bool in_head = 3 [default = false];
 
     // double, float
-    optional int32 precision = 4 [default = 0];
+    optional int32 precision = 4 [default = 0];   // Deprecated
+    optional double resolution = 5 [default = 1];
     // int, double, float
-    optional double min = 5 [default = 0];
-    optional double max = 6 [default = 0];
+    optional double min = 6 [default = 0];
+    optional double max = 7 [default = 0];
 
     // time ("1 day" can encode times 12h before or after the receiver's time)
-    optional uint32 num_days = 7 [default = 1];
+    optional uint32 num_days = 8 [default = 1];
 
     // static
-    optional string static_value = 8 [default = ""];
+    optional string static_value = 9 [default = ""];
 
     // string, bytes
-    optional uint32 max_length = 9 [default = 0];
+    optional uint32 max_length = 10 [default = 0];
 
     // any `repeated` field
-    optional uint32 max_repeat = 10 [default = 1];
+    optional uint32 max_repeat = 11 [default = 1];
 
     // enum
-    optional bool packed_enum = 11 [default = true];
+    optional bool packed_enum = 12 [default = true];
 
     optional string description = 20;
 
