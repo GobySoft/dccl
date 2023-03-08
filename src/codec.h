@@ -152,6 +152,7 @@ namespace dccl
         /// \param num_chars Character limit for line widths on console outputs
         void set_console_width(unsigned num_chars) { console_width_ = num_chars; }
 
+
         //@}
             
         /// \name Informational Methods.
@@ -360,6 +361,9 @@ namespace dccl
         Codec& operator= (const Codec&);
 
         void encode_internal(const google::protobuf::Message& msg, bool header_only, Bitset& header_bits, Bitset& body_bits, int user_id);
+        std::string get_all_error_fields_in_message(
+            const google::protobuf::Message& msg,
+            uint8_t depth = 1);
 
         void encrypt(std::string* s, const std::string& nonce);
         void decrypt(std::string* s, const std::string& nonce);
