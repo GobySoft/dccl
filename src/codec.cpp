@@ -65,7 +65,7 @@ using google::protobuf::Reflection;
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : strict_(false), id_codec_(dccl_id_codec), console_width_(60)
+    : strict_(false), id_codec_(dccl_id_codec), console_width_(60), verbose_encode_errors_outputs_(false)
 {
     set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -204,8 +204,21 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         size_t head_byte_size = 0;
 
         if (!msg.IsInitialized() && !header_only)
-            throw(Exception(
-                "Message is not properly initialized. All `required` fields must be set."));
+        {
+            std::stringstream ss;
+
+            if (!verbose_encode_errors_outputs_)
+            {
+                ss << "Message is not properly initialized. All `required` fields must be set.";
+            }
+            else
+            {
+                ss << "Message is not properly initialized. All `required` fields must be set. Fields with errors: \n"
+                    << get_all_error_fields_in_message(msg);
+            }
+
+            throw(Exception(ss.str()));
+        }
 
         if (!id2desc_.count(dccl_id))
             throw(Exception("Message id " + boost::lexical_cast<std::string>(dccl_id) +
@@ -767,4 +780,81 @@ std::string dccl::Codec::build_guard_for_console_output(std::string& base, char 
 {
     // Only guard if possible, otherwise return an empty string rather than throwing a std::length_error.
     return (base.size() < console_width_) ? std::string((console_width_-base.size())/2, guard_char) : std::string();
+}
+
+
+std::string dccl::Codec::get_all_error_fields_in_message(
+    const google::protobuf::Message& message,
+    uint8_t depth /*= 1 */)
+{
+    // This is largely taken from google::protobuf::ReflectionOps::FindInitializationErrors(), which is called by
+    // google::protobuf::Message::FindInitializationErrors(). The Message implementation is not used as they force a
+    // prefix of parent message onto fields, which would require a split function to break by delimiter '.' should we
+    // want to reflect upon sub-messages and get field numbers.
+
+    std::stringstream output_stream;
+
+    const google::protobuf::Descriptor* descriptor = message.GetDescriptor();
+    const google::protobuf::Reflection* reflection = message.GetReflection();
+    const uint8_t depth_spacing = 4;
+
+    // Check required fields of this message.
+    const int32_t field_count = descriptor->field_count();
+
+    for (int32_t index = 0; index < field_count; ++index)
+    {
+        if (descriptor->field(index)->is_required())
+        {
+            if (!reflection->HasField(message, descriptor->field(index)))
+            {
+                output_stream << std::string(depth * depth_spacing, ' ')
+                    << descriptor->field(index)->number()
+                    << ": "
+                    << descriptor->field(index)->name()
+                    << "\n";
+            }
+        }
+    }
+
+    // Check sub-messages.
+    std::vector<const google::protobuf::FieldDescriptor*> fields;
+    reflection->ListFields(message, &fields);
+
+    for (const google::protobuf::FieldDescriptor* field : fields)
+    {
+        if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
+        {
+            output_stream << std::string(depth * depth_spacing, ' ')
+                << field->number()
+                << ": "
+                << field->name()
+                << "\n";
+
+            if (field->is_repeated())
+            {
+                int32_t size = reflection->FieldSize(message, field);
+
+                for (int32_t index = 0; index < size; ++index)
+                {
+                    const google::protobuf::Message& sub_message =
+                        reflection->GetRepeatedMessage(message, field, index);
+
+                    output_stream << std::string((depth + 1) * depth_spacing, ' ')
+                        << "["
+                        << index
+                        << "]: "
+                        << "\n";
+
+                    output_stream << get_all_error_fields_in_message(sub_message, depth + 2);
+                }
+            }
+            else
+            {
+                const google::protobuf::Message& sub_message = reflection->GetMessage(message, field);
+                output_stream << get_all_error_fields_in_message(sub_message, depth + 1);
+            }
+        }
+    }
+
+    return output_stream.str();
 }

@@ -152,6 +152,13 @@ namespace dccl
         /// \param num_chars Character limit for line widths on console outputs
         void set_console_width(unsigned num_chars) { console_width_ = num_chars; }
 
+
+        /// \brief Set "verbose_encode_errors_outputs_" where missing 'required' fields are recursively founds.
+        ///
+        /// \param mode "true" enables verbose errors on encode, "false" disables verbose errors on encode.
+        void set_verbose_encode_error_outputs(bool mode) { verbose_encode_errors_outputs_ = mode; }
+
+
         //@}
             
         /// \name Informational Methods.
@@ -360,6 +367,9 @@ namespace dccl
         Codec& operator= (const Codec&);
 
         void encode_internal(const google::protobuf::Message& msg, bool header_only, Bitset& header_bits, Bitset& body_bits, int user_id);
+        std::string get_all_error_fields_in_message(
+            const google::protobuf::Message& msg,
+            uint8_t depth = 1);
 
         void encrypt(std::string* s, const std::string& nonce);
         void decrypt(std::string* s, const std::string& nonce);
@@ -382,6 +392,9 @@ namespace dccl
 
         // console outputting format width
         unsigned console_width_;
+
+        // recursive debug information in encode() with missing required fields
+        bool verbose_encode_errors_outputs_;
         
 	// set of DCCL IDs *not* to encrypt        
 	std::set<unsigned> skip_crypto_ids_;
