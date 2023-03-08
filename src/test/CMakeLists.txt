@@ -19,6 +19,7 @@ add_subdirectory(dccl_strict)
 add_subdirectory(dccl_packed_enum)
 add_subdirectory(dccl_dynamic_protobuf)
 add_subdirectory(dccl_presence)
+add_subdirectory(dccl_resolution)
 
 if(enable_units)
   add_subdirectory(dccl_units)
