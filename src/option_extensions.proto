@@ -50,9 +50,10 @@ message DCCLFieldOptions
 
     // any `repeated` field
     optional uint32 max_repeat = 11 [default = 1];
+    optional uint32 min_repeat = 12 [default = 0];
 
     // enum
-    optional bool packed_enum = 12 [default = true];
+    optional bool packed_enum = 13 [default = true];
 
     optional string description = 20;
 
