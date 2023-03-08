@@ -156,6 +156,20 @@ int main(int argc, char* argv[])
         {
         }
     }
+
+
+    // test verbose encode errors output
+    TestMsg empty;
+    try
+    {
+        std::string dummy;
+        codec.encode(&bytes, empty);
+    }
+    catch(const dccl::Exception&e)
+    {
+        // expected long error
+        std::cout << "Expected verbose error encoding empty message: " << e.what() << std::endl;
+    }    
     
     std::cout << "all tests passed" << std::endl;
 }

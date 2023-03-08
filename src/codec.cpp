@@ -59,13 +59,12 @@ using google::protobuf::Descriptor;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 
-
 //
 // Codec
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : strict_(false), id_codec_(dccl_id_codec), console_width_(60), verbose_encode_errors_outputs_(false)
+    : strict_(false), id_codec_(dccl_id_codec), console_width_(60)
 {
     set_default_codecs();
     FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -207,15 +206,9 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         {
             std::stringstream ss;
 
-            if (!verbose_encode_errors_outputs_)
-            {
-                ss << "Message is not properly initialized. All `required` fields must be set.";
-            }
-            else
-            {
-                ss << "Message is not properly initialized. All `required` fields must be set. Fields with errors: \n"
-                    << get_all_error_fields_in_message(msg);
-            }
+            ss << "Message is not properly initialized. All `required` fields must be set. Fields "
+                  "with errors: \n"
+               << get_all_error_fields_in_message(msg);
 
             throw(Exception(ss.str()));
         }
@@ -588,7 +581,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name = boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string message_name =
+                boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -775,17 +769,16 @@ void dccl::Codec::set_id_codec(const std::string& id_codec_name)
     id_codec();
 }
 
-
 std::string dccl::Codec::build_guard_for_console_output(std::string& base, char guard_char) const
 {
     // Only guard if possible, otherwise return an empty string rather than throwing a std::length_error.
-    return (base.size() < console_width_) ? std::string((console_width_-base.size())/2, guard_char) : std::string();
+    return (base.size() < console_width_)
+               ? std::string((console_width_ - base.size()) / 2, guard_char)
+               : std::string();
 }
 
-
-std::string dccl::Codec::get_all_error_fields_in_message(
-    const google::protobuf::Message& message,
-    uint8_t depth /*= 1 */)
+std::string dccl::Codec::get_all_error_fields_in_message(const google::protobuf::Message& message,
+                                                         uint8_t depth /*= 1 */)
 {
     // This is largely taken from google::protobuf::ReflectionOps::FindInitializationErrors(), which is called by
     // google::protobuf::Message::FindInitializationErrors(). The Message implementation is not used as they force a
@@ -808,10 +801,8 @@ std::string dccl::Codec::get_all_error_fields_in_message(
             if (!reflection->HasField(message, descriptor->field(index)))
             {
                 output_stream << std::string(depth * depth_spacing, ' ')
-                    << descriptor->field(index)->number()
-                    << ": "
-                    << descriptor->field(index)->name()
-                    << "\n";
+                              << descriptor->field(index)->number() << ": "
+                              << descriptor->field(index)->name() << "\n";
             }
         }
     }
@@ -824,11 +815,8 @@ std::string dccl::Codec::get_all_error_fields_in_message(
     {
         if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
         {
-            output_stream << std::string(depth * depth_spacing, ' ')
-                << field->number()
-                << ": "
-                << field->name()
-                << "\n";
+            output_stream << std::string(depth * depth_spacing, ' ') << field->number() << ": "
+                          << field->name() << "\n";
 
             if (field->is_repeated())
             {
@@ -839,18 +827,17 @@ std::string dccl::Codec::get_all_error_fields_in_message(
                     const google::protobuf::Message& sub_message =
                         reflection->GetRepeatedMessage(message, field, index);
 
-                    output_stream << std::string((depth + 1) * depth_spacing, ' ')
-                        << "["
-                        << index
-                        << "]: "
-                        << "\n";
+                    output_stream << std::string((depth + 1) * depth_spacing, ' ') << "[" << index
+                                  << "]: "
+                                  << "\n";
 
                     output_stream << get_all_error_fields_in_message(sub_message, depth + 2);
                 }
             }
             else
             {
-                const google::protobuf::Message& sub_message = reflection->GetMessage(message, field);
+                const google::protobuf::Message& sub_message =
+                    reflection->GetMessage(message, field);
                 output_stream << get_all_error_fields_in_message(sub_message, depth + 1);
             }
         }
