@@ -127,9 +127,14 @@ namespace dccl
                   FieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
                                           "(dccl.field).max must be <= maximum of this field type.");
 
+                  // allowable epsilon for min / max to diverge from nearest quantile
+                  const double min_max_eps = 1e-10;
+                  
+                  // ensure that max and min are multiples of the resolution chosen
+                  FieldCodecBase::require(std::abs(quantize(min(), resolution()) - min()) < min_max_eps, "(dccl.field).min must be an exact multiple of (dccl.field).resolution");
+                  FieldCodecBase::require(std::abs(quantize(max(), resolution()) - max()) < min_max_eps, "(dccl.field).max must be an exact multiple of (dccl.field).resolution");
 
                   // ensure value fits into double
-                  // TODO: adapt this check to the new resolution field
                   FieldCodecBase::require(std::log2(max() - min()) - std::log2(resolution()) <= std::numeric_limits<double>::digits,
                                           "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision.");
 

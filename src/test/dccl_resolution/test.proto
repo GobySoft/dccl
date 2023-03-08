@@ -35,7 +35,13 @@ message NumericMsg
   // resolution default
   required double u4 = 6 [(dccl.field).max = 20.0,
                           (dccl.field).min = 0.0];
-                        
+
+  // weird resolution
+  required double u5 = 7 [(dccl.field).max = 3.6,
+                          (dccl.field).min = 1.44,
+                          (dccl.field).resolution = 0.12];
+
+    
 }
 
 message NegativeResolutionNumericMsg    // Invalid resolution
@@ -75,4 +81,26 @@ message TooBigNumericMsg
   optional double a = 1 [(dccl.field).max = 180,
                          (dccl.field).min = -180,
                          (dccl.field).resolution = 1e-15];                        
+}
+
+message MinNotMultipleOfResolution
+{
+  option (dccl.msg).id = 11;
+  option (dccl.msg).max_bytes = 32;
+  option (dccl.msg).codec_version = 4;
+
+  required double a = 1 [(dccl.field).max = 3.6,
+                         (dccl.field).min = 1.5,
+                         (dccl.field).resolution = 0.2];
+}
+
+message MaxNotMultipleOfResolution
+{
+  option (dccl.msg).id = 11;
+  option (dccl.msg).max_bytes = 32;
+  option (dccl.msg).codec_version = 4;
+
+  required double a = 1 [(dccl.field).max = 3.5,
+                         (dccl.field).min = 1.4,
+                         (dccl.field).resolution = 0.2];
 }

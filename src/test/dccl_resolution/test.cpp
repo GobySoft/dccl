@@ -68,6 +68,30 @@ int main(int argc, char* argv[])
     {
         std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: [(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision." << std::endl;
     }
+
+    
+    try
+    {
+        codec.load<MinNotMultipleOfResolution>();
+        bool message_should_fail_load = false;
+        assert(message_should_fail_load);
+    }
+    catch(dccl::Exception& e)
+    {
+        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: (dccl.field).min must be an exact multiple of (dccl.field).resolution." << std::endl;
+    }
+
+    try
+    {
+        codec.load<MaxNotMultipleOfResolution>();
+        bool message_should_fail_load = false;
+        assert(message_should_fail_load);
+    }
+    catch(dccl::Exception& e)
+    {
+        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: (dccl.field).max must be an exact multiple of (dccl.field).resolution." << std::endl;
+    }
+
     
     NumericMsg msg_in;
 
@@ -77,6 +101,7 @@ int main(int argc, char* argv[])
     msg_in.set_u2(0);
     msg_in.set_u3(10.2);
     msg_in.set_u4(5.6);
+    msg_in.set_u5(1.95);
     
     std::string encoded;
     codec.encode(&encoded, msg_in);
@@ -87,6 +112,7 @@ int main(int argc, char* argv[])
     msg_in.set_b(11.4211);
     msg_in.set_u3(10.0);
     msg_in.set_u4(6);
+    msg_in.set_u5(1.92);
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 
     std::cout << "all tests passed" << std::endl;
