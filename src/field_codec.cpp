@@ -535,7 +535,9 @@ unsigned dccl::FieldCodecBase::min_size_repeated()
 
     if (codec_version() > 2)
         return repeated_vector_field_size(dccl_field_options().min_repeat(),
-                                          dccl_field_options().max_repeat());
+                                          dccl_field_options().max_repeat()) +
+               min_size() * dccl_field_options().min_repeat();
+
     else
         return min_size() * dccl_field_options().max_repeat();
 }
