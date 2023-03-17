@@ -371,6 +371,14 @@ class FieldCodecBase
             throw(Exception("FieldCodecManagerLocal is not set"));
     }
 
+    const FieldCodecManagerLocal& manager() const
+    {
+        if (manager_)
+            return *manager_;
+        else
+            throw(Exception("FieldCodecManagerLocal is not set"));
+    }
+
     static internal::MessageStackData message_data_;
 
   protected:
@@ -540,16 +548,7 @@ class FieldCodecBase
     FieldCodecManagerLocal* manager_{nullptr};
 };
 
-inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec)
-{
-    using google::protobuf::FieldDescriptor;
-    using internal::TypeHelper;
-    return os
-           << "[FieldCodec '" << field_codec.name()
-           << "']: field type: " << TypeHelper::find(field_codec.field_type())->as_str() << " ("
-           << TypeHelper::find(FieldDescriptor::TypeToCppType(field_codec.field_type()))->as_str()
-           << ") | wire type: " << TypeHelper::find(field_codec.wire_type())->as_str();
-}
+std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec);
 
 inline Exception type_error(const std::string& action, const std::type_info& expected,
                             const std::type_info& got)

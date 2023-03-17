@@ -169,9 +169,12 @@ class FieldCodecManagerLocal
 
     void clear()
     {
-        internal::TypeHelper::reset();
+        type_helper_.reset();
         codecs_.clear();
     }
+
+    internal::TypeHelper& type_helper() { return type_helper_; }
+    const internal::TypeHelper& type_helper() const { return type_helper_; }
 
   private:
     boost::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
@@ -223,6 +226,8 @@ class FieldCodecManagerLocal
     typedef std::map<std::string, boost::shared_ptr<FieldCodecBase>> InsideMap;
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
     bool enroll_;
+
+    internal::TypeHelper type_helper_;
 };
 
 class FieldCodecManager
@@ -321,7 +326,7 @@ typename boost::enable_if<
     void>::type
 dccl::FieldCodecManagerLocal::add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
 {
-    internal::TypeHelper::add<typename Codec::wire_type>();
+    type_helper_.add<typename Codec::wire_type>();
     add_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
                            google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                            google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
@@ -401,7 +406,7 @@ typename boost::enable_if<
     void>::type
 dccl::FieldCodecManagerLocal::remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
 {
-    internal::TypeHelper::remove<typename Codec::wire_type>();
+    type_helper_.remove<typename Codec::wire_type>();
     remove_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
                               google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                               google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
