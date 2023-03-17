@@ -60,14 +60,14 @@ namespace dccl
             typedef int symbol_type; // google protobuf RepeatedField size type
             typedef double value_type;
             
-            static const symbol_type OUT_OF_RANGE_SYMBOL = -1;
-            static const symbol_type EOF_SYMBOL = -2;
-            static const symbol_type MIN_SYMBOL = EOF_SYMBOL;
+            static constexpr symbol_type OUT_OF_RANGE_SYMBOL = -1;
+            static constexpr symbol_type EOF_SYMBOL = -2;
+            static constexpr symbol_type MIN_SYMBOL = EOF_SYMBOL;
             
-            static const int CODE_VALUE_BITS = 32;
-            static const int FREQUENCY_BITS = CODE_VALUE_BITS - 2;
+            static constexpr int CODE_VALUE_BITS = 32;
+            static constexpr int FREQUENCY_BITS = CODE_VALUE_BITS - 2;
             
-            static const freq_type MAX_FREQUENCY = (1 << FREQUENCY_BITS) - 1;
+            static constexpr freq_type MAX_FREQUENCY = (1 << FREQUENCY_BITS) - 1;
 
             
             // maps message name -> map of field name -> last size (bits)
@@ -209,10 +209,10 @@ namespace dccl
             {   
               public:              
             
-              static const uint64 TOP_VALUE = (static_cast<uint64>(1) << Model::CODE_VALUE_BITS) - 1; // 11111111...
-              static const uint64 HALF = (static_cast<uint64>(1) << (Model::CODE_VALUE_BITS-1));      // 10000000...
-              static const uint64 FIRST_QTR = HALF >> 1;                                       // 01000000...
-              static const uint64 THIRD_QTR = HALF+FIRST_QTR;                                  // 11000000...
+              static constexpr uint64 TOP_VALUE = (static_cast<uint64>(1) << Model::CODE_VALUE_BITS) - 1; // 11111111...
+              static constexpr uint64 HALF = (static_cast<uint64>(1) << (Model::CODE_VALUE_BITS-1));      // 10000000...
+              static constexpr uint64 FIRST_QTR = HALF >> 1;                                       // 01000000...
+              static constexpr uint64 THIRD_QTR = HALF+FIRST_QTR;                                  // 11000000...
             
               Bitset encode_repeated(const std::vector<Model::value_type>& wire_value)
               {

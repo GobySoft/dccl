@@ -506,7 +506,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, google::p
 
             dlog.is(logger::DEBUG3, logger::DECODE) && dlog  << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
 
-            internal::MessageStack msg_stack;
+            internal::MessageStack msg_stack(FieldCodecBase::message_data_);
             msg_stack.push(msg->GetDescriptor());
 
             codec->base_decode(&head_bits, msg, HEAD);

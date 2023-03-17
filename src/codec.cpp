@@ -225,7 +225,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             //fixed header
             id_codec()->field_encode(&head_bits, dccl_id, 0);
 
-            internal::MessageStack msg_stack;
+            internal::MessageStack msg_stack(FieldCodecBase::message_data_);
             msg_stack.push(msg.GetDescriptor());
             codec->base_encode(&head_bits, msg, HEAD, strict_);
 
