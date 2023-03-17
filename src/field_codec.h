@@ -363,6 +363,14 @@ class FieldCodecBase
         return dynamic_conditions_;
     }
 
+    FieldCodecManagerLocal& manager()
+    {
+        if (manager_)
+            return *manager_;
+        else
+            throw(Exception("FieldCodecManagerLocal is not set"));
+    }
+
     static internal::MessageStackData message_data_;
 
   protected:
@@ -463,13 +471,14 @@ class FieldCodecBase
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
 
-    friend class FieldCodecManager;
+    friend class FieldCodecManagerLocal;
 
   private:
     // codec information
     void set_name(const std::string& name) { name_ = name; }
     void set_field_type(google::protobuf::FieldDescriptor::Type type) { field_type_ = type; }
     void set_wire_type(google::protobuf::FieldDescriptor::CppType type) { wire_type_ = type; }
+    void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }
 
     bool variable_size()
     {
@@ -527,6 +536,8 @@ class FieldCodecBase
     bool force_required_;
 
     static DynamicConditions dynamic_conditions_;
+
+    FieldCodecManagerLocal* manager_{nullptr};
 };
 
 inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec)

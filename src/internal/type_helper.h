@@ -31,7 +31,7 @@
 
 namespace dccl
 {
-    class FieldCodecManager;
+    class FieldCodecManagerLocal;
     
     namespace internal
     {
@@ -58,7 +58,7 @@ namespace dccl
             static boost::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name = "");
             
           private:
-            friend class ::dccl::FieldCodecManager;
+            friend class ::dccl::FieldCodecManagerLocal;
             template<typename ProtobufMessage>
                 static void add()
             {
