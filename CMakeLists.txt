@@ -6,7 +6,7 @@
 # this project is intended to be built out of source by using 
 # > ./build.sh
 
-cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
 # FILE GLOB_RECURSE calls should not follow symlinks by default.
 cmake_policy(SET CMP0009 NEW)

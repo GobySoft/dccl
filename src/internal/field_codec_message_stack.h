@@ -37,40 +37,26 @@ enum MessagePart
 /// Namespace for objects used internally by DCCL
 namespace internal
 {
-//RAII handler for the current Message recursion stack
-class MessageStack
+
+struct MessageStackData
 {
-  public:
-    MessageStack(const google::protobuf::FieldDescriptor* field = 0);
+    const google::protobuf::Descriptor* top_descriptor() const
+    {
+        return !desc.empty() ? desc.back() : nullptr;
+    }
+    const google::protobuf::Message* top_message() const
+    {
+        return !messages.empty() ? messages.back().msg : nullptr;
+    }
+    const google::protobuf::FieldDescriptor* top_field() const
+    {
+        return !field.empty() ? field.back() : nullptr;
+    }
+    MessagePart current_part() const { return parts.empty() ? UNKNOWN : parts.back(); }
 
-    ~MessageStack();
-
-    bool first() { return desc_.empty(); }
-    int count() { return desc_.size(); }
-
-    void push(const google::protobuf::Descriptor* desc);
-    void push(const google::protobuf::FieldDescriptor* field);
-    void push(MessagePart part);
-
-    void update_index(const google::protobuf::FieldDescriptor* field, int index);
-    void push_message(const google::protobuf::FieldDescriptor* field,int index=-1);
-
-    static MessagePart current_part() {
-        return parts_.empty() ? UNKNOWN : parts_.back(); }
-
-    friend class ::dccl::FieldCodecBase;
-
-  private:
-    void __pop_desc();
-    void __pop_field();
-    void __pop_parts();
-    void __pop_messages();
-
-    static std::vector<const google::protobuf::Descriptor*> desc_;
-    static std::vector<const google::protobuf::FieldDescriptor*> field_;
-    static std::vector<MessagePart> parts_;
-
-
+    std::vector<const google::protobuf::Descriptor*> desc;
+    std::vector<const google::protobuf::FieldDescriptor*> field;
+    std::vector<MessagePart> parts;
     struct MessageAndField
     {
         // latest depth of message
@@ -78,9 +64,37 @@ class MessageStack
         // field corresponding to this message (or nullptr for the first)
         const google::protobuf::FieldDescriptor* field{nullptr};
     };
-        
-    static std::vector<MessageAndField> messages_;
-    
+    std::vector<MessageAndField> messages;
+};
+
+//RAII handler for the current Message recursion stack
+class MessageStack
+{
+  public:
+    MessageStack(MessageStackData& data, const google::protobuf::FieldDescriptor* field = 0);
+
+    ~MessageStack();
+
+    bool first() { return data_.desc.empty(); }
+    int count() { return data_.desc.size(); }
+
+    void push(const google::protobuf::Descriptor* desc);
+    void push(const google::protobuf::FieldDescriptor* field);
+    void push(MessagePart part);
+
+    void update_index(const google::protobuf::FieldDescriptor* field, int index);
+    void push_message(const google::protobuf::FieldDescriptor* field, int index = -1);
+
+    std::size_t field_size() { return data_.field.size(); }
+    MessagePart current_part() const { return data_.current_part(); }
+
+  private:
+    void __pop_desc();
+    void __pop_field();
+    void __pop_parts();
+    void __pop_messages();
+
+    MessageStackData& data_;
 
     int descriptors_pushed_;
     int fields_pushed_;

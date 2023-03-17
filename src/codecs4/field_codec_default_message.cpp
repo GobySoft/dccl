@@ -124,7 +124,9 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
                     // remove the unused messages
                     for (int j = field_values.size(), m = max_repeat; j < m; ++j)
-                    { refl->RemoveLast(msg, field_desc); }
+                    {
+                        refl->RemoveLast(msg, field_desc);
+                    }
                 }
                 else
                 {
@@ -240,7 +242,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if (internal::MessageStack::current_part() ==
+        else if (FieldCodecBase::message_data_.current_part() ==
                  UNKNOWN) // part not yet explicitly specified
         {
             if ((part() == HEAD && !dccl_field_options.in_head()) ||
@@ -249,7 +251,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             else
                 return true;
         }
-        else if (internal::MessageStack::current_part() !=
+        else if (FieldCodecBase::message_data_.current_part() !=
                  part()) // part specified and doesn't match
             return false;
         else

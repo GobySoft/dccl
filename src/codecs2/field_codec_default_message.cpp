@@ -172,7 +172,7 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if(internal::MessageStack::current_part() == UNKNOWN) // part not yet explicitly specified
+        else if(FieldCodecBase::message_data_.current_part() == UNKNOWN) // part not yet explicitly specified
         {
             if(field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
                find(field)->name() == Codec::default_codec_name()) // default message codec will expand
@@ -183,7 +183,7 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             else
                 return true;
         }
-        else if(internal::MessageStack::current_part() != part()) // part specified and doesn't match
+        else if(FieldCodecBase::message_data_.current_part() != part()) // part specified and doesn't match
             return false;
         else
             return true;

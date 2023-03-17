@@ -79,7 +79,7 @@ class FieldCodecBase
     /// \return FieldDescriptor for the current field or 0 if this codec is encoding the base message.
     const google::protobuf::FieldDescriptor* this_field() const
     {
-        return !internal::MessageStack::field_.empty() ? internal::MessageStack::field_.back() : 0;
+        return message_data_.top_field();
     }
 
     /// \brief Returns the Descriptor (message schema meta-data) for the immediate parent Message
@@ -97,15 +97,10 @@ class FieldCodecBase
     /// returns Descriptor for FooBar if this_field() == FieldDescriptor for baz
     static const google::protobuf::Descriptor* this_descriptor()
     {
-        return !internal::MessageStack::desc_.empty() ? internal::MessageStack::desc_.back() : 0;
+        return message_data_.top_descriptor();
     }
 
-    static const google::protobuf::Message* this_message()
-    {
-        return !internal::MessageStack::messages_.empty()
-                   ? internal::MessageStack::messages_.back().msg
-                   : 0;
-    }
+    static const google::protobuf::Message* this_message() { return message_data_.top_message(); }
 
     // currently encoded or (partially) decoded root message
     static const google::protobuf::Message* root_message() { return root_message_; }
@@ -367,6 +362,8 @@ class FieldCodecBase
         dynamic_conditions_.set_field(field);
         return dynamic_conditions_;
     }
+
+    static internal::MessageStackData message_data_;
 
   protected:
     /// \brief Whether to use the required or optional encoding

@@ -226,7 +226,7 @@ class DefaultMessageCodec : public FieldCodecBase
                 return;
 
             // Print it otherwise
-            internal::MessageStack msg_handler;
+            internal::MessageStack msg_handler(FieldCodecBase::message_data_);
             std::stringstream ss;
             int depth = msg_handler.count();
 
