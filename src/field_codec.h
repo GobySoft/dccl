@@ -466,6 +466,8 @@ class FieldCodecBase
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
 
+    void check_repeat_settings();
+    
     friend class FieldCodecManager;
 
   private:
