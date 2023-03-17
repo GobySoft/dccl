@@ -170,7 +170,7 @@ namespace dccl
            
                         boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
                         boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-                            internal::TypeHelper::find(field_desc);
+                            manager().type_helper().find(field_desc);
             
             
                         if(field_desc->is_repeated())

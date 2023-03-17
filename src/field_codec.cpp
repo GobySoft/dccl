@@ -50,7 +50,7 @@ void dccl::FieldCodecBase::base_encode(Bitset* bits, const google::protobuf::Mes
     // we pass this through the FromProtoCppTypeBase to do dynamic_cast (RTTI) for
     // custom message codecs so that these codecs can be written in the derived class (not google::protobuf::Message)
     field_encode(
-        bits, internal::TypeHelper::find(field_value.GetDescriptor())->get_value(field_value), 0);
+        bits, manager().type_helper().find(field_value.GetDescriptor())->get_value(field_value), 0);
 }
 
 void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_value,
@@ -556,4 +556,19 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
         if (!field)
             dlog << std::endl;
     }
+}
+
+
+std::ostream& dccl::operator<<(std::ostream& os, const dccl::FieldCodecBase& field_codec)
+{
+    using google::protobuf::FieldDescriptor;
+    return os << "[FieldCodec '" << field_codec.name() << "']: field type: "
+              << field_codec.manager().type_helper().find(field_codec.field_type())->as_str()
+              << " ("
+              << field_codec.manager()
+                     .type_helper()
+                     .find(FieldDescriptor::TypeToCppType(field_codec.field_type()))
+                     ->as_str()
+              << ") | wire type: "
+              << field_codec.manager().type_helper().find(field_codec.wire_type())->as_str();
 }

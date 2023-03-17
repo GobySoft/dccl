@@ -480,7 +480,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
                                                         << std::endl;
 
         boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
-        boost::shared_ptr<internal::FromProtoCppTypeBase> helper = internal::TypeHelper::find(desc);
+        boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
+            manager_.type_helper().find(desc);
 
         CharIterator actual_end = end;
         if (codec)
