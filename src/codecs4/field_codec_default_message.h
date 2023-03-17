@@ -46,7 +46,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
-        return FieldCodecManager::find(field_desc, has_codec_group(), codec_group());
+        return manager().find(field_desc, has_codec_group(), codec_group());
     }
 
     bool is_optional() { return this_field() && this_field()->is_optional() && !use_required(); }
@@ -163,7 +163,8 @@ class DefaultMessageCodec : public FieldCodecBase
         }
 
         static void oneof(unsigned* return_value,
-                          const google::protobuf::OneofDescriptor* oneof_desc)
+                          const google::protobuf::OneofDescriptor* oneof_desc,
+                          FieldCodecManagerLocal& manager)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -189,7 +190,8 @@ class DefaultMessageCodec : public FieldCodecBase
         }
 
         static void oneof(unsigned* return_value,
-                          const google::protobuf::OneofDescriptor* oneof_desc)
+                          const google::protobuf::OneofDescriptor* oneof_desc,
+                          FieldCodecManagerLocal& manager)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -204,7 +206,8 @@ class DefaultMessageCodec : public FieldCodecBase
             codec->field_validate(return_value, field_desc);
         }
 
-        static void oneof(bool*, const google::protobuf::OneofDescriptor*)
+        static void oneof(bool*, const google::protobuf::OneofDescriptor*,
+                          FieldCodecManagerLocal& manager)
         { /* Do nothing */
         }
     };
@@ -219,7 +222,8 @@ class DefaultMessageCodec : public FieldCodecBase
         }
 
         static void oneof(std::stringstream* return_value,
-                          const google::protobuf::OneofDescriptor* oneof_desc)
+                          const google::protobuf::OneofDescriptor* oneof_desc,
+                          FieldCodecManagerLocal& manager)
         {
             // Do nothing if the oneof descriptor is null
             if (!oneof_desc)
@@ -242,8 +246,8 @@ class DefaultMessageCodec : public FieldCodecBase
 
             std::stringstream range;
             unsigned max_sz = 0, min_sz = 0;
-            MaxSize::oneof(&max_sz, oneof_desc);
-            MinSize::oneof(&min_sz, oneof_desc);
+            MaxSize::oneof(&max_sz, oneof_desc, manager);
+            MinSize::oneof(&min_sz, oneof_desc, manager);
             range << min_sz << "-" << max_sz;
 
             ss << indent << name << std::setfill('.') << std::setw(std::max(1, width))
@@ -253,9 +257,8 @@ class DefaultMessageCodec : public FieldCodecBase
             // Add oneof field's info
             for (auto i = 0; i < oneof_desc->field_count(); ++i)
             {
-                auto codec =
-                    FieldCodecManager::find(oneof_desc->field(i), FieldCodecBase::has_codec_group(),
-                                            FieldCodecBase::codec_group());
+                auto codec = manager.find(oneof_desc->field(i), FieldCodecBase::has_codec_group(),
+                                          FieldCodecBase::codec_group());
                 codec->field_info(return_value, oneof_desc->field(i));
             }
 
@@ -270,7 +273,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         // First, process the oneof definitions...
         for (auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
-            Action::oneof(return_value, desc->oneof_decl(i));
+            Action::oneof(return_value, desc->oneof_decl(i), manager());
 
         // ... then, process the fields
         for (int i = 0, n = desc->field_count(); i < n; ++i)

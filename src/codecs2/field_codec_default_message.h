@@ -45,7 +45,7 @@ namespace dccl
 
             boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
             {
-                return FieldCodecManager::find(field_desc, has_codec_group(), codec_group());
+                return manager().find(field_desc, has_codec_group(), codec_group());
             }
         
         
