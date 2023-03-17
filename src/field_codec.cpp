@@ -405,7 +405,7 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
 
         Bitset size_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
                                                     dccl_field_options().max_repeat()),
-                         wire_vector_size);
+                         wire_vector_size - dccl_field_options().min_repeat());
         bits->append(size_bits);
 
         dlog.is(DEBUG2, ENCODE) && dlog << "repeated size field ... produced these "
@@ -445,7 +445,7 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
         size_bits.get_more_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
                                                            dccl_field_options().max_repeat()));
 
-        wire_vector_size = size_bits.to_ulong();
+        wire_vector_size = size_bits.to_ulong() + dccl_field_options().min_repeat();
     }
 
     wire_values->resize(wire_vector_size);
@@ -504,12 +504,24 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
     return out;
 }
 
-unsigned dccl::FieldCodecBase::max_size_repeated()
+void dccl::FieldCodecBase::check_repeat_settings()
 {
     if (!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " +
                         this_field()->DebugString()));
-    else if (codec_version() > 2)
+    else if (dccl_field_options().max_repeat() < 1)
+        throw(Exception("(dccl.field).max_repeat must not be less than 1: " +
+                        this_field()->DebugString()));
+    else if (dccl_field_options().max_repeat() < dccl_field_options().min_repeat())
+        throw(Exception("(dccl.field).max_repeat must not be less than (dccl.field).min_repeat: " +
+                        this_field()->DebugString()));
+}
+
+unsigned dccl::FieldCodecBase::max_size_repeated()
+{
+    check_repeat_settings();
+
+    if (codec_version() > 2)
         return repeated_vector_field_size(dccl_field_options().min_repeat(),
                                           dccl_field_options().max_repeat()) +
                max_size() * dccl_field_options().max_repeat();
@@ -519,10 +531,9 @@ unsigned dccl::FieldCodecBase::max_size_repeated()
 
 unsigned dccl::FieldCodecBase::min_size_repeated()
 {
-    if (!dccl_field_options().has_max_repeat())
-        throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field " +
-                        this_field()->DebugString()));
-    else if (codec_version() > 2)
+    check_repeat_settings();
+
+    if (codec_version() > 2)
         return repeated_vector_field_size(dccl_field_options().min_repeat(),
                                           dccl_field_options().max_repeat());
     else
