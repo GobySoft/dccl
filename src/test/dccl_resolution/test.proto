@@ -1,106 +1,134 @@
 @PROTOBUF_SYNTAX_VERSION@
+
 import "dccl/option_extensions.proto";
 package dccl.test;
 
 message NumericMsg
 {
-  option (dccl.msg).id = 10;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).max = 180,
-                         (dccl.field).min = -180,
-                         (dccl.field).precision = 12,
-                         (dccl.field).in_head=true];
+    optional double a = 1 [
+        (dccl.field).max = 180,
+        (dccl.field).min = -180,
+        (dccl.field).precision = 12,
+        (dccl.field).in_head = true
+    ];
 
-  optional double b = 2 [(dccl.field).max = 18,
-                         (dccl.field).min = -18,
-                         (dccl.field).resolution = 0.0001];
+    optional double b = 2 [
+        (dccl.field).max = 18,
+        (dccl.field).min = -18,
+        (dccl.field).resolution = 0.0001
+    ];
 
-  // max is 2^64 rounded to 1e5
-  required uint64 u1 = 3 [(dccl.field).max = 18446744073709500000,
-                          (dccl.field).min = 0,
-                          (dccl.field).precision = -5];
+    // max is 2^64 rounded to 1e5
+    required uint64 u1 = 3 [
+        (dccl.field).max = 18446744073709500000,
+        (dccl.field).min = 0,
+        (dccl.field).precision = -5
+    ];
 
-  // max is 2^64 rounded to 1e5
-  required uint64 u2 = 4 [(dccl.field).max = 18446744073709500000,
-                          (dccl.field).min = 0,
-                          (dccl.field).resolution = 100000];
+    // max is 2^64 rounded to 1e5
+    required uint64 u2 = 4 [
+        (dccl.field).max = 18446744073709500000,
+        (dccl.field).min = 0,
+        (dccl.field).resolution = 100000
+    ];
 
-  // resolution != 10^N
-  required double u3 = 5 [(dccl.field).max = 15.5,
-                          (dccl.field).min = 5.5,
-                          (dccl.field).resolution = 0.5];
+    // resolution != 10^N
+    required double u3 = 5 [
+        (dccl.field).max = 15.5,
+        (dccl.field).min = 5.5,
+        (dccl.field).resolution = 0.5
+    ];
 
-  // resolution default
-  required double u4 = 6 [(dccl.field).max = 20.0,
-                          (dccl.field).min = 0.0];
+    // resolution default
+    required double u4 = 6 [(dccl.field).max = 20.0, (dccl.field).min = 0.0];
 
-  // weird resolution
-  required double u5 = 7 [(dccl.field).max = 3.6,
-                          (dccl.field).min = 1.44,
-                          (dccl.field).resolution = 0.12];
+    // weird resolution
+    required double u5 = 7 [
+        (dccl.field).max = 3.6,
+        (dccl.field).min = 1.44,
+        (dccl.field).resolution = 0.12
+    ];
 
-    
+    // old precision field did not require min and max to be a multiple of resolution
+    required int32 u6 = 8 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 16383,
+        (dccl.field).precision = -2
+    ];
 }
 
-message NegativeResolutionNumericMsg    // Invalid resolution
+message NegativeResolutionNumericMsg  // Invalid resolution
 {
-  option (dccl.msg).id = 10;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).min = -20,
-                         (dccl.field).max = 20,
-                         (dccl.field).resolution = -0.5];
+    optional double a = 1 [
+        (dccl.field).min = -20,
+        (dccl.field).max = 20,
+        (dccl.field).resolution = -0.5
+    ];
 
-  optional int32 b = 2 [(dccl.field).min = -500000,
-                        (dccl.field).max = 500000,
-                        (dccl.field).precision = -3];
+    optional int32 b = 2 [
+        (dccl.field).min = -500000,
+        (dccl.field).max = 500000,
+        (dccl.field).precision = -3
+    ];
 }
-
 
 message BothResolutionAndPrecisionSetNumericMsg
 {
-  option (dccl.msg).id = 11;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).max = 180,
-                         (dccl.field).min = -180,
-                         (dccl.field).precision = 1,
-                         (dccl.field).resolution = 0.1];                        
+    optional double a = 1 [
+        (dccl.field).max = 180,
+        (dccl.field).min = -180,
+        (dccl.field).precision = 1,
+        (dccl.field).resolution = 0.1
+    ];
 }
 
 message TooBigNumericMsg
 {
-  option (dccl.msg).id = 11;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).max = 180,
-                         (dccl.field).min = -180,
-                         (dccl.field).resolution = 1e-15];                        
+    optional double a = 1 [
+        (dccl.field).max = 180,
+        (dccl.field).min = -180,
+        (dccl.field).resolution = 1e-15
+    ];
 }
 
 message MinNotMultipleOfResolution
 {
-  option (dccl.msg).id = 11;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  required double a = 1 [(dccl.field).max = 3.6,
-                         (dccl.field).min = 1.5,
-                         (dccl.field).resolution = 0.2];
+    required double a = 1 [
+        (dccl.field).max = 3.6,
+        (dccl.field).min = 1.5,
+        (dccl.field).resolution = 0.2
+    ];
 }
 
 message MaxNotMultipleOfResolution
 {
-  option (dccl.msg).id = 11;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  required double a = 1 [(dccl.field).max = 3.5,
-                         (dccl.field).min = 1.4,
-                         (dccl.field).resolution = 0.2];
+    required double a = 1 [
+        (dccl.field).max = 3.5,
+        (dccl.field).min = 1.4,
+        (dccl.field).resolution = 0.2
+    ];
 }
