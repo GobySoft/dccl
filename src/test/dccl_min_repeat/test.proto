@@ -1,0 +1,58 @@
+@PROTOBUF_SYNTAX_VERSION@
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message TestMsg
+{
+    option (dccl.msg) = {
+        id: 1
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    repeated int32 a = 1 [
+        (dccl.field) = { min: -100 max: 100 max_repeat: 5 }
+    ];  // default min repeat (0)
+    repeated int32 b = 2 [
+        (dccl.field) = { min: -100 max: 100 min_repeat: 2 max_repeat: 3 }
+    ];  // min repeat and max repeat different
+    repeated int32 c = 3 [
+        (dccl.field) = { min: -100 max: 100 min_repeat: 3 max_repeat: 3 }
+    ];  // min repeat and max repeat the same
+}
+
+message InvalidTestMsgMissingMaxRepeat
+{
+    option (dccl.msg) = {
+        id: 2
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    repeated int32 a = 1 [(dccl.field) = { min: -100 max: 100 }];
+}
+
+message InvalidTestMsgMaxRepeatLessThanOne
+{
+    option (dccl.msg) = {
+        id: 2
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    repeated int32 a = 1 [(dccl.field) = { min: -100 max: 100 max_repeat: 0 }];
+}
+
+message InvalidTestMsgMaxRepeatLessThanMinRepeat
+{
+    option (dccl.msg) = {
+        id: 2
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    repeated int32 a = 1
+        [(dccl.field) = { min: -100 max: 100 min_repeat: 5 max_repeat: 3 }];
+}

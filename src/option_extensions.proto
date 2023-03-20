@@ -36,8 +36,8 @@ message DCCLFieldOptions
     optional int32 precision = 4 [default = 0];   // Deprecated
     optional double resolution = 5 [default = 1];
     // int, double, float
-    optional double min = 6 [default = 0];
-    optional double max = 7 [default = 0];
+    optional double min = 6;
+    optional double max = 7;
 
     // time ("1 day" can encode times 12h before or after the receiver's time)
     optional uint32 num_days = 8 [default = 1];
@@ -46,13 +46,14 @@ message DCCLFieldOptions
     optional string static_value = 9 [default = ""];
 
     // string, bytes
-    optional uint32 max_length = 10 [default = 0];
+    optional uint32 max_length = 10;
 
     // any `repeated` field
-    optional uint32 max_repeat = 11 [default = 1];
+    optional uint32 max_repeat = 11;
+    optional uint32 min_repeat = 12 [default = 0];
 
     // enum
-    optional bool packed_enum = 12 [default = true];
+    optional bool packed_enum = 13 [default = true];
 
     optional string description = 20;
 
