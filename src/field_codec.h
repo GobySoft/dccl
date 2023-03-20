@@ -466,6 +466,8 @@ class FieldCodecBase
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
 
+    void check_repeat_settings();
+    
     friend class FieldCodecManager;
 
   private:
@@ -482,7 +484,10 @@ class FieldCodecBase
             return max_size() != min_size();
     }
 
-    int repeated_vector_field_size(int max_repeat) { return dccl::ceil_log2(max_repeat + 1); }
+    int repeated_vector_field_size(int min_repeat, int max_repeat)
+    {
+        return dccl::ceil_log2(max_repeat - min_repeat + 1);
+    }
 
     void disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits,
                    int depth, int vector_size = -1);

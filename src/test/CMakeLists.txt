@@ -20,6 +20,7 @@ add_subdirectory(dccl_packed_enum)
 add_subdirectory(dccl_dynamic_protobuf)
 add_subdirectory(dccl_presence)
 add_subdirectory(dccl_resolution)
+add_subdirectory(dccl_min_repeat)
 
 if(enable_units)
   add_subdirectory(dccl_units)

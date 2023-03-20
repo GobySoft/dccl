@@ -304,7 +304,11 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
                                              ". " + this_field()->name()
                                        : this_descriptor()->full_name());
     if (this_field() && this_field()->is_repeated())
-        name += "[" + boost::lexical_cast<std::string>(dccl_field_options().max_repeat()) + "]";
+        name += "[" +
+                (dccl_field_options().has_min_repeat()
+                     ? (boost::lexical_cast<std::string>(dccl_field_options().min_repeat()) + "-")
+                     : "") +
+                boost::lexical_cast<std::string>(dccl_field_options().max_repeat()) + "]";
 
     if (!this_field() || this_field()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
         depth -= 1;
@@ -384,13 +388,24 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
                                           FieldCodecBase::this_field()->DebugString(),
                                       this->this_field()));
 
+    if (wire_values.size() < dccl_field_options().min_repeat() && strict())
+        throw(dccl::OutOfRangeException(
+            std::string("Repeated size is less than min_repeat for field: ") +
+                FieldCodecBase::this_field()->DebugString(),
+            this->this_field()));
+
     // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat)
     if (codec_version() > 2)
     {
-        wire_vector_size =
-            std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());
-        Bitset size_bits(repeated_vector_field_size(dccl_field_options().max_repeat()),
-                         wire_vector_size);
+        wire_vector_size = std::min(static_cast<int>(dccl_field_options().max_repeat()),
+                                    static_cast<int>(wire_values.size()));
+
+        wire_vector_size = std::max(static_cast<int>(dccl_field_options().min_repeat()),
+                                    static_cast<int>(wire_vector_size));
+
+        Bitset size_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
+                                                    dccl_field_options().max_repeat()),
+                         wire_vector_size - dccl_field_options().min_repeat());
         bits->append(size_bits);
 
         dlog.is(DEBUG2, ENCODE) && dlog << "repeated size field ... produced these "
@@ -427,9 +442,10 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
     if (codec_version() > 2)
     {
         Bitset size_bits(repeated_bits);
-        size_bits.get_more_bits(repeated_vector_field_size(dccl_field_options().max_repeat()));
+        size_bits.get_more_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
+                                                           dccl_field_options().max_repeat()));
 
-        wire_vector_size = size_bits.to_ulong();
+        wire_vector_size = size_bits.to_ulong() + dccl_field_options().min_repeat();
     }
 
     wire_values->resize(wire_vector_size);
@@ -461,9 +477,10 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
 
     if (codec_version() > 2)
     {
-        wire_vector_size =
-            std::min((int)dccl_field_options().max_repeat(), (int)wire_values.size());
-        out += repeated_vector_field_size(dccl_field_options().max_repeat());
+        wire_vector_size = std::min(static_cast<int>(dccl_field_options().max_repeat()),
+                                    static_cast<int>(wire_values.size()));
+        out += repeated_vector_field_size(dccl_field_options().min_repeat(),
+                                          dccl_field_options().max_repeat());
     }
 
     internal::MessageStack msg_handler(this->this_field());
@@ -487,13 +504,26 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
     return out;
 }
 
-unsigned dccl::FieldCodecBase::max_size_repeated()
+void dccl::FieldCodecBase::check_repeat_settings()
 {
     if (!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " +
                         this_field()->DebugString()));
-    else if (codec_version() > 2)
-        return repeated_vector_field_size(dccl_field_options().max_repeat()) +
+    else if (dccl_field_options().max_repeat() < 1)
+        throw(Exception("(dccl.field).max_repeat must not be less than 1: " +
+                        this_field()->DebugString()));
+    else if (dccl_field_options().max_repeat() < dccl_field_options().min_repeat())
+        throw(Exception("(dccl.field).max_repeat must not be less than (dccl.field).min_repeat: " +
+                        this_field()->DebugString()));
+}
+
+unsigned dccl::FieldCodecBase::max_size_repeated()
+{
+    check_repeat_settings();
+
+    if (codec_version() > 2)
+        return repeated_vector_field_size(dccl_field_options().min_repeat(),
+                                          dccl_field_options().max_repeat()) +
                max_size() * dccl_field_options().max_repeat();
     else
         return max_size() * dccl_field_options().max_repeat();
@@ -501,11 +531,13 @@ unsigned dccl::FieldCodecBase::max_size_repeated()
 
 unsigned dccl::FieldCodecBase::min_size_repeated()
 {
-    if (!dccl_field_options().has_max_repeat())
-        throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field " +
-                        this_field()->DebugString()));
-    else if (codec_version() > 2)
-        return repeated_vector_field_size(dccl_field_options().max_repeat());
+    check_repeat_settings();
+
+    if (codec_version() > 2)
+        return repeated_vector_field_size(dccl_field_options().min_repeat(),
+                                          dccl_field_options().max_repeat()) +
+               min_size() * dccl_field_options().min_repeat();
+
     else
         return min_size() * dccl_field_options().max_repeat();
 }
