@@ -162,39 +162,11 @@ class DefaultMessageCodec : public FieldCodecBase
 
                 if (field_desc->is_repeated())
                 {
-                    ReturnType return_value = ReturnType();
+                    std::vector<boost::any> field_values;
+                    for (int j = 0, m = refl->FieldSize(*msg, field_desc); j < m; ++j)
+                        field_values.push_back(helper->get_repeated_value(field_desc, *msg, j));
 
-                    const google::protobuf::Message* msg =
-                        boost::any_cast<const google::protobuf::Message*>(wire_value);
-                    const google::protobuf::Descriptor* desc = msg->GetDescriptor();
-                    const google::protobuf::Reflection* refl = msg->GetReflection();
-                    for (int i = 0, n = desc->field_count(); i < n; ++i)
-                    {
-                        const google::protobuf::FieldDescriptor* field_desc = desc->field(i);
-
-                        if (!check_field(field_desc))
-                            continue;
-
-                        boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-                        boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-                            manager().type_helper().find(field_desc);
-
-                        if (field_desc->is_repeated())
-                        {
-                            std::vector<boost::any> field_values;
-                            for (int j = 0, m = refl->FieldSize(*msg, field_desc); j < m; ++j)
-                                field_values.push_back(
-                                    helper->get_repeated_value(field_desc, *msg, j));
-
-                            Action::repeated(codec, &return_value, field_values, field_desc);
-                        }
-                        else
-                        {
-                            Action::single(codec, &return_value,
-                                           helper->get_value(field_desc, *msg), field_desc);
-                        }
-                    }
-                    return return_value;
+                    Action::repeated(codec, &return_value, field_values, field_desc);
                 }
                 else
                 {
