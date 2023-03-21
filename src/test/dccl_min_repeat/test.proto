@@ -1,4 +1,4 @@
-@PROTOBUF_SYNTAX_VERSION@
+syntax = "proto2";
 
 import "dccl/option_extensions.proto";
 
