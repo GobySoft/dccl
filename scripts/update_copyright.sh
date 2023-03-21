@@ -59,13 +59,20 @@ EOF
     done
 }
 
+prepend_header()
+{
+    i=$1
+    cat /tmp/dccl_authors.tmp $here/../src/share/header_lib.txt $i > $i.tmp; mv $i.tmp $i;
+}
+
+set -x
 pushd ../src
 header_strip
-for i in `find -regex ".*\.h$\|.*\.cpp$"`;
-do
-    gen_authors $i
-    cat /tmp/dccl_authors.tmp $here/../src/share/header_lib.txt $i > $i.tmp; mv $i.tmp $i;
-done
+export -f gen_authors prepend_header
+export here
+find -regex ".*\.h$\|.*\.cpp$" | parallel gen_authors
+find -regex ".*\.h$\|.*\.cpp$" | parallel prepend_header
+
 popd
 
 rm /tmp/dccl_authors.tmp
