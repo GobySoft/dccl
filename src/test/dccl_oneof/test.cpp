@@ -26,12 +26,12 @@
 
 #include <fstream>
 
-#include <google/protobuf/descriptor.pb.h>
 #include "dccl/native_protobuf/dccl_native_protobuf.h"
+#include <google/protobuf/descriptor.pb.h>
 
+#include "dccl/binary.h"
 #include "dccl/codec.h"
 #include "test.pb.h"
-#include "dccl/binary.h"
 using namespace dccl::test;
 
 dccl::Codec codec;
@@ -39,14 +39,12 @@ dccl::Codec codec;
 // ensure we link in dccl_native_protobuf.so
 dccl::native_protobuf::EnumFieldCodec dummy;
 
-
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);
 
-    
     {
         TestMsg msg_in;
         msg_in.set_double_oneof1(10.56);
@@ -93,9 +91,9 @@ int main(int argc, char* argv[])
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
-    
     // Test exception thrown for in_head oneof fields
-    try {
+    try
+    {
         InvalidTestMsg msg_in;
         msg_in.set_double_oneof1(10.56);
         msg_in.mutable_msg_oneof2()->set_val(100.123);
@@ -103,9 +101,12 @@ int main(int argc, char* argv[])
         codec.load(msg_in.GetDescriptor());
         codec.info(msg_in.GetDescriptor());
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
         // expect throw dccl::Exception with in_head == true
-        assert(strcmp(e.what(), "Oneof field used in header - oneof fields cannot be encoded in the header.") == 0);
+        assert(
+            strcmp(e.what(),
+                   "Oneof field used in header - oneof fields cannot be encoded in the header.") ==
+            0);
     }
 }

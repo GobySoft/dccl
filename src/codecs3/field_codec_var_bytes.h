@@ -27,32 +27,29 @@
 
 namespace dccl
 {
-    namespace v3
-    {
-        // Size (in bits) for "required/optional/repeated bytes foo":
-        // if optional: [1 bit - has_foo()?][N bits - prefix with length of byte string][string bytes]
-        // if required: [N bits - prefix with length of string][string bytes]
-        // if repeated: [M bits - prefix with the number of repeated values][same as "required" for value with index 0][same as "required" for index = 1]...[same as required for last index]
-        class VarBytesCodec : public dccl::TypedFieldCodec<std::string>
-        {
-        private:
-            dccl::Bitset encode();
-            dccl::Bitset encode(const std::string& wire_value);
-            std::string decode(dccl::Bitset* bits);
-            unsigned size();
-            unsigned size(const std::string& wire_value);
-            unsigned max_size();
-            unsigned min_size();
-            void validate();
-        
-        private:
-            unsigned prefix_size()
-            { return dccl::ceil_log2(dccl_field_options().max_length()+1); }
-            unsigned presence_size()
-            { return use_required() ? 0 : 1; }
-        
-        };
-    }
-}
+namespace v3
+{
+// Size (in bits) for "required/optional/repeated bytes foo":
+// if optional: [1 bit - has_foo()?][N bits - prefix with length of byte string][string bytes]
+// if required: [N bits - prefix with length of string][string bytes]
+// if repeated: [M bits - prefix with the number of repeated values][same as "required" for value with index 0][same as "required" for index = 1]...[same as required for last index]
+class VarBytesCodec : public dccl::TypedFieldCodec<std::string>
+{
+  private:
+    dccl::Bitset encode();
+    dccl::Bitset encode(const std::string& wire_value);
+    std::string decode(dccl::Bitset* bits);
+    unsigned size();
+    unsigned size(const std::string& wire_value);
+    unsigned max_size();
+    unsigned min_size();
+    void validate();
+
+  private:
+    unsigned prefix_size() { return dccl::ceil_log2(dccl_field_options().max_length() + 1); }
+    unsigned presence_size() { return use_required() ? 0 : 1; }
+};
+} // namespace v3
+} // namespace dccl
 
 #endif

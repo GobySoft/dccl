@@ -470,7 +470,7 @@ class FieldCodecBase
     virtual unsigned min_size_repeated();
 
     void check_repeat_settings();
-    
+
     friend class FieldCodecManager;
 
   private:

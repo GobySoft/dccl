@@ -30,7 +30,11 @@ message BytesMsg
     option (dccl.msg).max_bytes = 54;
     option (dccl.msg).codec_version = 4;
 
-    required bytes req_bytes = 1 [(dccl.field) = { max_length: 10 codec: "dccl.var_bytes" } ];
-    optional bytes opt_bytes = 2 [(dccl.field) = { max_length: 10 codec: "dccl.var_bytes" } ];  
-    repeated bytes rep_bytes = 3 [(dccl.field) = { max_length: 10 max_repeat: 3 codec: "dccl.var_bytes" } ];  
+    required bytes req_bytes = 1
+        [(dccl.field) = { max_length: 10 codec: "dccl.var_bytes" }];
+    optional bytes opt_bytes = 2
+        [(dccl.field) = { max_length: 10 codec: "dccl.var_bytes" }];
+    repeated bytes rep_bytes = 3 [
+        (dccl.field) = { max_length: 10 max_repeat: 3 codec: "dccl.var_bytes" }
+    ];
 }

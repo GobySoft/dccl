@@ -29,13 +29,13 @@ package dccl.test;
 
 message GobyMessage
 {
-  option (dccl.msg).id = 4;
-  option (dccl.msg).max_bytes = 64;
-  option (dccl.msg).codec_version = 4;
-  
-  required string telegram = 1 [(dccl.field).max_length=10]; 
-  required Header header = 2 [(dccl.field).in_head = true];
+    option (dccl.msg).id = 4;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 4;
 
-  optional int32 const_int =3 [(dccl.field).static_value="3", (dccl.field).codec="_static"];
+    required string telegram = 1 [(dccl.field).max_length = 10];
+    required Header header = 2 [(dccl.field).in_head = true];
+
+    optional int32 const_int = 3
+        [(dccl.field).static_value = "3", (dccl.field).codec = "_static"];
 }
-

@@ -244,14 +244,13 @@ void test3()
     msg_in.set_a(10);
     msg_in.set_c_center(100);
     msg_in.set_c(100);
-    
-    
+
     msg_in.set_y(13);
     {
         auto c = msg_in.mutable_child2();
         c->set_include_i(TestMsg::Child2::NO);
     }
-    
+
     codec.info(msg_in.GetDescriptor());
 
     std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;

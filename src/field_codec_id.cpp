@@ -27,16 +27,13 @@
 // DefaultIdentifierCodec
 //
 
-dccl::Bitset dccl::DefaultIdentifierCodec::encode()
-{
-    return encode(0);
-}
+dccl::Bitset dccl::DefaultIdentifierCodec::encode() { return encode(0); }
 
 dccl::Bitset dccl::DefaultIdentifierCodec::encode(const uint32& id)
 {
-    if(id <= ONE_BYTE_MAX_ID)
+    if (id <= ONE_BYTE_MAX_ID)
     {
-        return(dccl::Bitset(this_size(id), id) << 1);
+        return (dccl::Bitset(this_size(id), id) << 1);
     }
     else
     {
@@ -45,18 +42,17 @@ dccl::Bitset dccl::DefaultIdentifierCodec::encode(const uint32& id)
         // set LSB to indicate long header form
         return_bits.set(0, true);
 
-        
         return return_bits;
     }
 }
 
 dccl::uint32 dccl::DefaultIdentifierCodec::decode(Bitset* bits)
 {
-    if(bits->test(0))
+    if (bits->test(0))
     {
         // long header
         // grabs more bits to add to the MSB of `bits`
-        bits->get_more_bits((LONG_FORM_ID_BYTES - SHORT_FORM_ID_BYTES)*BITS_IN_BYTE);
+        bits->get_more_bits((LONG_FORM_ID_BYTES - SHORT_FORM_ID_BYTES) * BITS_IN_BYTE);
         // discard identifier
         *(bits) >>= 1;
         return bits->to_ulong();
@@ -69,33 +65,21 @@ dccl::uint32 dccl::DefaultIdentifierCodec::decode(Bitset* bits)
     }
 }
 
-unsigned dccl::DefaultIdentifierCodec::size()
-{
-    return this_size(0);
-}
+unsigned dccl::DefaultIdentifierCodec::size() { return this_size(0); }
 
-unsigned dccl::DefaultIdentifierCodec::size(const uint32& id)
-{
-    return this_size(id);
-}
+unsigned dccl::DefaultIdentifierCodec::size(const uint32& id) { return this_size(id); }
 
 unsigned dccl::DefaultIdentifierCodec::this_size(const uint32& id)
 {
-    if(id > TWO_BYTE_MAX_ID)
-        throw(Exception("dccl.id provided (" + boost::lexical_cast<std::string>(id) + ") exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
-    
-    return (id <= ONE_BYTE_MAX_ID) ?
-        SHORT_FORM_ID_BYTES*BITS_IN_BYTE :
-        LONG_FORM_ID_BYTES*BITS_IN_BYTE;
+    if (id > TWO_BYTE_MAX_ID)
+        throw(Exception(
+            "dccl.id provided (" + boost::lexical_cast<std::string>(id) +
+            ") exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
+
+    return (id <= ONE_BYTE_MAX_ID) ? SHORT_FORM_ID_BYTES * BITS_IN_BYTE
+                                   : LONG_FORM_ID_BYTES * BITS_IN_BYTE;
 }
 
+unsigned dccl::DefaultIdentifierCodec::max_size() { return LONG_FORM_ID_BYTES * BITS_IN_BYTE; }
 
-unsigned dccl::DefaultIdentifierCodec::max_size()
-{
-    return LONG_FORM_ID_BYTES * BITS_IN_BYTE;
-}
-
-unsigned dccl::DefaultIdentifierCodec::min_size()
-{
-    return SHORT_FORM_ID_BYTES * BITS_IN_BYTE;
-}
+unsigned dccl::DefaultIdentifierCodec::min_size() { return SHORT_FORM_ID_BYTES * BITS_IN_BYTE; }

@@ -32,43 +32,43 @@ using dccl::operator<<;
 
 namespace dccl
 {
-    namespace test
-    {    
-        class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
-        {
-        private:
-            dccl::Bitset encode(const dccl::uint32& wire_value);
-    
-            dccl::Bitset encode()
-                { return encode(MINI_ID_OFFSET); }
-    
-            dccl::uint32 decode(dccl::Bitset* bits)
-                { return bits->to_ulong() + MINI_ID_OFFSET; }
-    
-            unsigned size()
-                { return MINI_ID_SIZE; }
-    
-            void validate()
-                { }
-    
+namespace test
+{
+class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
+{
+  private:
+    dccl::Bitset encode(const dccl::uint32& wire_value);
 
-            // Add this value when decoding to put us safely in our own namespace
-            // from the normal default DCCL Codec
-            enum { MINI_ID_OFFSET = 1000000 };    
-            enum { MINI_ID_SIZE = 6 };
-        };
-    }
-}
+    dccl::Bitset encode() { return encode(MINI_ID_OFFSET); }
 
+    dccl::uint32 decode(dccl::Bitset* bits) { return bits->to_ulong() + MINI_ID_OFFSET; }
+
+    unsigned size() { return MINI_ID_SIZE; }
+
+    void validate() {}
+
+    // Add this value when decoding to put us safely in our own namespace
+    // from the normal default DCCL Codec
+    enum
+    {
+        MINI_ID_OFFSET = 1000000
+    };
+    enum
+    {
+        MINI_ID_SIZE = 6
+    };
+};
+} // namespace test
+} // namespace dccl
 
 bool double_cmp(double a, double b, int precision)
 {
     int a_whole = a;
     int b_whole = b;
 
-    int a_part = (a-a_whole)*pow(10.0, precision);
-    int b_part = (b-b_whole)*pow(10.0, precision);
-    
+    int a_part = (a - a_whole) * pow(10.0, precision);
+    int b_part = (b - b_whole) * pow(10.0, precision);
+
     return (a_whole == b_whole) && (a_part == b_part);
 }
 
@@ -79,30 +79,29 @@ dccl::Bitset dccl::test::MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uin
     return dccl::Bitset(MINI_ID_SIZE, wire_value - MINI_ID_OFFSET);
 }
 
-
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
-    {        
-	dccl::FieldCodecManager::add<dccl::test::MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
+
+    {
+        dccl::FieldCodecManager::add<dccl::test::MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
         dccl::Codec codec("mini_id_codec");
         codec.set_crypto_passphrase("309ldskjfla39");
-        
+
         codec.load<MiniUser>();
-        codec.info<MiniUser>(&dccl::dlog);	  
-        
+        codec.info<MiniUser>(&dccl::dlog);
+
         MiniUser mini_user_msg_in, mini_user_msg_out;
         mini_user_msg_in.set_user(876);
         std::string encoded;
         codec.encode(&encoded, mini_user_msg_in);
         codec.decode(encoded, &mini_user_msg_out);
         assert(mini_user_msg_out.SerializeAsString() == mini_user_msg_in.SerializeAsString());
-        
+
         codec.load<MiniOWTT>();
         codec.info<MiniOWTT>(&dccl::dlog);
-        
-        MiniOWTT mini_owtt_in, mini_owtt_out; 
+
+        MiniOWTT mini_owtt_in, mini_owtt_out;
         mini_owtt_in.set_clock_mode(3);
         mini_owtt_in.set_tod(12);
         mini_owtt_in.set_user(13);
@@ -110,14 +109,14 @@ int main(int argc, char* argv[])
         encoded.clear();
         codec.encode(&encoded, mini_owtt_in);
         std::cout << "OWTT as hex: " << dccl::hex_encode(encoded) << std::endl;
-        
+
         codec.decode(encoded, &mini_owtt_out);
         assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());
-        
+
         codec.load<MiniAbort>();
         codec.info<MiniAbort>(&dccl::dlog);
-        
-        MiniAbort mini_abort_in, mini_abort_out; 
+
+        MiniAbort mini_abort_in, mini_abort_out;
         mini_abort_in.set_user(130);
         encoded.clear();
         codec.encode(&encoded, mini_abort_in);
@@ -126,6 +125,4 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "all tests passed" << std::endl;
-
 }
-

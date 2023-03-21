@@ -28,54 +28,66 @@ package dccl.test;
 
 message NumericMsg
 {
-  option (dccl.msg).id = 10;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).max = 180,
-                         (dccl.field).min = -180,
-                         (dccl.field).precision = 12,
-                         (dccl.field).in_head=true];
+    optional double a = 1 [
+        (dccl.field).max = 180,
+        (dccl.field).min = -180,
+        (dccl.field).precision = 12,
+        (dccl.field).in_head = true
+    ];
 
-  optional double b = 2 [(dccl.field).max = 18,
-                         (dccl.field).min = -18,
-                         (dccl.field).precision = 4];
+    optional double b = 2 [
+        (dccl.field).max = 18,
+        (dccl.field).min = -18,
+        (dccl.field).precision = 4
+    ];
 
-  // max is 2^64 rounded to 1e5
-  required uint64 u1 = 3 [(dccl.field).max = 18446744073709500000,
-                          (dccl.field).min = 0,
-                          (dccl.field).precision = -5];
+    // max is 2^64 rounded to 1e5
+    required uint64 u1 = 3 [
+        (dccl.field).max = 18446744073709500000,
+        (dccl.field).min = 0,
+        (dccl.field).precision = -5
+    ];
 
-  // max is 2^64 rounded to 1e5
-  required uint64 u2 = 4 [(dccl.field).max = 18446744073709500000,
-                          (dccl.field).min = 0,
-                          (dccl.field).precision = -5];
-                        
+    // max is 2^64 rounded to 1e5
+    required uint64 u2 = 4 [
+        (dccl.field).max = 18446744073709500000,
+        (dccl.field).min = 0,
+        (dccl.field).precision = -5
+    ];
 }
 
 message NegativePrecisionNumericMsg
 {
-  option (dccl.msg).id = 10;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).min = -20,
-                         (dccl.field).max = 20,
-                         (dccl.field).precision = -1];
+    optional double a = 1 [
+        (dccl.field).min = -20,
+        (dccl.field).max = 20,
+        (dccl.field).precision = -1
+    ];
 
-  optional int32 b = 2 [(dccl.field).min = -500000,
-                        (dccl.field).max = 500000,
-                        (dccl.field).precision = -3];
+    optional int32 b = 2 [
+        (dccl.field).min = -500000,
+        (dccl.field).max = 500000,
+        (dccl.field).precision = -3
+    ];
 }
-
 
 message TooBigNumericMsg
 {
-  option (dccl.msg).id = 11;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  optional double a = 1 [(dccl.field).max = 180,
-                         (dccl.field).min = -180,
-                         (dccl.field).precision = 15];                        
+    optional double a = 1 [
+        (dccl.field).max = 180,
+        (dccl.field).min = -180,
+        (dccl.field).precision = 15
+    ];
 }

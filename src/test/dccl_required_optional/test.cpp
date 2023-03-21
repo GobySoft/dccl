@@ -33,9 +33,9 @@ using dccl::operator<<;
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
-    
+
     codec.load<BytesMsg>();
     codec.info<BytesMsg>(&dccl::dlog);
 
@@ -46,13 +46,11 @@ int main(int argc, char* argv[])
 
     std::string encoded;
     codec.encode(&encoded, msg_in);
-    
+
     BytesMsg msg_out;
     codec.decode(encoded, &msg_out);
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-    
-    
+
     std::cout << "all tests passed" << std::endl;
 }
-

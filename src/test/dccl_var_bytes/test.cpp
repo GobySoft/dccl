@@ -32,9 +32,9 @@ using dccl::operator<<;
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
-    
+
     codec.load<BytesMsg>();
     codec.info<BytesMsg>(&dccl::dlog);
 
@@ -49,13 +49,11 @@ int main(int argc, char* argv[])
     codec.encode(&encoded, msg_in);
 
     assert(encoded.size() == 36);
-    
+
     BytesMsg msg_out;
     codec.decode(encoded, &msg_out);
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-    
-    
+
     std::cout << "all tests passed" << std::endl;
 }
-

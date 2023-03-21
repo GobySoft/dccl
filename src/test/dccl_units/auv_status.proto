@@ -24,47 +24,86 @@
 syntax = "proto2";
 import "dccl/option_extensions.proto";
 
-message AUVStatus { 
-  option (dccl.msg) = { id: 122
-                        max_bytes: 32
-                        codec_version: 4 };
-  
-  // Header
-  required double timestamp = 1  [(dccl.field) = { codec: "_time"   in_head: true }];
-  required int32 source = 2      [(dccl.field) = { min: 0  max: 31  in_head: true }];
-  required int32 destination = 3 [(dccl.field) = { min: 0  max: 31  in_head: true }];  
+message AUVStatus
+{
+    option (dccl.msg) = {
+        id: 122
+        max_bytes: 32
+        codec_version: 4
+    };
 
-  // Body 
-    required double x = 4 [(dccl.field) = { units { system: "si" base_dimensions: "L" }
-                                          min: -10000  max: 10000  precision: 1 }];
-  required double y = 5 [(dccl.field) = { units { system: "si" base_dimensions: "L" }
-                                          min: -10000  max: 10000  precision: 1 }];
-  
-  required double speed = 6 [(dccl.field) = { units { system: "si" base_dimensions: "LT^-1" }
-                                              min: 0
-                                              max: 20.0,
-                                              precision: 1 }];
-  required double heading = 7 [(dccl.field) = { units { system: "angle::degree" derived_dimensions: "plane_angle" }
-                                                min: 0
-                                                max: 360.0,
-                                                precision: 1 }];
-  
-  optional double depth = 8 [(dccl.field) = { units { system: "si" base_dimensions: "L" }
-                                              min: 0  max: 6500  precision: 0 }];
-  optional double altitude = 9 [(dccl.field) = { units { system: "si" base_dimensions: "L" }
-                                                 min: 0  max: 500  precision: 1 }];
-  optional double pitch = 10 [(dccl.field) = { units { system: "angle::radian" derived_dimensions: "plane_angle" }
-                                               min: -1.57  max: 1.57 precision: 2 }];
-  optional double roll = 11 [(dccl.field) = { units { system: "angle::radian" derived_dimensions: "plane_angle" }
-                                              min: -1.57  max: 1.57 precision: 2 }];
-  optional MissionState mission_state = 12;
-  enum MissionState { IDLE = 0; 
-                      SEARCH = 1; 
-                      CLASSIFY = 2; 
-                      WAYPOINT = 3; }
-  
-  optional DepthMode depth_mode = 13;
-  enum DepthMode { DEPTH_SINGLE = 0; 
-                   DEPTH_YOYO = 1; 
-                   DEPTH_BOTTOM_FOLLOWING = 2; } 
-} 
+    // Header
+    required double timestamp = 1
+        [(dccl.field) = { codec: "_time" in_head: true }];
+    required int32 source = 2 [(dccl.field) = { min: 0 max: 31 in_head: true }];
+    required int32 destination = 3
+        [(dccl.field) = { min: 0 max: 31 in_head: true }];
+
+    // Body
+    required double x = 4 [(dccl.field) = {
+        units { system: "si" base_dimensions: "L" }
+        min: -10000
+        max: 10000
+        precision: 1
+    }];
+    required double y = 5 [(dccl.field) = {
+        units { system: "si" base_dimensions: "L" }
+        min: -10000
+        max: 10000
+        precision: 1
+    }];
+
+    required double speed = 6 [(dccl.field) = {
+        units { system: "si" base_dimensions: "LT^-1" }
+        min: 0
+        max: 20.0,
+        precision: 1
+    }];
+    required double heading = 7 [(dccl.field) = {
+        units { system: "angle::degree" derived_dimensions: "plane_angle" }
+        min: 0
+        max: 360.0,
+        precision: 1
+    }];
+
+    optional double depth = 8 [(dccl.field) = {
+        units { system: "si" base_dimensions: "L" }
+        min: 0
+        max: 6500
+        precision: 0
+    }];
+    optional double altitude = 9 [(dccl.field) = {
+        units { system: "si" base_dimensions: "L" }
+        min: 0
+        max: 500
+        precision: 1
+    }];
+    optional double pitch = 10 [(dccl.field) = {
+        units { system: "angle::radian" derived_dimensions: "plane_angle" }
+        min: -1.57
+        max: 1.57
+        precision: 2
+    }];
+    optional double roll = 11 [(dccl.field) = {
+        units { system: "angle::radian" derived_dimensions: "plane_angle" }
+        min: -1.57
+        max: 1.57
+        precision: 2
+    }];
+    optional MissionState mission_state = 12;
+    enum MissionState
+    {
+        IDLE = 0;
+        SEARCH = 1;
+        CLASSIFY = 2;
+        WAYPOINT = 3;
+    }
+
+    optional DepthMode depth_mode = 13;
+    enum DepthMode
+    {
+        DEPTH_SINGLE = 0;
+        DEPTH_YOYO = 1;
+        DEPTH_BOTTOM_FOLLOWING = 2;
+    }
+}

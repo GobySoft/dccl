@@ -24,15 +24,24 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 import "dccl/option_extensions.proto";
 
-message NavigationReport {
-  option (dccl.msg) = { codec_version: 4
-                        id: 124
-                        max_bytes: 32 };
-  required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
-  required double y = 2 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
-  required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
-  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
-  optional VehicleClass veh_class = 4;
-  optional bool battery_ok = 5;
+message NavigationReport
+{
+    option (dccl.msg) = {
+        codec_version: 4
+        id: 124
+        max_bytes: 32
+    };
+    required double x = 1
+        [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+    required double y = 2
+        [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+    required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
+    enum VehicleClass
+    {
+        AUV = 1;
+        USV = 2;
+        SHIP = 3;
+    }
+    optional VehicleClass veh_class = 4;
+    optional bool battery_ok = 5;
 }
-

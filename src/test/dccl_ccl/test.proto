@@ -28,28 +28,20 @@ package dccl.test;
 
 message NormalDCCL1Byte
 {
-  option (dccl.msg).id = 1;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 1;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  required int32 a = 1 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  required int32 b = 2 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  
+    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
+    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
 }
-
 
 message NormalDCCL2Byte
 {
-  option (dccl.msg).id = 1000;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 1000;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  required int32 a = 1 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  required int32 b = 2 [(dccl.field).min=0,
-                        (dccl.field).max=0xFFFF];
-  
+    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
+    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
 }
-

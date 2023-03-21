@@ -50,8 +50,6 @@ int main(int argc, char* argv[])
     codec.info<GobyMessage2>(&dccl::dlog);
     codec.info<GobyMessage3>(&dccl::dlog);
 
-    
- 
     msg_in1.set_int32_val(1);
     msg_in2.set_bool_val(false);
     msg_in3.set_string_val("string1");
@@ -71,7 +69,6 @@ int main(int argc, char* argv[])
     decode(bytes2);
     decode(bytes1);
     decode(bytes3);
-    
 
     std::cout << "all tests passed" << std::endl;
 }
@@ -79,8 +76,8 @@ int main(int argc, char* argv[])
 void decode(const std::string& bytes)
 {
     unsigned dccl_id = codec.id(bytes);
-    
-    if(dccl_id == codec.id<GobyMessage1>())
+
+    if (dccl_id == codec.id<GobyMessage1>())
     {
         GobyMessage1 msg_out1;
         codec.decode(bytes, &msg_out1);
@@ -88,7 +85,7 @@ void decode(const std::string& bytes)
         std::cout << "Got..." << msg_out1 << std::endl;
         assert(msg_out1.SerializeAsString() == msg_in1.SerializeAsString());
     }
-    else if(dccl_id == codec.id<GobyMessage2>())
+    else if (dccl_id == codec.id<GobyMessage2>())
     {
         GobyMessage2 msg_out2;
         codec.decode(bytes, &msg_out2);
@@ -96,13 +93,12 @@ void decode(const std::string& bytes)
         std::cout << "Got..." << msg_out2 << std::endl;
         assert(msg_out2.SerializeAsString() == msg_in2.SerializeAsString());
     }
-    else if(dccl_id == codec.id<GobyMessage3>())
+    else if (dccl_id == codec.id<GobyMessage3>())
     {
         GobyMessage3 msg_out3;
         codec.decode(bytes, &msg_out3);
-        
+
         std::cout << "Got..." << msg_out3 << std::endl;
         assert(msg_out3.SerializeAsString() == msg_in3.SerializeAsString());
     }
-    
 }

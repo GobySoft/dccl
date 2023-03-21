@@ -27,11 +27,11 @@ import "dccl/option_extensions.proto";
 
 message ArithmeticOptions
 {
-  required string model = 1;
-  optional bool debug_assert = 2 [default = false];
+    required string model = 1;
+    optional bool debug_assert = 2 [default = false];
 }
 
 extend .dccl.DCCLFieldOptions
 {
-  optional ArithmeticOptions arithmetic = 1001;
+    optional ArithmeticOptions arithmetic = 1001;
 }

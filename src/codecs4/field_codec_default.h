@@ -32,19 +32,19 @@
 
 namespace dccl
 {
-    /// DCCL version 4 default field codecs
-    namespace v4
-    {
-	// all these are the same as version 3
-        template<typename WireType, typename FieldType = WireType>
-        using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
+/// DCCL version 4 default field codecs
+namespace v4
+{
+// all these are the same as version 3
+template <typename WireType, typename FieldType = WireType>
+using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
 
-        using DefaultBoolCodec = v3::DefaultBoolCodec;
-        using DefaultEnumCodec = v3::DefaultEnumCodec;
+using DefaultBoolCodec = v3::DefaultBoolCodec;
+using DefaultEnumCodec = v3::DefaultEnumCodec;
 
-        using DefaultBytesCodec = v3::VarBytesCodec;
-        using DefaultStringCodec = v3::VarBytesCodec;
-    }
-}
+using DefaultBytesCodec = v3::VarBytesCodec;
+using DefaultStringCodec = v3::VarBytesCodec;
+} // namespace v4
+} // namespace dccl
 
 #endif
