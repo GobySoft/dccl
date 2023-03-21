@@ -1,7 +1,8 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2021-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Davide Fenucci <davfen@noc.ac.uk>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
