@@ -1,7 +1,8 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2019:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Kyle Guilbert <kguilbert@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -33,7 +34,7 @@ void test2(dccl::Codec&);
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
     codec.load<PresenceMsg>();
     codec.info<PresenceMsg>(&dccl::dlog);
@@ -60,7 +61,7 @@ void test1(dccl::Codec& codec)
     codec.encode(&encoded, msg_in);
 
     assert(encoded.size() == 17);
-    
+
     PresenceMsg msg_out;
     codec.decode(encoded, &msg_out);
 
@@ -112,7 +113,6 @@ void test2(dccl::Codec& codec)
     msg_in.add_repeat_enum(ENUM2_B);
     msg_in.add_repeat_enum(ENUM2_C);
 
-
     std::string encoded;
     codec.encode(&encoded, msg_in);
 
@@ -146,10 +146,11 @@ void test2(dccl::Codec& codec)
     assert(msg_in.opt_enum() == msg_out.opt_enum());
 
     assert(msg_in.repeat_i32_size() == msg_out.repeat_i32_size());
-    assert(std::equal(msg_in.repeat_i32().begin(), msg_in.repeat_i32().end(), msg_out.repeat_i32().begin()));
+    assert(std::equal(msg_in.repeat_i32().begin(), msg_in.repeat_i32().end(),
+                      msg_out.repeat_i32().begin()));
     assert(msg_in.repeat_enum_size() == msg_out.repeat_enum_size());
-    assert(std::equal(msg_in.repeat_enum().begin(), msg_in.repeat_enum().end(), msg_out.repeat_enum().begin()));
-
+    assert(std::equal(msg_in.repeat_enum().begin(), msg_in.repeat_enum().end(),
+                      msg_out.repeat_enum().begin()));
 
     std::cout << "test2 passed" << std::endl;
 }

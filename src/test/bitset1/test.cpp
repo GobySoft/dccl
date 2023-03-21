@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2013-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -19,8 +21,8 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #include <utility>
 
 #include "dccl/binary.h"
@@ -42,7 +44,7 @@ int main()
     std::cout << bits << std::endl;
     s = bits.to_string();
     assert(s == std::string("01011100"));
-    
+
     bits >>= 1;
     std::cout << bits << std::endl;
     s = bits.to_string();
@@ -57,7 +59,7 @@ int main()
     // logic
     unsigned long v1 = 14, v2 = 679;
     Bitset bits1(15, v1), bits2(15, v2);
-    
+
     assert((bits1 & bits2).to_ulong() == (v1 & v2));
     assert((bits1 | bits2).to_ulong() == (v1 | v2));
     assert((bits1 ^ bits2).to_ulong() == (v1 ^ v2));
@@ -67,7 +69,7 @@ int main()
     assert((bits2 < bits1) == (v2 < v1));
 
     using namespace std::rel_ops;
-    
+
     assert((bits1 > bits2) == (v1 > v2));
     assert((bits1 >= bits2) == (v1 >= v2));
     assert((bits1 <= bits2) == (v1 <= v2));
@@ -76,7 +78,7 @@ int main()
     assert((Bitset(8, 23)) == Bitset(8, 23));
     assert((Bitset(16, 23)) != Bitset(8, 23));
     assert((Bitset(16, 0x0001)) != Bitset(16, 0x1001));
-    
+
     assert(dccl::hex_encode(bits2.to_byte_string()) == "a702");
     bits2.from_byte_string(dccl::hex_decode("12a502"));
     std::cout << bits2.size() << ": " << bits2 << std::endl;
@@ -91,19 +93,18 @@ int main()
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" <<  std::endl;
+        std::cout << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
-        
+
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
 
         assert(child.size() == 8);
         assert(parent.size() == 4);
-        
+
         assert(child.to_ulong() == 0x10);
         assert(parent.to_ulong() == 0xD);
-        
-    }    
+    }
 
     {
         std::cout << std::endl;
@@ -115,9 +116,9 @@ int main()
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" <<  std::endl;
+        std::cout << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
-        
+
         std::cout << "grandparent: " << grandparent << std::endl;
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
@@ -125,14 +126,13 @@ int main()
         assert(child.size() == 8);
         assert(parent.size() == 4);
         assert(grandparent.size() == 8);
-        
+
         assert(child.to_ulong() == 0x20);
         assert(parent.to_ulong() == 0x0);
         assert(grandparent.to_ulong() == 0xD1);
     }
 
-
-    {        
+    {
         std::cout << std::endl;
         Bitset grandparent(8, 0xD1);
         Bitset parent(&grandparent);
@@ -142,9 +142,9 @@ int main()
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" <<  std::endl;
+        std::cout << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
-        
+
         std::cout << "grandparent: " << grandparent << std::endl;
         std::cout << "parent: " << parent << std::endl;
         std::cout << "child: " << child << std::endl;
@@ -152,14 +152,13 @@ int main()
         assert(child.size() == 8);
         assert(parent.size() == 0);
         assert(grandparent.size() == 4);
-        
+
         assert(child.to_ulong() == 0x10);
         assert(parent.to_ulong() == 0x0);
         assert(grandparent.to_ulong() == 0xD);
     }
 
-    
     std::cout << "all tests passed" << std::endl;
-    
+
     return 0;
 }

@@ -1,36 +1,60 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2019-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Chris Murphy <cmurphy@aphysci.com>
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 
 package dccl.test;
 
 enum Enum
 {
-  ENUM2_A = -2; // for completeness, though negative values are discouraged
-  ENUM2_B = 0;
-  ENUM2_C = 1;
-  ENUM2_D = 2;
-  ENUM2_E = 10;
-  ENUM2_F = 11;
-  ENUM2_G = 12;
-  ENUM2_H = 16777213; // Many skipped values - packed will be 3b, unpacked 24b
+    ENUM2_A = -2;  // for completeness, though negative values are discouraged
+    ENUM2_B = 0;
+    ENUM2_C = 1;
+    ENUM2_D = 2;
+    ENUM2_E = 10;
+    ENUM2_F = 11;
+    ENUM2_G = 12;
+    ENUM2_H =
+        16777213;  // Many skipped values - packed will be 3b, unpacked 24b
 }
 
 message TestMsgPack
 {
-  option (dccl.msg).id = 2;
-  option (dccl.msg).max_bytes = 2;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 2;
+    option (dccl.msg).codec_version = 4;
 
-  required int32 five_bit_padding = 1 [(dccl.field) = {min: 0, max: 31}]; // 5b padding.
-  required Enum value = 2 [(dccl.field).packed_enum=true];
+    required int32 five_bit_padding = 1
+        [(dccl.field) = { min: 0, max: 31 }];  // 5b padding.
+    required Enum value = 2 [(dccl.field).packed_enum = true];
 }
 
 message TestMsgUnpack
 {
-  option (dccl.msg).id = 3;
-  option (dccl.msg).max_bytes = 4;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 4;
+    option (dccl.msg).codec_version = 4;
 
-  required Enum value = 1 [(dccl.field).packed_enum=false];
+    required Enum value = 1 [(dccl.field).packed_enum = false];
 }
-

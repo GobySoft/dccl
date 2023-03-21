@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2012-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -24,13 +26,12 @@
 
 using namespace dccl::logger;
 
-dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
-                                                           bool final_child)
+dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits, bool final_child)
 {
-    if(final_child || this->size() < num_bits)
+    if (final_child || this->size() < num_bits)
     {
         size_type num_parent_bits = (final_child) ? num_bits : num_bits - this->size();
-        if(parent_)
+        if (parent_)
         {
             Bitset parent_bits = parent_->relinquish_bits(num_parent_bits, false);
             append(parent_bits);
@@ -38,17 +39,18 @@ dccl::Bitset dccl::Bitset::relinquish_bits(size_type num_bits,
     }
 
     Bitset out;
-    if(!final_child)
+    if (!final_child)
     {
-        for(size_type i = 0; i < num_bits; ++i)
+        for (size_type i = 0; i < num_bits; ++i)
         {
-            if(this->empty())
-                throw(dccl::Exception("Cannot relinquish_bits - no more bits to give up! Check that all field codecs are always producing (encode) and consuming (decode) the exact same number of bits."));
-            
+            if (this->empty())
+                throw(dccl::Exception("Cannot relinquish_bits - no more bits to give up! Check "
+                                      "that all field codecs are always producing (encode) and "
+                                      "consuming (decode) the exact same number of bits."));
+
             out.push_back(this->front());
             this->pop_front();
         }
     }
     return out;
 }
-

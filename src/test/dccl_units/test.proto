@@ -1,61 +1,99 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2015-2018:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Stephanie Petillo <stephanie@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
-
 
 message CTDTestMessage
 {
-  option (dccl.msg).unit_system = "si";
-    
-  optional double conductivity = 2 [(dccl.field).units.derived_dimensions = "conductance/length"];
-  required double temperature = 3 [(dccl.field) = { units { derived_dimensions: "temperature"
-//                                                            system: "celsius"
-                                                           }
-                                                    min: 0
-                                                    max: 30
-                                                    precision: -1 }];
+    option (dccl.msg).unit_system = "si";
 
-    required double micro_temp = 5 [(dccl.field) = { units { base_dimensions: "K"
-                                                             prefix: "micro"
-                                                             relative_temperature: true
-            }
-                                                     min: 0
-                                                     max: 30
-                                                     precision: -1 }];
+    optional double conductivity = 2
+        [(dccl.field).units.derived_dimensions = "conductance/length"];
+    required double temperature = 3 [(dccl.field) = {
+        units {
+            derived_dimensions: "temperature"
+            //                                                            system:
+            //                                                            "celsius"
+        }
+        min: 0
+        max: 30
+        precision: -1
+    }];
 
-    required int32 pressure = 4 [(dccl.field).units.derived_dimensions = "pressure"];
-  
-  required double salinity = 10 [(dccl.field).units.base_dimensions = "-"]; 
-  required double sound_speed = 11 [(dccl.field).units.base_dimensions = " LT^-1"]; 
-  optional double density = 12 [(dccl.field).units.base_dimensions = "M L^-3"];
+    required double micro_temp = 5 [(dccl.field) = {
+        units {
+            base_dimensions: "K"
+            prefix: "micro"
+            relative_temperature: true
+        }
+        min: 0
+        max: 30
+        precision: -1
+    }];
 
-  required int32 depth = 13 [(dccl.field) = { units { derived_dimensions: "length" prefix: "kilo" }
-                                              min: 0
-                                              max: 6000
-                                               }];
+    required int32 pressure = 4
+        [(dccl.field).units.derived_dimensions = "pressure"];
 
-  required double auv_speed = 14 [(dccl.field).units.unit = "metric::knot"];
+    required double salinity = 10 [(dccl.field).units.base_dimensions = "-"];
+    required double sound_speed = 11
+        [(dccl.field).units.base_dimensions = " LT^-1"];
+    optional double density = 12
+        [(dccl.field).units.base_dimensions = "M L^-3"];
 
-    
-    
+    required int32 depth = 13 [(dccl.field) = {
+        units { derived_dimensions: "length" prefix: "kilo" }
+        min: 0
+        max: 6000
+    }];
+
+    required double auv_speed = 14 [(dccl.field).units.unit = "metric::knot"];
 }
 
 message Parent
 {
     option (dccl.msg).unit_system = "cgs";
 
-    required int32 mass = 1 [(dccl.field).units.base_dimensions = "M"]; // should be grams
-    required int32 si_mass = 2 [(dccl.field) = { units { system: "si" base_dimensions: "M" } }]; // should be kilograms
+    required int32 mass = 1
+        [(dccl.field).units.base_dimensions = "M"];  // should be grams
+    required int32 si_mass = 2 [
+        (dccl.field) = { units { system: "si" base_dimensions: "M" } }
+    ];  // should be kilograms
 
     required Child child = 3;
 
     message Child
     {
-        required int32 length = 1 [(dccl.field).units.derived_dimensions = "length"]; // should be centimeters
+        required int32 length = 1 [(dccl.field).units.derived_dimensions =
+                                       "length"];  // should be centimeters
     }
-
 }
 
 message OuterChild
 {
-    required int32 length = 1 [(dccl.field).units.derived_dimensions = "length", (dccl.field).units.system = "si"]; 
+    required int32 length = 1 [
+        (dccl.field).units.derived_dimensions = "length",
+        (dccl.field).units.system = "si"
+    ];
 }
