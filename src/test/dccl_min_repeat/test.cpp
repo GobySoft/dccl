@@ -170,6 +170,5 @@ int main(int argc, char* argv[])
         // expected
     }
 
-    
     std::cout << "All tests passed." << std::endl;
 }

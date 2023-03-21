@@ -1,13 +1,35 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2019-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Kyle Guilbert <kguilbert@aphysci.com>
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 package dccl.test;
 
 enum Enum
 {
-  ENUM2_A = 3;
-  ENUM2_B = 4;
-  ENUM2_C = 5;
-
+    ENUM2_A = 3;
+    ENUM2_B = 4;
+    ENUM2_C = 5;
 }
 
 message PresenceMsg
@@ -17,25 +39,60 @@ message PresenceMsg
     option (dccl.msg).codec_version = 4;
 
     // optional fields gain an extra bit set to 1
-    required int32 req_i32 = 1 [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500 } ];
-    required int64 req_i64 = 2 [(dccl.field) = { codec: "dccl.presence", min: 0, max: 65535 } ];
-    required uint32 req_ui32 = 3 [(dccl.field) = { codec: "dccl.presence", min: 0, max: 1022 } ];
-    required uint64 req_ui64 = 4 [(dccl.field) = { codec: "dccl.presence", min: 100, max: 1123 } ];
-    required float req_float = 5 [(dccl.field) = { codec: "dccl.presence", min: -1000, max: 1000, precision: 5 } ];
-    required double req_double = 6 [(dccl.field) = { codec: "dccl.presence", min: -1000, max: 1000, precision: 8 } ];
-    required Enum req_enum = 7 [(dccl.field) = { codec: "dccl.presence" } ];
-    
-    // optional fields will gain an extra bit; when unpopulated, the fields are encoded with this bit only
-    optional int32 opt_i32 = 8 [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500 } ];
-    optional int64 opt_i64 = 9 [(dccl.field) = { codec: "dccl.presence", min: 0, max: 65535 } ];
-    optional uint32 opt_ui32 = 10 [(dccl.field) = { codec: "dccl.presence", min: 0, max: 1022 } ];
-    optional uint64 opt_ui64 = 11 [(dccl.field) = { codec: "dccl.presence", min: 100, max: 1123 } ];
-    optional float opt_float = 12 [(dccl.field) = { codec: "dccl.presence", min: -1000, max: 1000, precision: 5 } ];
-    optional double opt_double = 13 [(dccl.field) = { codec: "dccl.presence", min: -1000, max: 1000, precision: 8 } ];
-    optional Enum opt_enum = 14 [(dccl.field) = { codec: "dccl.presence" } ];
+    required int32 req_i32 = 1
+        [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500 }];
+    required int64 req_i64 = 2
+        [(dccl.field) = { codec: "dccl.presence", min: 0, max: 65535 }];
+    required uint32 req_ui32 = 3
+        [(dccl.field) = { codec: "dccl.presence", min: 0, max: 1022 }];
+    required uint64 req_ui64 = 4
+        [(dccl.field) = { codec: "dccl.presence", min: 100, max: 1123 }];
+    required float req_float = 5 [(dccl.field) = {
+        codec: "dccl.presence",
+        min: -1000,
+        max: 1000,
+        precision: 5
+    }];
+    required double req_double = 6 [(dccl.field) = {
+        codec: "dccl.presence",
+        min: -1000,
+        max: 1000,
+        precision: 8
+    }];
+    required Enum req_enum = 7 [(dccl.field) = { codec: "dccl.presence" }];
 
-    // note: since repeated fields are treated like "required" fields, they are unaffected by the presence codec    
-    repeated int32 repeat_i32 = 15 [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500, max_repeat: 2 }];
-    repeated Enum repeat_enum = 16 [(dccl.field) = { codec: "dccl.presence", max_repeat: 3 } ];
+    // optional fields will gain an extra bit; when unpopulated, the fields are
+    // encoded with this bit only
+    optional int32 opt_i32 = 8
+        [(dccl.field) = { codec: "dccl.presence", min: -100, max: 500 }];
+    optional int64 opt_i64 = 9
+        [(dccl.field) = { codec: "dccl.presence", min: 0, max: 65535 }];
+    optional uint32 opt_ui32 = 10
+        [(dccl.field) = { codec: "dccl.presence", min: 0, max: 1022 }];
+    optional uint64 opt_ui64 = 11
+        [(dccl.field) = { codec: "dccl.presence", min: 100, max: 1123 }];
+    optional float opt_float = 12 [(dccl.field) = {
+        codec: "dccl.presence",
+        min: -1000,
+        max: 1000,
+        precision: 5
+    }];
+    optional double opt_double = 13 [(dccl.field) = {
+        codec: "dccl.presence",
+        min: -1000,
+        max: 1000,
+        precision: 8
+    }];
+    optional Enum opt_enum = 14 [(dccl.field) = { codec: "dccl.presence" }];
+
+    // note: since repeated fields are treated like "required" fields, they are
+    // unaffected by the presence codec
+    repeated int32 repeat_i32 = 15 [(dccl.field) = {
+        codec: "dccl.presence",
+        min: -100,
+        max: 500,
+        max_repeat: 2
+    }];
+    repeated Enum repeat_enum = 16
+        [(dccl.field) = { codec: "dccl.presence", max_repeat: 3 }];
 }
-

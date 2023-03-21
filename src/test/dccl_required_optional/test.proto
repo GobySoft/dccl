@@ -1,13 +1,37 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2011-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 package dccl.test;
 
 message BytesMsg
 {
-  option (dccl.msg).id = 10;
-  option (dccl.msg).max_bytes = 32;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
 
-  required bytes req_bytes = 1 [(dccl.field).max_length=8];
-  optional bytes opt_bytes = 2 [(dccl.field).max_length=8];  
+    required bytes req_bytes = 1 [(dccl.field).max_length = 8];
+    optional bytes opt_bytes = 2 [(dccl.field).max_length = 8];
 }

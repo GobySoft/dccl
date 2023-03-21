@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2014-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -36,16 +38,16 @@ int main()
         r_out.set_z(-100);
         r_out.set_veh_class(NavigationReport::AUV);
         r_out.set_battery_ok(true);
-        
+
         codec.encode(&encoded_bytes, r_out);
     }
     // send encoded_bytes across your link
 
     // RECEIVER
-    if(codec.id(encoded_bytes) == codec.id<NavigationReport>())
+    if (codec.id(encoded_bytes) == codec.id<NavigationReport>())
     {
         NavigationReport r_in;
         codec.decode(encoded_bytes, &r_in);
         std::cout << r_in.ShortDebugString() << std::endl;
-    }    
+    }
 }

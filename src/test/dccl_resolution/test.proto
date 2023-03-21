@@ -1,4 +1,28 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2013-2023:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Davide Fenucci <davfen@noc.ac.uk>
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 
 import "dccl/option_extensions.proto";
 package dccl.test;
@@ -53,7 +77,8 @@ message NumericMsg
         (dccl.field).resolution = 0.12
     ];
 
-    // old precision field did not require min and max to be a multiple of resolution
+    // old precision field did not require min and max to be a multiple of
+    // resolution
     required int32 u6 = 8 [
         (dccl.field).min = 0,
         (dccl.field).max = 25599,

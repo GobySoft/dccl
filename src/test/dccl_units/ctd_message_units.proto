@@ -1,34 +1,62 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2015-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
-
 
 message CTDMessage
 {
-  option (dccl.msg) = { id: 123
-                        max_bytes: 32
-                        codec_version: 4
-                        unit_system: "si" };
-    
-  required double temperature = 1 [(dccl.field) = { units { derived_dimensions: "temperature"
-                                                            system: "celsius" }
-                                                    min: 0
-                                                    max: 30
-                                                    precision: 1 }];
-  
-  required int32 depth = 2 [(dccl.field) = { units { derived_dimensions: "length"
-                                                     system: "si" }
-                                             min: 0
-                                             max: 6000 }];
-  
-  required double salinity = 4 [(dccl.field) = { min: 10
-                                                 max: 40
-                                                 precision: 1
-                                                 units { base_dimensions: "-"} }];
-  
-  required double sound_speed = 5 [(dccl.field) = { units { base_dimensions:  "LT^-1" system: "si" }
-                                                    min: 1450
-                                                    max: 1550
-                                                    precision: 1 }]; 
+    option (dccl.msg) = {
+        id: 123
+        max_bytes: 32
+        codec_version: 4
+        unit_system: "si"
+    };
+
+    required double temperature = 1 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "celsius" }
+        min: 0
+        max: 30
+        precision: 1
+    }];
+
+    required int32 depth = 2 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" }
+        min: 0
+        max: 6000
+    }];
+
+    required double salinity = 4 [(dccl.field) = {
+        min: 10
+        max: 40
+        precision: 1
+        units { base_dimensions: "-" }
+    }];
+
+    required double sound_speed = 5 [(dccl.field) = {
+        units { base_dimensions: "LT^-1" system: "si" }
+        min: 1450
+        max: 1550
+        precision: 1
+    }];
 }
-
-

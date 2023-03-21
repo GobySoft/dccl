@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2019:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -21,9 +23,9 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of Legacy CCL
 
-#include "test.pb.h"
 #include "dccl.h"
 #include "dccl/native_protobuf/dccl_native_protobuf.h"
+#include "test.pb.h"
 
 using namespace dccl::test;
 
@@ -32,11 +34,10 @@ using dccl::operator<<;
 // ensure we link in dccl_native_protobuf.so
 dccl::native_protobuf::EnumFieldCodec dummy;
 
-
 void fill_message(NativeProtobufTest& msg_in)
 {
     int i = 0;
-     msg_in.set_double_default_optional(++i + 0.1);
+    msg_in.set_double_default_optional(++i + 0.1);
     msg_in.set_float_default_optional(++i + 0.2);
 
     msg_in.set_int32_default_optional(++i);
@@ -51,7 +52,7 @@ void fill_message(NativeProtobufTest& msg_in)
     msg_in.set_sfixed64_default_optional(-++i);
 
     msg_in.set_bool_default_optional(true);
-    
+
     msg_in.set_enum_default_optional(ENUM_C);
 
     msg_in.set_double_default_required(++i + 0.1);
@@ -71,9 +72,8 @@ void fill_message(NativeProtobufTest& msg_in)
     msg_in.set_bool_default_required(true);
 
     msg_in.set_enum_default_required(ENUM_C);
-    
-    
-    for(int j = 0; j < 4; ++j)
+
+    for (int j = 0; j < 4; ++j)
     {
         msg_in.add_double_default_repeat(++i + 0.1);
         msg_in.add_int32_default_repeat(++i);
@@ -83,7 +83,7 @@ void fill_message(NativeProtobufTest& msg_in)
 void fill_message_partial(NativeProtobufTest& msg_in)
 {
     int i = 0;
-     msg_in.set_double_default_optional(++i + 0.1);
+    msg_in.set_double_default_optional(++i + 0.1);
     msg_in.set_float_default_optional(++i + 0.2);
 
     msg_in.set_int32_default_optional(++i);
@@ -93,7 +93,6 @@ void fill_message_partial(NativeProtobufTest& msg_in)
     msg_in.set_fixed32_default_optional(++i);
     msg_in.set_sfixed32_default_optional(++i);
     msg_in.set_sfixed64_default_optional(-++i);
-
 
     msg_in.set_double_default_required(++i + 0.1);
     msg_in.set_float_default_required(++i + 0.2);
@@ -112,15 +111,13 @@ void fill_message_partial(NativeProtobufTest& msg_in)
     msg_in.set_bool_default_required(true);
 
     msg_in.set_enum_default_required(ENUM_C);
-    
-    
-    for(int j = 0; j < 2; ++j)
+
+    for (int j = 0; j < 2; ++j)
     {
         msg_in.add_double_default_repeat(++i + 0.1);
         msg_in.add_int32_default_repeat(++i);
     }
 }
-
 
 void fill_message_max(NativeProtobufTest& msg_in)
 {
@@ -158,15 +155,13 @@ void fill_message_max(NativeProtobufTest& msg_in)
     msg_in.set_bool_default_required(true);
 
     msg_in.set_enum_default_required(ENUM_C);
-    
-    
-    for(int j = 0; j < 4; ++j)
+
+    for (int j = 0; j < 4; ++j)
     {
         msg_in.add_double_default_repeat(std::numeric_limits<double>::max());
         msg_in.add_int32_default_repeat(std::numeric_limits<dccl::int32>::max());
     }
 }
-
 
 void fill_message_min(NativeProtobufTest& msg_in)
 {
@@ -204,15 +199,13 @@ void fill_message_min(NativeProtobufTest& msg_in)
     msg_in.set_bool_default_required(true);
 
     msg_in.set_enum_default_required(ENUM_A);
-    
-    
-    for(int j = 0; j < 4; ++j)
+
+    for (int j = 0; j < 4; ++j)
     {
         msg_in.add_double_default_repeat(std::numeric_limits<double>::min());
         msg_in.add_int32_default_repeat(std::numeric_limits<dccl::int32>::min());
     }
 }
-
 
 void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
 {
@@ -225,14 +218,13 @@ void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
     std::cout << "Try decode..." << std::endl;
     codec.decode(bytes, &msg_out);
     std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
-    
+
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 }
 
-
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     dccl::Codec codec;
     codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);
@@ -255,16 +247,12 @@ int main(int argc, char* argv[])
         fill_message_min(msg_in);
         run_test(codec, msg_in);
     }
-    
-    
+
     {
         NativeProtobufTest msg_in;
         fill_message_max(msg_in);
         run_test(codec, msg_in);
     }
-    
-    
-    
+
     std::cout << "all tests passed" << std::endl;
 }
-

@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2014-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -24,84 +26,80 @@
 
 #include <getopt.h>
 
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 namespace dccl
 {
-    /// Represents a command line option
-    class Option
+/// Represents a command line option
+class Option
+{
+  public:
+    /// \brief Create a command line option
+    ///
+    /// \param shortname Single character representation (e.g. 'v' for "-v")
+    /// \param longname Full representation (e.g. "verbose" for "--verbose")
+    /// \param has_argument Does the parameter take an argument?
+    /// \param description Human description for the --help option
+    Option(char shortname, const char* longname, int has_argument, const std::string& description)
+        : description_(description)
     {
-      public:
-        /// \brief Create a command line option
-        ///
-        /// \param shortname Single character representation (e.g. 'v' for "-v")
-        /// \param longname Full representation (e.g. "verbose" for "--verbose")
-        /// \param has_argument Does the parameter take an argument?
-        /// \param description Human description for the --help option
-        Option(char shortname,
-               const char* longname,
-               int has_argument,
-               const std::string& description)
-            : description_(description)
+        c_opt_.name = longname;
+
+        c_opt_.has_arg = has_argument;
+        c_opt_.flag = 0;
+        c_opt_.val = shortname;
+    }
+
+    /// \return Equivalent option from <getopt.h>
+    option c_opt() const { return c_opt_; }
+
+    /// \return option code from <getopt.h> used in getopt_long()
+    std::string opt_code() const
+    {
+        std::string opt_code;
+        if (c_opt_.val == 0)
+            return opt_code;
+
+        opt_code += std::string(1, c_opt_.val);
+        if (c_opt_.has_arg == no_argument)
+            return opt_code;
+        else if (c_opt_.has_arg == required_argument)
+            return opt_code + ":";
+        else if (c_opt_.has_arg == optional_argument)
+            return opt_code + "::";
+        else
+            return "";
+    }
+
+    /// \return String giving usage for the --help option.
+    std::string usage() const
+    {
+        std::stringstream usage;
+        if (c_opt_.val != 0)
+            usage << "-" << (char)c_opt_.val << ", ";
+        usage << "--" << c_opt_.name;
+        usage << std::string(std::max(1, (int)(20 - usage.str().size())), ' ') << description_;
+        return usage.str();
+    }
+
+    /// \brief Convert a vector of Options into a vector of options (from getopt.h) and an opt_string, suitable for use in getopt_long()
+    static void convert_vector(const std::vector<Option>& options, std::vector<option>* c_options,
+                               std::string* opt_string)
+    {
+        for (int i = 0, n = options.size(); i < n; ++i)
         {
-            c_opt_.name = longname;
-            
-            c_opt_.has_arg = has_argument;
-            c_opt_.flag = 0;
-            c_opt_.val = shortname;
+            c_options->push_back(options[i].c_opt());
+            *opt_string += options[i].opt_code();
         }
+        option zero = {0, 0, 0, 0};
+        c_options->push_back(zero);
+    }
 
-        /// \return Equivalent option from <getopt.h>
-        option c_opt() const { return c_opt_; }
-
-        /// \return option code from <getopt.h> used in getopt_long()
-        std::string opt_code() const 
-        {
-            std::string opt_code;
-            if(c_opt_.val == 0)
-                return opt_code;
-
-            opt_code += std::string(1, c_opt_.val);
-            if(c_opt_.has_arg == no_argument)
-                return opt_code;
-            else if(c_opt_.has_arg == required_argument)
-                return opt_code + ":";
-            else if(c_opt_.has_arg == optional_argument)
-                return opt_code + "::";
-            else
-                return "";
-            
-        }    
-
-        /// \return String giving usage for the --help option.
-        std::string usage() const 
-        {
-            std::stringstream usage; 
-            if(c_opt_.val != 0)
-                usage << "-" << (char)c_opt_.val << ", ";
-            usage << "--" << c_opt_.name;
-            usage << std::string(std::max(1, (int)(20-usage.str().size())), ' ') << description_;
-            return usage.str();
-        }
-    
-        /// \brief Convert a vector of Options into a vector of options (from getopt.h) and an opt_string, suitable for use in getopt_long()
-        static void convert_vector(const std::vector<Option>& options, std::vector<option>* c_options, std::string* opt_string)
-        {
-            for(int i = 0, n = options.size(); i < n; ++i)
-            {
-                c_options->push_back(options[i].c_opt());
-                *opt_string += options[i].opt_code();
-            }
-            option zero = { 0, 0, 0, 0 };
-            c_options->push_back(zero);
-        }
-    
-      private:
-        option c_opt_;
-        std::string description_;
-    };
-}
+  private:
+    option c_opt_;
+    std::string description_;
+};
+} // namespace dccl
 
 #endif
-

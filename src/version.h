@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -24,15 +26,17 @@
 
 #include <string>
 
+// clang-format off
 #define DCCL_VERSION_MAJOR @DCCL_VERSION_MAJOR@
 #define DCCL_VERSION_MINOR @DCCL_VERSION_MINOR@
 #define DCCL_VERSION_PATCH @DCCL_VERSION_PATCH@
+// clang-format on
 
 namespace dccl
 {
-    const std::string VERSION_STRING = "@DCCL_VERSION@";
-    const std::string VERSION_DATE = "@DCCL_VERSION_DATE@";
-    const std::string COMPILE_DATE = "@DCCL_COMPILE_DATE@";
-}
+const std::string VERSION_STRING = "@DCCL_VERSION@";
+const std::string VERSION_DATE = "@DCCL_VERSION_DATE@";
+const std::string COMPILE_DATE = "@DCCL_COMPILE_DATE@";
+} // namespace dccl
 
 #endif

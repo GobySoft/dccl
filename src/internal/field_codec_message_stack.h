@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2014-2023:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -53,10 +55,9 @@ class MessageStack
     void push(MessagePart part);
 
     void update_index(const google::protobuf::FieldDescriptor* field, int index);
-    void push_message(const google::protobuf::FieldDescriptor* field,int index=-1);
+    void push_message(const google::protobuf::FieldDescriptor* field, int index = -1);
 
-    static MessagePart current_part() {
-        return parts_.empty() ? UNKNOWN : parts_.back(); }
+    static MessagePart current_part() { return parts_.empty() ? UNKNOWN : parts_.back(); }
 
     friend class ::dccl::FieldCodecBase;
 
@@ -70,7 +71,6 @@ class MessageStack
     static std::vector<const google::protobuf::FieldDescriptor*> field_;
     static std::vector<MessagePart> parts_;
 
-
     struct MessageAndField
     {
         // latest depth of message
@@ -78,9 +78,8 @@ class MessageStack
         // field corresponding to this message (or nullptr for the first)
         const google::protobuf::FieldDescriptor* field{nullptr};
     };
-        
+
     static std::vector<MessageAndField> messages_;
-    
 
     int descriptors_pushed_;
     int fields_pushed_;
