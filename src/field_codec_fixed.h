@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2019:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Kyle Guilbert <kguilbert@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -26,27 +29,24 @@
 
 namespace dccl
 {
-    /// \brief Base class for static-typed field encoders/decoders that use a fixed number of bits on the wire regardless of the value of the field. Use TypedFieldCodec if your encoder is variable length. See TypedFieldCodec for an explanation of the template parameters (FieldType and WireType).
-    ///
-    /// \ingroup dccl_field_api
-    /// Implements TypedFieldCodec::size(const FieldType& field_value), TypedFieldCodec::max_size and TypedFieldCodec::min_size, and provides a virtual zero-argument function for size()
-    template<typename WireType, typename FieldType = WireType>
-        class TypedFixedFieldCodec : public TypedFieldCodec<WireType, FieldType>
-    {
-      public:
-      /// \brief The size of the encoded message in bits. Use TypedFieldCodec if the size depends on the data.
-      virtual unsigned size() = 0;
-          
-      public:
-      unsigned size(const WireType& wire_value)
-      { return size(); }
-          
-      unsigned max_size()
-      { return size(); }
-          
-      unsigned min_size()
-      { return size(); }          
-    };
-}
+/// \brief Base class for static-typed field encoders/decoders that use a fixed number of bits on the wire regardless of the value of the field. Use TypedFieldCodec if your encoder is variable length. See TypedFieldCodec for an explanation of the template parameters (FieldType and WireType).
+///
+/// \ingroup dccl_field_api
+/// Implements TypedFieldCodec::size(const FieldType& field_value), TypedFieldCodec::max_size and TypedFieldCodec::min_size, and provides a virtual zero-argument function for size()
+template <typename WireType, typename FieldType = WireType>
+class TypedFixedFieldCodec : public TypedFieldCodec<WireType, FieldType>
+{
+  public:
+    /// \brief The size of the encoded message in bits. Use TypedFieldCodec if the size depends on the data.
+    virtual unsigned size() = 0;
+
+  public:
+    unsigned size(const WireType& wire_value) { return size(); }
+
+    unsigned max_size() { return size(); }
+
+    unsigned min_size() { return size(); }
+};
+} // namespace dccl
 
 #endif

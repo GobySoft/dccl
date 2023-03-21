@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2012-2023:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Nathan Knotts <nknotts@gmail.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -28,7 +31,9 @@
 
 #include "dccl/common.h"
 
+// clang-format off
 #define DCCL_HAS_B64 @DCCL_HAS_B64@
+// clang-format on
 
 #if DCCL_HAS_B64
 #include <cstdio>

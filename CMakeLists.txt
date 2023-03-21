@@ -67,7 +67,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2022.09.05")
+   set(DCCL_VERSION_DATE "2023.03.21")
 endif()
 
 
@@ -249,18 +249,6 @@ else()
   set(DCCL_HAS_LUA "0")
 endif()
 
-
-# Protobuf < 2.4.0 does not have plugin capability
-if(${PROTOC_VERSION} VERSION_LESS 2.4.0)
-  option(enable_units "Enable static unit-safety functionality" OFF)
-else()
-  option(enable_units "Enable static unit-safety functionality" ON)
-endif()
-
-# Protobuf >= 3.0.0. requires a syntax version
-if(NOT ${PROTOC_VERSION} VERSION_LESS 3.0.0) 
-  set(PROTOBUF_SYNTAX_VERSION "syntax = \"proto2\";")
-endif()
   
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)

@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2023:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -478,6 +481,7 @@ class FieldCodecBase
     virtual unsigned any_size_repeated(const std::vector<boost::any>& wire_values);
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
+    void check_repeat_settings();
 
     friend class FieldCodecManagerLocal;
 
@@ -496,7 +500,10 @@ class FieldCodecBase
             return max_size() != min_size();
     }
 
-    int repeated_vector_field_size(int max_repeat) { return dccl::ceil_log2(max_repeat + 1); }
+    int repeated_vector_field_size(int min_repeat, int max_repeat)
+    {
+        return dccl::ceil_log2(max_repeat - min_repeat + 1);
+    }
 
     void disp_size(const google::protobuf::FieldDescriptor* field, const Bitset& new_bits,
                    int depth, int vector_size = -1);

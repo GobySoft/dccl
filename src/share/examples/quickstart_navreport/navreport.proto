@@ -1,14 +1,47 @@
+// Copyright 2014-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 import "dccl/option_extensions.proto";
 
-message NavigationReport {
-  option (dccl.msg) = { codec_version: 4
-                        id: 124
-                        max_bytes: 32 };
-  required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
-  required double y = 2 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
-  required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
-  enum VehicleClass { AUV = 1; USV = 2; SHIP = 3; }
-  optional VehicleClass veh_class = 4;
-  optional bool battery_ok = 5;
+message NavigationReport
+{
+    option (dccl.msg) = {
+        codec_version: 4
+        id: 124
+        max_bytes: 32
+    };
+    required double x = 1
+        [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+    required double y = 2
+        [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
+    required double z = 3 [(dccl.field) = { min: -5000 max: 0 precision: 0 }];
+    enum VehicleClass
+    {
+        AUV = 1;
+        USV = 2;
+        SHIP = 3;
+    }
+    optional VehicleClass veh_class = 4;
+    optional bool battery_ok = 5;
 }
-

@@ -1,7 +1,12 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2023:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Nathan Knotts <nknotts@gmail.com>
+//   philboske <philboske@gmail.com>
+//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -44,7 +49,9 @@
 #include "codecs3/field_codec_default_message.h"
 #include "field_codec_manager.h"
 
+// clang-format off
 #define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
+// clang-format on
 
 /// Dynamic Compact Control Language namespace
 namespace dccl

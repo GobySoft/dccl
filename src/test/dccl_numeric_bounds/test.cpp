@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Davide Fenucci <davfen@noc.ac.uk>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -30,9 +33,9 @@ using dccl::operator<<;
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
-    
+
     codec.load<NumericMsg>();
     codec.info<NumericMsg>(&dccl::dlog);
 
@@ -42,11 +45,15 @@ int main(int argc, char* argv[])
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: [(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision." << std::endl;
+        std::cout << "** Note: this error is expected during proper execution of this unit test "
+                     "**: Field a failed validation: "
+                     "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a "
+                     "double-precision floating point value. Please increase min, decrease max, or "
+                     "decrease precision."
+                  << std::endl;
     }
-    
 
     NumericMsg msg_in;
 
@@ -54,10 +61,10 @@ int main(int argc, char* argv[])
     msg_in.set_b(11.42106);
     msg_in.set_u1(18446744073709500000ull);
     msg_in.set_u2(0);
-    
+
     std::string encoded;
     codec.encode(&encoded, msg_in);
-    
+
     NumericMsg msg_out;
     codec.decode(encoded, &msg_out);
 
@@ -67,17 +74,14 @@ int main(int argc, char* argv[])
     // Check negative precision encoding
     const int NUM_TESTS = 8;
     int test_values[NUM_TESTS][4] = {
-      // a_set, a_result, b_set, b_result
-      {20, 20, -500000, -500000},
-      {0, 0, 254000, 254000},
-      {10, 10, -257000, -257000},
-      {-10, -10, -499000, -499000},
-      {-20, -20, 500000, 500000},
-      {-19, -20, 499999, 500000},
-      {6, 10, -123400, -123000},
-      {0, 0, 0, 0},
+        // a_set, a_result, b_set, b_result
+        {20, 20, -500000, -500000}, {0, 0, 254000, 254000},
+        {10, 10, -257000, -257000}, {-10, -10, -499000, -499000},
+        {-20, -20, 500000, 500000}, {-19, -20, 499999, 500000},
+        {6, 10, -123400, -123000},  {0, 0, 0, 0},
     };
-    for (int i=0; i < NUM_TESTS; ++i) {
+    for (int i = 0; i < NUM_TESTS; ++i)
+    {
         NegativePrecisionNumericMsg msg_in_neg, msg_out_neg;
         std::string enc;
         msg_in_neg.set_a(test_values[i][0]);
@@ -85,14 +89,13 @@ int main(int argc, char* argv[])
 
         codec.encode(&enc, msg_in_neg);
         codec.decode(enc, &msg_out_neg);
-	
-	std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
-	std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
+
+        std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
+        std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
 
         assert(msg_out_neg.a() == test_values[i][1]);
         assert(msg_out_neg.b() == test_values[i][3]);
-    }    
-    
+    }
+
     std::cout << "all tests passed" << std::endl;
 }
-

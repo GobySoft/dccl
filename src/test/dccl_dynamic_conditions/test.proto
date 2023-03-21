@@ -1,0 +1,189 @@
+// Copyright 2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message TestMsg
+{
+    option (dccl.msg) = {
+        id: 2,
+        max_bytes: 512,
+        codec_version: @DCCL_CODEC_VERSION @
+    };
+
+    enum State
+    {
+        STATE_1 = 1;
+        STATE_2 = 2;
+        STATE_3 = 3;
+    }
+
+    required State state = 1;
+
+    optional int32 a = 2 [(dccl.field) = {
+        min: 0
+        max: 200
+        dynamic_conditions {
+            // can use "return"
+            required_if: "return this.state == 'STATE_1'"
+            omit_if: "return this.state ~= 'STATE_1'"
+        }
+    }];
+
+    optional int32 b = 3 [(dccl.field) = {
+        min: 0
+        max: 300
+        dynamic_conditions {
+            // if no return in script, assume it is implicit - DCCL will prefix
+            // with "return "
+            required_if: "this.state == 'STATE_2'"
+            omit_if: "this.state ~= 'STATE_2'"
+        }
+    }];
+
+    optional int32 c_center = 4 [
+        default = 199,
+        (dccl.field) = {
+            min: 0
+            max: 300
+            dynamic_conditions {
+                // same as required_if: "this.state == 'STATE_3'" and omit_if ~=
+                // 'STATE_3'"
+                only_if: "this.state == 'STATE_1'"
+            }
+        }
+
+    ];
+
+    optional int32 c = 6 [(dccl.field) = {
+        min: 0
+        max: 400
+        dynamic_conditions {
+            only_if: "this.state == 'STATE_1'"
+            min: "this.c_center-100"
+            max: "this.c_center+100"
+        }
+    }];
+
+    repeated int32 d = 7 [(dccl.field) = {
+        min: 0
+        max: 300
+        max_repeat: 6
+        dynamic_conditions {
+            // LUA indexes from 1
+            only_if: "this_index ~= 4"
+            min: "this_index*50"
+            max: "this_index*50+100"
+        }
+    }];
+
+    repeated Child child = 10 [(dccl.field) = { max_repeat: 10 }];
+
+    message Child
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            // within the embedded message, 'this' refers to the embedded
+            // message (innermost scope) ...
+            dynamic_conditions { only_if: "this.include_i == 'YES'" }
+        }];
+
+        optional int32 i2 = 3 [(dccl.field) = {
+            min: 0
+            max: 255
+            // ... but the entire message is still accessible with 'root', and
+            // 'this_index' refers to the current repeated message index
+            dynamic_conditions {
+                only_if: "print(this_index); return root.child[this_index].include_i == 'YES'"
+            }
+        }];
+    }
+
+    message Child2
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.include_i == 'YES'" }
+
+        }];
+    }
+
+    required Child2 child2 = 11;
+
+    message Child3
+    {
+        enum IncludeI
+        {
+            UNUSED = 0;
+            YES = 1;
+            NO = 2;
+        }
+
+        required IncludeI include_i = 1;
+        optional int32 i = 2 [(dccl.field) = {
+            min: 0
+            max: 255
+            // check that root works correctly here
+            dynamic_conditions { only_if: "root.child3.include_i == 'YES'" }
+
+        }];
+
+        // since this message uses local scoping only, we can include it again
+        optional Child2 subchild = 3;
+    }
+    optional Child3 child3 = 12;
+
+    oneof example_oneof
+    {
+        int32 x = 20 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.state == 'STATE_1'" }
+        }];
+        int32 y = 21 [(dccl.field) = {
+            min: 0
+            max: 255
+            dynamic_conditions { only_if: "this.state == 'STATE_2'" }
+        }];
+    }
+}

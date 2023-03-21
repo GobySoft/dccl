@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2019:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -22,41 +25,38 @@
 #ifndef Exception20100812H
 #define Exception20100812H
 
-#include <stdexcept>
 #include <google/protobuf/descriptor.h>
+#include <stdexcept>
 
 namespace dccl
 {
-    /// \brief Exception class for DCCL
-    class Exception : public std::runtime_error {
-      public:
-      Exception(const std::string& s)
-          : std::runtime_error(s)
-        { }
+/// \brief Exception class for DCCL
+class Exception : public std::runtime_error
+{
+  public:
+    Exception(const std::string& s) : std::runtime_error(s) {}
+};
 
-    };
+/// \brief Exception used to signal null (non-existent) value within field codecs during decode.
+class NullValueException : public Exception
+{
+  public:
+    NullValueException() : Exception("NULL Value") {}
+};
 
-    /// \brief Exception used to signal null (non-existent) value within field codecs during decode.
-    class NullValueException : public Exception
+class OutOfRangeException : public std::out_of_range
+{
+  public:
+    OutOfRangeException(const std::string& s, const google::protobuf::FieldDescriptor* field)
+        : std::out_of_range(s), field_(field)
     {
-      public:
-      NullValueException()
-          : Exception("NULL Value")
-        { }    
-    };
+    }
 
-    class OutOfRangeException : public std::out_of_range
-    {
-      public:
-        OutOfRangeException(const std::string& s, const google::protobuf::FieldDescriptor* field) : std::out_of_range(s), field_(field)
-        { }
+    const google::protobuf::FieldDescriptor* field() const { return field_; }
 
-        const google::protobuf::FieldDescriptor* field() const { return field_; }
-        
-    private:
-        const google::protobuf::FieldDescriptor* field_;
-    };
-}
+  private:
+    const google::protobuf::FieldDescriptor* field_;
+};
+} // namespace dccl
 
 #endif
-

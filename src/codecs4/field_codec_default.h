@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Davide Fenucci <davfen@noc.ac.uk>
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -29,19 +32,19 @@
 
 namespace dccl
 {
-    /// DCCL version 4 default field codecs
-    namespace v4
-    {
-	// all these are the same as version 3
-        template<typename WireType, typename FieldType = WireType>
-        using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
+/// DCCL version 4 default field codecs
+namespace v4
+{
+// all these are the same as version 3
+template <typename WireType, typename FieldType = WireType>
+using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
 
-        using DefaultBoolCodec = v3::DefaultBoolCodec;
-        using DefaultEnumCodec = v3::DefaultEnumCodec;
+using DefaultBoolCodec = v3::DefaultBoolCodec;
+using DefaultEnumCodec = v3::DefaultEnumCodec;
 
-        using DefaultBytesCodec = v3::VarBytesCodec;
-        using DefaultStringCodec = v3::VarBytesCodec;
-    }
-}
+using DefaultBytesCodec = v3::VarBytesCodec;
+using DefaultStringCodec = v3::VarBytesCodec;
+} // namespace v4
+} // namespace dccl
 
 #endif
