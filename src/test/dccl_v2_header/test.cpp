@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -26,18 +28,15 @@
 
 #include <sys/time.h>
 
-
 #include "dccl/binary.h"
 
 using dccl::operator<<;
 using namespace dccl::test;
 
-
-
 int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);    
-    
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+
     dccl::Codec codec;
 
     GobyMessage msg_in1;
@@ -47,12 +46,12 @@ int main(int argc, char* argv[])
     timeval t;
     gettimeofday(&t, 0);
     dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
-    
+
     msg_in1.mutable_header()->set_time(now);
     msg_in1.mutable_header()->set_time_signed(now);
     msg_in1.mutable_header()->set_time_double(now / 1000000);
 
-    dccl::int64 past = now / 1000000.0 - 200000; // Pick a time 2+ days in the past.
+    dccl::int64 past = now / 1000000.0 - 200000;   // Pick a time 2+ days in the past.
     dccl::int64 future = now / 1000000.0 + 200000; // Pick a time 2+ days in the future.
     msg_in1.mutable_header()->set_pasttime_double(past);
     msg_in1.mutable_header()->set_futuretime_double(future);
@@ -61,13 +60,12 @@ int main(int argc, char* argv[])
     msg_in1.mutable_header()->set_time_precision(now + msec);
     msg_in1.mutable_header()->set_time_double_precision((now + t.tv_usec) / 1000000.0);
 
-
     msg_in1.mutable_header()->set_source_platform(1);
     msg_in1.mutable_header()->set_dest_platform(3);
     msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
-    msg_in1.set_const_int(3); 
-    
-    codec.info(msg_in1.GetDescriptor(), &std::cout);    
+    msg_in1.set_const_int(3);
+
+    codec.info(msg_in1.GetDescriptor(), &std::cout);
     std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
     codec.load(msg_in1.GetDescriptor());
     std::cout << "Try encode..." << std::endl;
@@ -77,14 +75,13 @@ int main(int argc, char* argv[])
 
     // test that adding garbage to the end does not affect decoding
     bytes1 += std::string(10, '\0');
-    
+
     std::cout << "Try decode..." << std::endl;
-    
+
     GobyMessage* msg_out1 = codec.decode<GobyMessage*>(bytes1);
     std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
     delete msg_out1;
-    
+
     std::cout << "all tests passed" << std::endl;
 }
-

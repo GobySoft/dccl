@@ -186,6 +186,8 @@ if(PROTOBUFDCCL_FOUND)
       "" PROTOC_VERSION ${PROTOC_VERSION_STRING})
 
     string(STRIP ${PROTOC_VERSION} PROTOC_VERSION)
-
+    if(${PROTOC_VERSION} VERSION_LESS 3.0.0)
+      message(FATAL_ERROR "DCCL requires Protobuf >= 3.0.0")
+    endif()
 endif()
 

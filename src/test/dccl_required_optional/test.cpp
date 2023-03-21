@@ -1,7 +1,10 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -30,9 +33,9 @@ using dccl::operator<<;
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
-    
+
     codec.load<BytesMsg>();
     codec.info<BytesMsg>(&dccl::dlog);
 
@@ -43,13 +46,11 @@ int main(int argc, char* argv[])
 
     std::string encoded;
     codec.encode(&encoded, msg_in);
-    
+
     BytesMsg msg_out;
     codec.decode(encoded, &msg_out);
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-    
-    
+
     std::cout << "all tests passed" << std::endl;
 }
-

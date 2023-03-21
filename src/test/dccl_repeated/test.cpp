@@ -1,7 +1,9 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2011-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -21,9 +23,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests functionality of std::list<const google::protobuf::Message*> calls
 
-
-#include "dccl/codec.h"
 #include "dccl/binary.h"
+#include "dccl/codec.h"
 
 #include "test.pb.h"
 using namespace dccl::test;
@@ -45,61 +46,62 @@ int main(int argc, char* argv[])
     msg_in2.set_bool_val(false);
     msg_in3.set_string_val("string1");
     msg_in4.set_string_val("string2");
-    
+
     std::list<const google::protobuf::Message*> msgs;
     msgs.push_back(&msg_in1);
     msgs.push_back(&msg_in2);
-    msgs.push_back(&msg_in3);    
+    msgs.push_back(&msg_in3);
     msgs.push_back(&msg_in4);
 
     std::list<const google::protobuf::Descriptor*> descs;
     descs.push_back(msg_in1.GetDescriptor());
     descs.push_back(msg_in2.GetDescriptor());
-    descs.push_back(msg_in3.GetDescriptor());    
+    descs.push_back(msg_in3.GetDescriptor());
     descs.push_back(msg_in4.GetDescriptor());
-    
-    for(std::list<const google::protobuf::Descriptor*>::const_iterator it = descs.begin(),
-            end = descs.end(); it != end; ++it)
+
+    for (std::list<const google::protobuf::Descriptor*>::const_iterator it = descs.begin(),
+                                                                        end = descs.end();
+         it != end; ++it)
     {
         codec.info(*it, &std::cout);
         codec.load(*it);
     }
-    
+
     std::string bytes1;
-    for(std::list<const google::protobuf::Message*>::const_iterator it = msgs.begin(),
-            end = msgs.end(); it != end; ++it)
+    for (std::list<const google::protobuf::Message*>::const_iterator it = msgs.begin(),
+                                                                     end = msgs.end();
+         it != end; ++it)
     {
         static int i = 0;
         std::cout << "Message " << ++i << " in:\n" << (*it)->DebugString() << std::endl;
         std::cout << "Try encode..." << std::endl;
         codec.encode(&bytes1, *(*it));
-    }    
-    bytes1 += std::string(4, '\0');    
+    }
+    bytes1 += std::string(4, '\0');
 
-    
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
 
-
     // non-destructive
     {
-        std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
+        std::list<boost::shared_ptr<google::protobuf::Message>> msgs_out;
         try
         {
             std::string::iterator begin = bytes1.begin(), end = bytes1.end();
-            while(begin != end)
+            while (begin != end)
             {
-                std::map<dccl::int32, const google::protobuf::Descriptor*>::const_iterator it = codec.loaded().find(codec.id(begin, end));
-                if(it == codec.loaded().end())
+                std::map<dccl::int32, const google::protobuf::Descriptor*>::const_iterator it =
+                    codec.loaded().find(codec.id(begin, end));
+                if (it == codec.loaded().end())
                     break;
-                
+
                 boost::shared_ptr<google::protobuf::Message> msg =
                     dccl::DynamicProtobufManager::new_protobuf_message(it->second);
                 begin = codec.decode(begin, end, msg.get());
                 msgs_out.push_back(msg);
             }
         }
-        catch(dccl::Exception &e)
+        catch (dccl::Exception& e)
         {
             std::cout << e.what() << std::endl;
         }
@@ -107,27 +109,30 @@ int main(int argc, char* argv[])
         std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
 
         assert(msgs.size() == msgs_out.size());
-    
-        for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
-                end = msgs_out.end(); it != end; ++it)
+
+        for (std::list<boost::shared_ptr<google::protobuf::Message>>::const_iterator
+                 it = msgs_out.begin(),
+                 end = msgs_out.end();
+             it != end; ++it)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
+            std::cout << "... got Message " << ++i << " out:\n"
+                      << (*it)->DebugString() << std::endl;
             assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
             ++in_it;
         }
     }
-
 
     // destructive
     {
-        std::list< boost::shared_ptr<google::protobuf::Message> > msgs_out;
+        std::list<boost::shared_ptr<google::protobuf::Message>> msgs_out;
         try
         {
-            while(!bytes1.empty())
-                msgs_out.push_back(codec.decode<boost::shared_ptr<google::protobuf::Message> >(&bytes1));
+            while (!bytes1.empty())
+                msgs_out.push_back(
+                    codec.decode<boost::shared_ptr<google::protobuf::Message>>(&bytes1));
         }
-        catch(dccl::Exception &e)
+        catch (dccl::Exception& e)
         {
             std::cout << e.what() << std::endl;
         }
@@ -135,18 +140,19 @@ int main(int argc, char* argv[])
         std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
 
         assert(msgs.size() == msgs_out.size());
-    
-        for(std::list< boost::shared_ptr<google::protobuf::Message> >::const_iterator it = msgs_out.begin(),
-                end = msgs_out.end(); it != end; ++it)
+
+        for (std::list<boost::shared_ptr<google::protobuf::Message>>::const_iterator
+                 it = msgs_out.begin(),
+                 end = msgs_out.end();
+             it != end; ++it)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n" << (*it)->DebugString() << std::endl;
+            std::cout << "... got Message " << ++i << " out:\n"
+                      << (*it)->DebugString() << std::endl;
             assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
             ++in_it;
         }
     }
-    
 
     std::cout << "all tests passed" << std::endl;
 }
-

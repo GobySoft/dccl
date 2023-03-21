@@ -1,3 +1,28 @@
+// Copyright 2010-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//   Davide Fenucci <davfen@noc.ac.uk>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 syntax = "proto2";
 
 import "google/protobuf/descriptor.proto";
@@ -33,11 +58,11 @@ message DCCLFieldOptions
     optional bool in_head = 3 [default = false];
 
     // double, float
-    optional int32 precision = 4 [default = 0];   // Deprecated
+    optional int32 precision = 4 [default = 0];  // Deprecated
     optional double resolution = 5 [default = 1];
     // int, double, float
-    optional double min = 6 [default = 0];
-    optional double max = 7 [default = 0];
+    optional double min = 6;
+    optional double max = 7;
 
     // time ("1 day" can encode times 12h before or after the receiver's time)
     optional uint32 num_days = 8 [default = 1];
@@ -46,13 +71,14 @@ message DCCLFieldOptions
     optional string static_value = 9 [default = ""];
 
     // string, bytes
-    optional uint32 max_length = 10 [default = 0];
+    optional uint32 max_length = 10;
 
     // any `repeated` field
-    optional uint32 max_repeat = 11 [default = 1];
+    optional uint32 max_repeat = 11;
+    optional uint32 min_repeat = 12 [default = 0];
 
     // enum
-    optional bool packed_enum = 12 [default = true];
+    optional bool packed_enum = 13 [default = true];
 
     optional string description = 20;
 

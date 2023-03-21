@@ -1,19 +1,58 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2015-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 
 message CommandMessage
 {
-    option (dccl.msg) = { id:  125  max_bytes:  32  codec_version: 4  unit_system: "si"};
-  
+    option (dccl.msg) = {
+        id: 125
+        max_bytes: 32
+        codec_version: 4
+        unit_system: "si"
+    };
 
-    required int32 destination = 1 [(dccl.field)  = { max: 31 min: 0 in_head: true }];  
+    required int32 destination = 1
+        [(dccl.field) = { max: 31 min: 0 in_head: true }];
     optional string description = 2 [(dccl.field).omit = true];
-    enum SonarPower { NOMINAL = 10; LOW = 5; OFF = 0; }
+    enum SonarPower
+    {
+        NOMINAL = 10;
+        LOW = 5;
+        OFF = 0;
+    }
     optional SonarPower sonar_power = 10;
-    required double speed = 11 [(dccl.field) = { units { base_dimensions: "LT^-1" }
-                                                 max: 2.0  min: -0.5 precision: 1 }];
-    repeated int32 waypoint_depth = 12
-        [(dccl.field) = { units { base_dimensions: "L" }
-                          max: 40  min: 0 max_repeat: 4 }];
+    required double speed = 11 [(dccl.field) = {
+        units { base_dimensions: "LT^-1" }
+        max: 2.0
+        min: -0.5
+        precision: 1
+    }];
+    repeated int32 waypoint_depth = 12 [(dccl.field) = {
+        units { base_dimensions: "L" }
+        max: 40
+        min: 0
+        max_repeat: 4
+    }];
 }
-

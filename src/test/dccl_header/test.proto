@@ -1,17 +1,41 @@
-@PROTOBUF_SYNTAX_VERSION@
+// Copyright 2011-2022:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Chris Murphy <cmurphy@aphysci.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 import "dccl/test/dccl_header/header.proto";
 package dccl.test;
 
 message GobyMessage
 {
-  option (dccl.msg).id = 4;
-  option (dccl.msg).max_bytes = 64;
-  option (dccl.msg).codec_version = 4;
-  
-  required string telegram = 1 [(dccl.field).max_length=10]; 
-  required Header header = 2 [(dccl.field).in_head = true];
+    option (dccl.msg).id = 4;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 4;
 
-  optional int32 const_int =3 [(dccl.field).static_value="3", (dccl.field).codec="_static"];
+    required string telegram = 1 [(dccl.field).max_length = 10];
+    required Header header = 2 [(dccl.field).in_head = true];
+
+    optional int32 const_int = 3
+        [(dccl.field).static_value = "3", (dccl.field).codec = "_static"];
 }
-
