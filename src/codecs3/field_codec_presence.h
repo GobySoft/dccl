@@ -1,7 +1,8 @@
-// Copyright 2009-2017 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Massachusetts Institute of Technology (for 2007-2014)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2019:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Kyle Guilbert <kguilbert@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -19,8 +20,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-
-
 #ifndef FIELD_CODEC_PRESENCE_20190722H
 #define FIELD_CODEC_PRESENCE_20190722H
 

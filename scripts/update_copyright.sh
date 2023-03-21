@@ -1,25 +1,27 @@
 #!/bin/bash
 
 here=`pwd`
+endtext='If not, see <http:\/\/www.gnu.org\/licenses\/>.'
+set -x
 
 header_strip()
 {
-    endtext='If not, see <http:\/\/www.gnu.org\/licenses\/>.'
-    for i in `grep -lr "$endtext" | egrep "\.cpp$|\.h$"`
-    do 
-        echo $i
-        l=$(grep -n "$endtext" $i | tail -1 | cut -d ":" -f 1)
-        l=$(($l+1))
-        echo $l
-        tail -n +$l $i | sed '/./,$!d' > $i.tmp;
-        mv $i.tmp $i
-    done
+    i=$1
+    echo $i
+    l=$(grep -n "$endtext" $i | tail -1 | cut -d ":" -f 1)
+    l=$(($l+1))
+    echo $l
+    tail -n +$l $i | sed '/./,$!d' > $i.tmp;
+    mv $i.tmp $i
 }
 
-gen_authors()
+gen_authors_prepend_header()
 {
     i=$1
     echo $i;
+    hash=$(echo "$i" | md5sum | cut -d " " -f1)
+    temp="/tmp/dccl_authors.${hash}.tmp"
+    echo $temp
     mapfile -t authors < <(git blame --line-porcelain $i | grep "^author " | sort | uniq -c | sort -nr | sed 's/^ *//' | cut -d " " -f 3-)
     #    echo ${authors[@]}
     start_year=$(git log --follow --date=format:%Y --format=format:%ad $i | tail -n 1)
@@ -32,18 +34,18 @@ gen_authors()
         years="${start_year}-${end_year}"
     fi
     
-    cat <<EOF > /tmp/dccl_authors.tmp
+    cat <<EOF > ${temp}
 // Copyright ${years}:
 EOF
     
     if (( $end_year >= 2013  )); then
-        echo "//   GobySoft, LLC (2013-)" >>  /tmp/dccl_authors.tmp
+        echo "//   GobySoft, LLC (2013-)" >> ${temp}
     fi
     if (( $start_year <= 2014 )); then
-       echo "//   Massachusetts Institute of Technology (2007-2014)" >>  /tmp/dccl_authors.tmp
+       echo "//   Massachusetts Institute of Technology (2007-2014)" >>  ${temp}
     fi
 
-    cat <<EOF >> /tmp/dccl_authors.tmp
+    cat <<EOF >> ${temp}
 //   Community contributors (see AUTHORS file)
 // File authors:
 EOF
@@ -55,25 +57,20 @@ EOF
         if [ ! -z "$email" ]; then
             email=" <${email}>"
         fi
-        echo "//   $author$email"  >> /tmp/dccl_authors.tmp
+        echo "//   $author$email"  >> ${temp}
     done
+
+    cat ${temp} $here/../src/share/header_lib.txt $i > $i.tmp; mv $i.tmp $i;
+    rm ${temp}
 }
 
-prepend_header()
-{
-    i=$1
-    cat /tmp/dccl_authors.tmp $here/../src/share/header_lib.txt $i > $i.tmp; mv $i.tmp $i;
-}
 
-set -x
 pushd ../src
-header_strip
-export -f gen_authors prepend_header
-export here
-find -regex ".*\.h$\|.*\.cpp$" | parallel gen_authors
-find -regex ".*\.h$\|.*\.cpp$" | parallel prepend_header
+export -f gen_authors_prepend_header header_strip
+export here endtext
+grep -lr "$endtext" | egrep "\.cpp$|\.h$|\.proto$" | parallel header_strip
+find -type f -regex ".*\.h$\|.*\.cpp$\|.*\.proto$" | parallel gen_authors_prepend_header
 
 popd
 
-rm /tmp/dccl_authors.tmp
 
