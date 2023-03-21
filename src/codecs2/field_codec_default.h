@@ -129,12 +129,22 @@ namespace dccl
 
                   // allowable epsilon for min / max to diverge from nearest quantile
                   const double min_max_eps = 1e-10;
-
+                  bool min_multiple_of_res = std::abs(quantize(min(), resolution()) - min()) < min_max_eps;
+                  bool max_multiple_of_res = std::abs(quantize(max(), resolution()) - max()) < min_max_eps;
                   if(FieldCodecBase::dccl_field_options().has_resolution())
                   {
                       // ensure that max and min are multiples of the resolution chosen
-                      FieldCodecBase::require(std::abs(quantize(min(), resolution()) - min()) < min_max_eps, "(dccl.field).min must be an exact multiple of (dccl.field).resolution");
-                      FieldCodecBase::require(std::abs(quantize(max(), resolution()) - max()) < min_max_eps, "(dccl.field).max must be an exact multiple of (dccl.field).resolution");
+                      FieldCodecBase::require(min_multiple_of_res, "(dccl.field).min must be an exact multiple of (dccl.field).resolution");
+                      FieldCodecBase::require(max_multiple_of_res, "(dccl.field).max must be an exact multiple of (dccl.field).resolution");
+                  }
+                  else
+                  {
+                      auto res = resolution();
+                      // this was previously allowed so we will only give a warning not throw an exception
+                      if(!min_multiple_of_res)
+                          dccl::dlog.is(dccl::logger::WARN, dccl::logger::GENERAL) && dccl::dlog << "Warning: (dccl.field).min should be an exact multiple of 10^(-(dccl.field).precision), i.e. " << res << ": " << this->this_field()->DebugString() << std::endl;
+                      if(!max_multiple_of_res)
+                          dccl::dlog.is(dccl::logger::WARN, dccl::logger::GENERAL) && dccl::dlog << "Warning: (dccl.field).max should be an exact multiple of 10^(-(dccl.field).precision), i.e. " << res << ": " << this->this_field()->DebugString() << std::endl;
                   }
                   
                   // ensure value fits into double
