@@ -249,7 +249,8 @@ else()
   set(DCCL_HAS_LUA "0")
 endif()
 
-  
+option(enable_units "Enable static unit-safety functionality" ON)
+
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})
