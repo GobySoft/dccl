@@ -38,16 +38,16 @@ int main()
         r_out.set_z(-100);
         r_out.set_veh_class(NavigationReport::AUV);
         r_out.set_battery_ok(true);
-        
+
         codec.encode(&encoded_bytes, r_out);
     }
     // send encoded_bytes across your link
 
     // RECEIVER
-    if(codec.id(encoded_bytes) == codec.id<NavigationReport>())
+    if (codec.id(encoded_bytes) == codec.id<NavigationReport>())
     {
         NavigationReport r_in;
         codec.decode(encoded_bytes, &r_in);
         std::cout << r_in.ShortDebugString() << std::endl;
-    }    
+    }
 }

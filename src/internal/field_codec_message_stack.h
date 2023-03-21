@@ -55,10 +55,9 @@ class MessageStack
     void push(MessagePart part);
 
     void update_index(const google::protobuf::FieldDescriptor* field, int index);
-    void push_message(const google::protobuf::FieldDescriptor* field,int index=-1);
+    void push_message(const google::protobuf::FieldDescriptor* field, int index = -1);
 
-    static MessagePart current_part() {
-        return parts_.empty() ? UNKNOWN : parts_.back(); }
+    static MessagePart current_part() { return parts_.empty() ? UNKNOWN : parts_.back(); }
 
     friend class ::dccl::FieldCodecBase;
 
@@ -72,7 +71,6 @@ class MessageStack
     static std::vector<const google::protobuf::FieldDescriptor*> field_;
     static std::vector<MessagePart> parts_;
 
-
     struct MessageAndField
     {
         // latest depth of message
@@ -80,9 +78,8 @@ class MessageStack
         // field corresponding to this message (or nullptr for the first)
         const google::protobuf::FieldDescriptor* field{nullptr};
     };
-        
+
     static std::vector<MessageAndField> messages_;
-    
 
     int descriptors_pushed_;
     int fields_pushed_;

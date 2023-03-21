@@ -77,7 +77,8 @@ message NumericMsg
         (dccl.field).resolution = 0.12
     ];
 
-    // old precision field did not require min and max to be a multiple of resolution
+    // old precision field did not require min and max to be a multiple of
+    // resolution
     required int32 u6 = 8 [
         (dccl.field).min = 0,
         (dccl.field).max = 25599,

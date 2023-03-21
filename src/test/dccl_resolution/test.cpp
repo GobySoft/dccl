@@ -33,9 +33,9 @@ using dccl::operator<<;
 int main(int argc, char* argv[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    
+
     dccl::Codec codec;
-    
+
     codec.load<NumericMsg>();
     codec.info<NumericMsg>(&dccl::dlog);
 
@@ -45,43 +45,56 @@ int main(int argc, char* argv[])
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: (dccl.field).resolution must be greater than 0." << std::endl;
+        std::cout
+            << "** Note: this error is expected during proper execution of this unit test **: "
+               "Field a failed validation: (dccl.field).resolution must be greater than 0."
+            << std::endl;
     }
-    
+
     try
     {
         codec.load<BothResolutionAndPrecisionSetNumericMsg>();
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: at most one of either (dccl.field).precision or (dccl.field).resolution can be set." << std::endl;
+        std::cout << "** Note: this error is expected during proper execution of this unit test "
+                     "**: Field a failed validation: at most one of either (dccl.field).precision "
+                     "or (dccl.field).resolution can be set."
+                  << std::endl;
     }
-    
+
     try
     {
         codec.load<TooBigNumericMsg>();
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: [(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a double-precision floating point value. Please increase min, decrease max, or decrease precision." << std::endl;
+        std::cout << "** Note: this error is expected during proper execution of this unit test "
+                     "**: Field a failed validation: "
+                     "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a "
+                     "double-precision floating point value. Please increase min, decrease max, or "
+                     "decrease precision."
+                  << std::endl;
     }
 
-    
     try
     {
         codec.load<MinNotMultipleOfResolution>();
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: (dccl.field).min must be an exact multiple of (dccl.field).resolution." << std::endl;
+        std::cout << "** Note: this error is expected during proper execution of this unit test "
+                     "**: Field a failed validation: (dccl.field).min must be an exact multiple of "
+                     "(dccl.field).resolution."
+                  << std::endl;
     }
 
     try
@@ -90,12 +103,14 @@ int main(int argc, char* argv[])
         bool message_should_fail_load = false;
         assert(message_should_fail_load);
     }
-    catch(dccl::Exception& e)
+    catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test **: Field a failed validation: (dccl.field).max must be an exact multiple of (dccl.field).resolution." << std::endl;
+        std::cout << "** Note: this error is expected during proper execution of this unit test "
+                     "**: Field a failed validation: (dccl.field).max must be an exact multiple of "
+                     "(dccl.field).resolution."
+                  << std::endl;
     }
 
-    
     NumericMsg msg_in;
 
     msg_in.set_a(10.12345678);
@@ -106,10 +121,10 @@ int main(int argc, char* argv[])
     msg_in.set_u4(5.6);
     msg_in.set_u5(1.95);
     msg_in.set_u6(25500);
-    
+
     std::string encoded;
     codec.encode(&encoded, msg_in);
-    
+
     NumericMsg msg_out;
     codec.decode(encoded, &msg_out);
 
@@ -121,4 +136,3 @@ int main(int argc, char* argv[])
 
     std::cout << "all tests passed" << std::endl;
 }
-

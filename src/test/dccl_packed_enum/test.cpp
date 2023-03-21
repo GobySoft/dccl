@@ -24,10 +24,10 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/codecs3/field_codec_default.h"
-#include "dccl/codec.h"
-#include "test.pb.h"
 #include "dccl/binary.h"
+#include "dccl/codec.h"
+#include "dccl/codecs3/field_codec_default.h"
+#include "test.pb.h"
 using namespace dccl::test;
 
 void decode_check(const std::string& encoded);
@@ -36,7 +36,8 @@ dccl::Codec codec;
 TestMsgPack msg_pack;
 TestMsgUnpack msg_unpack;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     msg_pack.set_five_bit_padding(0);
@@ -65,6 +66,6 @@ int main(int argc, char* argv[]) {
     codec.decode(bytes_pack, &msg_pack_out);
     codec.decode(bytes_unpack, &msg_unpack_out);
     assert(msg_pack_out.SerializeAsString() == msg_pack.SerializeAsString());
-    assert(msg_unpack_out.SerializeAsString() == msg_unpack.SerializeAsString());    
+    assert(msg_unpack_out.SerializeAsString() == msg_unpack.SerializeAsString());
     std::cout << "all tests passed" << std::endl;
 }

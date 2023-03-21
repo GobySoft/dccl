@@ -26,6 +26,5 @@ package dccl.tool.protobuf;
 
 message ByteString
 {
-  required bytes b = 1;
+    required bytes b = 1;
 }
-

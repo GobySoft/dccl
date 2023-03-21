@@ -151,7 +151,6 @@ class DefaultMessageCodec : public FieldCodecBase
     template <typename Action, typename ReturnType>
     ReturnType traverse_const_message(const boost::any& wire_value)
     {
-
         try
         {
             ReturnType return_value = ReturnType();

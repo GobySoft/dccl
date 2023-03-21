@@ -30,9 +30,8 @@ message TestMessageA
     option (dccl.msg).id = 127;
     option (dccl.msg).max_bytes = 2;
     option (dccl.msg).codec_version = 4;
-  
-    required uint32 a = 1 [(dccl.field).min=0,
-                           (dccl.field).max=0xFF];
+
+    required uint32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFF];
 }
 
 message TestMessageB
@@ -40,8 +39,6 @@ message TestMessageB
     option (dccl.msg).id = 128;
     option (dccl.msg).max_bytes = 2;
     option (dccl.msg).codec_version = 4;
-  
-    required uint32 b = 1 [(dccl.field).min=0,
-                           (dccl.field).max=0xFF];
-}
 
+    required uint32 b = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFF];
+}

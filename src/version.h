@@ -26,15 +26,17 @@
 
 #include <string>
 
+// clang-format off
 #define DCCL_VERSION_MAJOR @DCCL_VERSION_MAJOR@
 #define DCCL_VERSION_MINOR @DCCL_VERSION_MINOR@
 #define DCCL_VERSION_PATCH @DCCL_VERSION_PATCH@
+// clang-format on
 
 namespace dccl
 {
-    const std::string VERSION_STRING = "@DCCL_VERSION@";
-    const std::string VERSION_DATE = "@DCCL_VERSION_DATE@";
-    const std::string COMPILE_DATE = "@DCCL_COMPILE_DATE@";
-}
+const std::string VERSION_STRING = "@DCCL_VERSION@";
+const std::string VERSION_DATE = "@DCCL_VERSION_DATE@";
+const std::string COMPILE_DATE = "@DCCL_COMPILE_DATE@";
+} // namespace dccl
 
 #endif

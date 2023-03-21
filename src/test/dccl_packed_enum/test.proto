@@ -28,32 +28,33 @@ package dccl.test;
 
 enum Enum
 {
-  ENUM2_A = -2; // for completeness, though negative values are discouraged
-  ENUM2_B = 0;
-  ENUM2_C = 1;
-  ENUM2_D = 2;
-  ENUM2_E = 10;
-  ENUM2_F = 11;
-  ENUM2_G = 12;
-  ENUM2_H = 16777213; // Many skipped values - packed will be 3b, unpacked 24b
+    ENUM2_A = -2;  // for completeness, though negative values are discouraged
+    ENUM2_B = 0;
+    ENUM2_C = 1;
+    ENUM2_D = 2;
+    ENUM2_E = 10;
+    ENUM2_F = 11;
+    ENUM2_G = 12;
+    ENUM2_H =
+        16777213;  // Many skipped values - packed will be 3b, unpacked 24b
 }
 
 message TestMsgPack
 {
-  option (dccl.msg).id = 2;
-  option (dccl.msg).max_bytes = 2;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 2;
+    option (dccl.msg).codec_version = 4;
 
-  required int32 five_bit_padding = 1 [(dccl.field) = {min: 0, max: 31}]; // 5b padding.
-  required Enum value = 2 [(dccl.field).packed_enum=true];
+    required int32 five_bit_padding = 1
+        [(dccl.field) = { min: 0, max: 31 }];  // 5b padding.
+    required Enum value = 2 [(dccl.field).packed_enum = true];
 }
 
 message TestMsgUnpack
 {
-  option (dccl.msg).id = 3;
-  option (dccl.msg).max_bytes = 4;
-  option (dccl.msg).codec_version = 4;
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 4;
+    option (dccl.msg).codec_version = 4;
 
-  required Enum value = 1 [(dccl.field).packed_enum=false];
+    required Enum value = 1 [(dccl.field).packed_enum = false];
 }
-

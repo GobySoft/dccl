@@ -58,7 +58,7 @@ message DCCLFieldOptions
     optional bool in_head = 3 [default = false];
 
     // double, float
-    optional int32 precision = 4 [default = 0];   // Deprecated
+    optional int32 precision = 4 [default = 0];  // Deprecated
     optional double resolution = 5 [default = 1];
     // int, double, float
     optional double min = 6;
