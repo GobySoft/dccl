@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     msg_in.set_u3(10.2);
     msg_in.set_u4(5.6);
     msg_in.set_u5(1.95);
-    msg_in.set_u6(100);
+    msg_in.set_u6(25500);
     
     std::string encoded;
     codec.encode(&encoded, msg_in);
