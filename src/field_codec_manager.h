@@ -50,13 +50,8 @@ template <int> struct dummy_fcm
 class FieldCodecManagerLocal
 {
   public:
-    FieldCodecManagerLocal(bool enroll = true);
+    FieldCodecManagerLocal();
     ~FieldCodecManagerLocal();
-
-    void merge(const FieldCodecManagerLocal& other)
-    {
-        for (const auto& p : other.codecs_) codecs_.insert(p);
-    }
 
     // field type == wire type
     /* template<typename FieldType, template <typename FieldType> class Codec> */
@@ -234,7 +229,6 @@ class FieldCodecManagerLocal
   private:
     typedef std::map<std::string, boost::shared_ptr<FieldCodecBase>> InsideMap;
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
-    bool enroll_;
 
     internal::TypeHelper type_helper_;
     CodecData codec_data_;
@@ -252,7 +246,11 @@ class FieldCodecManager
     add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
-        for (auto* manager : managers_) manager->add<Codec>(name, dummy_fcm);
+        auto add_fcn = [=](FieldCodecManagerLocal* manager) {
+            manager->add<Codec>(name, dummy_fcm);
+        };
+        for (auto* manager : managers_) add_fcn(manager);
+        add_message_fcns_[name] = add_fcn;
     }
 
     template <class Codec>
@@ -264,14 +262,20 @@ class FieldCodecManager
     add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
-        for (auto* manager : managers_) manager->add<Codec>(name, dummy_fcm);
+        auto add_fcn = [=](FieldCodecManagerLocal* manager) {
+            manager->add<Codec>(name, dummy_fcm);
+        };
+        for (auto* manager : managers_) add_fcn(manager);
+        add_nonmessage_all_fcns_[name] = add_fcn;
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
     static void add(const std::string& name)
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
-        for (auto* manager : managers_) manager->add<Codec, type>(name);
+        auto add_fcn = [=](FieldCodecManagerLocal* manager) { manager->add<Codec, type>(name); };
+        for (auto* manager : managers_) add_fcn(manager);
+        add_nonmessage_single_fcns_[std::make_pair(name, type)] = add_fcn;
     }
 
     template <class Codec>
@@ -284,6 +288,7 @@ class FieldCodecManager
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
         for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
+        add_message_fcns_.erase(name);
     }
 
     template <class Codec>
@@ -296,6 +301,7 @@ class FieldCodecManager
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
         for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
+        add_nonmessage_all_fcns_.erase(name);
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
@@ -303,6 +309,7 @@ class FieldCodecManager
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
         for (auto* manager : managers_) manager->remove<Codec, type>(name);
+        add_nonmessage_single_fcns_.erase(std::make_pair(name, type));
     }
 
     friend class FieldCodecManagerLocal;
@@ -312,8 +319,11 @@ class FieldCodecManager
     {
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
         managers_.insert(manager);
-        // merge in any codecs that were added before this FieldCodecManagerLocal was enrolled
-        //        manager->merge(meta_manager_);
+
+        // run all `add`s from before this manager was started
+        for (auto& p : add_message_fcns_) p.second(manager);
+        for (auto& p : add_nonmessage_all_fcns_) p.second(manager);
+        for (auto& p : add_nonmessage_single_fcns_) p.second(manager);
     }
     static void unenroll(FieldCodecManagerLocal* manager)
     {
@@ -323,9 +333,13 @@ class FieldCodecManager
 
   private:
     static std::set<FieldCodecManagerLocal*> managers_;
-    // store all the codecs loaded here so any later FieldCodecManagerLocal instantiations will get the already loaded codecs
-    static FieldCodecManagerLocal meta_manager_;
-};
+    static std::map<std::string, std::function<void(FieldCodecManagerLocal*)>> add_message_fcns_;
+    static std::map<std::string, std::function<void(FieldCodecManagerLocal*)>>
+        add_nonmessage_all_fcns_;
+    static std::map<std::pair<std::string, google::protobuf::FieldDescriptor::Type>,
+                    std::function<void(FieldCodecManagerLocal*)>>
+        add_nonmessage_single_fcns_;
+}; // namespace dccl
 } // namespace dccl
 
 template <class Codec>
