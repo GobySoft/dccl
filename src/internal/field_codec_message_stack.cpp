@@ -74,7 +74,8 @@ void dccl::internal::MessageStack::__pop_messages()
     --messages_pushed_;
 }
 
-dccl::internal::MessageStack::MessageStack(MessageStackData& data,
+dccl::internal::MessageStack::MessageStack(const google::protobuf::Message* root_message,
+                                           MessageStackData& data,
                                            const google::protobuf::FieldDescriptor* field)
     : data_(data), descriptors_pushed_(0), fields_pushed_(0), parts_pushed_(0), messages_pushed_(0)
 {
@@ -96,23 +97,25 @@ dccl::internal::MessageStack::MessageStack(MessageStackData& data,
             push(part);
             push(field->message_type());
         }
-        push_message(field);
+        push_message(root_message, field);
         push(field);
     }
 }
 
-void dccl::internal::MessageStack::update_index(const google::protobuf::FieldDescriptor* field,
+void dccl::internal::MessageStack::update_index(const google::protobuf::Message* root_message,
+                                                const google::protobuf::FieldDescriptor* field,
                                                 int index)
 {
-    push_message(field, index);
+    push_message(root_message, field, index);
 }
 
-void dccl::internal::MessageStack::push_message(const google::protobuf::FieldDescriptor* field,
+void dccl::internal::MessageStack::push_message(const google::protobuf::Message* root_message,
+                                                const google::protobuf::FieldDescriptor* field,
                                                 int index)
 {
-    if (data_.messages.empty() && dccl::FieldCodecBase::root_message())
+    if (data_.messages.empty() && root_message)
     {
-        data_.messages.push_back({dccl::FieldCodecBase::root_message(), nullptr});
+        data_.messages.push_back({root_message, nullptr});
         ++messages_pushed_;
     }
 

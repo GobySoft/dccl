@@ -173,8 +173,7 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if (FieldCodecBase::message_data_.current_part() ==
-                 UNKNOWN) // part not yet explicitly specified
+        else if (message_data().current_part() == UNKNOWN) // part not yet explicitly specified
         {
             if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
                 find(field)->name() ==
@@ -186,8 +185,7 @@ bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             else
                 return true;
         }
-        else if (FieldCodecBase::message_data_.current_part() !=
-                 part()) // part specified and doesn't match
+        else if (message_data().current_part() != part()) // part specified and doesn't match
             return false;
         else
             return true;

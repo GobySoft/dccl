@@ -27,14 +27,7 @@
 #include "exception.h"
 #include "field_codec.h"
 
-dccl::MessagePart dccl::FieldCodecBase::part_ = dccl::UNKNOWN;
-
-bool dccl::FieldCodecBase::strict_ = false;
-
-const google::protobuf::Message* dccl::FieldCodecBase::root_message_ = 0;
-const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor_ = 0;
 dccl::DynamicConditions dccl::FieldCodecBase::dynamic_conditions_;
-dccl::internal::MessageStackData dccl::FieldCodecBase::message_data_;
 
 using dccl::dlog;
 using namespace dccl::logger;
@@ -47,7 +40,7 @@ dccl::FieldCodecBase::FieldCodecBase() : force_required_(false) {}
 void dccl::FieldCodecBase::base_encode(Bitset* bits, const google::protobuf::Message& field_value,
                                        MessagePart part, bool strict)
 {
-    BaseRAII scoped_globals(part, &field_value, strict);
+    BaseRAII scoped_globals(this, part, &field_value, strict);
 
     // we pass this through the FromProtoCppTypeBase to do dynamic_cast (RTTI) for
     // custom message codecs so that these codecs can be written in the derived class (not google::protobuf::Message)
@@ -58,7 +51,7 @@ void dccl::FieldCodecBase::base_encode(Bitset* bits, const google::protobuf::Mes
 void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_value,
                                         const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (field)
         dlog.is(DEBUG2, ENCODE) && dlog << "Starting encode for field: " << field->DebugString()
@@ -81,7 +74,7 @@ void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
                                                  const std::vector<boost::any>& field_values,
                                                  const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     std::vector<boost::any> wire_values;
     field_pre_encode_repeated(&wire_values, field_values);
@@ -95,7 +88,7 @@ void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
 void dccl::FieldCodecBase::base_size(unsigned* bit_size, const google::protobuf::Message& msg,
                                      MessagePart part)
 {
-    BaseRAII scoped_globals(part, &msg);
+    BaseRAII scoped_globals(this, part, &msg);
 
     *bit_size = 0;
 
@@ -105,7 +98,7 @@ void dccl::FieldCodecBase::base_size(unsigned* bit_size, const google::protobuf:
 void dccl::FieldCodecBase::field_size(unsigned* bit_size, const boost::any& field_value,
                                       const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     boost::any wire_value;
     field_pre_encode(&wire_value, field_value);
@@ -117,7 +110,7 @@ void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
                                                const std::vector<boost::any>& field_values,
                                                const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     std::vector<boost::any> wire_values;
     field_pre_encode_repeated(&wire_values, field_values);
@@ -128,7 +121,7 @@ void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
 void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* field_value,
                                        MessagePart part)
 {
-    BaseRAII scoped_globals(part, field_value);
+    BaseRAII scoped_globals(this, part, field_value);
     boost::any value(field_value);
     field_decode(bits, &value, 0);
 }
@@ -136,7 +129,7 @@ void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* 
 void dccl::FieldCodecBase::field_decode(Bitset* bits, boost::any* field_value,
                                         const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (!field_value)
         throw(Exception("Decode called with NULL boost::any"));
@@ -171,7 +164,7 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
                                                  std::vector<boost::any>* field_values,
                                                  const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (!field_values)
         throw(Exception("Decode called with NULL field_values"));
@@ -201,10 +194,10 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
 void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
                                          const google::protobuf::Descriptor* desc, MessagePart part)
 {
-    BaseRAII scoped_globals(part, desc);
+    BaseRAII scoped_globals(this, part, desc);
     *bit_size = 0;
 
-    internal::MessageStack msg_handler(message_data_);
+    internal::MessageStack msg_handler(root_message(), message_data());
     if (desc)
         msg_handler.push(desc);
     else
@@ -216,7 +209,7 @@ void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
 void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
                                           const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (this_field())
         *bit_size += this_field()->is_repeated() ? max_size_repeated() : max_size();
@@ -227,11 +220,11 @@ void dccl::FieldCodecBase::field_max_size(unsigned* bit_size,
 void dccl::FieldCodecBase::base_min_size(unsigned* bit_size,
                                          const google::protobuf::Descriptor* desc, MessagePart part)
 {
-    BaseRAII scoped_globals(part, desc);
+    BaseRAII scoped_globals(this, part, desc);
 
     *bit_size = 0;
 
-    internal::MessageStack msg_handler(message_data_);
+    internal::MessageStack msg_handler(root_message(), message_data());
     if (desc)
         msg_handler.push(desc);
     else
@@ -244,7 +237,7 @@ void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
                                           const google::protobuf::FieldDescriptor* field)
 
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (this_field())
         *bit_size += this_field()->is_repeated() ? min_size_repeated() : min_size();
@@ -254,9 +247,9 @@ void dccl::FieldCodecBase::field_min_size(unsigned* bit_size,
 
 void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* desc, MessagePart part)
 {
-    BaseRAII scoped_globals(part, desc);
+    BaseRAII scoped_globals(this, part, desc);
 
-    internal::MessageStack msg_handler(message_data_);
+    internal::MessageStack msg_handler(root_message(), message_data());
     if (desc)
         msg_handler.push(desc);
     else
@@ -268,7 +261,7 @@ void dccl::FieldCodecBase::base_validate(const google::protobuf::Descriptor* des
 
 void dccl::FieldCodecBase::field_validate(bool* b, const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (field && dccl_field_options().in_head() && variable_size())
         throw(Exception("Variable size codec used in header - header fields must be encoded with "
@@ -284,9 +277,9 @@ void dccl::FieldCodecBase::field_validate(bool* b, const google::protobuf::Field
 void dccl::FieldCodecBase::base_info(std::ostream* os, const google::protobuf::Descriptor* desc,
                                      MessagePart part)
 {
-    BaseRAII scoped_globals(part, desc);
+    BaseRAII scoped_globals(this, part, desc);
 
-    internal::MessageStack msg_handler(message_data_);
+    internal::MessageStack msg_handler(root_message(), message_data());
     if (desc)
         msg_handler.push(desc);
     else
@@ -298,7 +291,7 @@ void dccl::FieldCodecBase::base_info(std::ostream* os, const google::protobuf::D
 void dccl::FieldCodecBase::field_info(std::ostream* os,
                                       const google::protobuf::FieldDescriptor* field)
 {
-    internal::MessageStack msg_handler(message_data_, field);
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     std::stringstream ss;
     int depth = msg_handler.count();
@@ -348,7 +341,7 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str()
        << " {"
        << (this_field() ? manager().find(this_field(), has_codec_group(), codec_group())->name()
-                        : manager().find(root_descriptor_)->name())
+                        : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 
     //    std::string s = ss.str();
@@ -414,10 +407,10 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
                                         << size_bits.size() << " bits: " << size_bits << std::endl;
     }
 
-    internal::MessageStack msg_handler(message_data_, this->this_field());
+    internal::MessageStack msg_handler(root_message(), message_data(), this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
-        msg_handler.update_index(this->this_field(), i);
+        msg_handler.update_index(root_message(), this->this_field(), i);
 
         DynamicConditions& dc = this->dynamic_conditions(this->this_field());
         dc.set_repeated_index(i);
@@ -452,10 +445,10 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
 
     wire_values->resize(wire_vector_size);
 
-    internal::MessageStack msg_handler(message_data_, this->this_field());
+    internal::MessageStack msg_handler(root_message(), message_data(), this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
-        msg_handler.update_index(this->this_field(), i);
+        msg_handler.update_index(root_message(), this->this_field(), i);
 
         DynamicConditions& dc = this->dynamic_conditions(this->this_field());
         dc.set_repeated_index(i);
@@ -485,10 +478,10 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
                                           dccl_field_options().max_repeat());
     }
 
-    internal::MessageStack msg_handler(message_data_, this->this_field());
+    internal::MessageStack msg_handler(root_message(), message_data(), this->this_field());
     for (unsigned i = 0, n = wire_vector_size; i < n; ++i)
     {
-        msg_handler.update_index(this->this_field(), i);
+        msg_handler.update_index(root_message(), this->this_field(), i);
         DynamicConditions& dc = this->dynamic_conditions(this->this_field());
         dc.set_repeated_index(i);
         if (dc.has_omit_if())
@@ -575,12 +568,12 @@ void dccl::FieldCodecBase::any_post_decode_repeated(const std::vector<boost::any
 void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* field,
                                      const Bitset& new_bits, int depth, int vector_size /* = -1 */)
 {
-    if (!root_descriptor_)
+    if (!root_descriptor())
         return;
 
     if (dlog.is(DEBUG2, SIZE))
     {
-        std::string name = ((field) ? field->name() : root_descriptor_->full_name());
+        std::string name = ((field) ? field->name() : root_descriptor()->full_name());
         if (vector_size >= 0)
             name += "[" + boost::lexical_cast<std::string>(vector_size) + "]";
 
@@ -604,4 +597,90 @@ std::ostream& dccl::operator<<(std::ostream& os, const dccl::FieldCodecBase& fie
                      ->as_str()
               << ") | wire type: "
               << field_codec.manager().type_helper().find(field_codec.wire_type())->as_str();
+}
+
+const google::protobuf::FieldDescriptor* dccl::FieldCodecBase::this_field() const
+{
+    return message_data().top_field();
+}
+
+const google::protobuf::Descriptor* dccl::FieldCodecBase::this_descriptor()
+{
+    return message_data().top_descriptor();
+}
+
+const google::protobuf::Message* dccl::FieldCodecBase::this_message()
+{
+    return message_data().top_message();
+}
+
+const google::protobuf::Message* dccl::FieldCodecBase::root_message()
+{
+    return manager().codec_data().root_message_;
+}
+
+const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor()
+{
+    return manager().codec_data().root_descriptor_;
+}
+
+dccl::internal::MessageStackData& dccl::FieldCodecBase::message_data()
+{
+    return manager().codec_data().message_data_;
+}
+
+const dccl::internal::MessageStackData& dccl::FieldCodecBase::message_data() const
+{
+    return manager().codec_data().message_data_;
+}
+bool dccl::FieldCodecBase::has_codec_group()
+{
+    const google::protobuf::Descriptor* root_desc = root_descriptor();
+    if (root_desc)
+    {
+        return root_desc->options().GetExtension(dccl::msg).has_codec_group() ||
+               root_desc->options().GetExtension(dccl::msg).has_codec_version();
+    }
+    else
+        return false;
+}
+
+dccl::MessagePart dccl::FieldCodecBase::part() { return manager().codec_data().part_; }
+
+bool dccl::FieldCodecBase::strict() { return manager().codec_data().strict_; }
+
+int dccl::FieldCodecBase::codec_version()
+{
+    return root_descriptor()->options().GetExtension(dccl::msg).codec_version();
+}
+
+std::string dccl::FieldCodecBase::codec_group() { return codec_group(root_descriptor()); }
+
+dccl::FieldCodecBase::BaseRAII::BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                                         const google::protobuf::Descriptor* root_descriptor,
+                                         bool strict)
+    : field_codec_(field_codec)
+
+{
+    field_codec_->manager().codec_data().part_ = part;
+    field_codec_->manager().codec_data().strict_ = strict;
+    field_codec_->manager().codec_data().root_message_ = 0;
+    field_codec_->manager().codec_data().root_descriptor_ = root_descriptor;
+}
+dccl::FieldCodecBase::BaseRAII::BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                                         const google::protobuf::Message* root_message, bool strict)
+    : field_codec_(field_codec)
+
+{
+    field_codec_->manager().codec_data().part_ = part;
+    field_codec_->manager().codec_data().strict_ = strict;
+    field_codec_->manager().codec_data().root_message_ = root_message;
+    field_codec_->manager().codec_data().root_descriptor_ = root_message->GetDescriptor();
+}
+dccl::FieldCodecBase::BaseRAII::~BaseRAII()
+{
+    field_codec_->manager().codec_data().part_ = dccl::UNKNOWN;
+    field_codec_->manager().codec_data().strict_ = false;
+    field_codec_->manager().codec_data().root_message_ = nullptr;
+    field_codec_->manager().codec_data().root_descriptor_ = nullptr;
 }

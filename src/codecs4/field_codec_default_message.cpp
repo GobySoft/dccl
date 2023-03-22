@@ -241,8 +241,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if (FieldCodecBase::message_data_.current_part() ==
-                 UNKNOWN) // part not yet explicitly specified
+        else if (message_data().current_part() == UNKNOWN) // part not yet explicitly specified
         {
             if ((part() == HEAD && !dccl_field_options.in_head()) ||
                 (part() == BODY && dccl_field_options.in_head()))
@@ -250,8 +249,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             else
                 return true;
         }
-        else if (FieldCodecBase::message_data_.current_part() !=
-                 part()) // part specified and doesn't match
+        else if (message_data().current_part() != part()) // part specified and doesn't match
             return false;
         else
             return true;

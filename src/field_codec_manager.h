@@ -178,6 +178,9 @@ class FieldCodecManagerLocal
     internal::TypeHelper& type_helper() { return type_helper_; }
     const internal::TypeHelper& type_helper() const { return type_helper_; }
 
+    CodecData& codec_data() { return codec_data_; }
+    const CodecData& codec_data() const { return codec_data_; }
+
   private:
     boost::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
                                              const std::string& codec_name,
@@ -193,6 +196,10 @@ class FieldCodecManagerLocal
 
     template <class Codec>
     void add_single_type(const std::string& name,
+                         google::protobuf::FieldDescriptor::Type field_type,
+                         google::protobuf::FieldDescriptor::CppType wire_type);
+
+    void add_single_type(boost::shared_ptr<FieldCodecBase> new_field_codec, const std::string& name,
                          google::protobuf::FieldDescriptor::Type field_type,
                          google::protobuf::FieldDescriptor::CppType wire_type);
 
@@ -230,6 +237,7 @@ class FieldCodecManagerLocal
     bool enroll_;
 
     internal::TypeHelper type_helper_;
+    CodecData codec_data_;
 };
 
 class FieldCodecManager
@@ -305,7 +313,7 @@ class FieldCodecManager
         std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
         managers_.insert(manager);
         // merge in any codecs that were added before this FieldCodecManagerLocal was enrolled
-        manager->merge(meta_manager_);
+        //        manager->merge(meta_manager_);
     }
     static void unenroll(FieldCodecManagerLocal* manager)
     {
