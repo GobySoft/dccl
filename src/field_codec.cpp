@@ -27,8 +27,6 @@
 #include "exception.h"
 #include "field_codec.h"
 
-dccl::DynamicConditions dccl::FieldCodecBase::dynamic_conditions_;
-
 using dccl::dlog;
 using namespace dccl::logger;
 
@@ -655,6 +653,13 @@ int dccl::FieldCodecBase::codec_version()
 }
 
 std::string dccl::FieldCodecBase::codec_group() { return codec_group(root_descriptor()); }
+
+dccl::DynamicConditions&
+dccl::FieldCodecBase::dynamic_conditions(const google::protobuf::FieldDescriptor* field)
+{
+    manager().codec_data().dynamic_conditions_.set_field(field);
+    return manager().codec_data().dynamic_conditions_;
+}
 
 dccl::FieldCodecBase::BaseRAII::BaseRAII(FieldCodecBase* field_codec, MessagePart part,
                                          const google::protobuf::Descriptor* root_descriptor,
