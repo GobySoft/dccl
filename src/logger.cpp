@@ -30,15 +30,30 @@ dccl::Logger dccl::dlog;
 
 int dccl::internal::LogBuffer::sync()
 {
+#if DCCL_THREAD_SUPPORT
+    if (verbosity_ == logger::UNKNOWN)
+    {
+        std::cerr
+            << "Must use 'dlog.is(...) && dlog << ... << std::endl;' expression when running in "
+               "thread safe mode to allow the dlog mutex to be correctly locked and unlocked. "
+               "Offending line: "
+            << buffer_.front() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+#endif
+
     // all but last one
     while (buffer_.size() > 1)
     {
         display(buffer_.front());
         buffer_.pop_front();
     }
-    verbosity_ = logger::INFO;
+    verbosity_ = logger::UNKNOWN;
     group_ = logger::GENERAL;
-
+#if DCCL_THREAD_SUPPORT
+    g_dlog_mutex.unlock();
+#endif
     return 0;
 }
 

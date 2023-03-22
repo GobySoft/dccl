@@ -31,10 +31,10 @@
 #include <boost/utility/enable_if.hpp>
 
 #include "dccl/logger.h"
+#include "dccl/thread_safety.h"
 #include "field_codec.h"
 #include "internal/field_codec_data.h"
 #include "internal/type_helper.h"
-#include "thread_safety.h"
 
 namespace dccl
 {

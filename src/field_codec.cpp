@@ -569,17 +569,18 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
     if (!root_descriptor())
         return;
 
-    if (dlog.is(DEBUG2, SIZE))
+    if (dlog.check(DEBUG2))
     {
         std::string name = ((field) ? field->name() : root_descriptor()->full_name());
         if (vector_size >= 0)
             name += "[" + boost::lexical_cast<std::string>(vector_size) + "]";
 
-        dlog << std::string(depth, '|') << name << std::setfill('.')
-             << std::setw(40 - name.size() - depth) << new_bits.size() << std::endl;
+        dlog.is(DEBUG2, SIZE) && dlog << std::string(depth, '|') << name << std::setfill('.')
+                                      << std::setw(40 - name.size() - depth) << new_bits.size()
+                                      << std::endl;
 
         if (!field)
-            dlog << std::endl;
+            dlog.is(DEBUG2, SIZE) && dlog << std::endl;
     }
 }
 

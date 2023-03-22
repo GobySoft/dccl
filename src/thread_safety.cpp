@@ -19,9 +19,10 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "thread_safety.h"
+#include "dccl/thread_safety.h"
 
 #if DCCL_THREAD_SUPPORT
-std::mutex g_field_codec_manager_mutex;
-std::recursive_mutex g_dynamic_protobuf_manager_mutex;
+std::mutex dccl::g_field_codec_manager_mutex;
+std::recursive_mutex dccl::g_dynamic_protobuf_manager_mutex;
+std::recursive_mutex dccl::g_dlog_mutex;
 #endif
