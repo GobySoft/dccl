@@ -23,24 +23,18 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_manager.h"
 
-dccl::FieldCodecManagerLocal dccl::FieldCodecManager::meta_manager_(
-    false /* must not enroll or we will copy uninitialized data */);
-std::set<dccl::FieldCodecManagerLocal*> dccl::FieldCodecManager::managers_({&meta_manager_});
+std::set<dccl::FieldCodecManagerLocal*> dccl::FieldCodecManager::managers_;
+std::map<std::string, std::function<void(dccl::FieldCodecManagerLocal*)>>
+    dccl::FieldCodecManager::add_message_fcns_;
+std::map<std::string, std::function<void(dccl::FieldCodecManagerLocal*)>>
+    dccl::FieldCodecManager::add_nonmessage_all_fcns_;
+std::map<std::pair<std::string, google::protobuf::FieldDescriptor::Type>,
+         std::function<void(dccl::FieldCodecManagerLocal*)>>
+    dccl::FieldCodecManager::add_nonmessage_single_fcns_;
 
-dccl::FieldCodecManagerLocal::FieldCodecManagerLocal(bool enroll) : enroll_(enroll)
-{
-    std::cout << "Starting FieldCodecManagerLocal: " << this << " enroll: " << std::boolalpha
-              << enroll << std::endl;
+dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() { FieldCodecManager::enroll(this); }
 
-    if (enroll_)
-        FieldCodecManager::enroll(this);
-}
-
-dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal()
-{
-    if (enroll_)
-        FieldCodecManager::unenroll(this);
-}
+dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() { FieldCodecManager::unenroll(this); }
 
 boost::shared_ptr<dccl::FieldCodecBase>
 dccl::FieldCodecManagerLocal::__find(google::protobuf::FieldDescriptor::Type type,
