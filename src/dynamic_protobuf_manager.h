@@ -241,8 +241,8 @@ class DynamicProtobufManager
 
     void enable_disk_source_database();
 
-    DynamicProtobufManager(const DynamicProtobufManager&);
-    DynamicProtobufManager& operator=(const DynamicProtobufManager&);
+    DynamicProtobufManager(const DynamicProtobufManager&) = delete;
+    DynamicProtobufManager& operator=(const DynamicProtobufManager&) = delete;
 
   private:
     std::vector<boost::shared_ptr<google::protobuf::DescriptorDatabase>> databases_;
