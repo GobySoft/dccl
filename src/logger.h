@@ -32,6 +32,8 @@
 #include <iostream>
 #include <string>
 
+#include "dccl/thread_safety.h"
+
 namespace dccl
 {
 namespace logger
@@ -49,7 +51,8 @@ enum Verbosity
     INFO_PLUS = INFO | (INFO - 1),
     DEBUG1_PLUS = DEBUG1 | (DEBUG1 - 1),
     DEBUG2_PLUS = DEBUG2 | (DEBUG2 - 1),
-    DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1)
+    DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1),
+    UNKNOWN = 0
 };
 enum Group
 {
@@ -64,12 +67,14 @@ enum Group
 void to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl::logger::Group grp,
                 std::ostream* os, bool add_timestamp);
 
+class Logger;
+
 namespace internal
 {
 class LogBuffer : public std::streambuf
 {
   public:
-    LogBuffer() : verbosity_(logger::INFO), group_(logger::GENERAL), buffer_(1) {}
+    LogBuffer() : verbosity_(logger::UNKNOWN), group_(logger::GENERAL), buffer_(1) {}
     ~LogBuffer() {}
 
     /// connect a signal to a slot (function pointer or similar)
@@ -108,16 +113,16 @@ class LogBuffer : public std::streambuf
 
     void set_group(logger::Group group) { group_ = group; }
 
-    bool contains(logger::Verbosity verbosity) { return verbosity & enabled_verbosities_; }
+    bool contains(logger::Verbosity verbosity) const { return verbosity & enabled_verbosities_; }
 
   private:
     /// virtual inherited from std::streambuf.
     /// Called when std::endl or std::flush is inserted into the stream
-    int sync();
+    int sync() override;
 
     /// virtual inherited from std::streambuf. Called when something is inserted into the stream
     /// Called when std::endl or std::flush is inserted into the stream
-    int overflow(int c = EOF);
+    int overflow(int c = EOF) override;
 
     void display(const std::string& s)
     {
@@ -154,7 +159,10 @@ class Logger : public std::ostream
     Logger() : std::ostream(&buf_) {}
     virtual ~Logger() {}
 
-    /// \brief Indicates the verbosity of the Logger until the next std::flush or std::endl. The boolean return is used to take advantage of short-circuit evaluation of && to avoid spending CPU time generating log files that if they are not used.
+    /// \brief Same as is() but doesn't set the verbosity or lock the mutex.
+    bool check(logger::Verbosity verbosity) { return buf_.contains(verbosity); }
+
+    /// \brief Indicates the verbosity of the Logger until the next std::flush or std::endl. The boolean return is used to take advantage of short-circuit evaluation of && to avoid spending CPU time generating log files that if they are not used. This locks the dlog mutex when running with DCCL_THREAD_SUPPORT
     ///
     /// The typical usage is
     /// \code
@@ -171,6 +179,9 @@ class Logger : public std::ostream
         }
         else
         {
+#if DCCL_THREAD_SUPPORT
+            g_dlog_mutex.lock();
+#endif
             buf_.set_verbosity(verbosity);
             buf_.set_group(group);
             return true;
@@ -184,6 +195,7 @@ class Logger : public std::ostream
     /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
     {
+        LOCK_DLOG_MUTEX
         buf_.connect(verbosity_mask, slot);
     }
 
@@ -198,6 +210,7 @@ class Logger : public std::ostream
                  void (Obj::*mem_func)(const std::string& msg, logger::Verbosity vrb,
                                        logger::Group grp))
     {
+        LOCK_DLOG_MUTEX
 #if BOOST_VERSION >= 106000
         using boost::placeholders::_1;
         using boost::placeholders::_2;
@@ -213,6 +226,7 @@ class Logger : public std::ostream
     /// \param add_timestamp If true, prepend the current timestamp of the message to each log message.
     void connect(int verbosity_mask, std::ostream* os, bool add_timestamp = true)
     {
+        LOCK_DLOG_MUTEX
 #if BOOST_VERSION >= 106000
         using boost::placeholders::_1;
         using boost::placeholders::_2;
@@ -222,7 +236,11 @@ class Logger : public std::ostream
     }
 
     /// \brief Disconnect all slots for one or more given verbosities
-    void disconnect(int verbosity_mask) { buf_.disconnect(verbosity_mask); }
+    void disconnect(int verbosity_mask)
+    {
+        LOCK_DLOG_MUTEX
+        buf_.disconnect(verbosity_mask);
+    }
 
   private:
     internal::LogBuffer buf_;

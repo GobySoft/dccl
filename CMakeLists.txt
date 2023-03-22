@@ -186,13 +186,6 @@ include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
 message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
 
-# Protobuf uses pthread so we need to link it too (if it's here)
-find_package(Threads)
-
-# work around OLD compilers and systems (like gcc3.3 ...) where reentrancy matters to boost::signals2.  Dccl Bug #1090022.
-add_definitions(-D_REENTRANT)
-add_definitions(-pthread)
-
 # optional
 ## cryptopp
 find_package(Cryptopp QUIET)
@@ -249,7 +242,16 @@ else()
   set(DCCL_HAS_LUA "0")
 endif()
 
-  
+option(enable_thread_safety "Enable DCCL thread safety (uses std::mutex)" ON)
+if(enable_thread_safety)
+  set(DCCL_HAS_THREAD_SUPPORT "1")
+  # Protobuf uses pthread so we need to link it too (if it's here)
+  find_package(Threads)
+else()
+  set(DCCL_HAS_THREAD_SUPPORT "0")
+endif()
+
+
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})

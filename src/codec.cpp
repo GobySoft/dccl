@@ -546,7 +546,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
 
-    if (param_os || dlog.is(INFO))
+    if ((param_os && param_os != &dlog) || dlog.is(INFO))
     {
         try
         {
@@ -598,31 +598,32 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string header_str = "Header";
             std::string header_guard = build_guard_for_console_output(header_str, '-');
 
-            *os << header_guard << " " << header_str << " " << header_guard << std::endl;
+            *os << header_guard << " " << header_str << " " << header_guard << "\n";
             *os << bits_dccl_head_str << std::setfill('.')
                 << std::setw(bits_width - bits_dccl_head_str.size() + spaces) << id_bit_size << " {"
                 << id_codec()->name() << "}\n";
             codec->base_info(os, desc, HEAD);
-            //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << std::endl;
+            //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << "\n";
 
             std::string body_str = "Body";
             std::string body_guard = build_guard_for_console_output(body_str, '-');
 
-            *os << body_guard << " " << body_str << " " << body_guard << std::endl;
+            *os << body_guard << " " << body_str << " " << body_guard << "\n";
             codec->base_info(os, desc, BODY);
-            //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << std::endl;
+            //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << "\n";
 
-            //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << std::endl;
+            //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << "\n";
+            os->flush(); // unlock dlog mutex, if os == dlog
         }
         catch (Exception& e)
         {
+            os->flush(); // unlock dlog mutex, if necessary
+
             dlog.is(DEBUG1) &&
                 dlog << "Message " << desc->full_name()
                      << " cannot provide information due to invalid configuration. Reason: "
                      << e.what() << std::endl;
         }
-
-        os->flush();
     }
 }
 
@@ -727,22 +728,22 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 {
     std::ostream* os = (param_os) ? param_os : &dlog;
 
-    if (param_os || dlog.is(INFO))
+    if ((param_os && param_os != &dlog) || dlog.is(INFO))
     {
         std::string codec_str = "Dynamic Compact Control Language (DCCL) Codec";
         std::string codec_guard = build_guard_for_console_output(codec_str, '|');
 
-        *os << codec_guard << " " << codec_str << " " << codec_guard << std::endl;
+        *os << codec_guard << " " << codec_str << " " << codec_guard << "\n";
         *os << id2desc_.size() << " messages loaded.\n";
-        *os << "Field sizes are in bits unless otherwise noted." << std::endl;
+        *os << "Field sizes are in bits unless otherwise noted."
+            << "\n";
 
         for (std::map<int32, const google::protobuf::Descriptor*>::const_iterator
                  it = id2desc_.begin(),
                  n = id2desc_.end();
              it != n; ++it)
             info(it->second, os, it->first);
-
-        //        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
+        os->flush();
     }
 }
 

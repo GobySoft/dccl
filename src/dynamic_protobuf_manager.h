@@ -40,7 +40,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/version.hpp>
 
-#include "thread_safety.h"
+#include "dccl/thread_safety.h"
 
 namespace dccl
 {
