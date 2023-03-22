@@ -32,6 +32,7 @@
 
 #include "dccl/logger.h"
 #include "field_codec.h"
+#include "internal/field_codec_data.h"
 #include "internal/type_helper.h"
 #include "thread_safety.h"
 
@@ -173,8 +174,8 @@ class FieldCodecManagerLocal
     internal::TypeHelper& type_helper() { return type_helper_; }
     const internal::TypeHelper& type_helper() const { return type_helper_; }
 
-    CodecData& codec_data() { return codec_data_; }
-    const CodecData& codec_data() const { return codec_data_; }
+    internal::CodecData& codec_data() { return codec_data_; }
+    const internal::CodecData& codec_data() const { return codec_data_; }
 
   private:
     boost::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
@@ -231,7 +232,7 @@ class FieldCodecManagerLocal
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
 
     internal::TypeHelper type_helper_;
-    CodecData codec_data_;
+    internal::CodecData codec_data_;
 };
 
 class FieldCodecManager

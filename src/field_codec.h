@@ -52,15 +52,6 @@ namespace internal
 class MessageStack;
 }
 
-struct CodecData
-{
-    MessagePart part_{dccl::UNKNOWN};
-    bool strict_{false};
-    const google::protobuf::Message* root_message_{nullptr};
-    const google::protobuf::Descriptor* root_descriptor_{nullptr};
-    internal::MessageStackData message_data_;
-};
-
 /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
 class FieldCodecBase
 {
@@ -357,11 +348,7 @@ class FieldCodecBase
         }
     }
 
-    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
-    {
-        dynamic_conditions_.set_field(field);
-        return dynamic_conditions_;
-    }
+    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field);
 
     FieldCodecManagerLocal& manager()
     {
@@ -487,7 +474,6 @@ class FieldCodecBase
     void set_name(const std::string& name) { name_ = name; }
     void set_field_type(google::protobuf::FieldDescriptor::Type type) { field_type_ = type; }
     void set_wire_type(google::protobuf::FieldDescriptor::CppType type) { wire_type_ = type; }
-    void set_data(CodecData* data) { codec_data_ = data; }
 
     bool variable_size()
     {
@@ -528,10 +514,7 @@ class FieldCodecBase
 
     bool force_required_;
 
-    static DynamicConditions dynamic_conditions_;
-
     FieldCodecManagerLocal* manager_{nullptr};
-    CodecData* codec_data_{nullptr};
 };
 
 std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec);
