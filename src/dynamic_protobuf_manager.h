@@ -40,6 +40,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/version.hpp>
 
+#include "thread_safety.h"
+
 namespace dccl
 {
 /// Helper class for creating google::protobuf::Message objects that are not statically compiled into the application.
@@ -57,31 +59,7 @@ class DynamicProtobufManager
     /// \param user_pool_first Search the user pool first, then the generated (compiled-in) pool (useful in case the generated pool is missing extensions that are in the user pool)
     /// \return A pointer to the google::protobuf::Descriptor (or nullptr if not found)
     static const google::protobuf::Descriptor*
-    find_descriptor(const std::string& protobuf_type_name, bool user_pool_first = false)
-    {
-        const google::protobuf::Descriptor* desc = nullptr;
-        if (user_pool_first)
-        {
-            // try the user pool
-            desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
-            if (desc)
-                return desc;
-        }
-
-        // try the generated pool
-        desc = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(
-            protobuf_type_name);
-        if (desc)
-            return desc;
-
-        if (!user_pool_first)
-        {
-            // try the user pool
-            desc = user_descriptor_pool().FindMessageTypeByName(protobuf_type_name);
-        }
-
-        return desc;
-    }
+    find_descriptor(const std::string& protobuf_type_name, bool user_pool_first = false);
 
     /// \brief Create a new (empty) Google Protobuf message of a given type by name.
     ///
@@ -97,6 +75,8 @@ class DynamicProtobufManager
     static GoogleProtobufMessagePointer new_protobuf_message(const std::string& protobuf_type_name,
                                                              bool user_pool_first = false)
     {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+
         const google::protobuf::Descriptor* desc =
             find_descriptor(protobuf_type_name, user_pool_first);
         if (desc)
@@ -116,7 +96,9 @@ class DynamicProtobufManager
     static GoogleProtobufMessagePointer
     new_protobuf_message(const google::protobuf::Descriptor* desc)
     {
-        return GoogleProtobufMessagePointer(msg_factory().GetPrototype(desc)->New());
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        return GoogleProtobufMessagePointer(
+            get_instance()->msg_factory_->GetPrototype(desc)->New());
     }
 
     /// \brief Create a new (empty) Google Protobuf message of a given type by Descriptor
@@ -124,31 +106,24 @@ class DynamicProtobufManager
     /// \param desc The Google Protobuf Descriptor of the message to create.
     /// \return A boost::shared_ptr to the newly created object.
     static boost::shared_ptr<google::protobuf::Message>
-    new_protobuf_message(const google::protobuf::Descriptor* desc)
-    {
-        return new_protobuf_message<boost::shared_ptr<google::protobuf::Message>>(desc);
-    }
+    new_protobuf_message(const google::protobuf::Descriptor* desc);
 
     /// \brief Create a new (empty) Google Protobuf message of a given type by name.
     ///
     /// \param protobuf_type_name The full name (including package) of the Google Protobuf message to create (e.g. "package.MyMessage").
     /// \return A boost::shared_ptr to the newly created object.
     static boost::shared_ptr<google::protobuf::Message>
-    new_protobuf_message(const std::string& protobuf_type_name)
-    {
-        return new_protobuf_message<boost::shared_ptr<google::protobuf::Message>>(
-            protobuf_type_name);
-    }
+    new_protobuf_message(const std::string& protobuf_type_name);
 
     /// \brief Add a Google Protobuf DescriptorDatabase to the set of databases searched for Message Descriptors.
-    static void add_database(boost::shared_ptr<google::protobuf::DescriptorDatabase> database)
-    {
-        get_instance()->databases_.push_back(database);
-        get_instance()->update_databases();
-    }
+    static void add_database(boost::shared_ptr<google::protobuf::DescriptorDatabase> database);
 
     /// \brief Enable on the fly compilation of .proto files on the local disk. Must be called before load_from_proto_file() is called.
-    static void enable_compilation() { get_instance()->enable_disk_source_database(); }
+    static void enable_compilation()
+    {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        get_instance()->enable_disk_source_database();
+    }
 
     /// \brief Load a message from a .proto file on the disk. enable_compilation() must be called first.
     ///
@@ -166,31 +141,31 @@ class DynamicProtobufManager
     /// \brief Add a path for searching for import messages when loading .proto files using load_from_proto_file()
     ///
     /// \throw Exception If enable_compilation() has not been called before using this function.
-    static void add_include_path(const std::string& path)
-    {
-        if (!get_instance()->disk_source_tree_)
-            throw(std::runtime_error(
-                "Must called enable_compilation() before loading proto files directly"));
-
-        get_instance()->disk_source_tree_->MapPath("", path);
-    }
+    static void add_include_path(const std::string& path);
 
     /// \brief Load compiled .proto files from a UNIX shared library (i.e. *.so or *.dylib)
     ///
     /// \param shared_lib_path Path to shared library. May be relative if known by ld.so
-    static void* load_from_shared_lib(const std::string& shared_lib_path)
-    {
-        void* handle = dlopen(shared_lib_path.c_str(), RTLD_LAZY);
-        if (handle)
-            get_instance()->dl_handles_.push_back(handle);
-        return handle;
-    }
+    static void* load_from_shared_lib(const std::string& shared_lib_path);
 
-    static void protobuf_shutdown() { get_instance()->shutdown(); }
+    static void protobuf_shutdown()
+    {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        get_instance()->shutdown();
+    }
 
     /// \brief Add a protobuf file defined in a google::protobuf::FileDescriptorProto
     static const google::protobuf::FileDescriptor*
     add_protobuf_file(const google::protobuf::FileDescriptorProto& proto);
+
+    static void reset()
+    {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        inst_.reset(new DynamicProtobufManager);
+    }
+
+#if !(DCCL_THREAD_SUPPORT)
+    // no way to make these thread safe without the downstream user locking the mutex
 
     static google::protobuf::DynamicMessageFactory& msg_factory()
     {
@@ -204,8 +179,7 @@ class DynamicProtobufManager
     {
         return *get_instance()->simple_database_;
     }
-
-    static void reset() { inst_.reset(new DynamicProtobufManager); }
+#endif
 
   private:
     // so we can use shared_ptr to hold the singleton
@@ -219,6 +193,8 @@ class DynamicProtobufManager
 
     static DynamicProtobufManager* get_instance()
     {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+
         if (!inst_)
             inst_.reset(new DynamicProtobufManager);
         return inst_.get();
