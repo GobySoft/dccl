@@ -23,4 +23,7 @@
 
 #if DCCL_THREAD_SUPPORT
 std::mutex g_field_codec_manager_mutex;
+#define LOCK_FIELD_CODEC_MANAGER_MUTEX std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+#else
+#define LOCK_FIELD_CODEC_MANAGER_MUTEX
 #endif

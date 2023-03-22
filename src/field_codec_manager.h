@@ -245,7 +245,7 @@ class FieldCodecManager
         void>::type
     add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         auto add_fcn = [=](FieldCodecManagerLocal* manager) {
             manager->add<Codec>(name, dummy_fcm);
         };
@@ -261,7 +261,7 @@ class FieldCodecManager
         void>::type
     add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         auto add_fcn = [=](FieldCodecManagerLocal* manager) {
             manager->add<Codec>(name, dummy_fcm);
         };
@@ -272,7 +272,7 @@ class FieldCodecManager
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
     static void add(const std::string& name)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         auto add_fcn = [=](FieldCodecManagerLocal* manager) { manager->add<Codec, type>(name); };
         for (auto* manager : managers_) add_fcn(manager);
         add_nonmessage_single_fcns_[std::make_pair(name, type)] = add_fcn;
@@ -286,7 +286,7 @@ class FieldCodecManager
         void>::type
     remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
         add_message_fcns_.erase(name);
     }
@@ -299,7 +299,7 @@ class FieldCodecManager
         void>::type
     remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
         add_nonmessage_all_fcns_.erase(name);
     }
@@ -307,7 +307,7 @@ class FieldCodecManager
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
     static void remove(const std::string& name)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         for (auto* manager : managers_) manager->remove<Codec, type>(name);
         add_nonmessage_single_fcns_.erase(std::make_pair(name, type));
     }
@@ -317,7 +317,7 @@ class FieldCodecManager
   private:
     static void enroll(FieldCodecManagerLocal* manager)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         managers_.insert(manager);
 
         // run all `add`s from before this manager was started
@@ -327,7 +327,7 @@ class FieldCodecManager
     }
     static void unenroll(FieldCodecManagerLocal* manager)
     {
-        std::lock_guard<std::mutex> l(g_field_codec_manager_mutex);
+        LOCK_FIELD_CODEC_MANAGER_MUTEX
         managers_.erase(manager);
     }
 
