@@ -166,7 +166,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         static void oneof(unsigned* return_value,
                           const google::protobuf::OneofDescriptor* oneof_desc,
-                          FieldCodecManagerLocal& manager)
+                          FieldCodecBase* field_codec)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -193,7 +193,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         static void oneof(unsigned* return_value,
                           const google::protobuf::OneofDescriptor* oneof_desc,
-                          FieldCodecManagerLocal& manager)
+                          FieldCodecBase* field_codec)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -209,7 +209,7 @@ class DefaultMessageCodec : public FieldCodecBase
         }
 
         static void oneof(bool*, const google::protobuf::OneofDescriptor*,
-                          FieldCodecManagerLocal& manager)
+                          FieldCodecBase* field_codec)
         { /* Do nothing */
         }
     };
@@ -225,14 +225,15 @@ class DefaultMessageCodec : public FieldCodecBase
 
         static void oneof(std::stringstream* return_value,
                           const google::protobuf::OneofDescriptor* oneof_desc,
-                          FieldCodecManagerLocal& manager)
+                          FieldCodecBase* field_codec)
         {
             // Do nothing if the oneof descriptor is null
             if (!oneof_desc)
                 return;
 
             // Print it otherwise
-            internal::MessageStack msg_handler(FieldCodecBase::message_data_);
+            internal::MessageStack msg_handler(field_codec->root_message(),
+                                               field_codec->message_data());
             std::stringstream ss;
             int depth = msg_handler.count();
 
@@ -248,8 +249,8 @@ class DefaultMessageCodec : public FieldCodecBase
 
             std::stringstream range;
             unsigned max_sz = 0, min_sz = 0;
-            MaxSize::oneof(&max_sz, oneof_desc, manager);
-            MinSize::oneof(&min_sz, oneof_desc, manager);
+            MaxSize::oneof(&max_sz, oneof_desc, field_codec);
+            MinSize::oneof(&min_sz, oneof_desc, field_codec);
             range << min_sz << "-" << max_sz;
 
             ss << indent << name << std::setfill('.') << std::setw(std::max(1, width))
@@ -259,8 +260,9 @@ class DefaultMessageCodec : public FieldCodecBase
             // Add oneof field's info
             for (auto i = 0; i < oneof_desc->field_count(); ++i)
             {
-                auto codec = manager.find(oneof_desc->field(i), FieldCodecBase::has_codec_group(),
-                                          FieldCodecBase::codec_group());
+                auto codec = field_codec->manager().find(oneof_desc->field(i),
+                                                         field_codec->has_codec_group(),
+                                                         field_codec->codec_group());
                 codec->field_info(return_value, oneof_desc->field(i));
             }
 
@@ -275,7 +277,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         // First, process the oneof definitions...
         for (auto i = 0, n = desc->oneof_decl_count(); part() != HEAD && i < n; ++i)
-            Action::oneof(return_value, desc->oneof_decl(i), manager());
+            Action::oneof(return_value, desc->oneof_decl(i), this);
 
         // ... then, process the fields
         for (int i = 0, n = desc->field_count(); i < n; ++i)

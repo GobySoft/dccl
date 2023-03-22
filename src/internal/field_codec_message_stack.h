@@ -72,7 +72,8 @@ struct MessageStackData
 class MessageStack
 {
   public:
-    MessageStack(MessageStackData& data, const google::protobuf::FieldDescriptor* field = 0);
+    MessageStack(const google::protobuf::Message* root_message, MessageStackData& data,
+                 const google::protobuf::FieldDescriptor* field = 0);
 
     ~MessageStack();
 
@@ -83,8 +84,10 @@ class MessageStack
     void push(const google::protobuf::FieldDescriptor* field);
     void push(MessagePart part);
 
-    void update_index(const google::protobuf::FieldDescriptor* field, int index);
-    void push_message(const google::protobuf::FieldDescriptor* field, int index = -1);
+    void update_index(const google::protobuf::Message* root_message,
+                      const google::protobuf::FieldDescriptor* field, int index);
+    void push_message(const google::protobuf::Message* root_message,
+                      const google::protobuf::FieldDescriptor* field, int index = -1);
 
     std::size_t field_size() { return data_.field.size(); }
     MessagePart current_part() const { return data_.current_part(); }

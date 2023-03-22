@@ -29,6 +29,9 @@ std::set<dccl::FieldCodecManagerLocal*> dccl::FieldCodecManager::managers_({&met
 
 dccl::FieldCodecManagerLocal::FieldCodecManagerLocal(bool enroll) : enroll_(enroll)
 {
+    std::cout << "Starting FieldCodecManagerLocal: " << this << " enroll: " << std::boolalpha
+              << enroll << std::endl;
+
     if (enroll_)
         FieldCodecManager::enroll(this);
 }
@@ -44,13 +47,10 @@ dccl::FieldCodecManagerLocal::__find(google::protobuf::FieldDescriptor::Type typ
                                      const std::string& codec_name,
                                      const std::string& type_name /* = "" */) const
 {
-    typedef InsideMap::const_iterator InsideIterator;
-    typedef std::map<google::protobuf::FieldDescriptor::Type, InsideMap>::const_iterator Iterator;
-
-    Iterator it = codecs_.find(type);
+    auto it = codecs_.find(type);
     if (it != codecs_.end())
     {
-        InsideIterator inside_it = it->second.end();
+        auto inside_it = it->second.end();
         // try specific type codec
         inside_it = it->second.find(__mangle_name(codec_name, type_name));
         if (inside_it != it->second.end())

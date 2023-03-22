@@ -52,6 +52,15 @@ namespace internal
 class MessageStack;
 }
 
+struct CodecData
+{
+    MessagePart part_{dccl::UNKNOWN};
+    bool strict_{false};
+    const google::protobuf::Message* root_message_{nullptr};
+    const google::protobuf::Descriptor* root_descriptor_{nullptr};
+    internal::MessageStackData message_data_;
+};
+
 /// \brief Provides a base class for defining DCCL field encoders / decoders. Most users who wish to define custom encoders/decoders will use the RepeatedTypedFieldCodec, TypedFieldCodec or its children (e.g. TypedFixedFieldCodec) instead of directly inheriting from this class.
 class FieldCodecBase
 {
@@ -80,10 +89,7 @@ class FieldCodecBase
     /// \brief Returns the FieldDescriptor (field schema  meta-data) for this field
     ///
     /// \return FieldDescriptor for the current field or 0 if this codec is encoding the base message.
-    const google::protobuf::FieldDescriptor* this_field() const
-    {
-        return message_data_.top_field();
-    }
+    const google::protobuf::FieldDescriptor* this_field() const;
 
     /// \brief Returns the Descriptor (message schema meta-data) for the immediate parent Message
     ///
@@ -98,40 +104,31 @@ class FieldCodecBase
     /// returns Descriptor for Foo if this_field() == 0
     /// returns Descriptor for Foo if this_field() == FieldDescriptor for bar
     /// returns Descriptor for FooBar if this_field() == FieldDescriptor for baz
-    static const google::protobuf::Descriptor* this_descriptor()
-    {
-        return message_data_.top_descriptor();
-    }
+    const google::protobuf::Descriptor* this_descriptor();
 
-    static const google::protobuf::Message* this_message() { return message_data_.top_message(); }
+    const google::protobuf::Message* this_message();
 
     // currently encoded or (partially) decoded root message
-    static const google::protobuf::Message* root_message() { return root_message_; }
+    const google::protobuf::Message* root_message();
 
-    static bool has_codec_group()
-    {
-        if (root_descriptor_)
-        {
-            return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group() ||
-                   root_descriptor_->options().GetExtension(dccl::msg).has_codec_version();
-        }
-        else
-            return false;
-    }
+    const google::protobuf::Descriptor* root_descriptor();
+
+    internal::MessageStackData& message_data();
+
+    const internal::MessageStackData& message_data() const;
+
+    bool has_codec_group();
 
     static std::string codec_group(const google::protobuf::Descriptor* desc);
 
-    static std::string codec_group() { return codec_group(root_descriptor_); }
+    std::string codec_group();
 
-    static int codec_version()
-    {
-        return root_descriptor_->options().GetExtension(dccl::msg).codec_version();
-    }
+    int codec_version();
 
-    /// \brief the part of the message currently being encoded (head or body).
-    static MessagePart part() { return part_; }
+    /// \brief the part of the message currently being encoded (head or body)
+    MessagePart part();
 
-    static bool strict() { return strict_; }
+    bool strict();
 
     /// \brief Force the codec to always use the "required" field encoding, regardless of the FieldDescriptor setting. Useful when wrapping this codec in another that handles optional and repeated fields
     void set_force_use_required(bool force_required = true) { force_required_ = force_required; }
@@ -382,7 +379,7 @@ class FieldCodecBase
             throw(Exception("FieldCodecManagerLocal is not set"));
     }
 
-    static internal::MessageStackData message_data_;
+    virtual void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }
 
   protected:
     /// \brief Whether to use the required or optional encoding
@@ -490,7 +487,7 @@ class FieldCodecBase
     void set_name(const std::string& name) { name_ = name; }
     void set_field_type(google::protobuf::FieldDescriptor::Type type) { field_type_ = type; }
     void set_wire_type(google::protobuf::FieldDescriptor::CppType type) { wire_type_ = type; }
-    void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }
+    void set_data(CodecData* data) { codec_data_ = data; }
 
     bool variable_size()
     {
@@ -513,36 +510,17 @@ class FieldCodecBase
     // and unsets them on destruction
     struct BaseRAII
     {
-        BaseRAII(MessagePart part, const google::protobuf::Descriptor* root_descriptor,
-                 bool strict = false)
-        {
-            FieldCodecBase::part_ = part;
-            FieldCodecBase::strict_ = strict;
-            FieldCodecBase::root_message_ = 0;
-            FieldCodecBase::root_descriptor_ = root_descriptor;
-        }
+        BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                 const google::protobuf::Descriptor* root_descriptor, bool strict = false);
 
-        BaseRAII(MessagePart part, const google::protobuf::Message* root_message,
-                 bool strict = false)
-        {
-            FieldCodecBase::part_ = part;
-            FieldCodecBase::strict_ = strict;
-            FieldCodecBase::root_message_ = root_message;
-            FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();
-        }
-        ~BaseRAII()
-        {
-            FieldCodecBase::part_ = dccl::UNKNOWN;
-            FieldCodecBase::strict_ = false;
-            FieldCodecBase::root_message_ = 0;
-            FieldCodecBase::root_descriptor_ = 0;
-        }
+        BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                 const google::protobuf::Message* root_message, bool strict = false);
+        ~BaseRAII();
+
+      private:
+        FieldCodecBase* field_codec_;
     };
-
-    static MessagePart part_;
-    static bool strict_;
-    static const google::protobuf::Message* root_message_;
-    static const google::protobuf::Descriptor* root_descriptor_;
+    friend class BaseRAII;
 
     std::string name_;
     google::protobuf::FieldDescriptor::Type field_type_;
@@ -553,6 +531,7 @@ class FieldCodecBase
     static DynamicConditions dynamic_conditions_;
 
     FieldCodecManagerLocal* manager_{nullptr};
+    CodecData* codec_data_{nullptr};
 };
 
 std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec);

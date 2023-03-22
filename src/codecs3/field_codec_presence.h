@@ -55,7 +55,7 @@ class PresenceBitCodec
     /// The field_type of the "wrapped" codec
     typedef typename Base::field_type field_type;
 
-  protected:
+  private:
     /// Instance of the "wrapped" codec
     WrappedType _inner_codec;
 
@@ -154,6 +154,12 @@ class PresenceBitCodec
             // optional fields encode as 1 bit minimum
             return 1;
         }
+    }
+
+    void set_manager(FieldCodecManagerLocal* manager) override
+    {
+        _inner_codec.set_manager(manager);
+        FieldCodecBase::set_manager(manager);
     }
 };
 } // namespace v3

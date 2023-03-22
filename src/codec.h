@@ -525,7 +525,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             dlog.is(logger::DEBUG3, logger::DECODE) &&
                 dlog << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
 
-            internal::MessageStack msg_stack(FieldCodecBase::message_data_);
+            internal::MessageStack msg_stack(manager_.codec_data().root_message_,
+                                             manager_.codec_data().message_data_);
             msg_stack.push(msg->GetDescriptor());
 
             codec->base_decode(&head_bits, msg, HEAD);
