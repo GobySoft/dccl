@@ -72,7 +72,7 @@ using google::protobuf::Reflection;
 //
 
 dccl::Codec::Codec(const std::string& dccl_id_codec_name, const std::string& library_path)
-    : strict_(false), console_width_(60), id_codec_(dccl_id_codec_name)
+    : id_codec_(dccl_id_codec_name)
 {
     set_default_codecs();
     manager_.add<DefaultIdentifierCodec>(default_id_codec_name());
