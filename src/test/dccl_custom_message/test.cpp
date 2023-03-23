@@ -188,8 +188,8 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     dccl::Codec codec;
-    dccl::FieldCodecManager::add<dccl::test::CustomCodec>("custom_codec");
-    dccl::FieldCodecManager::add<dccl::test::Int32RepeatedCodec>("int32_test_codec");
+    codec.manager().add<dccl::test::CustomCodec>("custom_codec");
+    codec.manager().add<dccl::test::Int32RepeatedCodec>("int32_test_codec");
 
     codec.set_crypto_passphrase("my_passphrase!");
 

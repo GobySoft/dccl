@@ -71,8 +71,8 @@ using google::protobuf::Reflection;
 // Codec
 //
 
-dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : strict_(false), console_width_(60), id_codec_(dccl_id_codec)
+dccl::Codec::Codec(const std::string& dccl_id_codec_name, const std::string& library_path)
+    : strict_(false), console_width_(60), id_codec_(dccl_id_codec_name)
 {
     set_default_codecs();
     manager_.add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -544,9 +544,13 @@ unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */,
                        int user_id /* = -1 */) const
 {
-    std::ostream* os = (param_os) ? param_os : &dlog;
+    bool is_dlog = false;
+    if (!param_os || param_os == &dlog)
+        is_dlog = true;
+    std::stringstream ss;
+    std::ostream* os = (is_dlog) ? &ss : param_os;
 
-    if ((param_os && param_os != &dlog) || dlog.is(INFO))
+    if (!is_dlog || dlog.check(INFO))
     {
         try
         {
@@ -613,12 +617,13 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << "\n";
 
             //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << "\n";
-            os->flush(); // unlock dlog mutex, if os == dlog
+            os->flush();
+
+            if (is_dlog)
+                dlog.is(INFO) && dlog << ss.str() << std::endl;
         }
         catch (Exception& e)
         {
-            os->flush(); // unlock dlog mutex, if necessary
-
             dlog.is(DEBUG1) &&
                 dlog << "Message " << desc->full_name()
                      << " cannot provide information due to invalid configuration. Reason: "
@@ -726,9 +731,12 @@ void dccl::Codec::set_crypto_passphrase(
 
 void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 {
-    std::ostream* os = (param_os) ? param_os : &dlog;
-
-    if ((param_os && param_os != &dlog) || dlog.is(INFO))
+    bool is_dlog = false;
+    if (!param_os || param_os == &dlog)
+        is_dlog = true;
+    std::stringstream ss;
+    std::ostream* os = (is_dlog) ? &ss : param_os;
+    if (!is_dlog || dlog.check(INFO))
     {
         std::string codec_str = "Dynamic Compact Control Language (DCCL) Codec";
         std::string codec_guard = build_guard_for_console_output(codec_str, '|');
@@ -744,6 +752,9 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
              it != n; ++it)
             info(it->second, os, it->first);
         os->flush();
+
+        if (is_dlog)
+            dlog.is(INFO) && dlog << ss.str() << std::endl;
     }
 }
 

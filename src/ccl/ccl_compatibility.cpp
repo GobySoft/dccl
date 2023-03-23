@@ -37,24 +37,24 @@ extern "C"
         using namespace dccl;
         using namespace dccl::legacyccl;
 
-        FieldCodecManager::add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
+        dccl->manager().add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
 
         if (dccl->get_id_codec() != "dccl.ccl.id")
             dccl->set_id_codec("dccl.ccl.id");
 
-        FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
-        FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
-        FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
-        FieldCodecManager::add<HeadingCodec>("_ccl_heading");
-        FieldCodecManager::add<DepthCodec>("_ccl_depth");
-        FieldCodecManager::add<VelocityCodec>("_ccl_velocity");
-        FieldCodecManager::add<WattsCodec>("_ccl_watts");
-        FieldCodecManager::add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-        FieldCodecManager::add<SpeedCodec>("_ccl_speed");
-        FieldCodecManager::add<HiResAltitudeCodec>("_ccl_hires_altitude");
-        FieldCodecManager::add<TemperatureCodec>("_ccl_temperature");
-        FieldCodecManager::add<SalinityCodec>("_ccl_salinity");
-        FieldCodecManager::add<SoundSpeedCodec>("_ccl_sound_speed");
+        dccl->manager().add<LatLonCompressedCodec>("_ccl_latloncompressed");
+        dccl->manager().add<FixAgeCodec>("_ccl_fix_age");
+        dccl->manager().add<TimeDateCodec>("_ccl_time_date");
+        dccl->manager().add<HeadingCodec>("_ccl_heading");
+        dccl->manager().add<DepthCodec>("_ccl_depth");
+        dccl->manager().add<VelocityCodec>("_ccl_velocity");
+        dccl->manager().add<WattsCodec>("_ccl_watts");
+        dccl->manager().add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        dccl->manager().add<SpeedCodec>("_ccl_speed");
+        dccl->manager().add<HiResAltitudeCodec>("_ccl_hires_altitude");
+        dccl->manager().add<TemperatureCodec>("_ccl_temperature");
+        dccl->manager().add<SalinityCodec>("_ccl_salinity");
+        dccl->manager().add<SoundSpeedCodec>("_ccl_sound_speed");
 
         dccl->load<protobuf::CCLMDATEmpty>();
         dccl->load<protobuf::CCLMDATRedirect>();
@@ -78,20 +78,20 @@ extern "C"
         dccl->unload<protobuf::CCLMDATCommand>();
         dccl->unload<protobuf::CCLMDATError>();
 
-        FieldCodecManager::remove<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
-        FieldCodecManager::remove<LatLonCompressedCodec>("_ccl_latloncompressed");
-        FieldCodecManager::remove<FixAgeCodec>("_ccl_fix_age");
-        FieldCodecManager::remove<TimeDateCodec>("_ccl_time_date");
-        FieldCodecManager::remove<HeadingCodec>("_ccl_heading");
-        FieldCodecManager::remove<DepthCodec>("_ccl_depth");
-        FieldCodecManager::remove<VelocityCodec>("_ccl_velocity");
-        FieldCodecManager::remove<WattsCodec>("_ccl_watts");
-        FieldCodecManager::remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-        FieldCodecManager::remove<SpeedCodec>("_ccl_speed");
-        FieldCodecManager::remove<HiResAltitudeCodec>("_ccl_hires_altitude");
-        FieldCodecManager::remove<TemperatureCodec>("_ccl_temperature");
-        FieldCodecManager::remove<SalinityCodec>("_ccl_salinity");
-        FieldCodecManager::remove<SoundSpeedCodec>("_ccl_sound_speed");
+        dccl->manager().remove<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
+        dccl->manager().remove<LatLonCompressedCodec>("_ccl_latloncompressed");
+        dccl->manager().remove<FixAgeCodec>("_ccl_fix_age");
+        dccl->manager().remove<TimeDateCodec>("_ccl_time_date");
+        dccl->manager().remove<HeadingCodec>("_ccl_heading");
+        dccl->manager().remove<DepthCodec>("_ccl_depth");
+        dccl->manager().remove<VelocityCodec>("_ccl_velocity");
+        dccl->manager().remove<WattsCodec>("_ccl_watts");
+        dccl->manager().remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        dccl->manager().remove<SpeedCodec>("_ccl_speed");
+        dccl->manager().remove<HiResAltitudeCodec>("_ccl_hires_altitude");
+        dccl->manager().remove<TemperatureCodec>("_ccl_temperature");
+        dccl->manager().remove<SalinityCodec>("_ccl_salinity");
+        dccl->manager().remove<SoundSpeedCodec>("_ccl_sound_speed");
     }
 }
 

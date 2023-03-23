@@ -246,12 +246,10 @@ class FieldCodecManager
         void>::type
     add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        auto add_fcn = [=](FieldCodecManagerLocal* manager) {
-            manager->add<Codec>(name, dummy_fcm);
-        };
-        for (auto* manager : managers_) add_fcn(manager);
-        add_message_fcns_[name] = add_fcn;
+        static_assert(sizeof(Codec) == 0,
+                      "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().add<...>(...)` instead, or for the ID "
+                      "Codec use `dccl::Codec codec(\"id_codec_name\", MyIDCodec())`.");
     }
 
     template <class Codec>
@@ -262,21 +260,18 @@ class FieldCodecManager
         void>::type
     add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        auto add_fcn = [=](FieldCodecManagerLocal* manager) {
-            manager->add<Codec>(name, dummy_fcm);
-        };
-        for (auto* manager : managers_) add_fcn(manager);
-        add_nonmessage_all_fcns_[name] = add_fcn;
+        static_assert(sizeof(Codec) == 0,
+                      "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().add<...>(...)` instead.`");
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
     static void add(const std::string& name)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        auto add_fcn = [=](FieldCodecManagerLocal* manager) { manager->add<Codec, type>(name); };
-        for (auto* manager : managers_) add_fcn(manager);
-        add_nonmessage_single_fcns_[std::make_pair(name, type)] = add_fcn;
+        static_assert(sizeof(Codec) == 0,
+                      "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().add<...>(...)` instead, or for the ID "
+                      "Codec use `dccl::Codec codec(\"id_codec_name\", MyIDCodec())`.");
     }
 
     template <class Codec>
@@ -287,9 +282,9 @@ class FieldCodecManager
         void>::type
     remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
-        add_message_fcns_.erase(name);
+        static_assert(sizeof(Codec) == 0,
+                      "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().remove<...>(...) instead");
     }
 
     template <class Codec>
@@ -300,46 +295,19 @@ class FieldCodecManager
         void>::type
     remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        for (auto* manager : managers_) manager->remove<Codec>(name, dummy_fcm);
-        add_nonmessage_all_fcns_.erase(name);
+        static_assert(sizeof(Codec) == 0,
+                      "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().remove<...>(...) instead");
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
     static void remove(const std::string& name)
     {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        for (auto* manager : managers_) manager->remove<Codec, type>(name);
-        add_nonmessage_single_fcns_.erase(std::make_pair(name, type));
+        static_assert(sizeof(Codec) == 0,
+                      "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
+                      "`dccl::Codec codec; codec.manager().remove<...>(...) instead");
     }
 
-    friend class FieldCodecManagerLocal;
-
-  private:
-    static void enroll(FieldCodecManagerLocal* manager)
-    {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        managers_.insert(manager);
-
-        // run all `add`s from before this manager was started
-        for (auto& p : add_message_fcns_) p.second(manager);
-        for (auto& p : add_nonmessage_all_fcns_) p.second(manager);
-        for (auto& p : add_nonmessage_single_fcns_) p.second(manager);
-    }
-    static void unenroll(FieldCodecManagerLocal* manager)
-    {
-        LOCK_FIELD_CODEC_MANAGER_MUTEX
-        managers_.erase(manager);
-    }
-
-  private:
-    static std::set<FieldCodecManagerLocal*> managers_;
-    static std::map<std::string, std::function<void(FieldCodecManagerLocal*)>> add_message_fcns_;
-    static std::map<std::string, std::function<void(FieldCodecManagerLocal*)>>
-        add_nonmessage_all_fcns_;
-    static std::map<std::pair<std::string, google::protobuf::FieldDescriptor::Type>,
-                    std::function<void(FieldCodecManagerLocal*)>>
-        add_nonmessage_single_fcns_;
 }; // namespace dccl
 } // namespace dccl
 
@@ -396,26 +364,20 @@ void dccl::FieldCodecManagerLocal::add_single_type(
     const std::string& name, google::protobuf::FieldDescriptor::Type field_type,
     google::protobuf::FieldDescriptor::CppType wire_type)
 {
+    boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
+    new_field_codec->set_name(name);
+    new_field_codec->set_field_type(field_type);
+    new_field_codec->set_wire_type(wire_type);
+    new_field_codec->set_manager(this);
     using google::protobuf::FieldDescriptor;
     if (!codecs_[field_type].count(name))
     {
-        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
-        new_field_codec->set_name(name);
-        new_field_codec->set_field_type(field_type);
-        new_field_codec->set_wire_type(wire_type);
-        new_field_codec->set_manager(this);
-
         codecs_[field_type][name] = new_field_codec;
         dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog << "Adding codec " << *new_field_codec
                                                           << std::endl;
     }
     else
     {
-        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
-        new_field_codec->set_name(name);
-        new_field_codec->set_field_type(field_type);
-        new_field_codec->set_wire_type(wire_type);
-
         dccl::dlog.is(dccl::logger::DEBUG1) &&
             dccl::dlog << "Trying to add: " << *new_field_codec
                        << ", but already have duplicate codec (For `name`/`field type` pair) "
@@ -489,6 +451,7 @@ void dccl::FieldCodecManagerLocal::remove_single_type(
         new_field_codec->set_name(name);
         new_field_codec->set_field_type(field_type);
         new_field_codec->set_wire_type(wire_type);
+        new_field_codec->set_manager(this);
 
         dccl::dlog.is(dccl::logger::DEBUG1) && dccl::dlog
                                                    << "Trying to remove: " << *new_field_codec

@@ -29,10 +29,10 @@
 #include "dccl/arithmetic/field_codec_arithmetic.h"
 #include "dccl/codec.h"
 
-#include "test.pb.h"
+#include "test_arithmetic.pb.h"
 
 #include "dccl/binary.h"
-using namespace dccl::test;
+using namespace dccl::test::arith;
 
 using dccl::operator<<;
 
@@ -57,7 +57,7 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
     if (set_model)
     {
         model.set_name("model");
-        dccl::arith::ModelManager::set_model(model);
+        dccl::arith::ModelManager::set_model(codec, model);
     }
 
     codec.info(msg_in.GetDescriptor(), &std::cout);

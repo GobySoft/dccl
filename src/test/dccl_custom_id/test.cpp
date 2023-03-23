@@ -84,8 +84,7 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     {
-        dccl::FieldCodecManager::add<dccl::test::MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
-        dccl::Codec codec("mini_id_codec");
+        dccl::Codec codec("mini_id_codec", dccl::test::MicroModemMiniPacketDCCLIDCodec());
         codec.set_crypto_passphrase("309ldskjfla39");
 
         codec.load<MiniUser>();

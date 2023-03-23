@@ -103,8 +103,7 @@ int main(int argc, char* argv[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     {
-        dccl::FieldCodecManager::add<dccl::test::UserCustomIdCodec>("user_id_codec");
-        dccl::Codec codec("user_id_codec");
+        dccl::Codec codec("user_id_codec", dccl::test::UserCustomIdCodec());
 
         // load TestMessageA as DCCL ID 1
         {

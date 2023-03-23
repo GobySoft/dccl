@@ -32,6 +32,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
@@ -63,13 +64,29 @@ class FieldCodec;
 class Codec
 {
   public:
-    /// \brief Instantiate a Codec, optionally with a non-default identifier field codec.
+    /// \brief Instantiate a Codec, optionally with a non-default identifier field codec (loaded via a shared library).
     ///
     /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManagerLocal::add and then instantiate Codec with that name.
-    /// \param dccl_id_codec Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+    /// \param dccl_id_codec_name Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
     /// \param library_path Library to load using load_library (this library would typically load the identifier codec referenced in dccl_id_codec).
-    Codec(const std::string& dccl_id_codec = default_id_codec_name(),
+    Codec(const std::string& dccl_id_codec_name = default_id_codec_name(),
           const std::string& library_path = "");
+
+    /// \brief Instantiate a Codec with a non-default identifier field codec (loaded directly).
+    ///
+    /// If you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can instantiate a DCCL Codec that identifier codec using this constructor
+    /// \param dccl_id_codec_name Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+    /// \param dccl_id_codec Default instantiation of the IDFieldCodec to use
+    /// \tparam IDFieldCodec The type of the TypedFieldCodec<uint32> to be used as the ID codec
+    template <class IDFieldCodec,
+              typename std::enable_if<std::is_base_of<FieldCodecBase, IDFieldCodec>::value,
+                                      int>::type = 0>
+    Codec(const std::string& dccl_id_codec_name, const IDFieldCodec& dccl_id_codec)
+        : id_codec_(dccl_id_codec_name)
+    {
+        set_default_codecs();
+        manager_.add<IDFieldCodec>(dccl_id_codec_name);
+    }
 
     /// \brief Destructor
     virtual ~Codec();
@@ -355,7 +372,7 @@ class Codec
         }
     }
 
-    FieldCodecManagerLocal& manager();
+    FieldCodecManagerLocal& manager() { return manager_; }
 
   private:
     Codec(const Codec&);
@@ -381,10 +398,10 @@ class Codec
     std::string crypto_key_;
 
     // strict mode setting
-    bool strict_;
+    bool strict_{false};
 
     // console outputting format width
-    unsigned console_width_;
+    unsigned console_width_{60};
 
     // set of DCCL IDs *not* to encrypt
     std::set<unsigned> skip_crypto_ids_;

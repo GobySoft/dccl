@@ -35,41 +35,54 @@ extern "C"
 
         const char* native_pb_group = "dccl.native_protobuf";
 
-        FieldCodecManager::add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
+        dccl->manager().add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
             native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_INT64>,
-                               FieldDescriptor::TYPE_INT64>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_INT32>,
-                               FieldDescriptor::TYPE_INT32>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_INT64>,
+                 FieldDescriptor::TYPE_INT64>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_INT32>,
+                 FieldDescriptor::TYPE_INT32>(native_pb_group);
 
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SINT64>,
-                               FieldDescriptor::TYPE_SINT64>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SINT32>,
-                               FieldDescriptor::TYPE_SINT32>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SINT64>,
+                 FieldDescriptor::TYPE_SINT64>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SINT32>,
+                 FieldDescriptor::TYPE_SINT32>(native_pb_group);
 
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_UINT64>,
-                               FieldDescriptor::TYPE_UINT64>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_UINT32>,
-                               FieldDescriptor::TYPE_UINT32>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_UINT64>,
+                 FieldDescriptor::TYPE_UINT64>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_UINT32>,
+                 FieldDescriptor::TYPE_UINT32>(native_pb_group);
 
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SFIXED64>,
-                               FieldDescriptor::TYPE_SFIXED64>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SFIXED32>,
-                               FieldDescriptor::TYPE_SFIXED32>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SFIXED64>,
+                 FieldDescriptor::TYPE_SFIXED64>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SFIXED32>,
+                 FieldDescriptor::TYPE_SFIXED32>(native_pb_group);
 
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_FIXED64>,
-                               FieldDescriptor::TYPE_FIXED64>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_FIXED32>,
-                               FieldDescriptor::TYPE_FIXED32>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_FIXED64>,
+                 FieldDescriptor::TYPE_FIXED64>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_FIXED32>,
+                 FieldDescriptor::TYPE_FIXED32>(native_pb_group);
 
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<double, FieldDescriptor::TYPE_DOUBLE>,
-                               FieldDescriptor::TYPE_DOUBLE>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<float, FieldDescriptor::TYPE_FLOAT>,
-                               FieldDescriptor::TYPE_FLOAT>(native_pb_group);
-        FieldCodecManager::add<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
-                               FieldDescriptor::TYPE_BOOL>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<double, FieldDescriptor::TYPE_DOUBLE>,
+                 FieldDescriptor::TYPE_DOUBLE>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<float, FieldDescriptor::TYPE_FLOAT>,
+                 FieldDescriptor::TYPE_FLOAT>(native_pb_group);
+        dccl->manager()
+            .add<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
+                 FieldDescriptor::TYPE_BOOL>(native_pb_group);
 
-        FieldCodecManager::add<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
+        dccl->manager().add<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
 
         // ADD ENUM
     }
@@ -82,49 +95,54 @@ extern "C"
 
         const char* native_pb_group = "dccl.native_protobuf";
 
-        FieldCodecManager::remove<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_INT64>,
-                                  FieldDescriptor::TYPE_INT64>(native_pb_group);
-        FieldCodecManager::remove<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_INT32>,
-                                  FieldDescriptor::TYPE_INT32>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_INT64>,
+                    FieldDescriptor::TYPE_INT64>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_INT32>,
+                    FieldDescriptor::TYPE_INT32>(native_pb_group);
 
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SINT64>,
-            FieldDescriptor::TYPE_SINT64>(native_pb_group);
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SINT32>,
-            FieldDescriptor::TYPE_SINT32>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SINT64>,
+                    FieldDescriptor::TYPE_SINT64>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SINT32>,
+                    FieldDescriptor::TYPE_SINT32>(native_pb_group);
 
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_UINT64>,
-            FieldDescriptor::TYPE_UINT64>(native_pb_group);
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_UINT32>,
-            FieldDescriptor::TYPE_UINT32>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_UINT64>,
+                    FieldDescriptor::TYPE_UINT64>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_UINT32>,
+                    FieldDescriptor::TYPE_UINT32>(native_pb_group);
 
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SFIXED64>,
-            FieldDescriptor::TYPE_SFIXED64>(native_pb_group);
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SFIXED32>,
-            FieldDescriptor::TYPE_SFIXED32>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int64, FieldDescriptor::TYPE_SFIXED64>,
+                    FieldDescriptor::TYPE_SFIXED64>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::int32, FieldDescriptor::TYPE_SFIXED32>,
+                    FieldDescriptor::TYPE_SFIXED32>(native_pb_group);
 
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_FIXED64>,
-            FieldDescriptor::TYPE_FIXED64>(native_pb_group);
-        FieldCodecManager::remove<
-            PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_FIXED32>,
-            FieldDescriptor::TYPE_FIXED32>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::uint64, FieldDescriptor::TYPE_FIXED64>,
+                    FieldDescriptor::TYPE_FIXED64>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<dccl::uint32, FieldDescriptor::TYPE_FIXED32>,
+                    FieldDescriptor::TYPE_FIXED32>(native_pb_group);
 
-        FieldCodecManager::remove<PrimitiveTypeFieldCodec<double, FieldDescriptor::TYPE_DOUBLE>,
-                                  FieldDescriptor::TYPE_DOUBLE>(native_pb_group);
-        FieldCodecManager::remove<PrimitiveTypeFieldCodec<float, FieldDescriptor::TYPE_FLOAT>,
-                                  FieldDescriptor::TYPE_FLOAT>(native_pb_group);
-        FieldCodecManager::remove<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
-                                  FieldDescriptor::TYPE_BOOL>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<double, FieldDescriptor::TYPE_DOUBLE>,
+                    FieldDescriptor::TYPE_DOUBLE>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<float, FieldDescriptor::TYPE_FLOAT>,
+                    FieldDescriptor::TYPE_FLOAT>(native_pb_group);
+        dccl->manager()
+            .remove<PrimitiveTypeFieldCodec<bool, FieldDescriptor::TYPE_BOOL>,
+                    FieldDescriptor::TYPE_BOOL>(native_pb_group);
 
-        FieldCodecManager::remove<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
+        dccl->manager().remove<EnumFieldCodec, FieldDescriptor::TYPE_ENUM>(native_pb_group);
 
-        FieldCodecManager::remove<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
+        dccl->manager().remove<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
             native_pb_group);
     }
 }
