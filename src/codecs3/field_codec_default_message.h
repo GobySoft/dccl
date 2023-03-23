@@ -44,7 +44,7 @@ class DefaultMessageCodec : public FieldCodecBase
     unsigned min_size();
     unsigned any_size(const boost::any& wire_value);
 
-    boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
+    std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
         return manager().find(field_desc, has_codec_group(), codec_group());
     }
@@ -57,14 +57,14 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Size
     {
-        static void repeated(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void repeated(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                              const std::vector<boost::any>& field_values,
                              const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_size_repeated(return_value, field_values, field_desc);
         }
 
-        static void single(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void single(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                            const boost::any& field_value,
                            const google::protobuf::FieldDescriptor* field_desc)
         {
@@ -74,14 +74,14 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Encoder
     {
-        static void repeated(boost::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
+        static void repeated(std::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
                              const std::vector<boost::any>& field_values,
                              const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_encode_repeated(return_value, field_values, field_desc);
         }
 
-        static void single(boost::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
+        static void single(std::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
                            const boost::any& field_value,
                            const google::protobuf::FieldDescriptor* field_desc)
         {
@@ -91,7 +91,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct MaxSize
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_max_size(return_value, field_desc);
@@ -100,7 +100,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct MinSize
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             // defer minimum size calculation for dynamic conditions (since omit == 0)
@@ -116,7 +116,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Validate
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, bool* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, bool* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_validate(return_value, field_desc);
@@ -125,7 +125,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Info
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, std::stringstream* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, std::stringstream* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_info(return_value, field_desc);
@@ -167,8 +167,8 @@ class DefaultMessageCodec : public FieldCodecBase
                 if (!check_field(field_desc))
                     continue;
 
-                boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-                boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
+                std::shared_ptr<FieldCodecBase> codec = find(field_desc);
+                std::shared_ptr<internal::FromProtoCppTypeBase> helper =
                     manager().type_helper().find(field_desc);
 
                 if (field_desc->is_repeated())

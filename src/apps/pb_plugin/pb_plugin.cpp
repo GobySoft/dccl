@@ -24,13 +24,13 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "gen_units_class_plugin.h"
 #include "option_extensions.pb.h"
-#include <boost/shared_ptr.hpp>
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <sstream>
 
@@ -50,13 +50,13 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator
                   std::string* error) const;
 
   private:
-    void generate_message(const google::protobuf::Descriptor* desc,
-                          google::protobuf::compiler::GeneratorContext* generator_context,
-                          boost::shared_ptr<std::string> message_unit_system =
-                              boost::shared_ptr<std::string>()) const;
+    void generate_message(
+        const google::protobuf::Descriptor* desc,
+        google::protobuf::compiler::GeneratorContext* generator_context,
+        std::shared_ptr<std::string> message_unit_system = std::shared_ptr<std::string>()) const;
     void generate_field(const google::protobuf::FieldDescriptor* field,
                         google::protobuf::io::Printer* printer,
-                        boost::shared_ptr<std::string> message_unit_system) const;
+                        std::shared_ptr<std::string> message_unit_system) const;
     bool check_field_type(const google::protobuf::FieldDescriptor* field) const;
 };
 
@@ -102,7 +102,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
             }
         }
 
-        boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
+        std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
             generator_context->OpenForInsert(filename_h_, "includes"));
         google::protobuf::io::Printer include_printer(include_output.get(), '$');
         std::stringstream includes_ss;
@@ -134,11 +134,11 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
 void DCCLGenerator::generate_message(
     const google::protobuf::Descriptor* desc,
     google::protobuf::compiler::GeneratorContext* generator_context,
-    boost::shared_ptr<std::string> message_unit_system) const
+    std::shared_ptr<std::string> message_unit_system) const
 {
     try
     {
-        boost::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
+        std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
             generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
         google::protobuf::io::Printer printer(output.get(), '$');
 
@@ -180,7 +180,7 @@ void DCCLGenerator::generate_message(
 
 void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* field,
                                    google::protobuf::io::Printer* printer,
-                                   boost::shared_ptr<std::string> message_unit_system) const
+                                   std::shared_ptr<std::string> message_unit_system) const
 {
     try
     {

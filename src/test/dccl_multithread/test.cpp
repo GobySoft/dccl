@@ -54,7 +54,7 @@ void arithmetic_run_test(dccl::Codec& codec, dccl::arith::protobuf::ArithmeticMo
 
     //    std::cout << "Try decode..." << std::endl;
 
-    boost::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
+    std::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
     codec.decode(bytes, msg_out.get());
 
     //    std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;

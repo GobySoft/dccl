@@ -202,9 +202,8 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             throw(Exception("Message id " + boost::lexical_cast<std::string>(dccl_id) +
                             " has not been loaded. Call load() before encoding this type."));
 
-        boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
-        boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-            manager_.type_helper().find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+        std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
 
         if (codec)
         {
@@ -392,7 +391,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
                             "message definition for " +
                             desc->full_name() + " to use the default DCCL4 codecs."));
 
-        boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
         unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
         unsigned head_size_bits, body_size_bits;
@@ -485,7 +484,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
     unsigned head_size_bits;
@@ -505,7 +504,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
 
 unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 {
-    boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_max_size(&head_size_bits, desc, HEAD);
@@ -524,7 +523,7 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 
 unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 {
-    boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_min_size(&head_size_bits, desc, HEAD);
@@ -554,7 +553,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
     {
         try
         {
-            boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+            std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
             unsigned config_head_bit_size, body_bit_size;
             codec->base_max_size(&config_head_bit_size, desc, HEAD);

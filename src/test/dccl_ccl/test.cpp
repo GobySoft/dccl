@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     assert(state_in.mission_mode() == state_out.mission_mode());
 
     // test the dynamically generated message
-    boost::shared_ptr<google::protobuf::Message> state_in_2 =
+    std::shared_ptr<google::protobuf::Message> state_in_2 =
         dccl::DynamicProtobufManager::new_protobuf_message(
             dccl::legacyccl::protobuf::CCLMDATState::descriptor());
     state_in_2->CopyFrom(state_in);

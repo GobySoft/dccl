@@ -62,8 +62,8 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             if (!check_field(field_desc))
                 continue;
 
-            boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-            boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
+            std::shared_ptr<FieldCodecBase> codec = find(field_desc);
+            std::shared_ptr<internal::FromProtoCppTypeBase> helper =
                 manager().type_helper().find(field_desc);
 
             if (field_desc->is_repeated())

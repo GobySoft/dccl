@@ -27,14 +27,14 @@
 template <google::protobuf::FieldDescriptor::Type t>
 void insertType(dccl::internal::TypeHelper::TypeMap* type_map)
 {
-    type_map->insert(std::make_pair(t, boost::shared_ptr<dccl::internal::FromProtoTypeBase>(
+    type_map->insert(std::make_pair(t, std::shared_ptr<dccl::internal::FromProtoTypeBase>(
                                            new dccl::internal::FromProtoType<t>)));
 }
 
 template <google::protobuf::FieldDescriptor::CppType t>
 void insert(dccl::internal::TypeHelper::CppTypeMap* cpptype_map)
 {
-    cpptype_map->insert(std::make_pair(t, boost::shared_ptr<dccl::internal::FromProtoCppTypeBase>(
+    cpptype_map->insert(std::make_pair(t, std::shared_ptr<dccl::internal::FromProtoCppTypeBase>(
                                               new dccl::internal::FromProtoCppType<t>)));
 }
 
@@ -44,8 +44,8 @@ void insert(dccl::internal::TypeHelper::CppTypeMap* cpptype_map)
 void dccl::internal::TypeHelper::initialize()
 {
     using namespace google::protobuf;
-    using boost::shared_ptr;
     using std::make_pair;
+    using std::shared_ptr;
 
     type_map_.insert(make_pair(static_cast<FieldDescriptor::Type>(0),
                                shared_ptr<FromProtoTypeBase>(new FromProtoTypeBase)));
@@ -83,7 +83,7 @@ void dccl::internal::TypeHelper::initialize()
     insert<FieldDescriptor::CPPTYPE_ENUM>(&cpptype_map_);
 }
 
-boost::shared_ptr<dccl::internal::FromProtoCppTypeBase>
+std::shared_ptr<dccl::internal::FromProtoCppTypeBase>
 dccl::internal::TypeHelper::find(google::protobuf::FieldDescriptor::CppType cpptype,
                                  const std::string& type_name /*= ""*/) const
 {
@@ -98,15 +98,15 @@ dccl::internal::TypeHelper::find(google::protobuf::FieldDescriptor::CppType cppt
     if (it != cpptype_map_.end())
         return it->second;
     else
-        return boost::shared_ptr<FromProtoCppTypeBase>();
+        return std::shared_ptr<FromProtoCppTypeBase>();
 }
 
-boost::shared_ptr<dccl::internal::FromProtoTypeBase>
+std::shared_ptr<dccl::internal::FromProtoTypeBase>
 dccl::internal::TypeHelper::find(google::protobuf::FieldDescriptor::Type type) const
 {
     auto it = type_map_.find(type);
     if (it != type_map_.end())
         return it->second;
     else
-        return boost::shared_ptr<FromProtoTypeBase>();
+        return std::shared_ptr<FromProtoTypeBase>();
 }

@@ -431,7 +431,7 @@ inline void construct_base_dims_typedef(const std::vector<std::string>& dim_vec,
     else
     {
         os << "typedef boost::units::derived_dimension< ";
-        for (int i = 0; i < dim_vec.size(); i++)
+        for (std::size_t i = 0, n = dim_vec.size(); i < n; i++)
         {
             os << "boost::units::" << dim_vec[i] << "_base_dimension," << power_vec[i];
             if (i != dim_vec.size() - 1)
@@ -473,7 +473,7 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
         //http://www.boost.org/doc/libs/1_57_0/doc/html/boost_units/Examples.html#boost_units.Examples.DimensionExample
         os << "typedef ";
         std::string result = dim_vec[0];
-        for (int i = 0; i < operator_vec.size(); i++)
+        for (std::size_t i = 0, n = operator_vec.size(); i < n; i++)
         {
             if (operator_vec[i] == "/")
                 result = "boost::mpl::divides<boost::units::" + result +

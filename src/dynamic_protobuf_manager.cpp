@@ -28,7 +28,7 @@
 #include "exception.h"
 #include "logger.h"
 
-boost::shared_ptr<dccl::DynamicProtobufManager> dccl::DynamicProtobufManager::inst_;
+std::shared_ptr<dccl::DynamicProtobufManager> dccl::DynamicProtobufManager::inst_;
 
 //
 // STATIC
@@ -62,22 +62,22 @@ dccl::DynamicProtobufManager::find_descriptor(const std::string& protobuf_type_n
     return desc;
 }
 
-boost::shared_ptr<google::protobuf::Message>
+std::shared_ptr<google::protobuf::Message>
 dccl::DynamicProtobufManager::new_protobuf_message(const google::protobuf::Descriptor* desc)
 {
     LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
-    return new_protobuf_message<boost::shared_ptr<google::protobuf::Message>>(desc);
+    return new_protobuf_message<std::shared_ptr<google::protobuf::Message>>(desc);
 }
 
-boost::shared_ptr<google::protobuf::Message>
+std::shared_ptr<google::protobuf::Message>
 dccl::DynamicProtobufManager::new_protobuf_message(const std::string& protobuf_type_name)
 {
     LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
-    return new_protobuf_message<boost::shared_ptr<google::protobuf::Message>>(protobuf_type_name);
+    return new_protobuf_message<std::shared_ptr<google::protobuf::Message>>(protobuf_type_name);
 }
 
 void dccl::DynamicProtobufManager::add_database(
-    boost::shared_ptr<google::protobuf::DescriptorDatabase> database)
+    std::shared_ptr<google::protobuf::DescriptorDatabase> database)
 {
     LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     get_instance()->databases_.push_back(database);

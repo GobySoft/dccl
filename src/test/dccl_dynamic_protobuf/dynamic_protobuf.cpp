@@ -46,19 +46,19 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    boost::shared_ptr<google::protobuf::SimpleDescriptorDatabase> simple_database(
+    std::shared_ptr<google::protobuf::SimpleDescriptorDatabase> simple_database(
         new google::protobuf::SimpleDescriptorDatabase);
     dccl::DynamicProtobufManager::add_database(simple_database);
 
     {
         // testing compiled in
-        boost::shared_ptr<google::protobuf::Message> adyn_msg =
+        std::shared_ptr<google::protobuf::Message> adyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("A");
 
         std::cout << adyn_msg->GetDescriptor()->DebugString() << std::endl;
 
         // testing dlopen'd
-        boost::shared_ptr<google::protobuf::Message> bdyn_msg =
+        std::shared_ptr<google::protobuf::Message> bdyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("B");
 
         std::cout << bdyn_msg->GetDescriptor()->DebugString() << std::endl;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         // test non-existent
         try
         {
-            boost::shared_ptr<google::protobuf::Message> cdyn_msg =
+            std::shared_ptr<google::protobuf::Message> cdyn_msg =
                 dccl::DynamicProtobufManager::new_protobuf_message("C");
             // should throw
             assert(false);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         google::protobuf::TextFormat::ParseFromString(d_proto_str, &d_proto);
         dccl::DynamicProtobufManager::add_protobuf_file(d_proto);
 
-        boost::shared_ptr<google::protobuf::Message> ddyn_msg =
+        std::shared_ptr<google::protobuf::Message> ddyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("D");
 
         std::cout << ddyn_msg->GetDescriptor()->DebugString() << std::endl;
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
         simple_database->Add(e_proto);
 
-        boost::shared_ptr<google::protobuf::Message> edyn_msg =
+        std::shared_ptr<google::protobuf::Message> edyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("E");
         std::cout << edyn_msg->GetDescriptor()->DebugString() << std::endl;
 
