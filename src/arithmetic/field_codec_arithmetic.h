@@ -40,6 +40,7 @@
 #include "dccl/logger.h"
 
 #include "dccl/binary.h"
+#include "dccl/thread_safety.h"
 
 extern "C"
 {
@@ -54,6 +55,10 @@ namespace dccl
 /// DCCL Arithmetic Encoder Library namespace
 namespace arith
 {
+class ModelManager;
+
+ModelManager& model_manager(FieldCodecManagerLocal& manager);
+
 class Model
 {
   public:
@@ -70,6 +75,13 @@ class Model
 
     static constexpr freq_type MAX_FREQUENCY = (1 << FREQUENCY_BITS) - 1;
 
+#if DCCL_THREAD_SUPPORT
+    static std::recursive_mutex last_bits_map_mutex;
+#define LOCK_LAST_BITS_MAP_MUTEX \
+    std::lock_guard<std::recursive_mutex> l(dccl::arith::Model::last_bits_map_mutex);
+#else
+#define LOCK_LAST_BITS_MAP_MUTEX
+#endif
     // maps message name -> map of field name -> last size (bits)
     static std::map<std::string, std::map<std::string, Bitset>> last_bits_map;
 
@@ -118,16 +130,28 @@ class Model
 class ModelManager
 {
   public:
-    static void set_model(const protobuf::ArithmeticModel& model)
+    static void set_model(dccl::Codec& codec, const protobuf::ArithmeticModel& model);
+
+    Model& find(const std::string& name)
+    {
+        std::map<std::string, Model>::iterator it = arithmetic_models_.find(name);
+        if (it == arithmetic_models_.end())
+            throw(Exception("Cannot find model called: " + name));
+        else
+            return it->second;
+    }
+
+  private:
+    void _set_model(const protobuf::ArithmeticModel& model)
     {
         Model new_model(model);
-        create_and_validate_model(&new_model);
+        _create_and_validate_model(&new_model);
         if (arithmetic_models_.count(model.name()))
             arithmetic_models_.erase(model.name());
         arithmetic_models_.insert(std::make_pair(model.name(), new_model));
     }
 
-    static void create_and_validate_model(Model* model)
+    void _create_and_validate_model(Model* model)
     {
         if (!model->user_model_.IsInitialized())
         {
@@ -184,17 +208,8 @@ class ModelManager
         }
     }
 
-    static Model& find(const std::string& name)
-    {
-        std::map<std::string, Model>::iterator it = arithmetic_models_.find(name);
-        if (it == arithmetic_models_.end())
-            throw(Exception("Cannot find model called: " + name));
-        else
-            return it->second;
-    }
-
   private:
-    static std::map<std::string, Model> arithmetic_models_;
+    std::map<std::string, Model> arithmetic_models_;
 };
 
 template <typename FieldType = Model::value_type>
@@ -217,7 +232,6 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     {
         using dccl::dlog;
         using namespace dccl::logger;
-
         Model& model = current_model();
 
         uint64 low = 0;          // lowest code value (0.0 in decimal version)
@@ -375,6 +389,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         if (FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
         {
+            LOCK_LAST_BITS_MAP_MUTEX
             // bit of a hack so I can get at the exact bit field sizes
             Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
                                 [FieldCodecBase::this_field()->name()] = bits;
@@ -406,7 +421,6 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         using namespace dccl::logger;
 
         std::vector<Model::value_type> values;
-
         Model& model = current_model();
 
         uint64 value = 0;
@@ -487,6 +501,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         // for debugging / testing
         if (FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
         {
+            LOCK_LAST_BITS_MAP_MUTEX
             // must consume same bits as encoded makes
             Bitset in = Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
                                             [FieldCodecBase::this_field()->name()];
@@ -513,7 +528,6 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     unsigned max_size_repeated()
     {
         using dccl::log2;
-
         Model& model = current_model();
 
         // if user doesn't provide out_of_range frequency, set it to max to force this
@@ -597,7 +611,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
             FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
         try
         {
-            ModelManager::find(model_name);
+            model_manager().find(model_name);
         }
         catch (Exception& e)
         {
@@ -671,8 +685,10 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     Model& current_model()
     {
         std::string name = FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
-        return ModelManager::find(name);
+        return model_manager().find(name);
     }
+
+    ModelManager& model_manager() { return dccl::arith::model_manager(this->manager()); }
 };
 
 // constant integer definitions
@@ -717,6 +733,7 @@ class ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*>
             throw NullValueException();
     }
 };
+
 } // namespace arith
 } // namespace dccl
 

@@ -59,9 +59,10 @@ int main(int argc, char* argv[])
 {
     //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::FieldCodecManager::add<dccl::test::TestCodec>("test.grouptest");
-    dccl::FieldCodecManager::add<dccl::v3::DefaultMessageCodec,
-                                 google::protobuf::FieldDescriptor::TYPE_MESSAGE>("test.grouptest");
+    codec.manager().add<dccl::test::TestCodec>("test.grouptest");
+    codec.manager()
+        .add<dccl::v3::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>(
+            "test.grouptest");
 
     check<TestMsg>(50, true);
     check<TestMsg>(-50, false);

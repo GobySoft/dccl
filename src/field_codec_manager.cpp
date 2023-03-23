@@ -23,18 +23,9 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_manager.h"
 
-std::set<dccl::FieldCodecManagerLocal*> dccl::FieldCodecManager::managers_;
-std::map<std::string, std::function<void(dccl::FieldCodecManagerLocal*)>>
-    dccl::FieldCodecManager::add_message_fcns_;
-std::map<std::string, std::function<void(dccl::FieldCodecManagerLocal*)>>
-    dccl::FieldCodecManager::add_nonmessage_all_fcns_;
-std::map<std::pair<std::string, google::protobuf::FieldDescriptor::Type>,
-         std::function<void(dccl::FieldCodecManagerLocal*)>>
-    dccl::FieldCodecManager::add_nonmessage_single_fcns_;
+dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() {}
 
-dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() { FieldCodecManager::enroll(this); }
-
-dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() { FieldCodecManager::unenroll(this); }
+dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() {}
 
 boost::shared_ptr<dccl::FieldCodecBase>
 dccl::FieldCodecManagerLocal::__find(google::protobuf::FieldDescriptor::Type type,

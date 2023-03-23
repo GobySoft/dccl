@@ -5,6 +5,8 @@
 
 #include "field_codec_message_stack.h"
 
+#include <typeindex>
+
 namespace google
 {
 namespace protobuf
@@ -27,6 +29,25 @@ struct CodecData
     const google::protobuf::Descriptor* root_descriptor_{nullptr};
     MessageStackData message_data_;
     DynamicConditions dynamic_conditions_;
+
+    template <typename FieldCodecType>
+    void set_codec_specific_data(std::shared_ptr<boost::any> data)
+    {
+        codec_specific_[std::type_index(typeid(FieldCodecType))] = data;
+    }
+
+    template <typename FieldCodecType> std::shared_ptr<boost::any> codec_specific_data()
+    {
+        return codec_specific_.at(std::type_index(typeid(FieldCodecType)));
+    }
+
+    template <typename FieldCodecType> bool has_codec_specific_data()
+    {
+        return codec_specific_.count(std::type_index(typeid(FieldCodecType)));
+    }
+
+  private:
+    std::map<std::type_index, std::shared_ptr<boost::any>> codec_specific_;
 };
 } // namespace internal
 } // namespace dccl

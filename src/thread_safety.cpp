@@ -22,7 +22,6 @@
 #include "dccl/thread_safety.h"
 
 #if DCCL_THREAD_SUPPORT
-std::mutex dccl::g_field_codec_manager_mutex;
 std::recursive_mutex dccl::g_dynamic_protobuf_manager_mutex;
 std::recursive_mutex dccl::g_dlog_mutex;
 #endif

@@ -31,7 +31,7 @@ dccl::Logger dccl::dlog;
 int dccl::internal::LogBuffer::sync()
 {
 #if DCCL_THREAD_SUPPORT
-    if (verbosity_ == logger::UNKNOWN)
+    if (verbosity() == logger::UNKNOWN)
     {
         std::cerr
             << "Must use 'dlog.is(...) && dlog << ... << std::endl;' expression when running in "
@@ -49,8 +49,12 @@ int dccl::internal::LogBuffer::sync()
         display(buffer_.front());
         buffer_.pop_front();
     }
-    verbosity_ = logger::UNKNOWN;
-    group_ = logger::GENERAL;
+
+    if (!verbosity_.empty())
+        verbosity_.pop();
+    if (!group_.empty())
+        group_.pop();
+
 #if DCCL_THREAD_SUPPORT
     g_dlog_mutex.unlock();
 #endif

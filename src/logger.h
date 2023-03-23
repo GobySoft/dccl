@@ -30,6 +30,7 @@
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <stack>
 #include <string>
 
 #include "dccl/thread_safety.h"
@@ -74,7 +75,7 @@ namespace internal
 class LogBuffer : public std::streambuf
 {
   public:
-    LogBuffer() : verbosity_(logger::UNKNOWN), group_(logger::GENERAL), buffer_(1) {}
+    LogBuffer() : buffer_(1) {}
     ~LogBuffer() {}
 
     /// connect a signal to a slot (function pointer or similar)
@@ -109,9 +110,9 @@ class LogBuffer : public std::streambuf
     }
 
     /// sets the verbosity level until the next sync()
-    void set_verbosity(logger::Verbosity verbosity) { verbosity_ = verbosity; }
+    void set_verbosity(logger::Verbosity verbosity) { verbosity_.push(verbosity); }
 
-    void set_group(logger::Group group) { group_ = group; }
+    void set_group(logger::Group group) { group_.push(group); }
 
     bool contains(logger::Verbosity verbosity) const { return verbosity & enabled_verbosities_; }
 
@@ -126,21 +127,27 @@ class LogBuffer : public std::streambuf
 
     void display(const std::string& s)
     {
-        if (verbosity_ & logger::WARN)
-            warn_signal(s, logger::WARN, group_);
-        if (verbosity_ & logger::INFO)
-            info_signal(s, logger::INFO, group_);
-        if (verbosity_ & logger::DEBUG1)
-            debug1_signal(s, logger::DEBUG1, group_);
-        if (verbosity_ & logger::DEBUG2)
-            debug2_signal(s, logger::DEBUG2, group_);
-        if (verbosity_ & logger::DEBUG3)
-            debug3_signal(s, logger::DEBUG3, group_);
+        if (verbosity() & logger::WARN)
+            warn_signal(s, logger::WARN, group());
+        if (verbosity() & logger::INFO)
+            info_signal(s, logger::INFO, group());
+        if (verbosity() & logger::DEBUG1)
+            debug1_signal(s, logger::DEBUG1, group());
+        if (verbosity() & logger::DEBUG2)
+            debug2_signal(s, logger::DEBUG2, group());
+        if (verbosity() & logger::DEBUG3)
+            debug3_signal(s, logger::DEBUG3, group());
     }
 
+    logger::Verbosity verbosity()
+    {
+        return verbosity_.empty() ? logger::UNKNOWN : verbosity_.top();
+    }
+    logger::Group group() { return group_.empty() ? logger::GENERAL : group_.top(); }
+
   private:
-    logger::Verbosity verbosity_;
-    logger::Group group_;
+    std::stack<logger::Verbosity> verbosity_;
+    std::stack<logger::Group> group_;
     std::deque<std::string> buffer_;
     int enabled_verbosities_; // mask of verbosity settings enabled
 

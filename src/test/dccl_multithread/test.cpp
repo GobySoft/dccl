@@ -24,12 +24,43 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests all protobuf types with _default codecs, repeat and non repeat
 
-#include "dccl/codec.h"
-#include "test.pb.h"
-
 #include <thread>
 
+#include "dccl/arithmetic/field_codec_arithmetic.h"
+#include "dccl/codec.h"
+#include "test.pb.h"
+#include "test_arithmetic.pb.h"
+
 using namespace dccl::test;
+
+void arithmetic_run_test(dccl::Codec& codec, dccl::arith::protobuf::ArithmeticModel& model,
+                         const google::protobuf::Message& msg_in, bool set_model = true)
+{
+    if (set_model)
+    {
+        model.set_name("model");
+        dccl::arith::ModelManager::set_model(codec, model);
+    }
+
+    codec.load(msg_in.GetDescriptor());
+    codec.info(msg_in.GetDescriptor());
+
+    //    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+
+    //    std::cout << "Try encode..." << std::endl;
+    std::string bytes;
+    codec.encode(&bytes, msg_in);
+    //    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+    //    std::cout << "Try decode..." << std::endl;
+
+    boost::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
+    codec.decode(bytes, msg_out.get());
+
+    //    std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
+
+    assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
+}
 
 void decode_check(dccl::Codec& codec, const std::string& encoded, TestMsg msg_in);
 void run(int thread, int num_iterations);
@@ -88,6 +119,7 @@ int main(int argc, char* argv[])
 void run(int thread, int num_iterations)
 {
     dccl::Codec codec;
+    codec.load_library(DCCL_ARITHMETIC_NAME);
     codec.load<TestMsg>();
     for (int m = 0; m < num_iterations; ++m)
     {
@@ -172,15 +204,36 @@ void run(int thread, int num_iterations)
             em_msg->mutable_msg()->set_val(++i);
         }
 
-        //        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-
-        //        std::cout << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        //        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        //        std::cout << "Try decode..." << std::endl;
         decode_check(codec, bytes, msg_in);
+
+        // test case from Practical Implementations of Arithmetic Coding by Paul G. Howard and Je rey Scott Vitter
+        {
+            dccl::arith::protobuf::ArithmeticModel model;
+
+            model.set_eof_frequency(4); // "a"
+
+            model.add_value_bound(0);
+            model.add_frequency(5); // "b"
+
+            model.add_value_bound(1);
+            model.add_frequency(1); // "EOF"
+
+            model.add_value_bound(2);
+
+            model.set_out_of_range_frequency(0);
+
+            dccl::test::arith::ArithmeticDoubleTestMsg msg_in;
+
+            msg_in.add_value(0); // b
+            msg_in.add_value(0); // b
+            msg_in.add_value(0); // b
+            msg_in.add_value(1); // "EOF"
+
+            arithmetic_run_test(codec, model, msg_in);
+        }
     }
 }
 
