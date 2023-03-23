@@ -37,8 +37,8 @@
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/version.hpp>
+#include <memory>
 
 #include "dccl/thread_safety.h"
 
@@ -70,7 +70,7 @@ class DynamicProtobufManager
     /// \endcode
     /// would result in protobuf_type_name == "dccl.protobuf.A"
     /// \tparam GoogleProtobufMessagePointer A pointer or anything that acts like a pointer (has operator*()) to a google::protobuf::Message
-    /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. boost::shared_ptr<google::protobuf::Message>) are recommended.
+    /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. std::shared_ptr<google::protobuf::Message>) are recommended.
     template <typename GoogleProtobufMessagePointer>
     static GoogleProtobufMessagePointer new_protobuf_message(const std::string& protobuf_type_name,
                                                              bool user_pool_first = false)
@@ -91,7 +91,7 @@ class DynamicProtobufManager
     ///
     /// \param desc The Google Protobuf Descriptor of the message to create.
     /// \tparam GoogleProtobufMessagePointer A pointer or anything that acts like a pointer (has operator*()) to a google::protobuf::Message
-    /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. boost::shared_ptr<google::protobuf::Message>) are recommended.
+    /// \return A pointer to the newly created object. Deleting the memory is up to the caller of this function, so smart pointers (e.g. std::shared_ptr<google::protobuf::Message>) are recommended.
     template <typename GoogleProtobufMessagePointer>
     static GoogleProtobufMessagePointer
     new_protobuf_message(const google::protobuf::Descriptor* desc)
@@ -104,19 +104,19 @@ class DynamicProtobufManager
     /// \brief Create a new (empty) Google Protobuf message of a given type by Descriptor
     ///
     /// \param desc The Google Protobuf Descriptor of the message to create.
-    /// \return A boost::shared_ptr to the newly created object.
-    static boost::shared_ptr<google::protobuf::Message>
+    /// \return A std::shared_ptr to the newly created object.
+    static std::shared_ptr<google::protobuf::Message>
     new_protobuf_message(const google::protobuf::Descriptor* desc);
 
     /// \brief Create a new (empty) Google Protobuf message of a given type by name.
     ///
     /// \param protobuf_type_name The full name (including package) of the Google Protobuf message to create (e.g. "package.MyMessage").
-    /// \return A boost::shared_ptr to the newly created object.
-    static boost::shared_ptr<google::protobuf::Message>
+    /// \return A std::shared_ptr to the newly created object.
+    static std::shared_ptr<google::protobuf::Message>
     new_protobuf_message(const std::string& protobuf_type_name);
 
     /// \brief Add a Google Protobuf DescriptorDatabase to the set of databases searched for Message Descriptors.
-    static void add_database(boost::shared_ptr<google::protobuf::DescriptorDatabase> database);
+    static void add_database(std::shared_ptr<google::protobuf::DescriptorDatabase> database);
 
     /// \brief Enable on the fly compilation of .proto files on the local disk. Must be called before load_from_proto_file() is called.
     static void enable_compilation()
@@ -161,7 +161,13 @@ class DynamicProtobufManager
     static void reset()
     {
         LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
-        inst_.reset(new DynamicProtobufManager);
+        inst_.reset(new DynamicProtobufManager, DynamicProtobufManager::custom_deleter);
+    }
+
+    static void custom_deleter(DynamicProtobufManager* obj)
+    {
+        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        delete obj;
     }
 
 #if !(DCCL_THREAD_SUPPORT)
@@ -182,21 +188,13 @@ class DynamicProtobufManager
 #endif
 
   private:
-    // so we can use shared_ptr to hold the singleton
-#if BOOST_VERSION >= 107000
-    template <typename T> friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
-#else
-    template <typename T> friend void boost::checked_delete(T*);
-#endif
-
-    static boost::shared_ptr<DynamicProtobufManager> inst_;
-
+    static std::shared_ptr<DynamicProtobufManager> inst_;
     static DynamicProtobufManager* get_instance()
     {
         LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
 
         if (!inst_)
-            inst_.reset(new DynamicProtobufManager);
+            inst_.reset(new DynamicProtobufManager, DynamicProtobufManager::custom_deleter);
         return inst_.get();
     }
 
@@ -229,7 +227,7 @@ class DynamicProtobufManager
     {
         std::vector<google::protobuf::DescriptorDatabase*> databases;
 
-        for (std::vector<boost::shared_ptr<google::protobuf::DescriptorDatabase>>::const_iterator
+        for (std::vector<std::shared_ptr<google::protobuf::DescriptorDatabase>>::const_iterator
                  it = databases_.begin(),
                  end = databases_.end();
              it != end; ++it)
@@ -245,18 +243,18 @@ class DynamicProtobufManager
     DynamicProtobufManager& operator=(const DynamicProtobufManager&) = delete;
 
   private:
-    std::vector<boost::shared_ptr<google::protobuf::DescriptorDatabase>> databases_;
+    std::vector<std::shared_ptr<google::protobuf::DescriptorDatabase>> databases_;
 
     // always used
-    boost::shared_ptr<google::protobuf::DescriptorPoolDatabase> generated_database_;
-    boost::shared_ptr<google::protobuf::SimpleDescriptorDatabase> simple_database_;
-    boost::shared_ptr<google::protobuf::MergedDescriptorDatabase> merged_database_;
-    boost::shared_ptr<google::protobuf::DescriptorPool> user_descriptor_pool_;
-    boost::shared_ptr<google::protobuf::DynamicMessageFactory> msg_factory_;
+    std::shared_ptr<google::protobuf::DescriptorPoolDatabase> generated_database_;
+    std::shared_ptr<google::protobuf::SimpleDescriptorDatabase> simple_database_;
+    std::shared_ptr<google::protobuf::MergedDescriptorDatabase> merged_database_;
+    std::shared_ptr<google::protobuf::DescriptorPool> user_descriptor_pool_;
+    std::shared_ptr<google::protobuf::DynamicMessageFactory> msg_factory_;
 
     // sometimes used
-    boost::shared_ptr<google::protobuf::compiler::DiskSourceTree> disk_source_tree_;
-    boost::shared_ptr<google::protobuf::compiler::SourceTreeDescriptorDatabase> source_database_;
+    std::shared_ptr<google::protobuf::compiler::DiskSourceTree> disk_source_tree_;
+    std::shared_ptr<google::protobuf::compiler::SourceTreeDescriptorDatabase> source_database_;
 
     class DLogMultiFileErrorCollector : public google::protobuf::compiler::MultiFileErrorCollector
     {
@@ -264,7 +262,7 @@ class DynamicProtobufManager
                       const std::string& message);
     };
 
-    boost::shared_ptr<DLogMultiFileErrorCollector> error_collector_;
+    std::shared_ptr<DLogMultiFileErrorCollector> error_collector_;
 
     std::vector<void*> dl_handles_;
 };

@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
     // non-destructive
     {
-        std::list<boost::shared_ptr<google::protobuf::Message>> msgs_out;
+        std::list<std::shared_ptr<google::protobuf::Message>> msgs_out;
         try
         {
             std::string::iterator begin = bytes1.begin(), end = bytes1.end();
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
                 if (it == codec.loaded().end())
                     break;
 
-                boost::shared_ptr<google::protobuf::Message> msg =
+                std::shared_ptr<google::protobuf::Message> msg =
                     dccl::DynamicProtobufManager::new_protobuf_message(it->second);
                 begin = codec.decode(begin, end, msg.get());
                 msgs_out.push_back(msg);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
         assert(msgs.size() == msgs_out.size());
 
-        for (std::list<boost::shared_ptr<google::protobuf::Message>>::const_iterator
+        for (std::list<std::shared_ptr<google::protobuf::Message>>::const_iterator
                  it = msgs_out.begin(),
                  end = msgs_out.end();
              it != end; ++it)
@@ -125,12 +125,12 @@ int main(int argc, char* argv[])
 
     // destructive
     {
-        std::list<boost::shared_ptr<google::protobuf::Message>> msgs_out;
+        std::list<std::shared_ptr<google::protobuf::Message>> msgs_out;
         try
         {
             while (!bytes1.empty())
                 msgs_out.push_back(
-                    codec.decode<boost::shared_ptr<google::protobuf::Message>>(&bytes1));
+                    codec.decode<std::shared_ptr<google::protobuf::Message>>(&bytes1));
         }
         catch (dccl::Exception& e)
         {
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
         assert(msgs.size() == msgs_out.size());
 
-        for (std::list<boost::shared_ptr<google::protobuf::Message>>::const_iterator
+        for (std::list<std::shared_ptr<google::protobuf::Message>>::const_iterator
                  it = msgs_out.begin(),
                  end = msgs_out.end();
              it != end; ++it)

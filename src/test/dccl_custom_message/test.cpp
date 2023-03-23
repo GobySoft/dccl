@@ -206,8 +206,8 @@ int main(int argc, char* argv[])
     codec.encode(&bytes1, msg_in1);
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
-    boost::shared_ptr<google::protobuf::Message> msg_out1 =
-        codec.decode<boost::shared_ptr<google::protobuf::Message>>(bytes1);
+    std::shared_ptr<google::protobuf::Message> msg_out1 =
+        codec.decode<std::shared_ptr<google::protobuf::Message>>(bytes1);
     std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
 

@@ -127,9 +127,8 @@ class FieldCodecManagerLocal
     void remove(const std::string& name);
 
     /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
-    boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field,
-                                           bool has_codec_group,
-                                           const std::string& codec_group) const
+    std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field,
+                                         bool has_codec_group, const std::string& codec_group) const
     {
         std::string name = __find_codec(field, has_codec_group, codec_group);
 
@@ -143,8 +142,8 @@ class FieldCodecManagerLocal
     ///
     /// \param desc Message descriptor to find codec for
     /// \param name Codec name (used for embedded messages to prefer the codec listed as a field option). Omit for finding the codec of a base message (one that is not embedded).
-    boost::shared_ptr<FieldCodecBase> find(const google::protobuf::Descriptor* desc,
-                                           std::string name = "") const
+    std::shared_ptr<FieldCodecBase> find(const google::protobuf::Descriptor* desc,
+                                         std::string name = "") const
     {
         // this was called on the root message
         if (name.empty())
@@ -159,8 +158,8 @@ class FieldCodecManagerLocal
         return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE, name, desc->full_name());
     }
 
-    boost::shared_ptr<FieldCodecBase> find(google::protobuf::FieldDescriptor::Type type,
-                                           std::string name) const
+    std::shared_ptr<FieldCodecBase> find(google::protobuf::FieldDescriptor::Type type,
+                                         std::string name) const
     {
         return __find(type, name);
     }
@@ -178,9 +177,9 @@ class FieldCodecManagerLocal
     const internal::CodecData& codec_data() const { return codec_data_; }
 
   private:
-    boost::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
-                                             const std::string& codec_name,
-                                             const std::string& type_name = "") const;
+    std::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
+                                           const std::string& codec_name,
+                                           const std::string& type_name = "") const;
 
     std::string __mangle_name(const std::string& codec_name, const std::string& type_name) const
     {
@@ -195,7 +194,7 @@ class FieldCodecManagerLocal
                          google::protobuf::FieldDescriptor::Type field_type,
                          google::protobuf::FieldDescriptor::CppType wire_type);
 
-    void add_single_type(boost::shared_ptr<FieldCodecBase> new_field_codec, const std::string& name,
+    void add_single_type(std::shared_ptr<FieldCodecBase> new_field_codec, const std::string& name,
                          google::protobuf::FieldDescriptor::Type field_type,
                          google::protobuf::FieldDescriptor::CppType wire_type);
 
@@ -228,7 +227,7 @@ class FieldCodecManagerLocal
     }
 
   private:
-    typedef std::map<std::string, boost::shared_ptr<FieldCodecBase>> InsideMap;
+    typedef std::map<std::string, std::shared_ptr<FieldCodecBase>> InsideMap;
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
 
     internal::TypeHelper type_helper_;
@@ -364,7 +363,7 @@ void dccl::FieldCodecManagerLocal::add_single_type(
     const std::string& name, google::protobuf::FieldDescriptor::Type field_type,
     google::protobuf::FieldDescriptor::CppType wire_type)
 {
-    boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
+    std::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
     new_field_codec->set_name(name);
     new_field_codec->set_field_type(field_type);
     new_field_codec->set_wire_type(wire_type);
@@ -447,7 +446,7 @@ void dccl::FieldCodecManagerLocal::remove_single_type(
     }
     else
     {
-        boost::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
+        std::shared_ptr<FieldCodecBase> new_field_codec(new Codec());
         new_field_codec->set_name(name);
         new_field_codec->set_field_type(field_type);
         new_field_codec->set_wire_type(wire_type);

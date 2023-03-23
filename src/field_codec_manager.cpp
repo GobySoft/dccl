@@ -27,7 +27,7 @@ dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() {}
 
 dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() {}
 
-boost::shared_ptr<dccl::FieldCodecBase>
+std::shared_ptr<dccl::FieldCodecBase>
 dccl::FieldCodecManagerLocal::__find(google::protobuf::FieldDescriptor::Type type,
                                      const std::string& codec_name,
                                      const std::string& type_name /* = "" */) const

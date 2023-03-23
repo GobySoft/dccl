@@ -37,7 +37,7 @@
 
 #include <google/protobuf/descriptor.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
@@ -307,20 +307,20 @@ class Codec
 
     /// \brief An alterative form for decoding messages for message types <i>not</i> known at compile-time ("dynamic").
     ///
-    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like boost::shared_ptr included)
+    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like std::shared_ptr included)
     /// \param bytes the byte string returned by encode
     /// \param header_only If true, only decode the header (do not try to decrypt (if applicable) and decode the message body)
     /// \throw Exception if message cannot be decoded
-    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
+    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. std::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
     template <typename GoogleProtobufMessagePointer>
     GoogleProtobufMessagePointer decode(const std::string& bytes, bool header_only = false);
 
     /// \brief An alterative form for decoding messages for message types <i>not</i> known at compile-time ("dynamic"), where the bytes used are stripped from the front of the encoded message.
     ///
-    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like boost::shared_ptr included)
+    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like std::shared_ptr included)
     /// \param bytes encoded message to decode (must already have been validated) which will have the used bytes stripped from the front of the encoded message
     /// \throw Exception if message cannot be decoded
-    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
+    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. std::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
     template <typename GoogleProtobufMessagePointer>
     GoogleProtobufMessagePointer decode(std::string* bytes);
 
@@ -388,7 +388,7 @@ class Codec
 
     void set_default_codecs();
 
-    boost::shared_ptr<FieldCodecBase> id_codec() const
+    std::shared_ptr<FieldCodecBase> id_codec() const
     {
         return manager_.find(google::protobuf::FieldDescriptor::TYPE_UINT32, id_codec_);
     }
@@ -503,9 +503,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
         dlog.is(logger::DEBUG1, logger::DECODE) && dlog << "Type name: " << desc->full_name()
                                                         << std::endl;
 
-        boost::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
-        boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-            manager_.type_helper().find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+        std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
 
         CharIterator actual_end = end;
         if (codec)

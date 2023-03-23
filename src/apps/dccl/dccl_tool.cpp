@@ -270,7 +270,7 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
             exit(EXIT_FAILURE);
         }
 
-        boost::shared_ptr<google::protobuf::Message> msg =
+        std::shared_ptr<google::protobuf::Message> msg =
             dccl::DynamicProtobufManager::new_protobuf_message(desc);
         google::protobuf::TextFormat::ParseFromString(input, msg.get());
 
@@ -376,8 +376,8 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
 
     while (!input.empty())
     {
-        boost::shared_ptr<google::protobuf::Message> msg =
-            dccl.decode<boost::shared_ptr<google::protobuf::Message>>(&input);
+        std::shared_ptr<google::protobuf::Message> msg =
+            dccl.decode<std::shared_ptr<google::protobuf::Message>>(&input);
         if (!cfg.omit_prefix)
             std::cout << "|" << msg->GetDescriptor()->full_name() << "| ";
         std::cout << msg->ShortDebugString() << std::endl;

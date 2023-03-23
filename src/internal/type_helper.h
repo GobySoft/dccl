@@ -26,8 +26,8 @@
 
 #include <map>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/version.hpp>
+#include <memory>
 
 #include "protobuf_cpp_type_helpers.h"
 
@@ -44,9 +44,8 @@ class TypeHelper
     TypeHelper() { initialize(); }
     ~TypeHelper() {}
 
-    boost::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type) const;
-    boost::shared_ptr<FromProtoCppTypeBase>
-    find(const google::protobuf::FieldDescriptor* field) const
+    std::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type) const;
+    std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::FieldDescriptor* field) const
     {
         if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
             return find(field->message_type());
@@ -54,13 +53,13 @@ class TypeHelper
             return find(field->cpp_type());
     }
 
-    boost::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc) const
+    std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc) const
     {
         return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE, desc->full_name());
     }
 
-    boost::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype,
-                                                 const std::string& type_name = "") const;
+    std::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype,
+                                               const std::string& type_name = "") const;
 
   private:
     friend class ::dccl::FieldCodecManagerLocal;
@@ -68,7 +67,7 @@ class TypeHelper
     {
         custom_message_map_.insert(std::make_pair(
             ProtobufMessage::descriptor()->full_name(),
-            boost::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
+            std::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
     }
     template <typename ProtobufMessage> void remove()
     {
@@ -84,16 +83,16 @@ class TypeHelper
     void initialize();
 
   public:
-    typedef std::map<google::protobuf::FieldDescriptor::Type, boost::shared_ptr<FromProtoTypeBase>>
+    typedef std::map<google::protobuf::FieldDescriptor::Type, std::shared_ptr<FromProtoTypeBase>>
         TypeMap;
     TypeMap type_map_;
 
     typedef std::map<google::protobuf::FieldDescriptor::CppType,
-                     boost::shared_ptr<FromProtoCppTypeBase>>
+                     std::shared_ptr<FromProtoCppTypeBase>>
         CppTypeMap;
     CppTypeMap cpptype_map_;
 
-    typedef std::map<std::string, boost::shared_ptr<FromProtoCppTypeBase>> CustomMessageMap;
+    typedef std::map<std::string, std::shared_ptr<FromProtoCppTypeBase>> CustomMessageMap;
     CustomMessageMap custom_message_map_;
 };
 } // namespace internal
