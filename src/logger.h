@@ -149,7 +149,7 @@ class LogBuffer : public std::streambuf
             for (auto& slot : debug3_signal) slot(s, logger::DEBUG3, group());
         }
     }
-    
+
     logger::Verbosity verbosity()
     {
         return verbosity_.empty() ? logger::UNKNOWN : verbosity_.top();
@@ -228,8 +228,8 @@ class Logger : public std::ostream
                                        logger::Group grp))
     {
         LOCK_DLOG_MUTEX
-        using namespace std::placeholders;
-        connect(verbosity_mask, std::bind(mem_func, obj, _1, _2, _3));
+        connect(verbosity_mask, std::bind(mem_func, obj, std::placeholders::_1,
+                                          std::placeholders::_2, std::placeholders::_3));
     }
 
     /// \brief Connect the output of one or more given verbosities to a std::ostream
@@ -240,8 +240,9 @@ class Logger : public std::ostream
     void connect(int verbosity_mask, std::ostream* os, bool add_timestamp = true)
     {
         LOCK_DLOG_MUTEX
-        using namespace std::placeholders;
-        buf_.connect(verbosity_mask, std::bind(to_ostream, _1, _2, _3, os, add_timestamp));
+        buf_.connect(verbosity_mask,
+                     std::bind(to_ostream, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, os, add_timestamp));
     }
 
     /// \brief Disconnect all slots for one or more given verbosities
