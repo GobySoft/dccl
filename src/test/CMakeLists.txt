@@ -22,9 +22,6 @@ add_subdirectory(dccl_presence)
 add_subdirectory(dccl_resolution)
 add_subdirectory(dccl_min_repeat)
 
-if(enable_thread_safety)
-  add_subdirectory(dccl_multithread)
-endif()
   
 if(enable_units)
   add_subdirectory(dccl_units)
@@ -36,6 +33,9 @@ endif()
 
 if(build_arithmetic)
   add_subdirectory(dccl_arithmetic)
+  if(enable_thread_safety)
+    add_subdirectory(dccl_multithread)
+  endif()
 endif()
 
 if(build_native_protobuf)
