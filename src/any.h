@@ -57,7 +57,7 @@ template <class T> const T* any_cast(const any* operand) noexcept
     return boost::any_cast<T>(operand);
 }
 template <class T> T* any_cast(any* operand) noexcept { return boost::any_cast<T>(operand); }
-using bad_any_cast = dccl::bad_any_cast;
+using bad_any_cast = boost::bad_any_cast;
 inline bool is_empty(const any& a) { return a.empty(); }
 } // namespace dccl
 #endif

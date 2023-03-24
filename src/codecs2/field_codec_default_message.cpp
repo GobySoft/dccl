@@ -114,7 +114,7 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
 
         std::vector<const google::protobuf::FieldDescriptor*> set_fields;
         refl->ListFields(*msg, &set_fields);
-        if (is_empty(set_fields) && this_field())
+        if (set_fields.empty() && this_field())
             *wire_value = dccl::any();
         else
             *wire_value = msg;
