@@ -24,11 +24,7 @@
 #ifndef FieldCodecManager20110405H
 #define FieldCodecManager20110405H
 
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/logical.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <type_traits>
 
 #include "dccl/logger.h"
 #include "dccl/thread_safety.h"
@@ -38,14 +34,6 @@
 
 namespace dccl
 {
-namespace compiler
-{
-/// See Bug #1089061, and Boost MPL Documentation section 3.4 (compiler workarounds)
-template <int> struct dummy_fcm
-{
-    dummy_fcm(int) {}
-};
-} // namespace compiler
 
 /// \brief A class for managing the various field codecs. Here you can add and remove field codecs. The DCCL Codec and DefaultMessageCodec use the find() methods to locate the appropriate field codec.
 class FieldCodecManagerLocal
@@ -64,12 +52,11 @@ class FieldCodecManagerLocal
     /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
     /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
     template <class Codec>
-    typename boost::enable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+            !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0);
+    add(const std::string& name);
 
     /// \brief Add a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
     ///
@@ -77,12 +64,11 @@ class FieldCodecManagerLocal
     /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
     /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper add() overload.
     template <class Codec>
-    typename boost::disable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+          !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0);
+    add(const std::string& name);
 
     /// \brief Add a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
     ///
@@ -98,12 +84,11 @@ class FieldCodecManagerLocal
     /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
     /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper remove() overload.
     template <class Codec>
-    typename boost::enable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+            !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0);
+    remove(const std::string& name);
 
     /// \brief Remove a new field codec (used for codecs operating on all types except statically generated Protobuf messages).
     ///
@@ -111,12 +96,11 @@ class FieldCodecManagerLocal
     /// \param name Name to use for this codec. Corresponds to (dccl.field).codec="name" in .proto file.
     /// \return nothing (void). Return templates are used for template metaprogramming selection of the proper remove() overload.
     template <class Codec>
-    typename boost::disable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+          !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0);
+    remove(const std::string& name);
 
     /// \brief Remove a new field codec only valid for a specific google::protobuf::FieldDescriptor::Type. This is useful if a given codec is designed to work with only a specific Protobuf type that shares an underlying C++ type (e.g. Protobuf types `bytes` and `string`)
     ///
@@ -238,12 +222,11 @@ class FieldCodecManager
 {
   public:
     template <class Codec>
-    static typename boost::enable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+            !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
+    add(const std::string& name)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
@@ -252,12 +235,11 @@ class FieldCodecManager
     }
 
     template <class Codec>
-    static typename boost::disable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+          !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
+    add(const std::string& name)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
@@ -274,12 +256,11 @@ class FieldCodecManager
     }
 
     template <class Codec>
-    static typename boost::enable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+            !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm = 0)
+    remove(const std::string& name)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
@@ -287,12 +268,11 @@ class FieldCodecManager
     }
 
     template <class Codec>
-    static typename boost::disable_if<
-        boost::mpl::and_<
-            boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-            boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+    typename std::enable_if<
+        !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+          !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm = 0)
+    remove(const std::string& name)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
@@ -311,12 +291,11 @@ class FieldCodecManager
 } // namespace dccl
 
 template <class Codec>
-typename boost::enable_if<
-    boost::mpl::and_<
-        boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-        boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+typename std::enable_if<
+    std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+        !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
     void>::type
-dccl::FieldCodecManagerLocal::add(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
+dccl::FieldCodecManagerLocal::add(const std::string& name)
 {
     type_helper_.add<typename Codec::wire_type>();
     add_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
@@ -325,12 +304,11 @@ dccl::FieldCodecManagerLocal::add(const std::string& name, compiler::dummy_fcm<0
 }
 
 template <class Codec>
-typename boost::disable_if<
-    boost::mpl::and_<
-        boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-        boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+typename std::enable_if<
+    !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+      !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
     void>::type
-dccl::FieldCodecManagerLocal::add(const std::string& name, compiler::dummy_fcm<1> dummy_fcm)
+dccl::FieldCodecManagerLocal::add(const std::string& name)
 {
     add_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
@@ -385,12 +363,11 @@ void dccl::FieldCodecManagerLocal::add_single_type(
 }
 
 template <class Codec>
-typename boost::enable_if<
-    boost::mpl::and_<
-        boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-        boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+typename std::enable_if<
+    std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+        !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
     void>::type
-dccl::FieldCodecManagerLocal::remove(const std::string& name, compiler::dummy_fcm<0> dummy_fcm)
+dccl::FieldCodecManagerLocal::remove(const std::string& name)
 {
     type_helper_.remove<typename Codec::wire_type>();
     remove_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
@@ -399,12 +376,11 @@ dccl::FieldCodecManagerLocal::remove(const std::string& name, compiler::dummy_fc
 }
 
 template <class Codec>
-typename boost::disable_if<
-    boost::mpl::and_<
-        boost::is_base_of<google::protobuf::Message, typename Codec::wire_type>,
-        boost::mpl::not_<boost::is_same<google::protobuf::Message, typename Codec::wire_type>>>,
+typename std::enable_if<
+    !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
+      !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
     void>::type
-dccl::FieldCodecManagerLocal::remove(const std::string& name, compiler::dummy_fcm<1> dummy_fcm)
+dccl::FieldCodecManagerLocal::remove(const std::string& name)
 {
     remove_all_types<typename Codec::wire_type, typename Codec::field_type, Codec>(name);
 }
