@@ -32,7 +32,6 @@
 
 #include <sys/time.h>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/static_assert.hpp>
@@ -410,7 +409,10 @@ template <typename T> class StaticCodec : public TypedFixedFieldCodec<T>
 
     T decode(Bitset* bits)
     {
-        return boost::lexical_cast<T>(FieldCodecBase::dccl_field_options().static_value());
+        std::istringstream iss(FieldCodecBase::dccl_field_options().static_value());
+        T value;
+        iss >> value;
+        return value;
     }
 
     unsigned size() { return 0; }
@@ -421,11 +423,10 @@ template <typename T> class StaticCodec : public TypedFixedFieldCodec<T>
                                 "missing (dccl.field).static_value");
 
         std::string t = FieldCodecBase::dccl_field_options().static_value();
-        try
-        {
-            boost::lexical_cast<T>(t);
-        }
-        catch (boost::bad_lexical_cast&)
+        std::istringstream iss(t);
+        T value;
+
+        if (!(iss >> value))
         {
             FieldCodecBase::require(false, "invalid static_value for this type.");
         }

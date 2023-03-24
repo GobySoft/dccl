@@ -368,7 +368,7 @@ class Codec
                 return dccl::DCCLFieldOptions::descriptor()
                     ->FindFieldByName("codec")
                     ->default_value_string();
-            default: return "dccl.default" + boost::lexical_cast<std::string>(version);
+            default: return "dccl.default" + std::to_string(version);
         }
     }
 
@@ -431,7 +431,7 @@ GoogleProtobufMessagePointer dccl::Codec::decode(const std::string& bytes,
     unsigned this_id = id(bytes);
 
     if (!id2desc_.count(this_id))
-        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+        throw(Exception("Message id " + std::to_string(this_id) +
                         " has not been loaded. Call load() before decoding this type."));
 
     // ownership of this object goes to the caller of decode()
@@ -448,7 +448,7 @@ GoogleProtobufMessagePointer dccl::Codec::decode(std::string* bytes)
     unsigned this_id = id(*bytes);
 
     if (!id2desc_.count(this_id))
-        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+        throw(Exception("Message id " + std::to_string(this_id) +
                         " has not been loaded. Call load() before decoding this type."));
 
     GoogleProtobufMessagePointer msg =
@@ -495,7 +495,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             dlog << "Began decoding message of id: " << this_id << std::endl;
 
         if (!id2desc_.count(this_id))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+            throw(Exception("Message id " + std::to_string(this_id) +
                             " has not been loaded. Call load() before decoding this type."));
 
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();

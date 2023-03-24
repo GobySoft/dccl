@@ -237,7 +237,7 @@ class DefaultMessageCodec : public FieldCodecBase
             std::stringstream ss;
             int depth = msg_handler.count();
 
-            std::string name = boost::lexical_cast<std::string>(oneof_desc->index()) + ". " +
+            std::string name = std::to_string(oneof_desc->index()) + ". " +
                                oneof_desc->name() + " [oneof]";
 
             // Calculate indentation
