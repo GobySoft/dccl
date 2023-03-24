@@ -208,7 +208,7 @@ class Logger : public std::ostream
     /// \brief Connect the output of one or more given verbosities to a slot (function pointer or similar)
     ///
     /// \param verbosity_mask A bitmask representing the verbosity or verbosities to send to this slot. For example, you can use connect(WARN | INFO, slot) to send both WARN and INFO messages to slot.
-    /// \param slot The slot must be a function pointer or like object (e.g. boost::function) of type
+    /// \param slot The slot must be a function pointer or like object (e.g. std::function) of type
     /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
     {

@@ -32,12 +32,6 @@
 
 #include <sys/time.h>
 
-#include <boost/numeric/conversion/bounds.hpp>
-#include <boost/numeric/conversion/cast.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility.hpp>
-
 #include <google/protobuf/descriptor.h>
 
 #include "dccl/option_extensions.pb.h"
@@ -123,9 +117,9 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
     void validate_numeric_bounds()
     {
         // ensure given max and min fit within WireType ranges
-        FieldCodecBase::require(min() >= boost::numeric::bounds<WireType>::lowest(),
+        FieldCodecBase::require(min() >= std::numeric_limits<WireType>::lowest(),
                                 "(dccl.field).min must be >= minimum of this field type.");
-        FieldCodecBase::require(max() <= boost::numeric::bounds<WireType>::highest(),
+        FieldCodecBase::require(max() <= std::numeric_limits<WireType>::max(),
                                 "(dccl.field).max must be <= maximum of this field type.");
 
         // allowable epsilon for min / max to diverge from nearest quantile
@@ -198,7 +192,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             wire_value /= res;
         else
             wire_value *= (1.0 / res);
-        dccl::uint64 uint_value = boost::numeric_cast<dccl::uint64>(dccl::round(wire_value, 0));
+        dccl::uint64 uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
 
         // "presence" value (0)
         if (!FieldCodecBase::use_required())
