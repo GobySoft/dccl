@@ -26,21 +26,12 @@
 #ifndef DCCLFIELDCODECTYPED20120312H
 #define DCCLFIELDCODECTYPED20120312H
 
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 #include "field_codec.h"
 
 namespace dccl
 {
-/// Compiler workarounds namespace
-namespace compiler
-{
-/// workaround for compilers with broken template support (i.e. gcc 3.3)
-template <int> struct dummy
-{
-    dummy(int) {}
-};
-} // namespace compiler
 
 /// \brief A class that goes between FieldCodecBase and TypedFieldCodec to determine if the pre_encode() and post_decode() methods (which convert between WireType and FieldType) must be implemented or not.
 template <typename WireType, typename FieldType, class Enable = void>
@@ -62,8 +53,7 @@ class FieldCodecSelector : public FieldCodecBase
 
 /// \brief A class that goes between FieldCodecBase and TypedFieldCodec to determine if the pre_encode() and post_decode() methods must be implemented or not. The specialization is selected if WireType == FieldType and implements these functions as a pass-through.
 template <typename WireType, typename FieldType>
-class FieldCodecSelector<WireType, FieldType,
-                         typename boost::enable_if<boost::is_same<WireType, FieldType>>::type>
+class FieldCodecSelector<WireType, FieldType, std::enable_if_t<std::is_same<WireType, FieldType>::value>>
     : public FieldCodecBase
 {
   public:
@@ -168,17 +158,15 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
 
     // we don't currently support type conversion (post_decode / pre_encode) of Message types
     template <typename T>
-    typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_post_decode_specific(const boost::any& wire_value, boost::any* field_value,
-                             compiler::dummy<0> dummy = 0)
+    typename std::enable_if_t<std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_post_decode_specific(const boost::any& wire_value, boost::any* field_value)
     {
         *field_value = wire_value;
     }
 
     template <typename T>
-    typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_post_decode_specific(const boost::any& wire_value, boost::any* field_value,
-                             compiler::dummy<1> dummy = 0)
+    typename std::enable_if_t<!std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_post_decode_specific(const boost::any& wire_value, boost::any* field_value)
     {
         try
         {
@@ -196,8 +184,8 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     }
 
     template <typename T>
-    typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<0> dummy = 0)
+    typename std::enable_if_t<std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_decode_specific(Bitset* bits, boost::any* wire_value)
     {
         try
         {
@@ -213,8 +201,8 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     }
 
     template <typename T>
-    typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_decode_specific(Bitset* bits, boost::any* wire_value, compiler::dummy<1> dummy = 0)
+    typename std::enable_if_t<!std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_decode_specific(Bitset* bits, boost::any* wire_value)
     {
         try
         {
@@ -308,7 +296,10 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
             std::vector<WireType> in;
             for (std::vector<boost::any>::const_iterator it = wire_values.begin();
                  it != wire_values.end(); ++it)
-            { in.push_back(boost::any_cast<WireType>(*it)); } *bits = encode_repeated(in);
+            {
+                in.push_back(boost::any_cast<WireType>(*it));
+            }
+            *bits = encode_repeated(in);
         }
         catch (boost::bad_any_cast&)
         {
@@ -322,9 +313,8 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     }
 
     template <typename T>
-    typename boost::enable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values,
-                                 compiler::dummy<0> dummy = 0)
+    typename std::enable_if_t<std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
     {
         std::vector<WireType> decoded_msgs = decode_repeated(repeated_bits);
         wire_values->resize(decoded_msgs.size(), WireType());
@@ -338,9 +328,8 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     }
 
     template <typename T>
-    typename boost::disable_if<boost::is_base_of<google::protobuf::Message, T>, void>::type
-    any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values,
-                                 compiler::dummy<1> dummy = 0)
+    typename std::enable_if_t<!std::is_base_of<google::protobuf::Message, T>::value, void>
+    any_decode_repeated_specific(Bitset* repeated_bits, std::vector<boost::any>* wire_values)
     {
         std::vector<WireType> decoded = decode_repeated(repeated_bits);
         wire_values->resize(decoded.size(), WireType());
@@ -395,7 +384,10 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
             std::vector<WireType> in;
             for (std::vector<boost::any>::const_iterator it = wire_values.begin();
                  it != wire_values.end(); ++it)
-            { in.push_back(boost::any_cast<WireType>(*it)); } return size_repeated(in);
+            {
+                in.push_back(boost::any_cast<WireType>(*it));
+            }
+            return size_repeated(in);
         }
         catch (boost::bad_any_cast&)
         {
