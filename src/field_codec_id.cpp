@@ -73,8 +73,8 @@ unsigned dccl::DefaultIdentifierCodec::this_size(const uint32& id)
 {
     if (id > TWO_BYTE_MAX_ID)
         throw(Exception(
-            "dccl.id provided (" + boost::lexical_cast<std::string>(id) +
-            ") exceeds maximum: " + boost::lexical_cast<std::string>(int(TWO_BYTE_MAX_ID))));
+            "dccl.id provided (" + std::to_string(id) +
+            ") exceeds maximum: " + std::to_string(int(TWO_BYTE_MAX_ID))));
 
     return (id <= ONE_BYTE_MAX_ID) ? SHORT_FORM_ID_BYTES * BITS_IN_BYTE
                                    : LONG_FORM_ID_BYTES * BITS_IN_BYTE;

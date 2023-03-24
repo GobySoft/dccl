@@ -199,7 +199,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         }
 
         if (!id2desc_.count(dccl_id))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(dccl_id) +
+            throw(Exception("Message id " + std::to_string(dccl_id) +
                             " has not been loaded. Call load() before encoding this type."));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
@@ -414,12 +414,18 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         codec->base_validate(desc, BODY);
 
         if (id2desc_.count(dccl_id) && desc != id2desc_.find(dccl_id)->second)
-            throw(Exception("`dccl id` " + boost::lexical_cast<std::string>(dccl_id) +
-                            " is already in use by Message " +
-                            id2desc_.find(dccl_id)->second->full_name() + ": " +
-                            boost::lexical_cast<std::string>(id2desc_.find(dccl_id)->second)));
+        {
+            std::stringstream ss;
+            ss << "`dccl id` " << dccl_id << " is already in use by Message "
+               << id2desc_.find(dccl_id)->second->full_name() << ": "
+               << id2desc_.find(dccl_id)->second;
+
+            throw(Exception(ss.str()));
+        }
         else
+        {
             id2desc_.insert(std::make_pair(dccl_id, desc));
+        }
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
                                 << std::endl;
@@ -571,8 +577,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name =
-                boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string message_name = std::to_string(dccl_id) + ": " + desc->full_name();
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";

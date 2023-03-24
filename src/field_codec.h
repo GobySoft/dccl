@@ -28,14 +28,12 @@
 #include <map>
 #include <string>
 
-#include "dccl/any.h"
-#include <boost/lexical_cast.hpp>
-
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/message.h>
 
 #include "common.h"
+#include "dccl/any.h"
 #include "dccl/binary.h"
 #include "dccl/dynamic_conditions.h"
 #include "dccl/option_extensions.pb.h"

@@ -176,7 +176,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         FieldCodecBase::require(
             FieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE,
             "(dccl.field).max_repeat must be less than " +
-                boost::lexical_cast<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
+                std::to_string(static_cast<int>(MAX_REPEAT_SIZE)));
     }
 };
 

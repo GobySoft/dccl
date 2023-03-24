@@ -162,7 +162,7 @@ void dccl::v2::DefaultStringCodec::validate()
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
             "(dccl.field).max_length must be <= " +
-                boost::lexical_cast<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
+                std::to_string(static_cast<int>(MAX_STRING_LENGTH)));
 }
 
 //

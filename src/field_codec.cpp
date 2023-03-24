@@ -294,15 +294,15 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     std::stringstream ss;
     int depth = msg_handler.count();
 
-    std::string name = ((this_field()) ? boost::lexical_cast<std::string>(this_field()->number()) +
+    std::string name = ((this_field()) ? std::to_string(this_field()->number()) +
                                              ". " + this_field()->name()
                                        : this_descriptor()->full_name());
     if (this_field() && this_field()->is_repeated())
         name += "[" +
                 (dccl_field_options().has_min_repeat()
-                     ? (boost::lexical_cast<std::string>(dccl_field_options().min_repeat()) + "-")
+                     ? (std::to_string(dccl_field_options().min_repeat()) + "-")
                      : "") +
-                boost::lexical_cast<std::string>(dccl_field_options().max_repeat()) + "]";
+                std::to_string(dccl_field_options().max_repeat()) + "]";
 
     if (!this_field() || this_field()->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
         depth -= 1;
@@ -573,7 +573,7 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
     {
         std::string name = ((field) ? field->name() : root_descriptor()->full_name());
         if (vector_size >= 0)
-            name += "[" + boost::lexical_cast<std::string>(vector_size) + "]";
+            name += "[" + std::to_string(vector_size) + "]";
 
         dlog.is(DEBUG2, SIZE) && dlog << std::string(depth, '|') << name << std::setfill('.')
                                       << std::setw(40 - name.size() - depth) << new_bits.size()

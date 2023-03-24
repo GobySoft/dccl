@@ -30,7 +30,6 @@
 #include <limits>
 
 #include <boost/bimap.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "dccl/field_codec_typed.h"
 
@@ -187,7 +186,7 @@ class ModelManager
         {
             throw(Exception("Invalid model: " + model->user_model_.DebugString() +
                             "Sum of all frequencies must be less than " +
-                            boost::lexical_cast<std::string>(Model::MAX_FREQUENCY) +
+                            std::to_string(Model::MAX_FREQUENCY) +
                             " in order to use 64 bit arithmetic"));
         }
 
