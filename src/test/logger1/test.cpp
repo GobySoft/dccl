@@ -21,6 +21,9 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <cassert>
+
 #include "dccl/logger.h"
 
 /// asserts false if called - used for testing proper short-circuiting of logger calls

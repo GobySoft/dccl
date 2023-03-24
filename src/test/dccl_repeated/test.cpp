@@ -26,6 +26,8 @@
 #include "dccl/binary.h"
 #include "dccl/codec.h"
 
+#include <list>
+
 #include "test.pb.h"
 using namespace dccl::test;
 
