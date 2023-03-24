@@ -30,27 +30,27 @@ using dccl::dlog;
 // DefaultMessageCodec
 //
 
-void dccl::v2::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
+void dccl::v2::DefaultMessageCodec::any_encode(Bitset* bits, const dccl::any& wire_value)
 {
-    if (wire_value.empty())
+    if (is_empty(wire_value))
         *bits = Bitset(min_size());
     else
         *bits = traverse_const_message<Encoder, Bitset>(wire_value);
 }
 
-unsigned dccl::v2::DefaultMessageCodec::any_size(const boost::any& wire_value)
+unsigned dccl::v2::DefaultMessageCodec::any_size(const dccl::any& wire_value)
 {
-    if (wire_value.empty())
+    if (is_empty(wire_value))
         return min_size();
     else
         return traverse_const_message<Size, unsigned>(wire_value);
 }
 
-void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
+void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_value)
 {
     try
     {
-        google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message*>(*wire_value);
+        google::protobuf::Message* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
 
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();
         const google::protobuf::Reflection* refl = msg->GetReflection();
@@ -68,7 +68,7 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
             if (field_desc->is_repeated())
             {
-                std::vector<boost::any> wire_values;
+                std::vector<dccl::any> wire_values;
                 if (field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
                     for (unsigned j = 0,
@@ -80,7 +80,7 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
                     for (int j = 0, m = wire_values.size(); j < m; ++j)
                     {
-                        if (wire_values[j].empty())
+                        if (is_empty(wire_values[j]))
                             refl->RemoveLast(msg, field_desc);
                     }
                 }
@@ -94,13 +94,13 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             }
             else
             {
-                boost::any wire_value;
+                dccl::any wire_value;
                 if (field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
                     // allows us to propagate pointers instead of making many copies of entire messages
                     wire_value = refl->MutableMessage(msg, field_desc);
                     codec->field_decode(bits, &wire_value, field_desc);
-                    if (wire_value.empty())
+                    if (is_empty(wire_value))
                         refl->ClearField(msg, field_desc);
                 }
                 else
@@ -114,12 +114,12 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
 
         std::vector<const google::protobuf::FieldDescriptor*> set_fields;
         refl->ListFields(*msg, &set_fields);
-        if (set_fields.empty() && this_field())
-            *wire_value = boost::any();
+        if (is_empty(set_fields) && this_field())
+            *wire_value = dccl::any();
         else
             *wire_value = msg;
     }
-    catch (boost::bad_any_cast& e)
+    catch (dccl::bad_any_cast& e)
     {
         throw(Exception(
             "Bad type given to traverse mutable, expecting google::protobuf::Message*, got " +

@@ -46,7 +46,7 @@ void dccl::FieldCodecBase::base_encode(Bitset* bits, const google::protobuf::Mes
         bits, manager().type_helper().find(field_value.GetDescriptor())->get_value(field_value), 0);
 }
 
-void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_value,
+void dccl::FieldCodecBase::field_encode(Bitset* bits, const dccl::any& field_value,
                                         const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
@@ -55,7 +55,7 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_va
         dlog.is(DEBUG2, ENCODE) && dlog << "Starting encode for field: " << field->DebugString()
                                         << std::flush;
 
-    boost::any wire_value;
+    dccl::any wire_value;
     field_pre_encode(&wire_value, field_value);
 
     Bitset new_bits;
@@ -69,12 +69,12 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits, const boost::any& field_va
 }
 
 void dccl::FieldCodecBase::field_encode_repeated(Bitset* bits,
-                                                 const std::vector<boost::any>& field_values,
+                                                 const std::vector<dccl::any>& field_values,
                                                  const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
 
-    std::vector<boost::any> wire_values;
+    std::vector<dccl::any> wire_values;
     field_pre_encode_repeated(&wire_values, field_values);
 
     Bitset new_bits;
@@ -93,24 +93,24 @@ void dccl::FieldCodecBase::base_size(unsigned* bit_size, const google::protobuf:
     field_size(bit_size, &msg, 0);
 }
 
-void dccl::FieldCodecBase::field_size(unsigned* bit_size, const boost::any& field_value,
+void dccl::FieldCodecBase::field_size(unsigned* bit_size, const dccl::any& field_value,
                                       const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
 
-    boost::any wire_value;
+    dccl::any wire_value;
     field_pre_encode(&wire_value, field_value);
 
     *bit_size += any_size(wire_value);
 }
 
 void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
-                                               const std::vector<boost::any>& field_values,
+                                               const std::vector<dccl::any>& field_values,
                                                const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
 
-    std::vector<boost::any> wire_values;
+    std::vector<dccl::any> wire_values;
     field_pre_encode_repeated(&wire_values, field_values);
 
     *bit_size += any_size_repeated(wire_values);
@@ -120,17 +120,17 @@ void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* 
                                        MessagePart part)
 {
     BaseRAII scoped_globals(this, part, field_value);
-    boost::any value(field_value);
+    dccl::any value(field_value);
     field_decode(bits, &value, 0);
 }
 
-void dccl::FieldCodecBase::field_decode(Bitset* bits, boost::any* field_value,
+void dccl::FieldCodecBase::field_decode(Bitset* bits, dccl::any* field_value,
                                         const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
 
     if (!field_value)
-        throw(Exception("Decode called with NULL boost::any"));
+        throw(Exception("Decode called with NULL dccl::any"));
     else if (!bits)
         throw(Exception("Decode called with NULL Bitset"));
 
@@ -151,7 +151,7 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, boost::any* field_value,
     if (field)
         dlog.is(DEBUG2, DECODE) && dlog << "... using these bits: " << these_bits << std::endl;
 
-    boost::any wire_value = *field_value;
+    dccl::any wire_value = *field_value;
 
     any_decode(&these_bits, &wire_value);
 
@@ -159,7 +159,7 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, boost::any* field_value,
 }
 
 void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
-                                                 std::vector<boost::any>* field_values,
+                                                 std::vector<dccl::any>* field_values,
                                                  const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
@@ -182,7 +182,7 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
     dlog.is(DEBUG2, DECODE) && dlog << "using these " << these_bits.size()
                                     << " bits: " << these_bits << std::endl;
 
-    std::vector<boost::any> wire_values = *field_values;
+    std::vector<dccl::any> wire_values = *field_values;
     any_decode_repeated(&these_bits, &wire_values);
 
     field_values->clear();
@@ -369,7 +369,7 @@ std::string dccl::FieldCodecBase::codec_group(const google::protobuf::Descriptor
 std::string dccl::FieldCodecBase::info() { return std::string(); }
 
 void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
-                                               const std::vector<boost::any>& wire_values)
+                                               const std::vector<dccl::any>& wire_values)
 {
     // out_bits = [field_values[2]][field_values[1]][field_values[0]]
 
@@ -423,13 +423,13 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
         if (i < wire_values.size())
             any_encode(&new_bits, wire_values[i]);
         else
-            any_encode(&new_bits, boost::any());
+            any_encode(&new_bits, dccl::any());
         bits->append(new_bits);
     }
 }
 
 void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
-                                               std::vector<boost::any>* wire_values)
+                                               std::vector<dccl::any>* wire_values)
 {
     unsigned wire_vector_size = dccl_field_options().max_repeat();
     if (codec_version() > 2)
@@ -463,7 +463,7 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
     }
 }
 
-unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& wire_values)
+unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<dccl::any>& wire_values)
 {
     unsigned out = 0;
     unsigned wire_vector_size = dccl_field_options().max_repeat();
@@ -492,7 +492,7 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<boost::any>& 
         if (i < wire_values.size())
             out += any_size(wire_values[i]);
         else
-            out += any_size(boost::any());
+            out += any_size(dccl::any());
     }
     return out;
 }
@@ -535,25 +535,25 @@ unsigned dccl::FieldCodecBase::min_size_repeated()
         return min_size() * dccl_field_options().max_repeat();
 }
 
-void dccl::FieldCodecBase::any_pre_encode_repeated(std::vector<boost::any>* wire_values,
-                                                   const std::vector<boost::any>& field_values)
+void dccl::FieldCodecBase::any_pre_encode_repeated(std::vector<dccl::any>* wire_values,
+                                                   const std::vector<dccl::any>& field_values)
 {
-    for (std::vector<boost::any>::const_iterator it = field_values.begin(),
+    for (std::vector<dccl::any>::const_iterator it = field_values.begin(),
                                                  end = field_values.end();
          it != end; ++it)
     {
-        boost::any wire_value;
+        dccl::any wire_value;
         any_pre_encode(&wire_value, *it);
         wire_values->push_back(wire_value);
     }
 }
-void dccl::FieldCodecBase::any_post_decode_repeated(const std::vector<boost::any>& wire_values,
-                                                    std::vector<boost::any>* field_values)
+void dccl::FieldCodecBase::any_post_decode_repeated(const std::vector<dccl::any>& wire_values,
+                                                    std::vector<dccl::any>* field_values)
 {
-    for (std::vector<boost::any>::const_iterator it = wire_values.begin(), end = wire_values.end();
+    for (std::vector<dccl::any>::const_iterator it = wire_values.begin(), end = wire_values.end();
          it != end; ++it)
     {
-        boost::any field_value;
+        dccl::any field_value;
         any_post_decode(*it, &field_value);
         field_values->push_back(field_value);
     }

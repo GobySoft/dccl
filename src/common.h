@@ -44,36 +44,6 @@
 #define DCCL_HAS_CPP17
 #endif
 
-#ifdef DCCL_HAS_CPP17
-#include <any>
-namespace dccl
-{
-using any = std::any;
-template <class T> T any_cast(const any& operand) { return std::any_cast<T>(operand); }
-template <class T> T any_cast(any& operand) { return std::any_cast<T>(operand); }
-template <class T> T any_cast(any&& operand) { return std::any_cast<T>(operand); }
-template <class T> const T* any_cast(const any* operand) noexcept
-{
-    return std::any_cast<T>(operand);
-}
-template <class T> T* any_cast(any* operand) noexcept { return std::any_cast<T>(operand); }
-} // namespace dccl
-#else
-#include <boost/any.hpp>
-namespace dccl
-{
-using any = boost::any;
-template <class T> T any_cast(const any& operand) { return boost::any_cast<T>(operand); }
-template <class T> T any_cast(any& operand) { return boost::any_cast<T>(operand); }
-template <class T> T any_cast(any&& operand) { return boost::any_cast<T>(operand); }
-template <class T> const T* any_cast(const any* operand) noexcept
-{
-    return boost::any_cast<T>(operand);
-}
-template <class T> T* any_cast(any* operand) noexcept { return boost::any_cast<T>(operand); }
-} // namespace dccl
-#endif
-
 namespace dccl
 {
 inline unsigned floor_bits2bytes(unsigned bits) { return bits >> 3; }

@@ -477,10 +477,10 @@ unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
     Bitset these_bits(&fixed_header_bits);
     these_bits.get_more_bits(id_min_size);
 
-    boost::any return_value;
+    dccl::any return_value;
     id_codec()->field_decode(&these_bits, &return_value, 0);
 
-    return boost::any_cast<uint32>(return_value);
+    return dccl::any_cast<uint32>(return_value);
 }
 
 template <typename CharIterator>
