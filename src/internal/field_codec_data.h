@@ -31,12 +31,12 @@ struct CodecData
     DynamicConditions dynamic_conditions_;
 
     template <typename FieldCodecType>
-    void set_codec_specific_data(std::shared_ptr<boost::any> data)
+    void set_codec_specific_data(std::shared_ptr<dccl::any> data)
     {
         codec_specific_[std::type_index(typeid(FieldCodecType))] = data;
     }
 
-    template <typename FieldCodecType> std::shared_ptr<boost::any> codec_specific_data()
+    template <typename FieldCodecType> std::shared_ptr<dccl::any> codec_specific_data()
     {
         return codec_specific_.at(std::type_index(typeid(FieldCodecType)));
     }
@@ -47,7 +47,7 @@ struct CodecData
     }
 
   private:
-    std::map<std::type_index, std::shared_ptr<boost::any>> codec_specific_;
+    std::map<std::type_index, std::shared_ptr<dccl::any>> codec_specific_;
 };
 } // namespace internal
 } // namespace dccl

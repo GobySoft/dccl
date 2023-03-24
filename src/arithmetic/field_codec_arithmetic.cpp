@@ -238,10 +238,10 @@ dccl::arith::ModelManager& dccl::arith::model_manager(FieldCodecManagerLocal& ma
 {
     if (!manager.codec_data().template has_codec_specific_data<ArithmeticFieldCodecBase<>>())
     {
-        auto model_manager = std::make_shared<boost::any>(ModelManager());
+        auto model_manager = std::make_shared<dccl::any>(ModelManager());
         manager.codec_data().template set_codec_specific_data<ArithmeticFieldCodecBase<>>(
             model_manager);
     }
-    return boost::any_cast<ModelManager&>(
+    return dccl::any_cast<ModelManager&>(
         *manager.codec_data().template codec_specific_data<ArithmeticFieldCodecBase<>>());
 }
