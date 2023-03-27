@@ -509,7 +509,7 @@ class FromProtoCustomMessage
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
                          const google::protobuf::Message& msg) override
     {
-        Parent::const_type p = dccl::any_cast<Parent::const_type>(Parent::_get_value(field, msg));
+        auto p = dccl::any_cast<Parent::const_type>(Parent::_get_value(field, msg));
         type r;
         r.CopyFrom(*p);
         return r;
@@ -518,8 +518,7 @@ class FromProtoCustomMessage
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
                                   const google::protobuf::Message& msg, int index) override
     {
-        Parent::const_type p =
-            dccl::any_cast<Parent::const_type>(Parent::_get_repeated_value(field, msg, index));
+        auto p = dccl::any_cast<Parent::const_type>(Parent::_get_repeated_value(field, msg, index));
         type r;
         r.CopyFrom(*p);
         return r;

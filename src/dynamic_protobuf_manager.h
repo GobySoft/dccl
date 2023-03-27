@@ -47,6 +47,9 @@ namespace dccl
 class DynamicProtobufManager
 {
   public:
+    DynamicProtobufManager(const DynamicProtobufManager&) = delete;
+    DynamicProtobufManager& operator=(const DynamicProtobufManager&) = delete;
+
     /// \brief Finds the Google Protobuf Descriptor (essentially a meta-class for a given Message) from a given Message name.
     ///
     /// \param protobuf_type_name The fully qualified name of the Google Protobuf Message including package name. E.g. in the .proto file:
@@ -231,9 +234,6 @@ class DynamicProtobufManager
     }
 
     void enable_disk_source_database();
-
-    DynamicProtobufManager(const DynamicProtobufManager&) = delete;
-    DynamicProtobufManager& operator=(const DynamicProtobufManager&) = delete;
 
   private:
     std::vector<std::shared_ptr<google::protobuf::DescriptorDatabase>> databases_;

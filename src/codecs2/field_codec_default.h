@@ -97,7 +97,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
         return FieldCodecBase::dccl_field_options().resolution();
     }
 
-    virtual void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(),
                                 "missing (dccl.field).min");
@@ -162,9 +162,9 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                                 "min, decrease max, or decrease precision.");
     }
 
-    Bitset encode() { return Bitset(size()); }
+    Bitset encode() override { return Bitset(size()); }
 
-    virtual Bitset encode(const WireType& value)
+    Bitset encode(const WireType& value) override
     {
         dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::ENCODE) &&
             dlog << "Encode " << value << " with bounds: [" << min() << "," << max() << "]"
@@ -194,7 +194,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             wire_value /= res;
         else
             wire_value *= (1.0 / res);
-        dccl::uint64 uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
+        auto uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
 
         // "presence" value (0)
         if (!FieldCodecBase::use_required())
@@ -205,7 +205,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
         return encoded;
     }
 
-    virtual WireType decode(Bitset* bits)
+    WireType decode(Bitset* bits) override
     {
         dccl::dlog.is(dccl::logger::DEBUG2, dccl::logger::DECODE) &&
             dlog << "Decode with bounds: [" << min() << "," << max() << "]" << std::endl;
@@ -223,7 +223,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             --uint_value;
         }
 
-        WireType wire_value = (WireType)uint_value;
+        auto wire_value = (WireType)uint_value;
         double res = resolution();
         if (res >= 1)
             wire_value *= res;
@@ -240,7 +240,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
     // bring size(const WireType&) into scope so callers can access it
     using TypedFixedFieldCodec<WireType, FieldType>::size;
 
-    unsigned size()
+    unsigned size() override
     {
         // if not required field, leave one value for unspecified (always encoded as 0)
         unsigned NULL_VALUE = FieldCodecBase::use_required() ? 0 : 1;
@@ -255,11 +255,11 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
 class DefaultBoolCodec : public TypedFixedFieldCodec<bool>
 {
   private:
-    Bitset encode(const bool& wire_value);
-    Bitset encode();
-    bool decode(Bitset* bits);
-    unsigned size();
-    void validate();
+    Bitset encode(const bool& wire_value) override;
+    Bitset encode() override;
+    bool decode(Bitset* bits) override;
+    unsigned size() override;
+    void validate() override;
 };
 
 /// \brief Provides an variable length ASCII string encoder. Can encode strings up to 255 bytes by using a length byte preceeding the string.
@@ -268,14 +268,14 @@ class DefaultBoolCodec : public TypedFixedFieldCodec<bool>
 class DefaultStringCodec : public TypedFieldCodec<std::string>
 {
   private:
-    Bitset encode();
-    Bitset encode(const std::string& wire_value);
-    std::string decode(Bitset* bits);
-    unsigned size();
-    unsigned size(const std::string& wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    void validate();
+    Bitset encode() override;
+    Bitset encode(const std::string& wire_value) override;
+    std::string decode(Bitset* bits) override;
+    unsigned size() override;
+    unsigned size(const std::string& wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    void validate() override;
 
   private:
     enum
@@ -288,14 +288,14 @@ class DefaultStringCodec : public TypedFieldCodec<std::string>
 class DefaultBytesCodec : public TypedFieldCodec<std::string>
 {
   private:
-    Bitset encode();
-    Bitset encode(const std::string& wire_value);
-    std::string decode(Bitset* bits);
-    unsigned size();
-    unsigned size(const std::string& wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    void validate();
+    Bitset encode() override;
+    Bitset encode(const std::string& wire_value) override;
+    std::string decode(Bitset* bits) override;
+    unsigned size() override;
+    unsigned size(const std::string& wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    void validate() override;
 };
 
 /// \brief Provides an enum encoder. This converts the enumeration to an integer (based on the enumeration <i>index</i> (<b>not</b> its <i>value</i>) and uses DefaultNumericFieldCodec to encode the integer.
@@ -303,18 +303,18 @@ class DefaultEnumCodec
     : public DefaultNumericFieldCodec<int32, const google::protobuf::EnumValueDescriptor*>
 {
   public:
-    int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
-    const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value);
+    int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override;
+    const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value) override;
 
   private:
-    void validate() {}
+    void validate() override {}
 
-    double max()
+    double max() override
     {
         const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
         return e->value_count() - 1;
     }
-    double min() { return 0; }
+    double min() override { return 0; }
 };
 
 typedef double time_wire_type;
@@ -325,17 +325,17 @@ template <typename TimeType, int conversion_factor>
 class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
 {
   public:
-    time_wire_type pre_encode(const TimeType& time_of_day)
+    time_wire_type pre_encode(const TimeType& time_of_day) override
     {
         time_wire_type max_secs = max();
         return std::fmod(time_of_day / static_cast<time_wire_type>(conversion_factor), max_secs);
     }
 
-    TimeType post_decode(const time_wire_type& encoded_time)
+    TimeType post_decode(const time_wire_type& encoded_time) override
     {
-        int64 max_secs = (int64)max();
+        auto max_secs = (int64)max();
         timeval t;
-        gettimeofday(&t, 0);
+        gettimeofday(&t, nullptr);
         int64 now = t.tv_sec;
         int64 daystart = now - (now % max_secs);
         int64 today_time = now - daystart;
@@ -355,15 +355,18 @@ class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
     }
 
   private:
-    void validate()
+    void validate() override
     {
         DefaultNumericFieldCodec<time_wire_type, TimeType>::validate_numeric_bounds();
     }
 
-    double max() { return FieldCodecBase::dccl_field_options().num_days() * SECONDS_IN_DAY; }
+    double max() override
+    {
+        return FieldCodecBase::dccl_field_options().num_days() * SECONDS_IN_DAY;
+    }
 
-    double min() { return 0; }
-    double precision()
+    double min() override { return 0; }
+    double precision() override
     {
         if (!FieldCodecBase::dccl_field_options().has_precision())
             return 0; // default to second precision
@@ -399,11 +402,11 @@ template <> class TimeCodec<double> : public TimeCodecBase<double, 1>
 /// \brief Placeholder codec that takes no space on the wire (0 bits).
 template <typename T> class StaticCodec : public TypedFixedFieldCodec<T>
 {
-    Bitset encode(const T&) { return Bitset(size()); }
+    Bitset encode(const T&) override { return Bitset(size()); }
 
-    Bitset encode() { return Bitset(size()); }
+    Bitset encode() override { return Bitset(size()); }
 
-    T decode(Bitset* bits)
+    T decode(Bitset* /*bits*/) override
     {
         std::istringstream iss(FieldCodecBase::dccl_field_options().static_value());
         T value;
@@ -411,9 +414,9 @@ template <typename T> class StaticCodec : public TypedFixedFieldCodec<T>
         return value;
     }
 
-    unsigned size() { return 0; }
+    unsigned size() override { return 0; }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_static_value(),
                                 "missing (dccl.field).static_value");

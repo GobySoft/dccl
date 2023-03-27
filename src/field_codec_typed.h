@@ -238,21 +238,21 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     virtual unsigned size_repeated(const std::vector<WireType>& wire_values) = 0;
 
     /// \brief Give the max size of a repeated field
-    virtual unsigned max_size_repeated() = 0;
+    unsigned max_size_repeated() override = 0;
 
     /// \brief Give the min size of a repeated field
-    virtual unsigned min_size_repeated() = 0;
+    unsigned min_size_repeated() override = 0;
 
     /// \brief Encode an empty field
     ///
     /// \return Bits represented the encoded field.
-    virtual Bitset encode() { return encode_repeated(std::vector<WireType>()); }
+    Bitset encode() override { return encode_repeated(std::vector<WireType>()); }
 
     /// \brief Encode a non-empty field
     ///
     /// \param wire_value Value to encode.
     /// \return Bits represented the encoded field.
-    virtual Bitset encode(const WireType& wire_value)
+    Bitset encode(const WireType& wire_value) override
     {
         return encode_repeated(std::vector<WireType>(1, wire_value));
     }
@@ -261,7 +261,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     ///
     /// \param bits Bits to use for decoding.
     /// \return the decoded value.
-    virtual WireType decode(dccl::Bitset* bits)
+    WireType decode(dccl::Bitset* bits) override
     {
         std::vector<WireType> return_vec = decode_repeated(bits);
         if (is_empty(return_vec))
@@ -273,23 +273,23 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     /// \brief Calculate the size (in bits) of an empty field.
     ///
     /// \return the size (in bits) of the empty field.
-    virtual unsigned size() { return size_repeated(std::vector<WireType>()); }
+    unsigned size() override { return size_repeated(std::vector<WireType>()); }
 
     /// \brief Calculate the size (in bits) of a non-empty field.
     ///
     /// \param wire_value Value to use when calculating the size of the field. If calculating the size requires encoding the field completely, cache the encoded value for a likely future call to encode() for the same wire_value.
     /// \return the size (in bits) of the field.
-    virtual unsigned size(const WireType& wire_value)
+    unsigned size(const WireType& wire_value) override
     {
         return size_repeated(std::vector<WireType>(1, wire_value));
     }
 
-    virtual unsigned max_size() { return max_size_repeated(); }
+    unsigned max_size() override { return max_size_repeated(); }
 
-    virtual unsigned min_size() { return min_size_repeated(); }
+    unsigned min_size() override { return min_size_repeated(); }
 
   private:
-    void any_encode_repeated(Bitset* bits, const std::vector<dccl::any>& wire_values)
+    void any_encode_repeated(Bitset* bits, const std::vector<dccl::any>& wire_values) override
     {
         try
         {
@@ -303,7 +303,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
         }
     }
 
-    void any_decode_repeated(Bitset* repeated_bits, std::vector<dccl::any>* field_values)
+    void any_decode_repeated(Bitset* repeated_bits, std::vector<dccl::any>* field_values) override
     {
         any_decode_repeated_specific<WireType>(repeated_bits, field_values);
     }
@@ -332,7 +332,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
         for (int i = 0, n = decoded.size(); i < n; ++i) wire_values->at(i) = decoded[i];
     }
 
-    void any_pre_encode(dccl::any* wire_value, const dccl::any& field_value)
+    void any_pre_encode(dccl::any* wire_value, const dccl::any& field_value) override
     {
         try
         {
@@ -349,7 +349,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
         }
     }
 
-    void any_post_decode(const dccl::any& wire_value, dccl::any* field_value)
+    void any_post_decode(const dccl::any& wire_value, dccl::any* field_value) override
     {
         try
         {
@@ -372,7 +372,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     //          void any_post_decode_repeated(const std::vector<dccl::any>& wire_values,
     //                                        std::vector<dccl::any>* field_values);
 
-    unsigned any_size_repeated(const std::vector<dccl::any>& wire_values)
+    unsigned any_size_repeated(const std::vector<dccl::any>& wire_values) override
     {
         try
         {
