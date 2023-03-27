@@ -422,6 +422,7 @@ jobs:
 
   osx-build:
     <<: *job-template-amd64
+    resource_class: medium
     macos:
       xcode: "13.0.0"
     environment:
@@ -436,10 +437,10 @@ jobs:
           command: brew install cmake protobuf@3
       - run: &run-build
           name: Build
-          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j1
       - run: &run-tests
           name: Run tests
-          command: cd build && ctest --output-on-failure -j4
+          command: cd build && ctest --output-on-failure -j1
             
   amd64-stretch-build:
     <<: *job-template-amd64
