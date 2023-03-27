@@ -421,7 +421,6 @@ jobs:
             - '*.tar.xz'
 
   osx-build:
-    <<: *job-template-amd64
     resource_class: medium
     macos:
       xcode: "13.0.0"
