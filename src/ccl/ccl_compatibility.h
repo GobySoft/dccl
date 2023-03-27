@@ -149,7 +149,7 @@ class FixAgeCodec : public dccl::v2::DefaultNumericFieldCodec<dccl::uint32>
 class TimeDateCodec : public dccl::TypedFixedFieldCodec<dccl::uint64>
 {
   public:
-    static dccl::uint64 to_uint64_time(const boost::posix_time::ptime& time_date);
+    static dccl::uint64 to_uint64_time(const std::time_t& time_date);
 
   private:
     dccl::Bitset encode();

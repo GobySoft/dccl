@@ -23,8 +23,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of Legacy CCL
 
-#include <boost/date_time.hpp>
-
 #include "dccl/ccl/ccl_compatibility.h"
 #include "dccl/codec.h"
 #include "dccl/field_codec.h"
@@ -81,10 +79,16 @@ int main(int argc, char* argv[])
     state_in.set_longitude(-77.164266667);
     state_in.set_fix_age(4);
 
-    boost::gregorian::date today = boost::gregorian::day_clock::universal_day();
-    boost::posix_time::ptime time_date(
-        boost::gregorian::date(today.year(), boost::date_time::Mar, 4),
-        boost::posix_time::time_duration(17, 1, 44));
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm input_tm = *std::gmtime(&now_time_t); // get current year
+    input_tm.tm_mon = 2;                          // zero indexed March
+    input_tm.tm_mday = 4;
+    input_tm.tm_hour = 17;
+    input_tm.tm_min = 1;
+    input_tm.tm_sec = 44;
+    input_tm.tm_isdst = -1;
+    std::time_t time_date = timegm(&input_tm);
 
     state_in.set_time_date(dccl::legacyccl::TimeDateCodec::to_uint64_time(time_date));
     state_in.set_heading(270);
