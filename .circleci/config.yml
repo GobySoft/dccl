@@ -433,13 +433,13 @@ jobs:
           command: brew update
       - run:
           name: Install CMake
-          command: brew install cmake protobuf@3
+          command: brew install cmake protobuf
       - run: &run-build
           name: Build
-          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j1
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
       - run: &run-tests
           name: Run tests
-          command: cd build && ctest --output-on-failure -j1
+          command: cd build && ctest --output-on-failure -j4
             
   amd64-stretch-build:
     <<: *job-template-amd64

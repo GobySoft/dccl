@@ -139,14 +139,13 @@ dccl::arith::Model::value_type dccl::arith::Model::symbol_to_value(symbol_type s
 std::pair<dccl::arith::Model::freq_type, dccl::arith::Model::freq_type>
 dccl::arith::Model::symbol_to_cumulative_freq(symbol_type symbol, ModelState state) const
 {
-    const boost::bimap<symbol_type, freq_type>& c_freqs =
+    const auto& c_freqs =
         (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
 
-    boost::bimap<symbol_type, freq_type>::left_map::const_iterator c_freq_it =
-        c_freqs.left.find(symbol);
+    auto c_freq_it = c_freqs.find(symbol);
     std::pair<freq_type, freq_type> c_freq_range;
     c_freq_range.second = c_freq_it->second;
-    if (c_freq_it == c_freqs.left.begin())
+    if (c_freq_it == c_freqs.begin())
     {
         c_freq_range.first = 0;
     }
@@ -162,7 +161,7 @@ std::pair<dccl::arith::Model::symbol_type, dccl::arith::Model::symbol_type>
 dccl::arith::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_freq_pair,
                                               ModelState state) const
 {
-    const boost::bimap<symbol_type, freq_type>& c_freqs =
+    const auto& c_freqs =
         (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
 
     std::pair<symbol_type, symbol_type> symbol_pair;
@@ -174,11 +173,19 @@ dccl::arith::Model::cumulative_freq_to_symbol(std::pair<freq_type, freq_type> c_
     // symbol: 2   freq: 10   c_freq: 35 [25 ... 35)
     // searching for c_freq of 30 should return symbol 2
     // searching for c_freq of 10 should return symbol 1
-    symbol_pair.first = c_freqs.right.upper_bound(c_freq_pair.first)->second;
+    auto search = c_freq_pair.first;
+    for (const auto& p : c_freqs)
+    {
+        if (search < p.second)
+        {
+            symbol_pair.first = p.first;
+            break;
+        }
+    }
 
-    if (symbol_pair.first == c_freqs.left.rbegin()->first)
+    if (symbol_pair.first == c_freqs.rbegin()->first)
         symbol_pair.second = symbol_pair.first; // last symbol can't be ambiguous on the low end
-    else if (c_freqs.left.find(symbol_pair.first)->second > c_freq_pair.second)
+    else if (c_freqs.find(symbol_pair.first)->second > c_freq_pair.second)
         symbol_pair.second = symbol_pair.first; // unambiguously this symbol
     else
         symbol_pair.second = symbol_pair.first + 1;
@@ -191,16 +198,15 @@ void dccl::arith::Model::update_model(symbol_type symbol, ModelState state)
     if (!user_model_.is_adaptive())
         return;
 
-    boost::bimap<symbol_type, freq_type>& c_freqs =
-        (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
+    auto& c_freqs = (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
 
     if (dlog.check(DEBUG3))
     {
         dlog.is(DEBUG3) && dlog << "Model was: " << std::endl;
         for (symbol_type i = MIN_SYMBOL, n = max_symbol(); i <= n; ++i)
         {
-            boost::bimap<symbol_type, freq_type>::left_iterator it = c_freqs.left.find(i);
-            if (it != c_freqs.left.end())
+            auto it = c_freqs.find(i);
+            if (it != c_freqs.end())
                 dlog.is(DEBUG3) && dlog << "Symbol: " << it->first << ", c_freq: " << it->second
                                         << std::endl;
         }
@@ -208,9 +214,9 @@ void dccl::arith::Model::update_model(symbol_type symbol, ModelState state)
 
     for (symbol_type i = max_symbol(), n = symbol; i >= n; --i)
     {
-        boost::bimap<symbol_type, freq_type>::left_iterator it = c_freqs.left.find(i);
-        if (it != c_freqs.left.end())
-            c_freqs.left.replace_data(it, it->second + 1);
+        auto it = c_freqs.find(i);
+        if (it != c_freqs.end())
+            ++it->second;
     }
 
     if (dlog.check(DEBUG3))
@@ -218,8 +224,8 @@ void dccl::arith::Model::update_model(symbol_type symbol, ModelState state)
         dlog.is(DEBUG3) && dlog << "Model is now: " << std::endl;
         for (symbol_type i = MIN_SYMBOL, n = max_symbol(); i <= n; ++i)
         {
-            boost::bimap<symbol_type, freq_type>::left_iterator it = c_freqs.left.find(i);
-            if (it != c_freqs.left.end())
+            auto it = c_freqs.find(i);
+            if (it != c_freqs.end())
                 dlog.is(DEBUG3) && dlog << "Symbol: " << it->first << ", c_freq: " << it->second
                                         << std::endl;
         }
