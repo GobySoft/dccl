@@ -258,7 +258,7 @@ class DynamicProtobufManager
     class DLogMultiFileErrorCollector : public google::protobuf::compiler::MultiFileErrorCollector
     {
         void AddError(const std::string& filename, int line, int column,
-                      const std::string& message);
+                      const std::string& message) override;
     };
 
     std::shared_ptr<DLogMultiFileErrorCollector> error_collector_;

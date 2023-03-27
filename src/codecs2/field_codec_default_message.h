@@ -38,19 +38,19 @@ namespace v2
 class DefaultMessageCodec : public FieldCodecBase
 {
   private:
-    void any_encode(Bitset* bits, const dccl::any& wire_value);
-    void any_decode(Bitset* bits, dccl::any* wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    unsigned any_size(const dccl::any& wire_value);
+    void any_encode(Bitset* bits, const dccl::any& wire_value) override;
+    void any_decode(Bitset* bits, dccl::any* wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    unsigned any_size(const dccl::any& wire_value) override;
 
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
         return manager().find(field_desc, has_codec_group(), codec_group());
     }
 
-    void validate();
-    std::string info();
+    void validate() override;
+    std::string info() override;
     bool check_field(const google::protobuf::FieldDescriptor* field);
 
     struct Size

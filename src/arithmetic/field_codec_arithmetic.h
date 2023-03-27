@@ -221,7 +221,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     static constexpr uint64 FIRST_QTR = HALF >> 1;                // 01000000...
     static constexpr uint64 THIRD_QTR = HALF + FIRST_QTR;         // 11000000...
 
-    Bitset encode_repeated(const std::vector<Model::value_type>& wire_value)
+    Bitset encode_repeated(const std::vector<Model::value_type>& wire_value) override
     {
         return encode_repeated(wire_value, true);
     }
@@ -413,7 +413,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         }
     }
 
-    std::vector<Model::value_type> decode_repeated(Bitset* bits)
+    std::vector<Model::value_type> decode_repeated(Bitset* bits) override
     {
         using dccl::dlog;
         using namespace dccl::logger;
@@ -515,7 +515,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return values;
     }
 
-    unsigned size_repeated(const std::vector<Model::value_type>& wire_values)
+    unsigned size_repeated(const std::vector<Model::value_type>& wire_values) override
     {
         // we should really cache this for efficiency
         return encode_repeated(wire_values, false).size();
@@ -523,7 +523,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
     // this maximum size will be upper bounded by: ceil(log_2(1/P)) + 1 where P is the
     // probability of this least probable set of symbols
-    unsigned max_size_repeated()
+    unsigned max_size_repeated() override
     {
         using dccl::log2;
         Model& model = current_model();
@@ -561,7 +561,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return std::max(size_least_probable_plus_eof, size_least_probable) + 1;
     }
 
-    unsigned min_size_repeated()
+    unsigned min_size_repeated() override
     {
         using dccl::log2;
         const Model& model = current_model();
@@ -600,7 +600,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return std::min(size_empty, size_most_probable);
     }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().HasExtension(arithmetic),
                                 "missing (dccl.field).arithmetic");
@@ -698,12 +698,12 @@ template <typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::
 template <typename FieldType>
 class ArithmeticFieldCodec : public ArithmeticFieldCodecBase<FieldType>
 {
-    Model::value_type pre_encode(const FieldType& field_value)
+    Model::value_type pre_encode(const FieldType& field_value) override
     {
         return static_cast<Model::value_type>(field_value);
     }
 
-    FieldType post_decode(const Model::value_type& wire_value)
+    FieldType post_decode(const Model::value_type& wire_value) override
     {
         return static_cast<FieldType>(wire_value);
     }
@@ -714,12 +714,14 @@ class ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*>
     : public ArithmeticFieldCodecBase<const google::protobuf::EnumValueDescriptor*>
 {
   public:
-    Model::value_type pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+    Model::value_type
+    pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override
     {
         return field_value->number();
     }
 
-    const google::protobuf::EnumValueDescriptor* post_decode(const Model::value_type& wire_value)
+    const google::protobuf::EnumValueDescriptor*
+    post_decode(const Model::value_type& wire_value) override
     {
         const google::protobuf::EnumDescriptor* e = FieldCodecBase::this_field()->enum_type();
         const google::protobuf::EnumValueDescriptor* return_value =

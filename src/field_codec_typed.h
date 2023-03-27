@@ -106,7 +106,7 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     virtual unsigned size(const WireType& wire_value) = 0;
 
   private:
-    unsigned any_size(const dccl::any& wire_value)
+    unsigned any_size(const dccl::any& wire_value) override
     {
         try
         {
@@ -118,7 +118,7 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
         }
     }
 
-    void any_encode(Bitset* bits, const dccl::any& wire_value)
+    void any_encode(Bitset* bits, const dccl::any& wire_value) override
     {
         try
         {
@@ -130,12 +130,12 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
         }
     }
 
-    void any_decode(Bitset* bits, dccl::any* wire_value)
+    void any_decode(Bitset* bits, dccl::any* wire_value) override
     {
         any_decode_specific<WireType>(bits, wire_value);
     }
 
-    void any_pre_encode(dccl::any* wire_value, const dccl::any& field_value)
+    void any_pre_encode(dccl::any* wire_value, const dccl::any& field_value) override
     {
         try
         {
@@ -152,7 +152,7 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
         }
     }
 
-    void any_post_decode(const dccl::any& wire_value, dccl::any* field_value)
+    void any_post_decode(const dccl::any& wire_value, dccl::any* field_value) override
     {
         any_post_decode_specific<WireType>(wire_value, field_value);
     }

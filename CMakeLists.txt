@@ -267,6 +267,25 @@ else()
   option(enable_units ${UNITS_DOC_STRING} OFF)
 endif()
 
+## clang-tidy
+option(enable_clang_tidy "Run code through clang-tidy" OFF)
+
+if(enable_clang_tidy)
+  # Find clang-tidy
+  find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+  if(CLANG_TIDY_BIN)
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags" "-header-filter=^((?!\\.pb\\.h).)*$")
+  else()
+    message(FATAL_ERROR "clang-tidy not found")
+  endif()
+endif()
+
+
+set(DCCL_DEBUG_OPTIONS -Wall -Wno-sign-compare -Wno-unknown-warning-option)
+add_compile_options("$<$<CONFIG:DEBUG>:${DCCL_DEBUG_OPTIONS}>")
+add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
+
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})
