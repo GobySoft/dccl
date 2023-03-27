@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <limits>
 
-#include <boost/bimap.hpp>
 
 #include "dccl/field_codec_typed.h"
 
@@ -105,10 +104,10 @@ class Model
 
     freq_type total_freq(ModelState state) const
     {
-        const boost::bimap<symbol_type, freq_type>& c_freqs =
+        const auto& c_freqs =
             (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
 
-        return c_freqs.left.at(max_symbol());
+        return c_freqs.at(max_symbol());
     }
 
     void update_model(symbol_type symbol, ModelState state);
@@ -122,8 +121,8 @@ class Model
 
   private:
     protobuf::ArithmeticModel user_model_;
-    boost::bimap<symbol_type, freq_type> encoder_cumulative_freqs_;
-    boost::bimap<symbol_type, freq_type> decoder_cumulative_freqs_;
+    std::map<symbol_type, freq_type> encoder_cumulative_freqs_;
+    std::map<symbol_type, freq_type> decoder_cumulative_freqs_;
 };
 
 class ModelManager
@@ -176,7 +175,7 @@ class ModelManager
                                 "All frequencies must be nonzero."));
             }
             cumulative_freq += freq;
-            model->encoder_cumulative_freqs_.left.insert(std::make_pair(symbol, cumulative_freq));
+            model->encoder_cumulative_freqs_.insert(std::make_pair(symbol, cumulative_freq));
         }
 
         // must have separate models for adaptive encoding.
