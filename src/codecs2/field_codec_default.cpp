@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <sstream>
 
-#include "dccl/codec.h"
-#include "dccl/codecs2/field_codec_default.h"
+#include "../codec.h"
+#include "field_codec_default.h"
 
 using namespace dccl::logger;
 

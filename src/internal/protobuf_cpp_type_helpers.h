@@ -24,7 +24,8 @@
 #ifndef DCCLPROTOBUFCPPTYPEHELPERS20110323H
 #define DCCLPROTOBUFCPPTYPEHELPERS20110323H
 
-#include "dccl/any.h"
+#include "../any.h"
+
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/message.h>

@@ -39,7 +39,7 @@
 
 #include <memory>
 
-#include "dccl/thread_safety.h"
+#include "thread_safety.h"
 
 namespace dccl
 {

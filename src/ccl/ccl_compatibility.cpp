@@ -26,9 +26,9 @@
 #include <chrono>
 #include <ctime>
 
+#include "../codec.h"
 #include "WhoiUtil.h"
 #include "ccl_compatibility.h"
-#include "dccl/codec.h"
 
 extern "C"
 {

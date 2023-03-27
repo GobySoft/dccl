@@ -22,7 +22,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests required versus optional encoding of fields using a presence bit
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test/dccl_presence/test.pb.h"
 using namespace dccl::test;
 

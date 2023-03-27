@@ -30,15 +30,15 @@
 #include <limits>
 #include <utility>
 
-#include "dccl/field_codec_typed.h"
+#include "../field_codec_typed.h"
 
 #include "dccl/arithmetic/protobuf/arithmetic.pb.h"
 #include "dccl/arithmetic/protobuf/arithmetic_extensions.pb.h"
 
-#include "dccl/logger.h"
+#include "../logger.h"
 
-#include "dccl/binary.h"
-#include "dccl/thread_safety.h"
+#include "../binary.h"
+#include "../thread_safety.h"
 
 extern "C"
 {

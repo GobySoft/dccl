@@ -23,7 +23,7 @@
 #ifndef FIELD_CODEC_VAR_BYTES_20181010H
 #define FIELD_CODEC_VAR_BYTES_20181010H
 
-#include "dccl/field_codec_typed.h"
+#include "../field_codec_typed.h"
 
 namespace dccl
 {

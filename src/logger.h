@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-#include "dccl/thread_safety.h"
+#include "thread_safety.h"
 
 namespace dccl
 {

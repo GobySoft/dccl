@@ -32,7 +32,7 @@
 
 #include <dlfcn.h> // for shared library loading
 
-#include "dccl/codec.h"
+#include "codec.h"
 
 #if DCCL_HAS_CRYPTOPP
 #if CRYPTOPP_PATH_USES_PLUS_SIGN
@@ -48,15 +48,15 @@
 #endif // CRYPTOPP_PATH_USES_PLUS_SIGN
 #endif // HAS_CRYPTOPP
 
-#include "dccl/codecs2/field_codec_default.h"
-#include "dccl/codecs3/field_codec_default.h"
-#include "dccl/codecs3/field_codec_presence.h"
-#include "dccl/codecs3/field_codec_var_bytes.h"
-#include "dccl/codecs4/field_codec_default.h"
-#include "dccl/codecs4/field_codec_default_message.h"
-#include "dccl/field_codec_id.h"
+#include "codecs2/field_codec_default.h"
+#include "codecs3/field_codec_default.h"
+#include "codecs3/field_codec_presence.h"
+#include "codecs3/field_codec_var_bytes.h"
+#include "codecs4/field_codec_default.h"
+#include "codecs4/field_codec_default_message.h"
+#include "field_codec_id.h"
 
-#include "dccl/option_extensions.pb.h"
+#include "option_extensions.pb.h"
 
 using dccl::hex_encode;
 

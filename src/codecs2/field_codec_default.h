@@ -36,10 +36,10 @@
 
 #include "dccl/option_extensions.pb.h"
 
-#include "dccl/binary.h"
-#include "dccl/codecs2/field_codec_default_message.h"
-#include "dccl/field_codec.h"
-#include "dccl/field_codec_fixed.h"
+#include "../binary.h"
+#include "../field_codec.h"
+#include "../field_codec_fixed.h"
+#include "field_codec_default_message.h"
 
 namespace dccl
 {

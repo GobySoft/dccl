@@ -27,8 +27,8 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 
 #if CODEC_VERSION == 3
 #include "test3.pb.h"

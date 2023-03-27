@@ -24,7 +24,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests bounds on DefaultNumericFieldCodec
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 

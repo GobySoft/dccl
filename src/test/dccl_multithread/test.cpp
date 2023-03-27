@@ -26,8 +26,8 @@
 
 #include <thread>
 
-#include "dccl/arithmetic/field_codec_arithmetic.h"
-#include "dccl/codec.h"
+#include "../../arithmetic/field_codec_arithmetic.h"
+#include "../../codec.h"
 #include "test.pb.h"
 #include "test_arithmetic.pb.h"
 

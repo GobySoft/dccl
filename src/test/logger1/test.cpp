@@ -24,7 +24,7 @@
 
 #include <cassert>
 
-#include "dccl/logger.h"
+#include "../../logger.h"
 
 /// asserts false if called - used for testing proper short-circuiting of logger calls
 inline std::ostream& stream_assert(std::ostream& os)

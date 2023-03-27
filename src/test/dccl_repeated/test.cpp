@@ -23,8 +23,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests functionality of std::list<const google::protobuf::Message*> calls
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 
 #include <list>
 
