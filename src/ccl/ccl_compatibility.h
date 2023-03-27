@@ -24,10 +24,10 @@
 #ifndef DCCLCCLCOMPATIBILITY20120426H
 #define DCCLCCLCOMPATIBILITY20120426H
 
+#include "../codecs2/field_codec_default.h"
+#include "../field_codec_id.h"
 #include "dccl/ccl/protobuf/ccl.pb.h"
 #include "dccl/ccl/protobuf/ccl_extensions.pb.h"
-#include "dccl/codecs2/field_codec_default.h"
-#include "dccl/field_codec_id.h"
 
 extern "C"
 {

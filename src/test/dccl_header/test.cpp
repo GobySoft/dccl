@@ -24,12 +24,12 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests proper encoding of standard Goby header
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
 #include <sys/time.h>
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 using namespace dccl::test;
 
 int main(int /*argc*/, char* /*argv*/ [])

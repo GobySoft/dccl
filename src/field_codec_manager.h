@@ -26,11 +26,11 @@
 
 #include <type_traits>
 
-#include "dccl/logger.h"
-#include "dccl/thread_safety.h"
 #include "field_codec.h"
 #include "internal/field_codec_data.h"
 #include "internal/type_helper.h"
+#include "logger.h"
+#include "thread_safety.h"
 
 namespace dccl
 {
@@ -211,7 +211,7 @@ class FieldCodecManagerLocal
     }
 
   private:
-    typedef std::map<std::string, std::shared_ptr<FieldCodecBase>> InsideMap;
+    using InsideMap = std::map<std::string, std::shared_ptr<FieldCodecBase>>;
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
 
     internal::TypeHelper type_helper_;

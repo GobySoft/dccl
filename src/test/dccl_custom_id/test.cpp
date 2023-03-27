@@ -23,8 +23,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of a custom DCCL ID codec
 
-#include "dccl/codec.h"
-#include "dccl/field_codec.h"
+#include "../../codec.h"
+#include "../../field_codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 

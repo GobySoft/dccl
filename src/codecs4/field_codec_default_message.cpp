@@ -21,10 +21,10 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "dccl/codecs4/field_codec_default_message.h"
-#include "dccl/codec.h"
-#include "dccl/oneof.h"
 
+#include "field_codec_default_message.h"
+#include "../codec.h"
+#include "../oneof.h"
 
 std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
 

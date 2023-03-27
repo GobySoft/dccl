@@ -24,7 +24,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests receiving one of several static types
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
 using namespace dccl::test;

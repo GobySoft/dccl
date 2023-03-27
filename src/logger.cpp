@@ -24,7 +24,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <ctime>
 
-#include "dccl/logger.h"
+#include "logger.h"
 
 dccl::Logger dccl::dlog;
 

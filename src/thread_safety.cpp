@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "dccl/thread_safety.h"
+#include "thread_safety.h"
 
 #if DCCL_THREAD_SUPPORT
 std::recursive_mutex dccl::g_dynamic_protobuf_manager_mutex;

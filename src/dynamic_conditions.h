@@ -26,8 +26,8 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
-#include "dccl/option_extensions.pb.h"
-#include "def.h"
+#include "dccl/def.h"
+#include "option_extensions.pb.h"
 
 namespace sol
 {

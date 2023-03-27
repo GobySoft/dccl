@@ -24,7 +24,7 @@
 #ifndef DCCLFIELDCODECHELPERS20110825H
 #define DCCLFIELDCODECHELPERS20110825H
 
-#include "dccl/common.h"
+#include "../common.h"
 
 namespace dccl
 {
@@ -77,8 +77,8 @@ class MessageStack
 
     ~MessageStack();
 
-    bool first() { return data_.desc.empty(); }
-    int count() { return data_.desc.size(); }
+    bool first() const { return data_.desc.empty(); }
+    int count() const { return data_.desc.size(); }
 
     void push(const google::protobuf::Descriptor* desc);
     void push(const google::protobuf::FieldDescriptor* field);
@@ -89,7 +89,7 @@ class MessageStack
     void push_message(const google::protobuf::Message* root_message,
                       const google::protobuf::FieldDescriptor* field, int index = -1);
 
-    std::size_t field_size() { return data_.field.size(); }
+    std::size_t field_size() const { return data_.field.size(); }
     MessagePart current_part() const { return data_.current_part(); }
 
   private:

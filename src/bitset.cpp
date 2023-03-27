@@ -22,7 +22,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "bitset.h"
-#include "dccl/codec.h"
+#include "codec.h"
 
 using namespace dccl::logger;
 

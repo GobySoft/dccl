@@ -22,9 +22,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "dccl/codec.h"
-#include "exception.h"
 #include "field_codec.h"
+#include "codec.h"
+#include "exception.h"
 
 using dccl::dlog;
 using namespace dccl::logger;
@@ -495,7 +495,7 @@ unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<dccl::any>& w
     return out;
 }
 
-void dccl::FieldCodecBase::check_repeat_settings()
+void dccl::FieldCodecBase::check_repeat_settings() const
 {
     if (!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " +

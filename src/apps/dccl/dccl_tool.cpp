@@ -34,9 +34,9 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/text_format.h>
 
-#include "dccl/binary.h"
-#include "dccl/cli_option.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../cli_option.h"
+#include "../../codec.h"
 
 #include "dccl/version.h"
 #include "dccl_tool.pb.h"

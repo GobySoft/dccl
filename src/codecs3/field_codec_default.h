@@ -28,7 +28,7 @@
 #ifndef DCCLV3FIELDCODECDEFAULT20140403H
 #define DCCLV3FIELDCODECDEFAULT20140403H
 
-#include "dccl/codecs2/field_codec_default.h"
+#include "../codecs2/field_codec_default.h"
 
 namespace dccl
 {

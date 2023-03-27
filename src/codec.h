@@ -48,7 +48,7 @@
 
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
-#include "def.h"
+#include "dccl/def.h"
 #include "field_codec_manager.h"
 
 /// Dynamic Compact Control Language namespace
@@ -78,7 +78,7 @@ class Codec
     template <class IDFieldCodec,
               typename std::enable_if<std::is_base_of<FieldCodecBase, IDFieldCodec>::value,
                                       int>::type = 0>
-    Codec(const std::string& dccl_id_codec_name, const IDFieldCodec& dccl_id_codec)
+    Codec(const std::string& dccl_id_codec_name, const IDFieldCodec& dccl_id_codec) // NOLINT
         : id_codec_(dccl_id_codec_name)
     {
         set_default_codecs();
@@ -178,7 +178,8 @@ class Codec
     /// \param os Pointer to a stream to write this information (if 0, written to dccl::dlog)
     /// \param user_id Custom user_speicified dccl id to identify a message, if user_id is not specified or <0, then the first
     /// dccl_id with the message descriptor corresponding to that of msg will be used
-    template <typename ProtobufMessage> void info(std::ostream* os = 0, int user_id = -1) const
+    template <typename ProtobufMessage>
+    void info(std::ostream* os = nullptr, int user_id = -1) const
     {
         info(ProtobufMessage::descriptor(), os, user_id);
     }
@@ -188,13 +189,13 @@ class Codec
     /// \param os Pointer to a stream to write this information (if 0, writes to dccl::dlog)
     /// \param user_id Custom user_speicified dccl id to identify a message, if user_id is not specified or <0, then the first
     /// dccl id with the message descriptor corresponding to that of msg will be used
-    void info(const google::protobuf::Descriptor* desc, std::ostream* os = 0,
+    void info(const google::protobuf::Descriptor* desc, std::ostream* os = nullptr,
               int user_id = -1) const;
 
     /// \brief Writes a human readable summary (including field sizes) of all the loaded (validated) DCCL types
     ///
     /// \param os Pointer to a stream to write this information (if 0, writes to dccl::dlog)
-    void info_all(std::ostream* os = 0) const;
+    void info_all(std::ostream* os = nullptr) const;
 
     /// \brief Gives the DCCL id (defined by the custom message option extension "(dccl.msg).id" in the .proto file). This ID is used on the wire to unique identify incoming message types.
     ///
@@ -236,7 +237,7 @@ class Codec
         // pass the hard coded id, that is, (dccl.msg).id,
         // through encode/decode to allow a custom ID codec (if in use)
         // to always take effect.
-        id_codec()->field_encode(&id_bits, hardcoded_id, 0);
+        id_codec()->field_encode(&id_bits, hardcoded_id, nullptr);
         std::string id_bytes(id_bits.to_byte_string());
         return id(id_bytes);
     }
@@ -372,8 +373,8 @@ class Codec
     FieldCodecManagerLocal& manager() { return manager_; }
 
   private:
-    Codec(const Codec&);
-    Codec& operator=(const Codec&);
+    Codec(const Codec&) = delete;
+    Codec& operator=(const Codec&) = delete;
 
     void encode_internal(const google::protobuf::Message& msg, bool header_only,
                          Bitset& header_bits, Bitset& body_bits, int user_id);
@@ -460,8 +461,8 @@ template <typename CharIterator>
 unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
 {
     unsigned id_min_size = 0, id_max_size = 0;
-    id_codec()->field_min_size(&id_min_size, 0);
-    id_codec()->field_max_size(&id_max_size, 0);
+    id_codec()->field_min_size(&id_min_size, nullptr);
+    id_codec()->field_max_size(&id_max_size, nullptr);
 
     if (std::distance(begin, end) < (id_min_size / BITS_IN_BYTE))
         throw(Exception("Bytes passed (hex: " + hex_encode(begin, end) +
@@ -475,7 +476,7 @@ unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
     these_bits.get_more_bits(id_min_size);
 
     dccl::any return_value;
-    id_codec()->field_decode(&these_bits, &return_value, 0);
+    id_codec()->field_decode(&these_bits, &return_value, nullptr);
 
     return dccl::any_cast<uint32>(return_value);
 }
@@ -511,7 +512,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             codec->base_max_size(&head_size_bits, desc, HEAD);
             codec->base_max_size(&body_size_bits, desc, BODY);
             unsigned id_size = 0;
-            id_codec()->field_size(&id_size, this_id, 0);
+            id_codec()->field_size(&id_size, this_id, nullptr);
             head_size_bits += id_size;
 
             unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);

@@ -26,9 +26,9 @@
 
 #include <unordered_map>
 
-#include "dccl/field_codec.h"
-#include "dccl/field_codec_manager.h"
-#include "dccl/oneof.h"
+#include "../field_codec.h"
+#include "../field_codec_manager.h"
+#include "../oneof.h"
 
 #include "dccl/option_extensions.pb.h"
 
@@ -40,11 +40,11 @@ namespace v4
 class DefaultMessageCodec : public FieldCodecBase
 {
   private:
-    void any_encode(Bitset* bits, const dccl::any& wire_value);
-    void any_decode(Bitset* bits, dccl::any* wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    unsigned any_size(const dccl::any& wire_value);
+    void any_encode(Bitset* bits, const dccl::any& wire_value) override;
+    void any_decode(Bitset* bits, dccl::any* wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    unsigned any_size(const dccl::any& wire_value) override;
 
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
@@ -53,8 +53,8 @@ class DefaultMessageCodec : public FieldCodecBase
 
     bool is_optional() { return this_field() && this_field()->is_optional() && !use_required(); }
 
-    void validate();
-    std::string info();
+    void validate() override;
+    std::string info() override;
     bool check_field(const google::protobuf::FieldDescriptor* field);
 
     struct Size
@@ -166,7 +166,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         static void oneof(unsigned* return_value,
                           const google::protobuf::OneofDescriptor* oneof_desc,
-                          FieldCodecBase* field_codec)
+                          FieldCodecBase* /*field_codec*/)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -193,7 +193,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
         static void oneof(unsigned* return_value,
                           const google::protobuf::OneofDescriptor* oneof_desc,
-                          FieldCodecBase* field_codec)
+                          FieldCodecBase* /*field_codec*/)
         {
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
@@ -298,8 +298,7 @@ class DefaultMessageCodec : public FieldCodecBase
         {
             ReturnType return_value = ReturnType();
 
-            const google::protobuf::Message* msg =
-                dccl::any_cast<const google::protobuf::Message*>(wire_value);
+            const auto* msg = dccl::any_cast<const google::protobuf::Message*>(wire_value);
             const google::protobuf::Descriptor* desc = msg->GetDescriptor();
             const google::protobuf::Reflection* refl = msg->GetReflection();
 

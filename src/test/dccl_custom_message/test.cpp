@@ -25,10 +25,10 @@
 // tests custom message codec
 // tests cryptography
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 using namespace dccl::test;
 
 using dccl::operator<<;

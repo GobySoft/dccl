@@ -20,11 +20,11 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "dccl/dynamic_conditions.h"
-#include "dccl/exception.h"
+#include "dynamic_conditions.h"
+#include "exception.h"
 
 #if DCCL_HAS_LUA
-#include "dccl/thirdparty/sol/sol.hpp"
+#include "thirdparty/sol/sol.hpp"
 // symbol in lua-protobuf/pb.c so we can load this using sol's require call
 LUALIB_API int luaopen_pb(lua_State* L);
 #define SOL_ALL_SAFETIES_ON 1

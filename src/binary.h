@@ -29,8 +29,8 @@
 #include <iomanip>
 #include <sstream>
 
-#include "dccl/common.h"
-#include "def.h"
+#include "common.h"
+#include "dccl/def.h"
 
 #if DCCL_HAS_B64
 #include <cstdio>

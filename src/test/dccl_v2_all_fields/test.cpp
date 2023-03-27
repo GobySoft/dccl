@@ -27,8 +27,8 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 

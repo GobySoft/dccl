@@ -23,8 +23,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of Legacy CCL
 
-#include "dccl.h"
-#include "dccl/native_protobuf/dccl_native_protobuf.h"
+#include "../../codec.h"
+#include "../../native_protobuf/dccl_native_protobuf.h"
 #include "test.pb.h"
 
 using namespace dccl::test;

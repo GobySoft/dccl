@@ -32,15 +32,15 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/message.h>
 
+#include "any.h"
+#include "binary.h"
 #include "common.h"
-#include "dccl/any.h"
-#include "dccl/binary.h"
-#include "dccl/dynamic_conditions.h"
-#include "dccl/option_extensions.pb.h"
+#include "dynamic_conditions.h"
 #include "exception.h"
 #include "internal/field_codec_message_stack.h"
 #include "internal/type_helper.h"
 #include "oneof.h"
+#include "option_extensions.pb.h"
 
 namespace dccl
 {
@@ -463,7 +463,7 @@ class FieldCodecBase
     virtual unsigned any_size_repeated(const std::vector<dccl::any>& wire_values);
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
-    void check_repeat_settings();
+    void check_repeat_settings() const;
 
     friend class FieldCodecManagerLocal;
 

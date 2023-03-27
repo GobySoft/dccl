@@ -165,7 +165,10 @@ endif()
 include(GNUInstallDirs)
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
+
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
+install(DIRECTORY ${dccl_SRC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dccl
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
@@ -208,7 +211,7 @@ endif()
 if(enable_cryptography)
   find_package(Cryptopp REQUIRED)
   set(DCCL_HAS_CRYPTOPP "1")
-  include_directories(${Cryptopp_INCLUDE_DIRS})
+  include_directories(SYSTEM ${Cryptopp_INCLUDE_DIRS})
 else()
   set(DCCL_HAS_CRYPTOPP "0")
 endif()
@@ -226,7 +229,7 @@ endif()
 if(enable_b64)
   find_package(B64 REQUIRED)
   set(DCCL_HAS_B64 "1")
-  include_directories(${B64_INCLUDE_DIRS})
+  include_directories(SYSTEM ${B64_INCLUDE_DIRS})
 else()
   set(DCCL_HAS_B64 "0")
 endif()
@@ -245,7 +248,7 @@ endif()
 if(enable_lua)
   find_package(Lua REQUIRED)
   set(DCCL_HAS_LUA "1")
-  include_directories(${LUA_INCLUDE_DIR})
+  include_directories(SYSTEM ${LUA_INCLUDE_DIR})
 else()
   set(DCCL_HAS_LUA "0")
 endif()
@@ -275,7 +278,7 @@ if(enable_clang_tidy)
   find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
   if(CLANG_TIDY_BIN)
     message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags" "-header-filter=^.*\\.h$")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags,readability-make-member-function-const" "-header-filter=^[^\\.]*\\.h$")
   else()
     message(FATAL_ERROR "clang-tidy not found")
   endif()
@@ -286,33 +289,14 @@ set(DCCL_DEBUG_OPTIONS -Wall -Wno-sign-compare -Wno-unknown-warning-option)
 add_compile_options("$<$<CONFIG:DEBUG>:${DCCL_DEBUG_OPTIONS}>")
 add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
 
+## configure to build/include/dccl
 
-# Configure file or hardlink it if unchanged (so that clang-tidy can modify the source headers)
-function(configure_file_or_hardlink INPUT_FILE OUTPUT_FILE)
-  # Configure the input file into the temporary file
-  configure_file(${INPUT_FILE} ${OUTPUT_FILE} @ONLY)
-
-  if(enable_clang_tidy)
-    # Check if the temporary file and the output file are identical
-    file(MD5 ${OUTPUT_FILE} OUTPUT_MD5)
-    file(MD5 ${INPUT_FILE} INPUT_MD5)
-    if(INPUT_MD5 STREQUAL OUTPUT_MD5 AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-      # only available in CMake 3.14 or newer
-      file(REMOVE ${OUTPUT_FILE})
-      file(CREATE_LINK ${INPUT_FILE} ${OUTPUT_FILE})
-    else()
-      message(WARNING "Cannot hardlink file as it does not have the same contents as input: ${OUTPUT_FILE}")
-    endif()
-  endif()
-endfunction()
-
-## copy to dccl/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/def.h src/version.h src/*.proto)
 foreach(I ${INCLUDE_FILES})
-  configure_file_or_hardlink(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I})
+  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I})
 endforeach()
 
-configure_file_or_hardlink(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h)
 
 configure_file(${dccl_PYTHON_DIR}/setup.py.in ${dccl_PYTHON_DIR}/setup.py @ONLY)
 

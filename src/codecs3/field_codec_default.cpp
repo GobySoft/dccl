@@ -22,7 +22,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "dccl/codecs3/field_codec_default.h"
+#include "field_codec_default.h"
 
 using namespace dccl::logger;
 

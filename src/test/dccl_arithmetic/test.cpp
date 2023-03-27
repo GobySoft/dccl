@@ -26,12 +26,12 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/arithmetic/field_codec_arithmetic.h"
-#include "dccl/codec.h"
+#include "../../arithmetic/field_codec_arithmetic.h"
+#include "../../codec.h"
 
 #include "test_arithmetic.pb.h"
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 using namespace dccl::test::arith;
 
 

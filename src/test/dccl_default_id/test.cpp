@@ -23,7 +23,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests fixed id header
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 

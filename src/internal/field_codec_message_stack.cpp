@@ -21,8 +21,9 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "field_codec_message_stack.h"
-#include "dccl/field_codec.h"
+#include "../field_codec.h"
 
 // MessageStack
 //

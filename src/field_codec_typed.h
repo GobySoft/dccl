@@ -73,7 +73,7 @@ template <typename WireType, typename FieldType = WireType>
 class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
 {
   public:
-    typedef WireType wire_type;
+    using wire_type = WireType;
     using field_type = FieldType;
 
   public:
