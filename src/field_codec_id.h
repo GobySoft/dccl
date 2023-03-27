@@ -29,14 +29,14 @@ namespace dccl
 class DefaultIdentifierCodec : public TypedFieldCodec<uint32>
 {
   protected:
-    virtual Bitset encode();
-    virtual Bitset encode(const uint32& wire_value);
-    virtual uint32 decode(Bitset* bits);
-    virtual unsigned size();
-    virtual unsigned size(const uint32& wire_value);
-    virtual unsigned max_size();
-    virtual unsigned min_size();
-    virtual void validate() {}
+    Bitset encode() override;
+    Bitset encode(const uint32& wire_value) override;
+    uint32 decode(Bitset* bits) override;
+    unsigned size() override;
+    unsigned size(const uint32& wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    void validate() override {}
 
   private:
     unsigned this_size(const uint32& wire_value);

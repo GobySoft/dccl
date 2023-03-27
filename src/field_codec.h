@@ -504,7 +504,7 @@ class FieldCodecBase
       private:
         FieldCodecBase* field_codec_;
     };
-    friend class BaseRAII;
+    friend struct BaseRAII;
 
     std::string name_;
     google::protobuf::FieldDescriptor::Type field_type_;

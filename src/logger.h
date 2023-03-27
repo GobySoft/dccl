@@ -77,7 +77,7 @@ class LogBuffer : public std::streambuf
 {
   public:
     LogBuffer() : buffer_(1) {}
-    ~LogBuffer() {}
+    ~LogBuffer() override {}
 
     /// connect a signal to a slot (function pointer or similar)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
@@ -174,7 +174,7 @@ class Logger : public std::ostream
 {
   public:
     Logger() : std::ostream(&buf_) {}
-    virtual ~Logger() {}
+    ~Logger() override {}
 
     /// \brief Same as is() but doesn't set the verbosity or lock the mutex.
     bool check(logger::Verbosity verbosity) { return buf_.contains(verbosity); }

@@ -45,7 +45,7 @@ class FromProtoTypeBase
 template <google::protobuf::FieldDescriptor::Type t> class FromProtoType : public FromProtoTypeBase
 {
   public:
-    std::string as_str()
+    std::string as_str() override
     {
         return google::protobuf::FieldDescriptorProto::Type_Name(
             static_cast<google::protobuf::FieldDescriptorProto::Type>(t));
@@ -161,26 +161,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE>
 {
   public:
     typedef double type;
-    std::string as_str() { return "CPPTYPE_DOUBLE"; }
+    std::string as_str() override { return "CPPTYPE_DOUBLE"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetDouble(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedDouble(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetDouble(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddDouble(msg, field, dccl::any_cast<type>(value));
     }
@@ -192,26 +192,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_FLOAT>
 {
   public:
     typedef float type;
-    std::string as_str() { return "CPPTYPE_FLOAT"; }
+    std::string as_str() override { return "CPPTYPE_FLOAT"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetFloat(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedFloat(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetFloat(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddFloat(msg, field, dccl::any_cast<type>(value));
     }
@@ -222,26 +222,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_INT32>
 {
   public:
     typedef google::protobuf::int32 type;
-    std::string as_str() { return "CPPTYPE_INT32"; }
+    std::string as_str() override { return "CPPTYPE_INT32"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetInt32(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedInt32(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetInt32(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddInt32(msg, field, dccl::any_cast<type>(value));
     }
@@ -252,26 +252,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_INT64>
 {
   public:
     typedef google::protobuf::int64 type;
-    std::string as_str() { return "CPPTYPE_INT64"; }
+    std::string as_str() override { return "CPPTYPE_INT64"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetInt64(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedInt64(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetInt64(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddInt64(msg, field, dccl::any_cast<type>(value));
     }
@@ -282,26 +282,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_UINT32>
 {
   public:
     typedef google::protobuf::uint32 type;
-    std::string as_str() { return "CPPTYPE_UINT32"; }
+    std::string as_str() override { return "CPPTYPE_UINT32"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetUInt32(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedUInt32(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetUInt32(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddUInt32(msg, field, dccl::any_cast<type>(value));
     }
@@ -313,26 +313,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_UINT64>
   public:
     typedef google::protobuf::uint64 type;
 
-    std::string as_str() { return "CPPTYPE_UINT64"; }
+    std::string as_str() override { return "CPPTYPE_UINT64"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetUInt64(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedUInt64(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetUInt64(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddUInt64(msg, field, dccl::any_cast<type>(value));
     }
@@ -343,26 +343,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_BOOL>
 {
   public:
     typedef bool type;
-    std::string as_str() { return "CPPTYPE_BOOL"; }
+    std::string as_str() override { return "CPPTYPE_BOOL"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetBool(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedBool(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetBool(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddBool(msg, field, dccl::any_cast<type>(value));
     }
@@ -373,26 +373,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_STRING>
 {
   public:
     typedef std::string type;
-    std::string as_str() { return "CPPTYPE_STRING"; }
+    std::string as_str() override { return "CPPTYPE_STRING"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetString(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedString(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetString(msg, field, dccl::any_cast<type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddString(msg, field, dccl::any_cast<type>(value));
     }
@@ -406,26 +406,26 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_ENUM>
     typedef const google::protobuf::EnumValueDescriptor* const_type;
     typedef google::protobuf::EnumValueDescriptor* mutable_type;
 
-    std::string as_str() { return "CPPTYPE_ENUM"; }
+    std::string as_str() override { return "CPPTYPE_ENUM"; }
 
   private:
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                         const google::protobuf::Message& msg)
+                         const google::protobuf::Message& msg) override
     {
         return msg.GetReflection()->GetEnum(msg, field);
     }
     dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                  const google::protobuf::Message& msg, int index)
+                                  const google::protobuf::Message& msg, int index) override
     {
         return msg.GetReflection()->GetRepeatedEnum(msg, field, index);
     }
     void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->SetEnum(msg, field, dccl::any_cast<const_type>(value));
     }
     void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
-                    dccl::any value)
+                    dccl::any value) override
     {
         msg->GetReflection()->AddEnum(msg, field, dccl::any_cast<const_type>(value));
     }
@@ -439,11 +439,11 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
   public:
     typedef const google::protobuf::Message* const_type;
     typedef google::protobuf::Message* mutable_type;
-    std::string as_str() { return "CPPTYPE_MESSAGE"; }
+    std::string as_str() override { return "CPPTYPE_MESSAGE"; }
 
   protected:
-    virtual dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                                 const google::protobuf::Message& msg)
+    dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
+                         const google::protobuf::Message& msg) override
     {
         if (field)
             return &(msg.GetReflection()->GetMessage(msg, field));
@@ -451,14 +451,14 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
             return &msg;
     }
 
-    virtual dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                          const google::protobuf::Message& msg, int index)
+    dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
+                                  const google::protobuf::Message& msg, int index) override
     {
         return &(msg.GetReflection()->GetRepeatedMessage(msg, field, index));
     }
 
-    virtual void _set_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
+                    dccl::any value) override
     {
         try
         {
@@ -478,8 +478,8 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
                 msg->MergeFrom(*p);
         }
     }
-    virtual void _add_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
+                    dccl::any value) override
     {
         try
         {
@@ -505,8 +505,8 @@ class FromProtoCustomMessage
   private:
     typedef FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE> Parent;
 
-    virtual dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                                 const google::protobuf::Message& msg)
+    dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
+                         const google::protobuf::Message& msg) override
     {
         Parent::const_type p = dccl::any_cast<Parent::const_type>(Parent::_get_value(field, msg));
         type r;
@@ -514,8 +514,8 @@ class FromProtoCustomMessage
         return r;
         //                return dynamic_cast<const_type>(*p);
     }
-    virtual dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                          const google::protobuf::Message& msg, int index)
+    dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
+                                  const google::protobuf::Message& msg, int index) override
     {
         Parent::const_type p =
             dccl::any_cast<Parent::const_type>(Parent::_get_repeated_value(field, msg, index));
@@ -524,15 +524,15 @@ class FromProtoCustomMessage
         return r;
         //                return dynamic_cast<const_type>(*p);
     }
-    virtual void _set_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    void _set_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
+                    dccl::any value) override
     {
         type v = dccl::any_cast<type>(value);
         Parent::const_type p = &v;
         Parent::_set_value(field, msg, p);
     }
-    virtual void _add_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    void _add_value(const google::protobuf::FieldDescriptor* field, google::protobuf::Message* msg,
+                    dccl::any value) override
     {
         type v = dccl::any_cast<type>(value);
         Parent::const_type p = &v;

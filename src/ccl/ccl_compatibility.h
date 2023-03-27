@@ -44,9 +44,9 @@ const unsigned char DCCL_CCL_HEADER = 32;
 class IdentifierCodec : public DefaultIdentifierCodec
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
+    dccl::Bitset encode() override { return encode(0); }
 
-    dccl::Bitset encode(const dccl::uint32& wire_value)
+    dccl::Bitset encode(const dccl::uint32& wire_value) override
     {
         if ((wire_value & 0xFFFF0000) == CCL_DCCL_ID_PREFIX)
         {
@@ -61,7 +61,7 @@ class IdentifierCodec : public DefaultIdentifierCodec
         }
     }
 
-    dccl::uint32 decode(dccl::Bitset* bits)
+    dccl::uint32 decode(dccl::Bitset* bits) override
     {
         unsigned ccl_id = bits->to_ulong();
 
@@ -80,9 +80,9 @@ class IdentifierCodec : public DefaultIdentifierCodec
         }
     }
 
-    unsigned size() { return size(0); }
+    unsigned size() override { return size(0); }
 
-    unsigned size(const dccl::uint32& field_value)
+    unsigned size(const dccl::uint32& field_value) override
     {
         if ((field_value & 0xFFFF0000) == CCL_DCCL_ID_PREFIX)
         {
@@ -95,9 +95,12 @@ class IdentifierCodec : public DefaultIdentifierCodec
         }
     }
 
-    unsigned max_size() { return dccl::BITS_IN_BYTE + dccl::DefaultIdentifierCodec::max_size(); }
+    unsigned max_size() override
+    {
+        return dccl::BITS_IN_BYTE + dccl::DefaultIdentifierCodec::max_size();
+    }
 
-    unsigned min_size() { return dccl::BITS_IN_BYTE; }
+    unsigned min_size() override { return dccl::BITS_IN_BYTE; }
 
     // prefixes (dccl.msg).id to indicate that this DCCL
     // message is an encoding of a legacy CCL message
@@ -110,10 +113,10 @@ class IdentifierCodec : public DefaultIdentifierCodec
 class LatLonCompressedCodec : public dccl::TypedFixedFieldCodec<double>
 {
   private:
-    dccl::Bitset encode();
-    dccl::Bitset encode(const double& wire_value);
-    double decode(dccl::Bitset* bits);
-    unsigned size();
+    dccl::Bitset encode() override;
+    dccl::Bitset encode(const double& wire_value) override;
+    double decode(dccl::Bitset* bits) override;
+    unsigned size() override;
     enum
     {
         LATLON_COMPRESSED_BYTE_SIZE = 3
@@ -123,22 +126,22 @@ class LatLonCompressedCodec : public dccl::TypedFixedFieldCodec<double>
 class FixAgeCodec : public dccl::v2::DefaultNumericFieldCodec<dccl::uint32>
 {
   private:
-    dccl::Bitset encode() { return encode((dccl::uint32)max()); }
+    dccl::Bitset encode() override { return encode((dccl::uint32)max()); }
 
-    dccl::Bitset encode(const dccl::uint32& wire_value)
+    dccl::Bitset encode(const dccl::uint32& wire_value) override
     {
         return dccl::v2::DefaultNumericFieldCodec<dccl::uint32>::encode(
             (dccl::uint32)std::min<unsigned char>((dccl::uint32)max(), wire_value / SCALE_FACTOR));
     }
 
-    dccl::uint32 decode(dccl::Bitset* bits)
+    dccl::uint32 decode(dccl::Bitset* bits) override
     {
         return SCALE_FACTOR * dccl::v2::DefaultNumericFieldCodec<dccl::uint32>::decode(bits);
     }
 
-    double max() { return (1 << dccl::BITS_IN_BYTE) - 1; }
-    double min() { return 0; }
-    void validate() {}
+    double max() override { return (1 << dccl::BITS_IN_BYTE) - 1; }
+    double min() override { return 0; }
+    void validate() override {}
 
     enum
     {
@@ -152,10 +155,10 @@ class TimeDateCodec : public dccl::TypedFixedFieldCodec<dccl::uint64>
     static dccl::uint64 to_uint64_time(const std::time_t& time_date);
 
   private:
-    dccl::Bitset encode();
-    dccl::Bitset encode(const dccl::uint64& wire_value);
-    dccl::uint64 decode(dccl::Bitset* bits);
-    unsigned size();
+    dccl::Bitset encode() override;
+    dccl::Bitset encode(const dccl::uint64& wire_value) override;
+    dccl::uint64 decode(dccl::Bitset* bits) override;
+    unsigned size() override;
 
     enum
     {
@@ -170,19 +173,19 @@ class TimeDateCodec : public dccl::TypedFixedFieldCodec<dccl::uint64>
 class HeadingCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 class HiResAltitudeCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return HI_RES_ALTITUDE_COMPRESSED_BYTE_SIZE * dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return HI_RES_ALTITUDE_COMPRESSED_BYTE_SIZE * dccl::BITS_IN_BYTE; }
     enum
     {
         HI_RES_ALTITUDE_COMPRESSED_BYTE_SIZE = 2
@@ -192,12 +195,15 @@ class HiResAltitudeCodec : public dccl::TypedFixedFieldCodec<float>
 class DepthCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return FieldCodecBase::dccl_field_options().GetExtension(ccl).bit_size(); }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override
+    {
+        return FieldCodecBase::dccl_field_options().GetExtension(ccl).bit_size();
+    }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(
             FieldCodecBase::dccl_field_options().GetExtension(ccl).has_bit_size(),
@@ -208,21 +214,21 @@ class DepthCodec : public dccl::TypedFixedFieldCodec<float>
 class VelocityCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 class SpeedCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(
             FieldCodecBase::dccl_field_options().GetExtension(ccl).has_thrust_mode_tag(),
@@ -233,19 +239,19 @@ class SpeedCodec : public dccl::TypedFixedFieldCodec<float>
 class WattsCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 class GFIPitchOilCodec : public dccl::TypedFixedFieldCodec<protobuf::CCLMDATState::GFIPitchOil>
 {
   private:
-    dccl::Bitset encode() { return encode(protobuf::CCLMDATState::GFIPitchOil()); }
-    dccl::Bitset encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value);
-    protobuf::CCLMDATState::GFIPitchOil decode(dccl::Bitset* bits);
-    unsigned size() { return GFI_PITCH_OIL_COMPRESSED_BYTE_SIZE * dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(protobuf::CCLMDATState::GFIPitchOil()); }
+    dccl::Bitset encode(const protobuf::CCLMDATState::GFIPitchOil& wire_value) override;
+    protobuf::CCLMDATState::GFIPitchOil decode(dccl::Bitset* bits) override;
+    unsigned size() override { return GFI_PITCH_OIL_COMPRESSED_BYTE_SIZE * dccl::BITS_IN_BYTE; }
     enum
     {
         GFI_PITCH_OIL_COMPRESSED_BYTE_SIZE = 2
@@ -255,28 +261,28 @@ class GFIPitchOilCodec : public dccl::TypedFixedFieldCodec<protobuf::CCLMDATStat
 class SalinityCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 class TemperatureCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 class SoundSpeedCodec : public dccl::TypedFixedFieldCodec<float>
 {
   private:
-    dccl::Bitset encode() { return encode(0); }
-    dccl::Bitset encode(const float& wire_value);
-    float decode(dccl::Bitset* bits);
-    unsigned size() { return dccl::BITS_IN_BYTE; }
+    dccl::Bitset encode() override { return encode(0); }
+    dccl::Bitset encode(const float& wire_value) override;
+    float decode(dccl::Bitset* bits) override;
+    unsigned size() override { return dccl::BITS_IN_BYTE; }
 };
 
 } // namespace legacyccl

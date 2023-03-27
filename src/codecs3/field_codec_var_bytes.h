@@ -36,14 +36,14 @@ namespace v3
 class VarBytesCodec : public dccl::TypedFieldCodec<std::string>
 {
   private:
-    dccl::Bitset encode();
-    dccl::Bitset encode(const std::string& wire_value);
-    std::string decode(dccl::Bitset* bits);
-    unsigned size();
-    unsigned size(const std::string& wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    void validate();
+    dccl::Bitset encode() override;
+    dccl::Bitset encode(const std::string& wire_value) override;
+    std::string decode(dccl::Bitset* bits) override;
+    unsigned size() override;
+    unsigned size(const std::string& wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    void validate() override;
 
   private:
     unsigned prefix_size() { return dccl::ceil_log2(dccl_field_options().max_length() + 1); }
