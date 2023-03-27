@@ -38,14 +38,14 @@ class TypedFixedFieldCodec : public TypedFieldCodec<WireType, FieldType>
 {
   public:
     /// \brief The size of the encoded message in bits. Use TypedFieldCodec if the size depends on the data.
-    virtual unsigned size() = 0;
+    unsigned size() override = 0;
 
   public:
-    unsigned size(const WireType& /*wire_value*/) { return size(); }
+    unsigned size(const WireType& /*wire_value*/) override { return size(); }
 
-    unsigned max_size() { return size(); }
+    unsigned max_size() override { return size(); }
 
-    unsigned min_size() { return size(); }
+    unsigned min_size() override { return size(); }
 };
 } // namespace dccl
 

@@ -41,8 +41,8 @@ class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, F
 {
 };
 
-typedef v2::DefaultBoolCodec DefaultBoolCodec;
-typedef v2::DefaultBytesCodec DefaultBytesCodec;
+using DefaultBoolCodec = v2::DefaultBoolCodec;
+using DefaultBytesCodec = v2::DefaultBytesCodec;
 // Enum Codec is identical to v2, except when packed_enum is set to false.
 
 /// \brief Provides an enum encoder. This converts the enumeration to an integer and uses
@@ -55,13 +55,13 @@ class DefaultEnumCodec
     : public DefaultNumericFieldCodec<int32, const google::protobuf::EnumValueDescriptor*>
 {
   public:
-    int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
-    const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value);
-    void validate() {}
+    int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override;
+    const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value) override;
+    void validate() override {}
 
   private:
-    double max();
-    double min();
+    double max() override;
+    double min() override;
 };
 
 template <typename TimeType> class TimeCodec : public v2::TimeCodecBase<TimeType, 0>
@@ -89,14 +89,14 @@ template <typename T> class StaticCodec : public v2::StaticCodec<T>
 class DefaultStringCodec : public TypedFieldCodec<std::string>
 {
   private:
-    Bitset encode();
-    Bitset encode(const std::string& wire_value);
-    std::string decode(Bitset* bits);
-    unsigned size();
-    unsigned size(const std::string& wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    void validate();
+    Bitset encode() override;
+    Bitset encode(const std::string& wire_value) override;
+    std::string decode(Bitset* bits) override;
+    unsigned size() override;
+    unsigned size(const std::string& wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    void validate() override;
 };
 
 } // namespace v3

@@ -88,6 +88,9 @@ class Codec
     /// \brief Destructor
     virtual ~Codec();
 
+    Codec(const Codec&) = delete;
+    Codec& operator=(const Codec&) = delete;
+
     /// \brief Add codecs and/or load messages present in the given shared library handle
     ///
     /// Codecs and messages must be loaded within the shared library using a C function
@@ -373,9 +376,6 @@ class Codec
     FieldCodecManagerLocal& manager() { return manager_; }
 
   private:
-    Codec(const Codec&) = delete;
-    Codec& operator=(const Codec&) = delete;
-
     void encode_internal(const google::protobuf::Message& msg, bool header_only,
                          Bitset& header_bits, Bitset& body_bits, int user_id);
     std::string get_all_error_fields_in_message(const google::protobuf::Message& msg,
@@ -433,9 +433,8 @@ GoogleProtobufMessagePointer dccl::Codec::decode(const std::string& bytes,
                         " has not been loaded. Call load() before decoding this type."));
 
     // ownership of this object goes to the caller of decode()
-    GoogleProtobufMessagePointer msg =
-        dccl::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(
-            id2desc_.find(this_id)->second);
+    auto msg = dccl::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(
+        id2desc_.find(this_id)->second);
     decode(bytes, &(*msg), header_only);
     return msg;
 }

@@ -278,7 +278,7 @@ if(enable_clang_tidy)
   find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
   if(CLANG_TIDY_BIN)
     message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags,readability-make-member-function-const" "-header-filter=^[^\\.]*\\.h$")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags,readability-make-member-function-const" "-header-filter=^.*\\.h$")
   else()
     message(FATAL_ERROR "clang-tidy not found")
   endif()
@@ -290,13 +290,18 @@ add_compile_options("$<$<CONFIG:DEBUG>:${DCCL_DEBUG_OPTIONS}>")
 add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
 
 ## configure to build/include/dccl
-
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/def.h src/version.h src/*.proto)
-foreach(I ${INCLUDE_FILES})
-  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I})
+file(GLOB_RECURSE COPY_INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
+foreach(I ${COPY_INCLUDE_FILES})
+  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} COPYONLY)
 endforeach()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h)
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/def.h src/version.h)
+foreach(I ${INCLUDE_FILES})
+  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
+endforeach()
+
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 configure_file(${dccl_PYTHON_DIR}/setup.py.in ${dccl_PYTHON_DIR}/setup.py @ONLY)
 
