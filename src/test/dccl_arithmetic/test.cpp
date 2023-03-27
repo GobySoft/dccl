@@ -34,7 +34,6 @@
 #include "dccl/binary.h"
 using namespace dccl::test::arith;
 
-using dccl::operator<<;
 
 void run_test(dccl::arith::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in, bool set_model = true)
@@ -311,7 +310,7 @@ int main(int argc, char* argv[])
 
     // randomly generate a model and a message
     // loop over all message lengths from 0 to 100
-    srand(time(NULL));
+    srand(time(nullptr));
     for (unsigned i = 0; i <= ArithmeticDouble2TestMsg::descriptor()
                                   ->FindFieldByName("value")
                                   ->options()

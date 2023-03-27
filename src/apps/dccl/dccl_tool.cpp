@@ -42,8 +42,8 @@
 #include "dccl_tool.pb.h"
 
 // for realpath
-#include <limits.h>
-#include <stdlib.h>
+#include <climits>
+#include <cstdlib>
 
 // replacement for boost::trim_if
 void trim_if(std::string& s, bool (*predicate)(char))
@@ -91,24 +91,17 @@ namespace tool
 {
 struct Config
 {
-    Config()
-        : action(NO_ACTION),
-          format(BINARY),
-          id_codec(dccl::Codec::default_id_codec_name()),
-          verbose(false),
-          omit_prefix(false)
-    {
-    }
+    Config() : id_codec(dccl::Codec::default_id_codec_name()) {}
 
-    Action action;
+    Action action{NO_ACTION};
     std::set<std::string> include;
     std::vector<std::string> dlopen;
     std::set<std::string> message;
     std::set<std::string> proto_file;
-    Format format;
+    Format format{BINARY};
     std::string id_codec;
-    bool verbose;
-    bool omit_prefix;
+    bool verbose{false};
+    bool omit_prefix{false};
 };
 } // namespace tool
 } // namespace dccl
@@ -136,10 +129,7 @@ int main(int argc, char* argv[])
 
         dccl::DynamicProtobufManager::enable_compilation();
 
-        for (std::set<std::string>::const_iterator it = cfg.include.begin(),
-                                                   end = cfg.include.end();
-             it != end; ++it)
-            dccl::DynamicProtobufManager::add_include_path(*it);
+        for (const auto& it : cfg.include) dccl::DynamicProtobufManager::add_include_path(it);
 
         std::string first_dl;
         if (cfg.dlopen.size())
@@ -154,15 +144,11 @@ int main(int argc, char* argv[])
 
         if (cfg.dlopen.size() > 1)
         {
-            for (std::vector<std::string>::iterator it = cfg.dlopen.begin() + 1,
-                                                    n = cfg.dlopen.end();
-                 it != n; ++it)
+            for (auto it = cfg.dlopen.begin() + 1, n = cfg.dlopen.end(); it != n; ++it)
                 dccl.load_library(*it);
         }
         bool no_messages_specified = cfg.message.empty();
-        for (std::set<std::string>::const_iterator it = cfg.proto_file.begin(),
-                                                   end = cfg.proto_file.end();
-             it != end; ++it)
+        for (auto it = cfg.proto_file.begin(), end = cfg.proto_file.end(); it != end; ++it)
         {
             const google::protobuf::FileDescriptor* file_desc =
                 dccl::DynamicProtobufManager::load_from_proto_file(*it);
@@ -190,13 +176,11 @@ int main(int argc, char* argv[])
         }
 
         // Load up all the messages
-        for (std::set<std::string>::const_iterator it = cfg.message.begin(),
-                                                   end = cfg.message.end();
-             it != end; ++it)
+        for (const auto& it : cfg.message)
         {
             const google::protobuf::Descriptor* desc =
-                dccl::DynamicProtobufManager::find_descriptor(*it);
-            load_desc(&dccl, desc, *it);
+                dccl::DynamicProtobufManager::find_descriptor(it);
+            load_desc(&dccl, desc, it);
         }
 
         switch (cfg.action)
@@ -213,7 +197,7 @@ int main(int argc, char* argv[])
     }
 }
 
-void analyze(dccl::Codec& dccl, const dccl::tool::Config& cfg) { dccl.info_all(&std::cout); }
+void analyze(dccl::Codec& dccl, const dccl::tool::Config& /*cfg*/) { dccl.info_all(&std::cout); }
 
 void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 {
@@ -280,7 +264,7 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 
         const google::protobuf::Descriptor* desc =
             dccl::DynamicProtobufManager::find_descriptor(name);
-        if (desc == 0)
+        if (desc == nullptr)
         {
             std::cerr << "No descriptor with name " << name
                       << " found! Make sure you have loaded all the necessary .proto files and/or "
@@ -405,16 +389,15 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
     }
 }
 
-void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg)
+void disp_proto(dccl::Codec& /*dccl*/, const dccl::tool::Config& cfg)
 {
     std::cout << "Please note that for Google Protobuf versions < 2.5.0, the dccl extensions will "
                  "not be show below, so you'll need to refer to the original .proto file."
               << std::endl;
-    for (std::set<std::string>::const_iterator it = cfg.message.begin(), end = cfg.message.end();
-         it != end; ++it)
+    for (const auto& it : cfg.message)
     {
         const google::protobuf::Descriptor* desc =
-            dccl::DynamicProtobufManager::find_descriptor(*it);
+            dccl::DynamicProtobufManager::find_descriptor(it);
 
         std::cout << desc->DebugString();
     }
@@ -447,38 +430,33 @@ void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, cons
 void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console_width_)
 {
     std::vector<dccl::Option> options;
-    options.push_back(
-        dccl::Option('e', "encode", no_argument, "Encode a DCCL message to STDOUT from STDIN"));
-    options.push_back(
-        dccl::Option('d', "decode", no_argument, "Decode a DCCL message to STDOUT from STDIN"));
-    options.push_back(
-        dccl::Option('a', "analyze", no_argument,
-                     "Provides information on a given DCCL message definition (e.g. field sizes)"));
-    options.push_back(dccl::Option('p', "display_proto", no_argument,
-                                   "Display the .proto definition of this message."));
-    options.push_back(dccl::Option('h', "help", no_argument, "Gives help on the usage of 'dccl'"));
-    options.push_back(dccl::Option('I', "proto_path", required_argument,
-                                   "Add another search directory for .proto files"));
-    options.push_back(dccl::Option('l', "dlopen", required_argument,
-                                   "Open this shared library containing compiled DCCL messages."));
-    options.push_back(dccl::Option('m', "message", required_argument,
-                                   "Message name to encode, decode or analyze."));
-    options.push_back(dccl::Option('f', "proto_file", required_argument, ".proto file to load."));
-    options.push_back(
-        dccl::Option(0, "format", required_argument,
-                     "Format for encode output or decode input: 'bin' (default) is raw binary, "
-                     "'hex' is ascii-encoded hexadecimal, 'textformat' is a Google Protobuf "
-                     "TextFormat byte string, 'base64' is ascii-encoded base 64."));
-    options.push_back(
-        dccl::Option('v', "verbose", no_argument, "Display extra debugging information."));
-    options.push_back(dccl::Option('o', "omit_prefix", no_argument,
-                                   "Omit the DCCL type name prefix from the output of decode."));
-    options.push_back(dccl::Option('i', "id_codec", required_argument,
-                                   "(Advanced) name for a nonstandard DCCL ID codec to use"));
-    options.push_back(dccl::Option('V', "version", no_argument, "DCCL Version"));
-    options.push_back(
-        dccl::Option('w', "console_width", required_argument,
-                     "Maximum number of characters used for prettifying console outputs."));
+    options.emplace_back('e', "encode", no_argument, "Encode a DCCL message to STDOUT from STDIN");
+    options.emplace_back('d', "decode", no_argument, "Decode a DCCL message to STDOUT from STDIN");
+    options.emplace_back(
+        'a', "analyze", no_argument,
+        "Provides information on a given DCCL message definition (e.g. field sizes)");
+    options.emplace_back('p', "display_proto", no_argument,
+                         "Display the .proto definition of this message.");
+    options.emplace_back('h', "help", no_argument, "Gives help on the usage of 'dccl'");
+    options.emplace_back('I', "proto_path", required_argument,
+                         "Add another search directory for .proto files");
+    options.emplace_back('l', "dlopen", required_argument,
+                         "Open this shared library containing compiled DCCL messages.");
+    options.emplace_back('m', "message", required_argument,
+                         "Message name to encode, decode or analyze.");
+    options.emplace_back('f', "proto_file", required_argument, ".proto file to load.");
+    options.emplace_back(0, "format", required_argument,
+                         "Format for encode output or decode input: 'bin' (default) is raw binary, "
+                         "'hex' is ascii-encoded hexadecimal, 'textformat' is a Google Protobuf "
+                         "TextFormat byte string, 'base64' is ascii-encoded base 64.");
+    options.emplace_back('v', "verbose", no_argument, "Display extra debugging information.");
+    options.emplace_back('o', "omit_prefix", no_argument,
+                         "Omit the DCCL type name prefix from the output of decode.");
+    options.emplace_back('i', "id_codec", required_argument,
+                         "(Advanced) name for a nonstandard DCCL ID codec to use");
+    options.emplace_back('V', "version", no_argument, "DCCL Version");
+    options.emplace_back('w', "console_width", required_argument,
+                         "Maximum number of characters used for prettifying console outputs.");
 
     std::vector<option> long_options;
     std::string opt_string;
@@ -496,7 +474,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
         {
             case 0:
                 // If this option set a flag, do nothing else now.
-                if (long_options[option_index].flag != 0)
+                if (long_options[option_index].flag != nullptr)
                     break;
 
                 if (!strcmp(long_options[option_index].name, "format"))
@@ -528,11 +506,11 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
             case 'a': cfg->action = ANALYZE; break;
             case 'p': cfg->action = DISP_PROTO; break;
             case 'I': cfg->include.insert(optarg); break;
-            case 'l': cfg->dlopen.push_back(optarg); break;
+            case 'l': cfg->dlopen.emplace_back(optarg); break;
             case 'm': cfg->message.insert(optarg); break;
             case 'f':
             {
-                char* proto_file_canonical_path = realpath(optarg, 0);
+                char* proto_file_canonical_path = realpath(optarg, nullptr);
                 if (proto_file_canonical_path)
                 {
                     cfg->proto_file.insert(proto_file_canonical_path);
@@ -552,8 +530,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
             case 'h':
                 std::cout << "Usage of the Dynamic Compact Control Language (DCCL) tool ('dccl'): "
                           << std::endl;
-                for (int i = 0, n = options.size(); i < n; ++i)
-                    std::cout << "  " << options[i].usage() << std::endl;
+                for (auto& option : options) std::cout << "  " << option.usage() << std::endl;
                 exit(EXIT_SUCCESS);
                 break;
 
@@ -565,7 +542,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
             case 'w':
             {
                 // Robust error checking inspired by https://stackoverflow.com/a/26083517.
-                char* end_ptr = NULL;
+                char* end_ptr = nullptr;
                 errno = 0;
                 auto number = strtol(optarg, &end_ptr, 10);
 

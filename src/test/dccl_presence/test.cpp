@@ -26,12 +26,11 @@
 #include "test/dccl_presence/test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
 
 void test1(dccl::Codec&);
 void test2(dccl::Codec&);
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

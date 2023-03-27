@@ -28,6 +28,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
+#include <utility>
 
 #include <dlfcn.h> // for shared library loading
 
@@ -57,7 +58,6 @@
 
 #include "dccl/option_extensions.pb.h"
 
-using dccl::hex_decode;
 using dccl::hex_encode;
 
 using namespace dccl;
@@ -71,8 +71,8 @@ using google::protobuf::Reflection;
 // Codec
 //
 
-dccl::Codec::Codec(const std::string& dccl_id_codec_name, const std::string& library_path)
-    : id_codec_(dccl_id_codec_name)
+dccl::Codec::Codec(std::string dccl_id_codec_name, const std::string& library_path)
+    : id_codec_(std::move(dccl_id_codec_name))
 {
     set_default_codecs();
     manager_.add<DefaultIdentifierCodec>(default_id_codec_name());
@@ -85,11 +85,10 @@ dccl::Codec::Codec(const std::string& dccl_id_codec_name, const std::string& lib
 
 dccl::Codec::~Codec()
 {
-    for (std::vector<void*>::iterator it = dl_handles_.begin(), n = dl_handles_.end(); it != n;
-         ++it)
+    for (auto& dl_handle : dl_handles_)
     {
-        unload_library(*it);
-        dlclose(*it);
+        unload_library(dl_handle);
+        dlclose(dl_handle);
     }
 }
 
@@ -208,7 +207,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         if (codec)
         {
             //fixed header
-            id_codec()->field_encode(&head_bits, dccl_id, 0);
+            id_codec()->field_encode(&head_bits, dccl_id, nullptr);
 
             internal::MessageStack msg_stack(manager_.codec_data().root_message_,
                                              manager_.codec_data().message_data_);
@@ -399,7 +398,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         codec->base_max_size(&body_size_bits, desc, BODY);
 
         unsigned id_bits = 0;
-        id_codec()->field_size(&id_bits, dccl_id, 0);
+        id_codec()->field_size(&id_bits, dccl_id, nullptr);
         head_size_bits += id_bits;
 
         const unsigned byte_size =
@@ -452,8 +451,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
 void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
 {
     unsigned int erased = 0;
-    for (std::map<int32, const google::protobuf::Descriptor*>::iterator it = id2desc_.begin();
-         it != id2desc_.end();)
+    for (auto it = id2desc_.begin(); it != id2desc_.end();)
     {
         if (it->second == desc)
         {
@@ -497,7 +495,7 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
     codec->base_size(&head_size_bits, msg, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_size(&id_bits, dccl_id, 0);
+    id_codec()->field_size(&id_bits, dccl_id, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -516,7 +514,7 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
     codec->base_max_size(&head_size_bits, desc, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_max_size(&id_bits, 0);
+    id_codec()->field_max_size(&id_bits, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -535,7 +533,7 @@ unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
     codec->base_min_size(&head_size_bits, desc, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_min_size(&id_bits, 0);
+    id_codec()->field_min_size(&id_bits, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -567,7 +565,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
 
             unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
             unsigned id_bit_size = 0;
-            id_codec()->field_size(&id_bit_size, dccl_id, 0);
+            id_codec()->field_size(&id_bit_size, dccl_id, nullptr);
 
             const unsigned bit_size = id_bit_size + config_head_bit_size + body_bit_size;
 
@@ -750,11 +748,7 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
         *os << "Field sizes are in bits unless otherwise noted."
             << "\n";
 
-        for (std::map<int32, const google::protobuf::Descriptor*>::const_iterator
-                 it = id2desc_.begin(),
-                 n = id2desc_.end();
-             it != n; ++it)
-            info(it->second, os, it->first);
+        for (auto it : id2desc_) info(it.second, os, it.first);
         os->flush();
 
         if (is_dlog)

@@ -145,8 +145,7 @@ class DefaultMessageCodec : public FieldCodecBase
         {
             ReturnType return_value = ReturnType();
 
-            const google::protobuf::Message* msg =
-                dccl::any_cast<const google::protobuf::Message*>(wire_value);
+            const auto* msg = dccl::any_cast<const google::protobuf::Message*>(wire_value);
             const google::protobuf::Descriptor* desc = msg->GetDescriptor();
             const google::protobuf::Reflection* refl = msg->GetReflection();
             for (int i = 0, n = desc->field_count(); i < n; ++i)

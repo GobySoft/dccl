@@ -60,7 +60,7 @@ template <typename N> void check_normal_dccl(dccl::Codec& codec)
     assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
 }
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

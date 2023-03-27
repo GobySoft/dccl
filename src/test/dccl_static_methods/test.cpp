@@ -38,7 +38,7 @@ dccl::Codec codec;
 
 void decode(const std::string& bytes);
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

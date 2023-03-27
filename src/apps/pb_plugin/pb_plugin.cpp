@@ -41,8 +41,8 @@ std::string filename_h_;
 class DCCLGenerator : public google::protobuf::compiler::CodeGenerator
 {
   public:
-    DCCLGenerator() {}
-    ~DCCLGenerator() override {}
+    DCCLGenerator() = default;
+    ~DCCLGenerator() override = default;
 
     // implements CodeGenerator ----------------------------------------
     bool Generate(const google::protobuf::FileDescriptor* file, const std::string& parameter,
@@ -78,7 +78,7 @@ bool DCCLGenerator::check_field_type(const google::protobuf::FieldDescriptor* fi
 }
 
 bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
-                             const std::string& parameter,
+                             const std::string& /*parameter*/,
                              google::protobuf::compiler::GeneratorContext* generator_context,
                              std::string* error) const
 {
@@ -112,14 +112,9 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
         includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
 
-        for (std::set<std::string>::const_iterator it = systems_to_include_.begin(),
-                                                   end = systems_to_include_.end();
-             it != end; ++it)
-        { include_units_headers(*it, includes_ss); }
-        for (std::set<std::string>::const_iterator it = base_units_to_include_.begin(),
-             end = base_units_to_include_.end();
-             it != end; ++it)
-        { include_base_unit_headers(*it, includes_ss); }
+        for (const auto& it : systems_to_include_) { include_units_headers(it, includes_ss); }
+        for (const auto& it : base_units_to_include_)
+        { include_base_unit_headers(it, includes_ss); }
         include_printer.Print(includes_ss.str().c_str());
 
         return true;

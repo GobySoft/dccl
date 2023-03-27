@@ -1,6 +1,9 @@
-// Copyright 2009-2023 Toby Schneider (http://gobysoft.org/index.wt/people/toby)
-//                     GobySoft, LLC (for 2013-)
-//                     Community contributors (see AUTHORS file)
+// Copyright 2009-2017:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -19,22 +22,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "def.h"
+#ifndef DEF20230327H
+#define DEF20230327H
 
-#if DCCL_THREAD_SUPPORT
-#include <mutex>
-#include <thread>
-#include <atomic>
-namespace dccl
-{
-extern std::recursive_mutex g_dynamic_protobuf_manager_mutex;
-extern std::recursive_mutex g_dlog_mutex;
-} // namespace dccl
+// sets CMake defined compile-time definitions (used with configure_file())
 
-#define LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX \
-    std::lock_guard<std::recursive_mutex> l(g_dynamic_protobuf_manager_mutex);
-#define LOCK_DLOG_MUTEX std::lock_guard<std::recursive_mutex> l(g_dlog_mutex);
-#else
-#define LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
-#define LOCK_DLOG_MUTEX
+// clang-format off
+#define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
+#define DCCL_HAS_B64 @DCCL_HAS_B64@
+#define DCCL_HAS_LUA @DCCL_HAS_LUA@
+#define DCCL_THREAD_SUPPORT @DCCL_HAS_THREAD_SUPPORT@
+// clang-format on
+
 #endif

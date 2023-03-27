@@ -36,7 +36,7 @@ dccl::Codec codec;
 TestMsgPack msg_pack;
 TestMsgUnpack msg_unpack;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

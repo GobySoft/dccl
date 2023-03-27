@@ -193,7 +193,7 @@ dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
 
 unsigned dccl::v2::DefaultBytesCodec::size() { return min_size(); }
 
-unsigned dccl::v2::DefaultBytesCodec::size(const std::string& wire_value) { return max_size(); }
+unsigned dccl::v2::DefaultBytesCodec::size(const std::string& /*wire_value*/) { return max_size(); }
 
 std::string dccl::v2::DefaultBytesCodec::decode(Bitset* bits)
 {

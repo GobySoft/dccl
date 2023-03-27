@@ -33,7 +33,7 @@ using namespace dccl::test;
 
 dccl::Codec codec;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     codec.load<TestMsg>();

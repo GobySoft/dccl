@@ -226,7 +226,7 @@ class FieldCodecManager
         std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
             !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    add(const std::string& name)
+    add(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
@@ -239,7 +239,7 @@ class FieldCodecManager
         !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
           !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    add(const std::string& name)
+    add(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
@@ -247,7 +247,7 @@ class FieldCodecManager
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
-    static void add(const std::string& name)
+    static void add(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global `FieldCodecManager::add<...>(...)` is no longer available. Use "
@@ -260,7 +260,7 @@ class FieldCodecManager
         std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
             !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value,
         void>::type
-    remove(const std::string& name)
+    remove(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
@@ -272,7 +272,7 @@ class FieldCodecManager
         !(std::is_base_of<google::protobuf::Message, typename Codec::wire_type>::value &&
           !std::is_same<google::protobuf::Message, typename Codec::wire_type>::value),
         void>::type
-    remove(const std::string& name)
+    remove(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
@@ -280,7 +280,7 @@ class FieldCodecManager
     }
 
     template <class Codec, google::protobuf::FieldDescriptor::Type type>
-    static void remove(const std::string& name)
+    static void remove(const std::string& /*name*/)
     {
         static_assert(sizeof(Codec) == 0,
                       "The global FieldCodecManager::remove<...>(...) is no longer available. Use "
@@ -328,7 +328,7 @@ void dccl::FieldCodecManagerLocal::add_all_types(const std::string& name)
 
     for (int i = 1, n = FieldDescriptor::MAX_TYPE; i <= n; ++i)
     {
-        FieldDescriptor::Type field_type = static_cast<FieldDescriptor::Type>(i);
+        auto field_type = static_cast<FieldDescriptor::Type>(i);
         if (FieldDescriptor::TypeToCppType(field_type) == cpp_field_type)
         {
             add_single_type<Codec>(name, field_type, cpp_wire_type);
@@ -400,7 +400,7 @@ void dccl::FieldCodecManagerLocal::remove_all_types(const std::string& name)
 
     for (int i = 1, n = FieldDescriptor::MAX_TYPE; i <= n; ++i)
     {
-        FieldDescriptor::Type field_type = static_cast<FieldDescriptor::Type>(i);
+        auto field_type = static_cast<FieldDescriptor::Type>(i);
         if (FieldDescriptor::TypeToCppType(field_type) == cpp_field_type)
         {
             remove_single_type<Codec>(name, field_type, cpp_wire_type);

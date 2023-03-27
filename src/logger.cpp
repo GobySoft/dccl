@@ -69,7 +69,7 @@ int dccl::internal::LogBuffer::overflow(int c)
     }
     else if (c == '\n')
     {
-        buffer_.push_back(std::string());
+        buffer_.emplace_back();
     }
     else
     {
@@ -78,8 +78,8 @@ int dccl::internal::LogBuffer::overflow(int c)
     return c;
 }
 
-void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl::logger::Group grp,
-                      std::ostream* os, bool add_timestamp)
+void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity /*vrb*/,
+                      dccl::logger::Group grp, std::ostream* os, bool add_timestamp)
 {
     std::string grp_str;
     switch (grp)
@@ -91,7 +91,7 @@ void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl:
         case logger::SIZE: grp_str = "{size}: "; break;
     }
 
-    std::time_t now = std::time(0);
+    std::time_t now = std::time(nullptr);
     std::tm* t = std::gmtime(&now);
 
     if (add_timestamp)

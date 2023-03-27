@@ -25,7 +25,6 @@
 #include "dccl/codec.h"
 #include "dccl/oneof.h"
 
-using dccl::dlog;
 
 std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
 
@@ -71,7 +70,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
 {
     try
     {
-        google::protobuf::Message* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
+        auto* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
 
         if (is_optional())
         {
@@ -120,7 +119,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
                     unsigned max_repeat =
                         field_desc->options().GetExtension(dccl::field).max_repeat();
                     for (unsigned j = 0, m = max_repeat; j < m; ++j)
-                        field_values.push_back(refl->AddMessage(msg, field_desc));
+                        field_values.emplace_back(refl->AddMessage(msg, field_desc));
 
                     codec->field_decode_repeated(bits, &field_values, field_desc);
 
@@ -134,8 +133,8 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
                 {
                     // for primitive types
                     codec->field_decode_repeated(bits, &field_values, field_desc);
-                    for (int j = 0, m = field_values.size(); j < m; ++j)
-                        helper->add_value(field_desc, msg, field_values[j]);
+                    for (auto& field_value : field_values)
+                        helper->add_value(field_desc, msg, field_value);
                 }
             }
             else

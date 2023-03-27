@@ -182,7 +182,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_DOU
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kDoubleSize;
     }
@@ -199,7 +199,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FLO
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FLOAT>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFloatSize;
     }
@@ -216,7 +216,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_BOO
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_BOOL>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kBoolSize;
     }
@@ -232,7 +232,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIX
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FIXED64>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFixed64Size;
     }
@@ -249,7 +249,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIX
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FIXED32>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFixed32Size;
     }
@@ -266,7 +266,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFI
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_SFIXED64>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kSFixed64Size;
     }
@@ -283,7 +283,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFI
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_SFIXED32>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kSFixed32Size;
     }

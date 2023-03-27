@@ -62,11 +62,11 @@ inline unsigned ceil_bits2bytes(unsigned bits)
 /// an unsigned 32 bit integer
 typedef google::protobuf::uint32 uint32;
 /// a signed 32 bit integer
-typedef google::protobuf::int32 int32;
+using int32 = google::protobuf::int32;
 /// an unsigned 64 bit integer
-typedef google::protobuf::uint64 uint64;
+using uint64 = google::protobuf::uint64;
 /// a signed 64 bit integer
-typedef google::protobuf::int64 int64;
+using int64 = google::protobuf::int64;
 
 const unsigned BITS_IN_BYTE = 8;
 

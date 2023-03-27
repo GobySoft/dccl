@@ -29,7 +29,6 @@
 
 using namespace dccl::test;
 
-using dccl::operator<<;
 
 // ensure we link in dccl_native_protobuf.so
 dccl::native_protobuf::EnumFieldCodec dummy;
@@ -222,7 +221,7 @@ void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 }
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

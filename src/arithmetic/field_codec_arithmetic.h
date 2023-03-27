@@ -28,7 +28,7 @@
 
 #include <algorithm>
 #include <limits>
-
+#include <utility>
 
 #include "dccl/field_codec_typed.h"
 
@@ -61,8 +61,8 @@ class Model
 {
   public:
     typedef uint32 freq_type;
-    typedef int symbol_type; // google protobuf RepeatedField size type
-    typedef double value_type;
+    using symbol_type = int; // google protobuf RepeatedField size type
+    using value_type = double;
 
     static constexpr symbol_type OUT_OF_RANGE_SYMBOL = -1;
     static constexpr symbol_type EOF_SYMBOL = -2;
@@ -83,7 +83,7 @@ class Model
     // maps message name -> map of field name -> last size (bits)
     static std::map<std::string, std::map<std::string, Bitset>> last_bits_map;
 
-    Model(const protobuf::ArithmeticModel& user) : user_model_(user) {}
+    Model(protobuf::ArithmeticModel user) : user_model_(std::move(user)) {}
 
     enum ModelState
     {
@@ -132,7 +132,7 @@ class ModelManager
 
     Model& find(const std::string& name)
     {
-        std::map<std::string, Model>::iterator it = arithmetic_models_.find(name);
+        auto it = arithmetic_models_.find(name);
         if (it == arithmetic_models_.end())
             throw(Exception("Cannot find model called: " + name));
         else
@@ -539,7 +539,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
                                                           model.user_model().frequency().end()));
 
         // full of least probable symbols
-        unsigned size_least_probable = (unsigned)(std::ceil(
+        auto size_least_probable = (unsigned)(std::ceil(
             max_repeat() * (log2(model.total_freq(Model::ENCODER)) - log2(lowest_frequency))));
 
         dccl::dlog.is(dccl::logger::DEBUG3) &&
@@ -548,7 +548,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         Model::freq_type eof_freq = model.user_model().eof_frequency();
         // almost full of least probable symbols plus EOF
-        unsigned size_least_probable_plus_eof =
+        auto size_least_probable_plus_eof =
             (unsigned)((eof_freq != 0)
                            ? std::ceil(max_repeat() * log2(model.total_freq(Model::ENCODER)) -
                                        (max_repeat() - 1) * log2(lowest_frequency) - log2(eof_freq))
@@ -577,7 +577,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         Model::freq_type eof_freq = model.user_model().eof_frequency();
         // just EOF
-        unsigned size_empty =
+        auto size_empty =
             (unsigned)((eof_freq != 0)
                            ? std::ceil(log2(model.total_freq(Model::ENCODER)) - log2(eof_freq))
                            : std::numeric_limits<unsigned>::max());
@@ -590,7 +590,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
             std::max(out_of_range_freq, *std::max_element(model.user_model().frequency().begin(),
                                                           model.user_model().frequency().end()));
 
-        unsigned size_most_probable = (unsigned)(std::ceil(
+        auto size_most_probable = (unsigned)(std::ceil(
             max_repeat() * (log2(model.total_freq(Model::ENCODER)) - log2(highest_frequency))));
 
         dccl::dlog.is(dccl::logger::DEBUG3) &&

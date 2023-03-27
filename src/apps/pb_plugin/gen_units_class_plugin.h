@@ -63,7 +63,7 @@ namespace phoenix = boost::phoenix;
 inline boost::bimap<std::string, char> make_dim_bimap()
 {
     typedef boost::bimap<std::string, char> dim_bimap;
-    typedef dim_bimap::value_type dimension;
+    using dimension = dim_bimap::value_type;
 
     dim_bimap dims;
     dims.insert(dimension("length", 'L'));
@@ -85,9 +85,9 @@ inline boost::bimap<std::string, char> make_dim_bimap()
 inline void push_char_base(std::vector<std::string>& vc, std::vector<std::string>& vs,
                            const char& c)
 {
-    vc.push_back(std::string(1, c));
+    vc.emplace_back(1, c);
 
-    typedef boost::bimap<std::string, char> bimap_type;
+    using bimap_type = boost::bimap<std::string, char>;
     bimap_type dim_bimap = make_dim_bimap();
 
     bimap_type::right_const_iterator it_right = dim_bimap.right.find(c);
@@ -101,24 +101,21 @@ inline void push_string_base(std::vector<std::string>& vc, std::vector<std::stri
 {
     vs.push_back(s);
 
-    typedef boost::bimap<std::string, char> bimap_type;
+    using bimap_type = boost::bimap<std::string, char>;
     bimap_type dim_bimap = make_dim_bimap();
 
     bimap_type::left_const_iterator it_left = dim_bimap.left.find(s);
 
-    vc.push_back(std::string(1, it_left->second));
+    vc.emplace_back(1, it_left->second);
 }
 
 // Make a vector of strings from char inputs (for creating the derived_dimensions operator vector)
-inline void push_char(std::vector<std::string>& vc, const char& c)
-{
-    vc.push_back(std::string(1, c));
-}
+inline void push_char(std::vector<std::string>& vc, const char& c) { vc.emplace_back(1, c); }
 
 // Make a vector of strings from vector<char> inputs (for creating the derived_dimensions vector of strings)
 inline void push_char_vec(std::vector<std::string>& vc, const std::vector<char>& c)
 {
-    vc.push_back(std::string(c.begin(), c.end()));
+    vc.emplace_back(c.begin(), c.end());
 }
 
 // Parser for base_dimensions input
@@ -197,14 +194,13 @@ bool parse_derived_dimensions(Iterator first, Iterator last,
         if (derived_dim_operators.size())
             derived_dim_operators.pop_back();
 
-        for (std::vector<std::string>::iterator it = params.begin(), end = params.end(); it != end;
-             ++it)
+        for (auto& param : params)
         {
-            std::string::size_type dim_pos = it->find("_dimension");
+            std::string::size_type dim_pos = param.find("_dimension");
             if (dim_pos != std::string::npos)
-                *it = it->substr(0, dim_pos);
+                param = param.substr(0, dim_pos);
             //std::cout << *it << std::endl;
-            derived_dim_strings.push_back(*it);
+            derived_dim_strings.push_back(param);
         }
 
         if (first != last) // fail if we did not get a full match

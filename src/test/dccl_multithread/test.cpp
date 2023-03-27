@@ -64,7 +64,7 @@ void arithmetic_run_test(dccl::Codec& codec, dccl::arith::protobuf::ArithmeticMo
 
 void decode_check(dccl::Codec& codec, const std::string& encoded, TestMsg msg_in);
 void run(int thread, int num_iterations);
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     {
         std::thread t1([]() { run(1, 100); });

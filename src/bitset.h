@@ -44,20 +44,20 @@ class Bitset : public std::deque<bool>
     /// \brief Construct an empty Bitset.
     ///
     /// \param parent Pointer to a bitset that should be consider this Bitset's parent for calls to get_more_bits()
-    explicit Bitset(Bitset* parent = 0) : parent_(parent) {}
+    explicit Bitset(Bitset* parent = nullptr) : parent_(parent) {}
 
     /// \brief Construct a Bitset of a certain initial size and value.
     ///
     /// \param num_bits Initial size of this Bitset
     /// \param value Initial value of the bits in this Bitset
     /// \param parent Pointer to a bitset that should be consider this Bitset's parent for calls to get_more_bits()
-    explicit Bitset(size_type num_bits, unsigned long value = 0, Bitset* parent = 0)
+    explicit Bitset(size_type num_bits, unsigned long value = 0, Bitset* parent = nullptr)
         : std::deque<bool>(num_bits, false), parent_(parent)
     {
         from(value, num_bits);
     }
 
-    ~Bitset() {}
+    ~Bitset() = default;
 
     /// \brief Retrieve more bits from the parent Bitset
     ///
@@ -182,7 +182,7 @@ class Bitset : public std::deque<bool>
     /// \return A reference to the resulting Bitset
     Bitset& set()
     {
-        for (iterator it = begin(), n = end(); it != n; ++it) *it = true;
+        for (bool& it : *this) it = true;
         return *this;
     }
 
@@ -197,7 +197,7 @@ class Bitset : public std::deque<bool>
     /// \return A reference to the resulting Bitset
     Bitset& reset()
     {
-        for (iterator it = begin(), n = end(); it != n; ++it) *it = false;
+        for (bool& it : *this) it = false;
         return *this;
     }
 
@@ -278,7 +278,7 @@ class Bitset : public std::deque<bool>
     {
         std::string s(size(), 0);
         int i = 0;
-        for (Bitset::const_reverse_iterator it = rbegin(), n = rend(); it != n; ++it)
+        for (auto it = rbegin(), n = rend(); it != n; ++it)
         {
             s[i] = (*it) ? '1' : '0';
             ++i;
@@ -351,8 +351,7 @@ class Bitset : public std::deque<bool>
     /// \brief Adds the bitset to the little end
     Bitset& prepend(const Bitset& bits)
     {
-        for (const_reverse_iterator it = bits.rbegin(), n = bits.rend(); it != n; ++it)
-            push_front(*it);
+        for (auto it = bits.rbegin(), n = bits.rend(); it != n; ++it) push_front(*it);
 
         return *this;
     }
@@ -360,7 +359,7 @@ class Bitset : public std::deque<bool>
     /// \brief Adds the bitset to the big end
     Bitset& append(const Bitset& bits)
     {
-        for (const_iterator it = bits.begin(), n = bits.end(); it != n; ++it) push_back(*it);
+        for (bool bit : bits) push_back(bit);
 
         return *this;
     }

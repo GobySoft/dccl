@@ -74,7 +74,7 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
 {
   public:
     typedef WireType wire_type;
-    typedef FieldType field_type;
+    using field_type = FieldType;
 
   public:
     /// \brief Encode an empty field
@@ -190,8 +190,7 @@ class TypedFieldCodec : public FieldCodecSelector<WireType, FieldType>
     {
         try
         {
-            google::protobuf::Message* msg =
-                dccl::any_cast<google::protobuf::Message*>(*wire_value);
+            auto* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
             msg->CopyFrom(decode(bits));
         }
         catch (NullValueException&)
@@ -225,8 +224,8 @@ template <typename WireType, typename FieldType = WireType>
 class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
 {
   public:
-    typedef WireType wire_type;
-    typedef FieldType field_type;
+    using wire_type = WireType;
+    using field_type = FieldType;
 
   public:
     /// \brief Encode a repeated field
@@ -295,12 +294,8 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
         try
         {
             std::vector<WireType> in;
-            for (std::vector<dccl::any>::const_iterator it = wire_values.begin();
-                 it != wire_values.end(); ++it)
-            {
-                in.push_back(dccl::any_cast<WireType>(*it));
-            }
-            *bits = encode_repeated(in);
+            for (const auto& wire_value : wire_values)
+            { in.push_back(dccl::any_cast<WireType>(wire_value)); } *bits = encode_repeated(in);
         }
         catch (dccl::bad_any_cast&)
         {
@@ -322,8 +317,7 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
 
         for (int i = 0, n = decoded_msgs.size(); i < n; ++i)
         {
-            google::protobuf::Message* msg =
-                dccl::any_cast<google::protobuf::Message*>(wire_values->at(i));
+            auto* msg = dccl::any_cast<google::protobuf::Message*>(wire_values->at(i));
             msg->CopyFrom(decoded_msgs[i]);
         }
     }
@@ -383,12 +377,8 @@ class RepeatedTypedFieldCodec : public TypedFieldCodec<WireType, FieldType>
         try
         {
             std::vector<WireType> in;
-            for (std::vector<dccl::any>::const_iterator it = wire_values.begin();
-                 it != wire_values.end(); ++it)
-            {
-                in.push_back(dccl::any_cast<WireType>(*it));
-            }
-            return size_repeated(in);
+            for (const auto& wire_value : wire_values)
+            { in.push_back(dccl::any_cast<WireType>(wire_value)); } return size_repeated(in);
         }
         catch (dccl::bad_any_cast&)
         {

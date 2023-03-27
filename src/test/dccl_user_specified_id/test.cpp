@@ -27,7 +27,6 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
 
 namespace dccl
 {
@@ -38,34 +37,34 @@ namespace test
 class UserCustomIdCodec : public DefaultIdentifierCodec
 {
   private:
-    dccl::Bitset encode(const dccl::uint32& wire_value)
+    dccl::Bitset encode(const dccl::uint32& wire_value) override
     {
         return user_id_set ? encode() : DefaultIdentifierCodec::encode(wire_value);
     }
 
-    dccl::Bitset encode()
+    dccl::Bitset encode() override
     {
         return user_id_set ? dccl::Bitset() : DefaultIdentifierCodec::encode();
     }
 
-    unsigned size() { return user_id_set ? 0 : DefaultIdentifierCodec::size(); }
+    unsigned size() override { return user_id_set ? 0 : DefaultIdentifierCodec::size(); }
 
-    unsigned size(const dccl::uint32& wire_value)
+    unsigned size(const dccl::uint32& wire_value) override
     {
         return user_id_set ? 0 : DefaultIdentifierCodec::size(wire_value);
     }
 
-    unsigned min_size() { return user_id_set ? 0 : DefaultIdentifierCodec::min_size(); }
+    unsigned min_size() override { return user_id_set ? 0 : DefaultIdentifierCodec::min_size(); }
 
-    unsigned max_size() { return user_id_set ? 0 : DefaultIdentifierCodec::max_size(); }
+    unsigned max_size() override { return user_id_set ? 0 : DefaultIdentifierCodec::max_size(); }
 
     // pass the current ID back
-    dccl::uint32 decode(dccl::Bitset* bits)
+    dccl::uint32 decode(dccl::Bitset* bits) override
     {
         return user_id_set ? user_id : DefaultIdentifierCodec::decode(bits);
     }
 
-    void validate()
+    void validate() override
     {
         if (!user_id_set)
             DefaultIdentifierCodec::validate();
@@ -98,7 +97,7 @@ struct UserCustomIdRAII
 bool dccl::test::UserCustomIdCodec::user_id_set = false;
 dccl::uint32 dccl::test::UserCustomIdCodec::user_id = 0;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

@@ -23,9 +23,9 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_manager.h"
 
-dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() {}
+dccl::FieldCodecManagerLocal::FieldCodecManagerLocal() = default;
 
-dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() {}
+dccl::FieldCodecManagerLocal::~FieldCodecManagerLocal() = default;
 
 std::shared_ptr<dccl::FieldCodecBase>
 dccl::FieldCodecManagerLocal::__find(google::protobuf::FieldDescriptor::Type type,

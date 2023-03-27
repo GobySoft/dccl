@@ -73,7 +73,7 @@ class MessageStack
 {
   public:
     MessageStack(const google::protobuf::Message* root_message, MessageStackData& data,
-                 const google::protobuf::FieldDescriptor* field = 0);
+                 const google::protobuf::FieldDescriptor* field = nullptr);
 
     ~MessageStack();
 

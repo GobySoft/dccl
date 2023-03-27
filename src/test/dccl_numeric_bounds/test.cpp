@@ -28,9 +28,7 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
-
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
@@ -80,12 +78,12 @@ int main(int argc, char* argv[])
         {-20, -20, 500000, 500000}, {-19, -20, 499999, 500000},
         {6, 10, -123400, -123000},  {0, 0, 0, 0},
     };
-    for (int i = 0; i < NUM_TESTS; ++i)
+    for (auto& test_value : test_values)
     {
         NegativePrecisionNumericMsg msg_in_neg, msg_out_neg;
         std::string enc;
-        msg_in_neg.set_a(test_values[i][0]);
-        msg_in_neg.set_b(test_values[i][2]);
+        msg_in_neg.set_a(test_value[0]);
+        msg_in_neg.set_b(test_value[2]);
 
         codec.encode(&enc, msg_in_neg);
         codec.decode(enc, &msg_out_neg);
@@ -93,8 +91,8 @@ int main(int argc, char* argv[])
         std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
         std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
 
-        assert(msg_out_neg.a() == test_values[i][1]);
-        assert(msg_out_neg.b() == test_values[i][3]);
+        assert(msg_out_neg.a() == test_value[1]);
+        assert(msg_out_neg.b() == test_value[3]);
     }
 
     std::cout << "all tests passed" << std::endl;

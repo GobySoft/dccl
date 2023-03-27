@@ -275,7 +275,7 @@ if(enable_clang_tidy)
   find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
   if(CLANG_TIDY_BIN)
     message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags" "-header-filter=^((?!\\.pb\\.h).)*$")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags" "-header-filter=^.*\\.h$")
   else()
     message(FATAL_ERROR "clang-tidy not found")
   endif()
@@ -286,14 +286,33 @@ set(DCCL_DEBUG_OPTIONS -Wall -Wno-sign-compare -Wno-unknown-warning-option)
 add_compile_options("$<$<CONFIG:DEBUG>:${DCCL_DEBUG_OPTIONS}>")
 add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
 
+
+# Configure file or hardlink it if unchanged (so that clang-tidy can modify the source headers)
+function(configure_file_or_hardlink INPUT_FILE OUTPUT_FILE)
+  # Configure the input file into the temporary file
+  configure_file(${INPUT_FILE} ${OUTPUT_FILE} @ONLY)
+
+  if(enable_clang_tidy)
+    # Check if the temporary file and the output file are identical
+    file(MD5 ${OUTPUT_FILE} OUTPUT_MD5)
+    file(MD5 ${INPUT_FILE} INPUT_MD5)
+    if(INPUT_MD5 STREQUAL OUTPUT_MD5 AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
+      # only available in CMake 3.14 or newer
+      file(REMOVE ${OUTPUT_FILE})
+      file(CREATE_LINK ${INPUT_FILE} ${OUTPUT_FILE})
+    else()
+      message(WARNING "Cannot hardlink file as it does not have the same contents as input: ${OUTPUT_FILE}")
+    endif()
+  endif()
+endfunction()
+
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${INCLUDE_FILES})
-  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
+  configure_file_or_hardlink(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I})
 endforeach()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
-
+configure_file_or_hardlink(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h)
 
 configure_file(${dccl_PYTHON_DIR}/setup.py.in ${dccl_PYTHON_DIR}/setup.py @ONLY)
 

@@ -49,7 +49,7 @@ void test2();
 void test3();
 #endif
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     test0();

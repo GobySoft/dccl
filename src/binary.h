@@ -30,10 +30,7 @@
 #include <sstream>
 
 #include "dccl/common.h"
-
-// clang-format off
-#define DCCL_HAS_B64 @DCCL_HAS_B64@
-// clang-format on
+#include "def.h"
 
 #if DCCL_HAS_B64
 #include <cstdio>

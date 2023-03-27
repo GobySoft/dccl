@@ -46,16 +46,16 @@ namespace test
 {
 class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
 {
-    double max() { return 100; }
-    double min() { return -100; }
-    double precision() { return 1; } // Deprecated
-    double resolution() { return 0.1; }
-    void validate() {}
+    double max() override { return 100; }
+    double min() override { return -100; }
+    double precision() override { return 1; } // Deprecated
+    double resolution() override { return 0.1; }
+    void validate() override {}
 };
 } // namespace test
 } // namespace dccl
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
