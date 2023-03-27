@@ -66,7 +66,7 @@ class DefaultEnumCodec
 
 template <typename TimeType> class TimeCodec : public v2::TimeCodecBase<TimeType, 0>
 {
-    static_assert(sizeof(TimeCodec) == 0);
+    static_assert(sizeof(TimeCodec) == 0, "Must use specialization of TimeCodec");
 };
 
 template <> class TimeCodec<uint64> : public v2::TimeCodecBase<uint64, 1000000>
