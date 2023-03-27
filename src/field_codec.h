@@ -510,7 +510,7 @@ class FieldCodecBase
     google::protobuf::FieldDescriptor::Type field_type_;
     google::protobuf::FieldDescriptor::CppType wire_type_;
 
-    bool force_required_;
+    bool force_required_{false};
 
     FieldCodecManagerLocal* manager_{nullptr};
 };
