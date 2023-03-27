@@ -13,10 +13,19 @@ cmake_policy(SET CMP0009 NEW)
 
 project(dccl)
 
+# boost for units and any (pre C++17)
+find_package(Boost 1.62.0 QUIET)
+
 if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
-  message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
-  set(CMAKE_CXX_STANDARD 14)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  if(Boost_FOUND)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL (when Boost is available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
+  else()
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    message ("Setting CMAKE_CXX_STANDARD to 17 as required by DCCL (when Boost is not available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly. If you wish to use C++14, install Boost (libboost-dev)")
+  endif()
 endif()
 
 ## allows us to write custom modules or modifying existing ones
@@ -177,10 +186,6 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
   "${dccl_INC_DIR};${dccl_FORMER_BIN_DIR};${dccl_FORMER_LIB_DIR};${dccl_FORMER_INC_DIR};${dccl_FORMER_SHARE_DIR};${dccl_PYTHON_DIR}/dccl/option_extensions_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.pyc"
   )
 
-## boost
-find_package(Boost 1.40.0)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-
 find_package(ProtobufDCCL REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
@@ -251,7 +256,14 @@ else()
   set(DCCL_HAS_THREAD_SUPPORT "0")
 endif()
 
-option(enable_units "Enable static unit-safety functionality" ON)
+## boost for units
+set(UNITS_DOC_STRING "Enable static unit-safety functionality (requires Boost)")
+if(Boost_FOUND)
+  option(enable_units ${UNITS_DOC_STRING} ON) 
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+else()
+  option(enable_units ${UNITS_DOC_STRING} OFF)
+endif()
 
 ## copy to dccl/include
 file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)

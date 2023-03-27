@@ -34,8 +34,6 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/text_format.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include "dccl/binary.h"
 #include "dccl/cli_option.h"
 #include "dccl/codec.h"
@@ -46,6 +44,29 @@
 // for realpath
 #include <limits.h>
 #include <stdlib.h>
+
+// replacement for boost::trim_if
+void trim_if(std::string& s, bool (*predicate)(char))
+{
+    // Trim from the start
+    s.erase(s.begin(),
+            std::find_if(s.begin(), s.end(), [predicate](char ch) { return !predicate(ch); }));
+
+    // Trim from the end
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [predicate](char ch) { return !predicate(ch); }).base(),
+        s.end());
+}
+void trim(std::string& s)
+{
+    trim_if(s, [](char ch) -> bool { return std::isspace(ch); });
+}
+std::string trim_copy(const std::string& s)
+{
+    auto cs = s;
+    trim(cs);
+    return cs;
+}
 
 enum Action
 {
@@ -216,7 +237,7 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
         std::string input;
         std::getline(std::cin, input);
 
-        boost::trim(input);
+        trim(input);
         if (input.empty())
             continue;
 
@@ -337,7 +358,7 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
             std::string line;
             std::getline(std::cin, line);
 
-            if (boost::trim_copy(line).empty())
+            if (trim_copy(line).empty())
                 continue;
 
             switch (cfg.format)
@@ -347,7 +368,7 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
 
                 case TEXTFORMAT:
                 {
-                    boost::trim_if(line, boost::is_any_of("\""));
+                    trim_if(line, [](char ch) -> bool { return ch == '"'; });
 
                     dccl::tool::protobuf::ByteString s;
                     google::protobuf::TextFormat::ParseFieldValueFromString(

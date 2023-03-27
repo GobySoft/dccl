@@ -37,7 +37,6 @@
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
 
-#include <boost/version.hpp>
 #include <memory>
 
 #include "dccl/thread_safety.h"

@@ -381,7 +381,7 @@ class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
 
 template <typename TimeType> class TimeCodec : public TimeCodecBase<TimeType, 0>
 {
-    BOOST_STATIC_ASSERT(sizeof(TimeCodec) == 0);
+    static_assert(sizeof(TimeCodec) == 0);
 };
 
 template <> class TimeCodec<uint64> : public TimeCodecBase<uint64, 1000000>
