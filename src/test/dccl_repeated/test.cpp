@@ -31,9 +31,7 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
-
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
@@ -61,23 +59,19 @@ int main(int argc, char* argv[])
     descs.push_back(msg_in3.GetDescriptor());
     descs.push_back(msg_in4.GetDescriptor());
 
-    for (std::list<const google::protobuf::Descriptor*>::const_iterator it = descs.begin(),
-                                                                        end = descs.end();
-         it != end; ++it)
+    for (auto desc : descs)
     {
-        codec.info(*it, &std::cout);
-        codec.load(*it);
+        codec.info(desc, &std::cout);
+        codec.load(desc);
     }
 
     std::string bytes1;
-    for (std::list<const google::protobuf::Message*>::const_iterator it = msgs.begin(),
-                                                                     end = msgs.end();
-         it != end; ++it)
+    for (auto msg : msgs)
     {
         static int i = 0;
-        std::cout << "Message " << ++i << " in:\n" << (*it)->DebugString() << std::endl;
+        std::cout << "Message " << ++i << " in:\n" << msg->DebugString() << std::endl;
         std::cout << "Try encode..." << std::endl;
-        codec.encode(&bytes1, *(*it));
+        codec.encode(&bytes1, *msg);
     }
     bytes1 += std::string(4, '\0');
 
@@ -92,8 +86,7 @@ int main(int argc, char* argv[])
             std::string::iterator begin = bytes1.begin(), end = bytes1.end();
             while (begin != end)
             {
-                std::map<dccl::int32, const google::protobuf::Descriptor*>::const_iterator it =
-                    codec.loaded().find(codec.id(begin, end));
+                auto it = codec.loaded().find(codec.id(begin, end));
                 if (it == codec.loaded().end())
                     break;
 
@@ -112,15 +105,11 @@ int main(int argc, char* argv[])
 
         assert(msgs.size() == msgs_out.size());
 
-        for (std::list<std::shared_ptr<google::protobuf::Message>>::const_iterator
-                 it = msgs_out.begin(),
-                 end = msgs_out.end();
-             it != end; ++it)
+        for (const auto& it : msgs_out)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n"
-                      << (*it)->DebugString() << std::endl;
-            assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
+            std::cout << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
+            assert((*in_it)->SerializeAsString() == it->SerializeAsString());
             ++in_it;
         }
     }
@@ -143,15 +132,11 @@ int main(int argc, char* argv[])
 
         assert(msgs.size() == msgs_out.size());
 
-        for (std::list<std::shared_ptr<google::protobuf::Message>>::const_iterator
-                 it = msgs_out.begin(),
-                 end = msgs_out.end();
-             it != end; ++it)
+        for (const auto& it : msgs_out)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n"
-                      << (*it)->DebugString() << std::endl;
-            assert((*in_it)->SerializeAsString() == (*it)->SerializeAsString());
+            std::cout << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
+            assert((*in_it)->SerializeAsString() == it->SerializeAsString());
             ++in_it;
         }
     }

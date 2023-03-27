@@ -211,13 +211,11 @@ class DynamicProtobufManager
         update_databases();
     }
 
-    ~DynamicProtobufManager() {}
+    ~DynamicProtobufManager() = default;
 
     void shutdown()
     {
-        for (std::vector<void*>::iterator it = dl_handles_.begin(), n = dl_handles_.end(); it != n;
-             ++it)
-            dlclose(*it);
+        for (auto& dl_handle : dl_handles_) dlclose(dl_handle);
         google::protobuf::ShutdownProtobufLibrary();
         inst_.reset();
     }
@@ -226,11 +224,7 @@ class DynamicProtobufManager
     {
         std::vector<google::protobuf::DescriptorDatabase*> databases;
 
-        for (std::vector<std::shared_ptr<google::protobuf::DescriptorDatabase>>::const_iterator
-                 it = databases_.begin(),
-                 end = databases_.end();
-             it != end; ++it)
-            databases.push_back(it->get());
+        for (const auto& database : databases_) databases.push_back(database.get());
 
         merged_database_.reset(new google::protobuf::MergedDescriptorDatabase(databases));
         user_descriptor_pool_.reset(new google::protobuf::DescriptorPool(merged_database_.get()));

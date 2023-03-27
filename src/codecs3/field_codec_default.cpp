@@ -198,7 +198,7 @@ dccl::v3::DefaultEnumCodec::post_decode(const dccl::int32& wire_value)
     {
         const google::protobuf::EnumValueDescriptor* return_value =
             e->FindValueByNumber(wire_value);
-        if (return_value != NULL)
+        if (return_value != nullptr)
             return return_value;
         else
             throw NullValueException();

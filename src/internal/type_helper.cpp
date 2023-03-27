@@ -24,6 +24,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "type_helper.h"
 
+#include <memory>
+
 template <google::protobuf::FieldDescriptor::Type t>
 void insertType(dccl::internal::TypeHelper::TypeMap* type_map)
 {
@@ -47,8 +49,8 @@ void dccl::internal::TypeHelper::initialize()
     using std::make_pair;
     using std::shared_ptr;
 
-    type_map_.insert(make_pair(static_cast<FieldDescriptor::Type>(0),
-                               shared_ptr<FromProtoTypeBase>(new FromProtoTypeBase)));
+    type_map_.insert(
+        make_pair(static_cast<FieldDescriptor::Type>(0), std::make_shared<FromProtoTypeBase>()));
     insertType<FieldDescriptor::TYPE_DOUBLE>(&type_map_);
     insertType<FieldDescriptor::TYPE_FLOAT>(&type_map_);
     insertType<FieldDescriptor::TYPE_UINT64>(&type_map_);
@@ -69,7 +71,7 @@ void dccl::internal::TypeHelper::initialize()
     insertType<FieldDescriptor::TYPE_ENUM>(&type_map_);
 
     cpptype_map_.insert(make_pair(static_cast<FieldDescriptor::CppType>(0),
-                                  shared_ptr<FromProtoCppTypeBase>(new FromProtoCppTypeBase)));
+                                  std::make_shared<FromProtoCppTypeBase>()));
 
     insert<FieldDescriptor::CPPTYPE_DOUBLE>(&cpptype_map_);
     insert<FieldDescriptor::CPPTYPE_FLOAT>(&cpptype_map_);

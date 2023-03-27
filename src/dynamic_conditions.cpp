@@ -41,7 +41,7 @@ void build_file_desc_set(const google::protobuf::FileDescriptor* file_desc,
     file_desc->CopyTo(file_desc_proto);
 }
 
-dccl::DynamicConditions::DynamicConditions() {}
+dccl::DynamicConditions::DynamicConditions() = default;
 
 dccl::DynamicConditions::~DynamicConditions()
 {

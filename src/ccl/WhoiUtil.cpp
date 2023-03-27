@@ -21,10 +21,10 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+#include <cstdio>
+#include <ctime> // P.Brodsky
 #include <iomanip>
 #include <iostream>
-#include <stdio.h>
-#include <time.h> // P.Brodsky
 
 #include "WhoiUtil.h"
 

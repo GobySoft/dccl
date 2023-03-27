@@ -39,7 +39,7 @@ dccl::Codec codec;
 // ensure we link in dccl_native_protobuf.so
 dccl::native_protobuf::EnumFieldCodec dummy;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

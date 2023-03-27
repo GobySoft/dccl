@@ -27,10 +27,7 @@
 #include <google/protobuf/message.h>
 
 #include "dccl/option_extensions.pb.h"
-
-// clang-format off
-#define DCCL_HAS_LUA @DCCL_HAS_LUA@
-// clang-format on
+#include "def.h"
 
 namespace sol
 {

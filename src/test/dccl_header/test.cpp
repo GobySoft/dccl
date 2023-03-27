@@ -32,9 +32,7 @@
 #include "dccl/binary.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
-
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
@@ -45,7 +43,7 @@ int main(int argc, char* argv[])
     msg_in1.set_telegram("hello!");
 
     timeval t;
-    gettimeofday(&t, 0);
+    gettimeofday(&t, nullptr);
     dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
 
     msg_in1.mutable_header()->set_time(now);
@@ -79,7 +77,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Try decode..." << std::endl;
 
-    GobyMessage* msg_out1 = codec.decode<GobyMessage*>(bytes1);
+    auto* msg_out1 = codec.decode<GobyMessage*>(bytes1);
     std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
     delete msg_out1;

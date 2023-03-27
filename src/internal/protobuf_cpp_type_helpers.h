@@ -37,7 +37,7 @@ namespace internal
 class FromProtoTypeBase
 {
   public:
-    virtual ~FromProtoTypeBase() {}
+    virtual ~FromProtoTypeBase() = default;
     /// string representation of the google::protobuf::FieldDescriptor::Type.
     virtual std::string as_str() { return "TYPE_UNKNOWN"; }
 };
@@ -56,7 +56,7 @@ template <google::protobuf::FieldDescriptor::Type t> class FromProtoType : publi
 class FromProtoCppTypeBase
 {
   public:
-    virtual ~FromProtoCppTypeBase() {}
+    virtual ~FromProtoCppTypeBase() = default;
 
     /// string representation
     virtual std::string as_str() { return "CPPTYPE_UNKNOWN"; }
@@ -77,7 +77,7 @@ class FromProtoCppTypeBase
     }
 
     /// \brief Get the value of the entire base message (only works for CPPTYPE_MESSAGE)
-    dccl::any get_value(const google::protobuf::Message& msg) { return _get_value(0, msg); }
+    dccl::any get_value(const google::protobuf::Message& msg) { return _get_value(nullptr, msg); }
 
     /// \brief Get the value of a repeated field at a given index.
     ///
@@ -111,7 +111,7 @@ class FromProtoCppTypeBase
         if (is_empty(value))
             return;
         else
-            _set_value(0, msg, value);
+            _set_value(nullptr, msg, value);
     }
 
     /// \brief Add a new entry for a repeated field to the back.
@@ -127,26 +127,26 @@ class FromProtoCppTypeBase
             _add_value(field, msg, value);
     }
 
-    virtual void _set_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    virtual void _set_value(const google::protobuf::FieldDescriptor* /*field*/,
+                            google::protobuf::Message* /*msg*/, dccl::any /*value*/)
     {
         return;
     }
 
-    virtual void _add_value(const google::protobuf::FieldDescriptor* field,
-                            google::protobuf::Message* msg, dccl::any value)
+    virtual void _add_value(const google::protobuf::FieldDescriptor* /*field*/,
+                            google::protobuf::Message* /*msg*/, dccl::any /*value*/)
     {
         return;
     }
 
-    virtual dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* field,
-                                          const google::protobuf::Message& msg, int index)
+    virtual dccl::any _get_repeated_value(const google::protobuf::FieldDescriptor* /*field*/,
+                                          const google::protobuf::Message& /*msg*/, int /*index*/)
     {
         return dccl::any();
     }
 
-    virtual dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
-                                 const google::protobuf::Message& msg)
+    virtual dccl::any _get_value(const google::protobuf::FieldDescriptor* /*field*/,
+                                 const google::protobuf::Message& /*msg*/)
     {
         return dccl::any();
     }
@@ -160,7 +160,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef double type;
+    using type = double;
     std::string as_str() override { return "CPPTYPE_DOUBLE"; }
 
   private:
@@ -191,7 +191,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_FLOAT>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef float type;
+    using type = float;
     std::string as_str() override { return "CPPTYPE_FLOAT"; }
 
   private:
@@ -221,7 +221,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_INT32>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef google::protobuf::int32 type;
+    using type = google::protobuf::int32;
     std::string as_str() override { return "CPPTYPE_INT32"; }
 
   private:
@@ -251,7 +251,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_INT64>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef google::protobuf::int64 type;
+    using type = google::protobuf::int64;
     std::string as_str() override { return "CPPTYPE_INT64"; }
 
   private:
@@ -281,7 +281,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_UINT32>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef google::protobuf::uint32 type;
+    using type = google::protobuf::uint32;
     std::string as_str() override { return "CPPTYPE_UINT32"; }
 
   private:
@@ -311,7 +311,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_UINT64>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef google::protobuf::uint64 type;
+    using type = google::protobuf::uint64;
 
     std::string as_str() override { return "CPPTYPE_UINT64"; }
 
@@ -342,7 +342,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_BOOL>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef bool type;
+    using type = bool;
     std::string as_str() override { return "CPPTYPE_BOOL"; }
 
   private:
@@ -372,7 +372,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_STRING>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef std::string type;
+    using type = std::string;
     std::string as_str() override { return "CPPTYPE_STRING"; }
 
   private:
@@ -403,8 +403,8 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_ENUM>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef const google::protobuf::EnumValueDescriptor* const_type;
-    typedef google::protobuf::EnumValueDescriptor* mutable_type;
+    using const_type = const google::protobuf::EnumValueDescriptor*;
+    using mutable_type = google::protobuf::EnumValueDescriptor*;
 
     std::string as_str() override { return "CPPTYPE_ENUM"; }
 
@@ -437,8 +437,8 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
     : public FromProtoCppTypeBase
 {
   public:
-    typedef const google::protobuf::Message* const_type;
-    typedef google::protobuf::Message* mutable_type;
+    using const_type = const google::protobuf::Message*;
+    using mutable_type = google::protobuf::Message*;
     std::string as_str() override { return "CPPTYPE_MESSAGE"; }
 
   protected:
@@ -462,7 +462,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
     {
         try
         {
-            const_type p = dccl::any_cast<const_type>(value);
+            auto p = dccl::any_cast<const_type>(value);
 
             if (field)
                 msg->GetReflection()->MutableMessage(msg, field)->MergeFrom(*p);
@@ -471,7 +471,7 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
         }
         catch (dccl::bad_any_cast& e)
         {
-            mutable_type p = dccl::any_cast<mutable_type>(value);
+            auto p = dccl::any_cast<mutable_type>(value);
             if (field)
                 msg->GetReflection()->MutableMessage(msg, field)->MergeFrom(*p);
             else
@@ -483,12 +483,12 @@ class FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
     {
         try
         {
-            const_type p = dccl::any_cast<const_type>(value);
+            auto p = dccl::any_cast<const_type>(value);
             msg->GetReflection()->AddMessage(msg, field)->MergeFrom(*p);
         }
         catch (dccl::bad_any_cast& e)
         {
-            mutable_type p = dccl::any_cast<mutable_type>(value);
+            auto p = dccl::any_cast<mutable_type>(value);
             msg->GetReflection()->AddMessage(msg, field)->MergeFrom(*p);
         }
     }
@@ -500,10 +500,10 @@ class FromProtoCustomMessage
     : public FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>
 {
   public:
-    typedef CustomMessage type;
+    using type = CustomMessage;
 
   private:
-    typedef FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE> Parent;
+    using Parent = FromProtoCppType<google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE>;
 
     dccl::any _get_value(const google::protobuf::FieldDescriptor* field,
                          const google::protobuf::Message& msg) override

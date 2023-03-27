@@ -41,7 +41,7 @@ class TypeHelper
 {
   public:
     TypeHelper() { initialize(); }
-    ~TypeHelper() {}
+    ~TypeHelper() = default;
 
     std::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type) const;
     std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::FieldDescriptor* field) const
@@ -82,16 +82,15 @@ class TypeHelper
     void initialize();
 
   public:
-    typedef std::map<google::protobuf::FieldDescriptor::Type, std::shared_ptr<FromProtoTypeBase>>
-        TypeMap;
+    using TypeMap =
+        std::map<google::protobuf::FieldDescriptor::Type, std::shared_ptr<FromProtoTypeBase>>;
     TypeMap type_map_;
 
-    typedef std::map<google::protobuf::FieldDescriptor::CppType,
-                     std::shared_ptr<FromProtoCppTypeBase>>
-        CppTypeMap;
+    using CppTypeMap =
+        std::map<google::protobuf::FieldDescriptor::CppType, std::shared_ptr<FromProtoCppTypeBase>>;
     CppTypeMap cpptype_map_;
 
-    typedef std::map<std::string, std::shared_ptr<FromProtoCppTypeBase>> CustomMessageMap;
+    using CustomMessageMap = std::map<std::string, std::shared_ptr<FromProtoCppTypeBase>>;
     CustomMessageMap custom_message_map_;
 };
 } // namespace internal

@@ -117,9 +117,11 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
     void validate_numeric_bounds()
     {
         // ensure given max and min fit within WireType ranges
-        FieldCodecBase::require(min() >= std::numeric_limits<WireType>::lowest(),
+        FieldCodecBase::require(static_cast<WireType>(min()) >=
+                                    std::numeric_limits<WireType>::lowest(),
                                 "(dccl.field).min must be >= minimum of this field type.");
-        FieldCodecBase::require(max() <= std::numeric_limits<WireType>::max(),
+        FieldCodecBase::require(static_cast<WireType>(max()) <=
+                                    std::numeric_limits<WireType>::max(),
                                 "(dccl.field).max must be <= maximum of this field type.");
 
         // allowable epsilon for min / max to diverge from nearest quantile

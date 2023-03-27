@@ -58,7 +58,7 @@ class FieldCodecBase
     //@{
 
     FieldCodecBase();
-    virtual ~FieldCodecBase() {}
+    virtual ~FieldCodecBase() = default;
     //@}
 
     /// \name Information Methods

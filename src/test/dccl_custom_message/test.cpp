@@ -42,10 +42,10 @@ namespace test
 class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
 {
   private:
-    unsigned size() { return (part() == dccl::HEAD) ? 0 : A_SIZE + B_SIZE; }
-    Bitset encode() { return Bitset(size()); }
+    unsigned size() override { return (part() == dccl::HEAD) ? 0 : A_SIZE + B_SIZE; }
+    Bitset encode() override { return Bitset(size()); }
 
-    Bitset encode(const CustomMsg& msg)
+    Bitset encode(const CustomMsg& msg) override
     {
         if (part() == dccl::HEAD)
         {
@@ -64,7 +64,7 @@ class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
         }
     }
 
-    CustomMsg decode(Bitset* bits)
+    CustomMsg decode(Bitset* bits) override
     {
         if (part() == dccl::HEAD)
         {
@@ -85,7 +85,7 @@ class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
         }
     }
 
-    void validate() {}
+    void validate() override {}
 
     enum
     {
@@ -113,7 +113,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
     dccl::int32 min() { return FieldCodecBase::dccl_field_options().min(); }
     dccl::int32 max_repeat() { return FieldCodecBase::dccl_field_options().max_repeat(); }
 
-    Bitset encode_repeated(const std::vector<dccl::int32>& wire_values)
+    Bitset encode_repeated(const std::vector<dccl::int32>& wire_values) override
     {
         Bitset value_bits;
         int repeat_size =
@@ -135,7 +135,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         return out;
     }
 
-    std::vector<dccl::int32> decode_repeated(Bitset* bits)
+    std::vector<dccl::int32> decode_repeated(Bitset* bits) override
     {
         int repeat_size = bits->to_ulong();
         std::cout << "repeat size is " << repeat_size << std::endl;
@@ -156,18 +156,21 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         return out;
     }
 
-    unsigned size_repeated(const std::vector<dccl::int32>& field_values)
+    unsigned size_repeated(const std::vector<dccl::int32>& field_values) override
     {
         return REPEAT_STORAGE_BITS + field_values.size() * singular_size();
     }
 
     unsigned singular_size() { return dccl::ceil_log2((max() - min()) + 1); }
 
-    unsigned max_size_repeated() { return REPEAT_STORAGE_BITS + max_repeat() * singular_size(); }
+    unsigned max_size_repeated() override
+    {
+        return REPEAT_STORAGE_BITS + max_repeat() * singular_size();
+    }
 
-    unsigned min_size_repeated() { return REPEAT_STORAGE_BITS; }
+    unsigned min_size_repeated() override { return REPEAT_STORAGE_BITS; }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(),
                                 "missing (dccl.field).min");
@@ -183,7 +186,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
 } // namespace test
 } // namespace dccl
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

@@ -41,7 +41,7 @@ class TypedFixedFieldCodec : public TypedFieldCodec<WireType, FieldType>
     virtual unsigned size() = 0;
 
   public:
-    unsigned size(const WireType& wire_value) { return size(); }
+    unsigned size(const WireType& /*wire_value*/) { return size(); }
 
     unsigned max_size() { return size(); }
 

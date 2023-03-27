@@ -24,7 +24,6 @@
 #include "field_codec_default_message.h"
 #include "dccl/codec.h"
 
-using dccl::dlog;
 
 //
 // DefaultMessageCodec
@@ -50,7 +49,7 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
 {
     try
     {
-        google::protobuf::Message* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
+        auto* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
 
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();
         const google::protobuf::Reflection* refl = msg->GetReflection();
@@ -74,13 +73,13 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
                     for (unsigned j = 0,
                                   m = field_desc->options().GetExtension(dccl::field).max_repeat();
                          j < m; ++j)
-                        wire_values.push_back(refl->AddMessage(msg, field_desc));
+                        wire_values.emplace_back(refl->AddMessage(msg, field_desc));
 
                     codec->field_decode_repeated(bits, &wire_values, field_desc);
 
-                    for (int j = 0, m = wire_values.size(); j < m; ++j)
+                    for (auto& wire_value : wire_values)
                     {
-                        if (is_empty(wire_values[j]))
+                        if (is_empty(wire_value))
                             refl->RemoveLast(msg, field_desc);
                     }
                 }
@@ -88,8 +87,8 @@ void dccl::v2::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
                 {
                     // for primitive types
                     codec->field_decode_repeated(bits, &wire_values, field_desc);
-                    for (int j = 0, m = wire_values.size(); j < m; ++j)
-                        helper->add_value(field_desc, msg, wire_values[j]);
+                    for (auto& wire_value : wire_values)
+                        helper->add_value(field_desc, msg, wire_value);
                 }
             }
             else

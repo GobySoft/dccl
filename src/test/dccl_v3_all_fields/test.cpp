@@ -36,7 +36,7 @@ void decode_check(const std::string& encoded);
 dccl::Codec codec;
 TestMsg msg_in;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

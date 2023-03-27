@@ -48,11 +48,8 @@
 
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
+#include "def.h"
 #include "field_codec_manager.h"
-
-// clang-format off
-#define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
-// clang-format on
 
 /// Dynamic Compact Control Language namespace
 namespace dccl
@@ -69,7 +66,7 @@ class Codec
     /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManagerLocal::add and then instantiate Codec with that name.
     /// \param dccl_id_codec_name Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
     /// \param library_path Library to load using load_library (this library would typically load the identifier codec referenced in dccl_id_codec).
-    Codec(const std::string& dccl_id_codec_name = default_id_codec_name(),
+    Codec(std::string dccl_id_codec_name = default_id_codec_name(),
           const std::string& library_path = "");
 
     /// \brief Instantiate a Codec with a non-default identifier field codec (loaded directly).
