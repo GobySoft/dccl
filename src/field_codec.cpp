@@ -21,7 +21,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include <boost/algorithm/string.hpp> // for replace_all
 
 #include "dccl/codec.h"
 #include "exception.h"
@@ -342,9 +341,6 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
                         : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 
-    //    std::string s = ss.str();
-    //    boost::replace_all(s, "\n", "\n" + indent);
-    //    s = indent + s;
 
     if (!is_zero_size)
         *os << ss.str() << "\n";

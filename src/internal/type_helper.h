@@ -26,7 +26,6 @@
 
 #include <map>
 
-#include <boost/version.hpp>
 #include <memory>
 
 #include "protobuf_cpp_type_helpers.h"
