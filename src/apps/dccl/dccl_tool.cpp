@@ -567,7 +567,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
                 // Robust error checking inspired by https://stackoverflow.com/a/26083517.
                 char* end_ptr = NULL;
                 errno = 0;
-                int number = strtol(optarg, &end_ptr, 10);
+                auto number = strtol(optarg, &end_ptr, 10);
 
                 if (optarg == end_ptr)
                 {
