@@ -237,6 +237,9 @@ workflows:
   commit:
     jobs:
 
+      - osx-build:
+          <<: *filter-template-non-master
+      
       - amd64-stretch-build:
           <<: *filter-template-non-master
       - amd64-buster-build:
@@ -417,6 +420,27 @@ jobs:
           paths:
             - '*.tar.xz'
 
+  osx-build:
+    <<: *job-template-amd64
+    macos:
+      xcode: "13.0.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - checkout
+      - run:
+          name: Update Homebrew
+          command: brew update
+      - run:
+          name: Install CMake
+          command: brew install cmake protobuf@3
+      - run: &run-build
+          name: Build
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+      - run: &run-tests
+          name: Run tests
+          command: cd build && ctest --output-on-failure -j4
+            
   amd64-stretch-build:
     <<: *job-template-amd64
     docker: *docker-base-stretch
