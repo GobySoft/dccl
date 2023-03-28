@@ -77,7 +77,7 @@ class DynamicProtobufManager
     static GoogleProtobufMessagePointer new_protobuf_message(const std::string& protobuf_type_name,
                                                              bool user_pool_first = false)
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
 
         const google::protobuf::Descriptor* desc =
             find_descriptor(protobuf_type_name, user_pool_first);
@@ -98,7 +98,7 @@ class DynamicProtobufManager
     static GoogleProtobufMessagePointer
     new_protobuf_message(const google::protobuf::Descriptor* desc)
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
         return GoogleProtobufMessagePointer(
             get_instance()->msg_factory_->GetPrototype(desc)->New());
     }
@@ -123,7 +123,7 @@ class DynamicProtobufManager
     /// \brief Enable on the fly compilation of .proto files on the local disk. Must be called before load_from_proto_file() is called.
     static void enable_compilation()
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
         get_instance()->enable_disk_source_database();
     }
 
@@ -152,7 +152,7 @@ class DynamicProtobufManager
 
     static void protobuf_shutdown()
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
         get_instance()->shutdown();
     }
 
@@ -162,14 +162,11 @@ class DynamicProtobufManager
 
     static void reset()
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
         inst_.reset(new DynamicProtobufManager, DynamicProtobufManager::custom_deleter);
     }
 
-    static void custom_deleter(DynamicProtobufManager* obj)
-    {
-        delete obj;
-    }
+    static void custom_deleter(DynamicProtobufManager* obj) { delete obj; }
 
 #if !(DCCL_THREAD_SUPPORT)
     // no way to make these thread safe without the downstream user locking the mutex
@@ -186,13 +183,67 @@ class DynamicProtobufManager
     {
         return *get_instance()->simple_database_;
     }
+#else
+    template <typename T = void> static google::protobuf::DynamicMessageFactory& msg_factory()
+    {
+        static_assert(!std::is_same<T, T>::value,
+                      "msg_factory() has been removed for thread-safety "
+                      "reasons, use msg_factory_call(...) instead.");
+        // to suppress warning, will never actually be called
+        return *get_instance()->msg_factory_;
+    }
+    template <typename T = void> static google::protobuf::DescriptorPool& user_descriptor_pool()
+    {
+        static_assert(!std::is_same<T, T>::value,
+                      "user_descriptor_pool() has been removed for thread-safety reasons, use "
+                      "user_descriptor_pool_call(...) instead.");
+        // to suppress warning, will never actually be called
+        return *get_instance()->user_descriptor_pool_;
+    }
+    template <typename T = void>
+    static google::protobuf::SimpleDescriptorDatabase& simple_database()
+    {
+        static_assert(!std::is_same<T, T>::value,
+                      "simple_database() has been removed for thread-safety reasons, use "
+                      "simple_database_call(...) instead.");
+        // to suppress warning, will never actually be called
+        return *get_instance()->simple_database_;
+    }
 #endif
+
+    template <typename ReturnType, typename... Args1, typename... Args2>
+    static ReturnType
+    msg_factory_call(ReturnType (google::protobuf::DynamicMessageFactory::*func)(Args1...) const,
+                     Args2... args)
+    {
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        return ((*get_instance()->msg_factory_).*func)(args...);
+    }
+
+    template <typename ReturnType, typename... Args1, typename... Args2>
+    static ReturnType
+    user_descriptor_pool_call(ReturnType (google::protobuf::DescriptorPool::*func)(Args1...) const,
+                              Args2... args)
+    {
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        return ((*get_instance()->user_descriptor_pool_).*func)(args...);
+    }
+
+    template <typename ReturnType, typename... Args1, typename... Args2>
+    static ReturnType
+    simple_database_call(ReturnType (google::protobuf::SimpleDescriptorDatabase::*func)(Args1...)
+                             const,
+                         Args2... args)
+    {
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        return ((*get_instance()->simple_database_).*func)(args...);
+    }
 
   private:
     static std::shared_ptr<DynamicProtobufManager> inst_;
     static DynamicProtobufManager* get_instance()
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+        DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
 
         if (!inst_)
             inst_.reset(new DynamicProtobufManager, DynamicProtobufManager::custom_deleter);

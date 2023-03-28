@@ -22,19 +22,20 @@
 #include "dccl/def.h"
 
 #if DCCL_THREAD_SUPPORT
+#include <atomic>
 #include <mutex>
 #include <thread>
-#include <atomic>
 namespace dccl
 {
 extern std::recursive_mutex g_dynamic_protobuf_manager_mutex;
 extern std::recursive_mutex g_dlog_mutex;
 } // namespace dccl
 
-#define LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX \
-    std::lock_guard<std::recursive_mutex> l(g_dynamic_protobuf_manager_mutex);
-#define LOCK_DLOG_MUTEX std::lock_guard<std::recursive_mutex> l(g_dlog_mutex);
+#define DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX \
+    std::lock_guard<std::recursive_mutex> l(dccl::g_dynamic_protobuf_manager_mutex);
+#define DCCL_LOCK_DLOG_MUTEX std::lock_guard<std::recursive_mutex> l(dccl::g_dlog_mutex);
 #else
-#define LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
-#define LOCK_DLOG_MUTEX
+// no op
+#define DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+#define DCCL_LOCK_DLOG_MUTEX
 #endif
