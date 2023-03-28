@@ -214,7 +214,7 @@ bool parse_derived_dimensions(Iterator first, Iterator last,
 }
 
 // Extract field type name as string
-std::string get_field_type_name(google::protobuf::FieldDescriptor::CppType type)
+inline std::string get_field_type_name(google::protobuf::FieldDescriptor::CppType type)
 {
     switch (type)
     {

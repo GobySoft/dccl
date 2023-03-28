@@ -270,7 +270,30 @@ if(enable_clang_tidy)
   find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
   if(CLANG_TIDY_BIN)
     message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" "-checks=modernize-use-override,modernize-deprecated-headers,misc-static-assert,misc-unused-using-decls,misc-unused-parameters,modernize-pass-by-value,modernize-use-using,modernize-use-emplace,modernize-use-nullptr,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-default-member-init,modernize-use-auto,modernize-raw-string-literal,modernize-make-shared,modernize-make-unique,modernize-loop-convert,readability-mismatched-tags,readability-make-member-function-const" "-header-filter=^.*[^(pb)]\\.h$")
+    string(CONCAT CLANG_TIDY_CHECKS "-checks="
+      "misc-static-assert,"
+      "misc-unused-using-decls,"
+      "misc-unused-parameters,"
+      "misc-definitions-in-headers,"
+      "misc-static-assert,"
+      "modernize-use-override,"
+      "modernize-deprecated-headers,"
+      "modernize-pass-by-value,"
+      "modernize-use-using,"
+      "modernize-use-emplace,"
+      "modernize-use-nullptr,"
+      "modernize-use-equals-default,"
+      "modernize-use-equals-delete,"
+      "modernize-use-default-member-init,"
+      "modernize-use-auto,"
+      "modernize-raw-string-literal,"
+      "modernize-make-shared,"
+      "modernize-make-unique,"
+      "modernize-loop-convert,"
+      "readability-mismatched-tags,"
+      "readability-make-member-function-const")
+    
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" ${CLANG_TIDY_CHECKS} "-header-filter=^.*[^(pb)]\\.h$")
   else()
     message(FATAL_ERROR "clang-tidy not found")
   endif()
