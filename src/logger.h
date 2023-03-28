@@ -212,7 +212,7 @@ class Logger : public std::ostream
     /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
     {
-        LOCK_DLOG_MUTEX
+        DCCL_LOCK_DLOG_MUTEX
         buf_.connect(verbosity_mask, slot);
     }
 
@@ -227,7 +227,7 @@ class Logger : public std::ostream
                  void (Obj::*mem_func)(const std::string& msg, logger::Verbosity vrb,
                                        logger::Group grp))
     {
-        LOCK_DLOG_MUTEX
+        DCCL_LOCK_DLOG_MUTEX
         connect(verbosity_mask, std::bind(mem_func, obj, std::placeholders::_1,
                                           std::placeholders::_2, std::placeholders::_3));
     }
@@ -239,7 +239,7 @@ class Logger : public std::ostream
     /// \param add_timestamp If true, prepend the current timestamp of the message to each log message.
     void connect(int verbosity_mask, std::ostream* os, bool add_timestamp = true)
     {
-        LOCK_DLOG_MUTEX
+        DCCL_LOCK_DLOG_MUTEX
         buf_.connect(verbosity_mask,
                      std::bind(to_ostream, std::placeholders::_1, std::placeholders::_2,
                                std::placeholders::_3, os, add_timestamp));
@@ -248,7 +248,7 @@ class Logger : public std::ostream
     /// \brief Disconnect all slots for one or more given verbosities
     void disconnect(int verbosity_mask)
     {
-        LOCK_DLOG_MUTEX
+        DCCL_LOCK_DLOG_MUTEX
         buf_.disconnect(verbosity_mask);
     }
 

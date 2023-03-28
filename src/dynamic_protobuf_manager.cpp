@@ -37,7 +37,7 @@ const google::protobuf::Descriptor*
 dccl::DynamicProtobufManager::find_descriptor(const std::string& protobuf_type_name,
                                               bool user_pool_first)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     const google::protobuf::Descriptor* desc = nullptr;
     if (user_pool_first)
     {
@@ -65,28 +65,28 @@ dccl::DynamicProtobufManager::find_descriptor(const std::string& protobuf_type_n
 std::shared_ptr<google::protobuf::Message>
 dccl::DynamicProtobufManager::new_protobuf_message(const google::protobuf::Descriptor* desc)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     return new_protobuf_message<std::shared_ptr<google::protobuf::Message>>(desc);
 }
 
 std::shared_ptr<google::protobuf::Message>
 dccl::DynamicProtobufManager::new_protobuf_message(const std::string& protobuf_type_name)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     return new_protobuf_message<std::shared_ptr<google::protobuf::Message>>(protobuf_type_name);
 }
 
 void dccl::DynamicProtobufManager::add_database(
     std::shared_ptr<google::protobuf::DescriptorDatabase> database)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     get_instance()->databases_.push_back(database);
     get_instance()->update_databases();
 }
 
 void dccl::DynamicProtobufManager::add_include_path(const std::string& path)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
 
     if (!get_instance()->disk_source_tree_)
         throw(std::runtime_error(
@@ -97,7 +97,7 @@ void dccl::DynamicProtobufManager::add_include_path(const std::string& path)
 
 void* dccl::DynamicProtobufManager::load_from_shared_lib(const std::string& shared_lib_path)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     void* handle = dlopen(shared_lib_path.c_str(), RTLD_LAZY);
     if (handle)
         get_instance()->dl_handles_.push_back(handle);
@@ -112,7 +112,7 @@ void* dccl::DynamicProtobufManager::load_from_shared_lib(const std::string& shar
 const google::protobuf::FileDescriptor*
 dccl::DynamicProtobufManager::load_from_proto_file(const std::string& protofile_absolute_path)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
 
     if (!get_instance()->source_database_)
         throw(dccl::Exception(
@@ -124,7 +124,7 @@ dccl::DynamicProtobufManager::load_from_proto_file(const std::string& protofile_
 const google::protobuf::FileDescriptor*
 dccl::DynamicProtobufManager::add_protobuf_file(const google::protobuf::FileDescriptorProto& proto)
 {
-    LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
+    DCCL_LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
     get_instance()->simple_database_->Add(proto);
 
     const google::protobuf::FileDescriptor* return_desc =
