@@ -25,8 +25,8 @@
 #include <iostream>
 #include <utility>
 
-#include "dccl/binary.h"
-#include "dccl/bitset.h"
+#include "../../binary.h"
+#include "../../bitset.h"
 
 using dccl::Bitset;
 

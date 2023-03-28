@@ -21,37 +21,25 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "field_codec_fixed.h"
 
-namespace dccl
-{
-/// \brief Provides the default 1 byte or 2 byte DCCL ID codec
-class DefaultIdentifierCodec : public TypedFieldCodec<uint32>
-{
-  protected:
-    Bitset encode() override;
-    Bitset encode(const uint32& wire_value) override;
-    uint32 decode(Bitset* bits) override;
-    unsigned size() override;
-    unsigned size(const uint32& wire_value) override;
-    unsigned max_size() override;
-    unsigned min_size() override;
-    void validate() override {}
+#ifndef DEF20230327H
+#define DEF20230327H
 
-  private:
-    unsigned this_size(const uint32& wire_value);
-    // maximum id we can fit in short or long header (MSB reserved to indicate
-    // short or long header)
-    enum
-    {
-        ONE_BYTE_MAX_ID = (1 << 7) - 1,
-        TWO_BYTE_MAX_ID = (1 << 15) - 1
-    };
+// sets CMake defined compile-time definitions (used with configure_file())
 
-    enum
-    {
-        SHORT_FORM_ID_BYTES = 1,
-        LONG_FORM_ID_BYTES = 2
-    };
-};
-} // namespace dccl
+// clang-format off
+#define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
+#define DCCL_HAS_B64 @DCCL_HAS_B64@
+#define DCCL_HAS_LUA @DCCL_HAS_LUA@
+#define DCCL_THREAD_SUPPORT @DCCL_HAS_THREAD_SUPPORT@
+#define DCCL_COMPILED_CXX_STANDARD @CMAKE_CXX_STANDARD@
+
+#if DCCL_COMPILED_CXX_STANDARD >= 17
+#define DCCL_HAS_CPP17
+#endif
+#if DCCL_COMPILED_CXX_STANDARD >= 20
+#define DCCL_HAS_CPP20
+#endif
+// clang-format on
+
+#endif

@@ -25,10 +25,10 @@
 // tests custom message codec
 // tests cryptography
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 using namespace dccl::test;
 
 using dccl::operator<<;
@@ -42,10 +42,10 @@ namespace test
 class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
 {
   private:
-    unsigned size() { return (part() == dccl::HEAD) ? 0 : A_SIZE + B_SIZE; }
-    Bitset encode() { return Bitset(size()); }
+    unsigned size() override { return (part() == dccl::HEAD) ? 0 : A_SIZE + B_SIZE; }
+    Bitset encode() override { return Bitset(size()); }
 
-    Bitset encode(const CustomMsg& msg)
+    Bitset encode(const CustomMsg& msg) override
     {
         if (part() == dccl::HEAD)
         {
@@ -64,7 +64,7 @@ class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
         }
     }
 
-    CustomMsg decode(Bitset* bits)
+    CustomMsg decode(Bitset* bits) override
     {
         if (part() == dccl::HEAD)
         {
@@ -85,7 +85,7 @@ class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
         }
     }
 
-    void validate() {}
+    void validate() override {}
 
     enum
     {
@@ -113,7 +113,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
     dccl::int32 min() { return FieldCodecBase::dccl_field_options().min(); }
     dccl::int32 max_repeat() { return FieldCodecBase::dccl_field_options().max_repeat(); }
 
-    Bitset encode_repeated(const std::vector<dccl::int32>& wire_values)
+    Bitset encode_repeated(const std::vector<dccl::int32>& wire_values) override
     {
         Bitset value_bits;
         int repeat_size =
@@ -135,7 +135,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         return out;
     }
 
-    std::vector<dccl::int32> decode_repeated(Bitset* bits)
+    std::vector<dccl::int32> decode_repeated(Bitset* bits) override
     {
         int repeat_size = bits->to_ulong();
         std::cout << "repeat size is " << repeat_size << std::endl;
@@ -156,18 +156,21 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         return out;
     }
 
-    unsigned size_repeated(const std::vector<dccl::int32>& field_values)
+    unsigned size_repeated(const std::vector<dccl::int32>& field_values) override
     {
         return REPEAT_STORAGE_BITS + field_values.size() * singular_size();
     }
 
     unsigned singular_size() { return dccl::ceil_log2((max() - min()) + 1); }
 
-    unsigned max_size_repeated() { return REPEAT_STORAGE_BITS + max_repeat() * singular_size(); }
+    unsigned max_size_repeated() override
+    {
+        return REPEAT_STORAGE_BITS + max_repeat() * singular_size();
+    }
 
-    unsigned min_size_repeated() { return REPEAT_STORAGE_BITS; }
+    unsigned min_size_repeated() override { return REPEAT_STORAGE_BITS; }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().has_min(),
                                 "missing (dccl.field).min");
@@ -176,20 +179,20 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         FieldCodecBase::require(
             FieldCodecBase::dccl_field_options().max_repeat() < MAX_REPEAT_SIZE,
             "(dccl.field).max_repeat must be less than " +
-                boost::lexical_cast<std::string>(static_cast<int>(MAX_REPEAT_SIZE)));
+                std::to_string(static_cast<int>(MAX_REPEAT_SIZE)));
     }
 };
 
 } // namespace test
 } // namespace dccl
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     dccl::Codec codec;
-    dccl::FieldCodecManager::add<dccl::test::CustomCodec>("custom_codec");
-    dccl::FieldCodecManager::add<dccl::test::Int32RepeatedCodec>("int32_test_codec");
+    codec.manager().add<dccl::test::CustomCodec>("custom_codec");
+    codec.manager().add<dccl::test::Int32RepeatedCodec>("int32_test_codec");
 
     codec.set_crypto_passphrase("my_passphrase!");
 
@@ -206,8 +209,8 @@ int main(int argc, char* argv[])
     codec.encode(&bytes1, msg_in1);
     std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
     std::cout << "Try decode..." << std::endl;
-    boost::shared_ptr<google::protobuf::Message> msg_out1 =
-        codec.decode<boost::shared_ptr<google::protobuf::Message>>(bytes1);
+    std::shared_ptr<google::protobuf::Message> msg_out1 =
+        codec.decode<std::shared_ptr<google::protobuf::Message>>(bytes1);
     std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
 

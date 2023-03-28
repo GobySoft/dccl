@@ -32,11 +32,12 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
@@ -47,11 +48,8 @@
 
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
+#include "dccl/def.h"
 #include "field_codec_manager.h"
-
-// clang-format off
-#define DCCL_HAS_CRYPTOPP @DCCL_HAS_CRYPTOPP@
-// clang-format on
 
 /// Dynamic Compact Control Language namespace
 namespace dccl
@@ -63,16 +61,35 @@ class FieldCodec;
 class Codec
 {
   public:
-    /// \brief Instantiate a Codec, optionally with a non-default identifier field codec.
+    /// \brief Instantiate a Codec, optionally with a non-default identifier field codec (loaded via a shared library).
     ///
-    /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManager::add and then instantiate Codec with that name.
-    /// \param dccl_id_codec Name passed to FieldCodecManager::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+    /// Normally you will use the default identifier field codec by calling Codec() with no parameters. This will use the DefaultIdentifierCodec to distinguish DCCL message types. However, if you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can load it with FieldCodecManagerLocal::add and then instantiate Codec with that name.
+    /// \param dccl_id_codec_name Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
     /// \param library_path Library to load using load_library (this library would typically load the identifier codec referenced in dccl_id_codec).
-    Codec(const std::string& dccl_id_codec = default_id_codec_name(),
+    Codec(std::string dccl_id_codec_name = default_id_codec_name(),
           const std::string& library_path = "");
+
+    /// \brief Instantiate a Codec with a non-default identifier field codec (loaded directly).
+    ///
+    /// If you are writing special purpose messages that need to use a different (e.g. more compact) identifier codec, you can instantiate a DCCL Codec that identifier codec using this constructor
+    /// \param dccl_id_codec_name Name passed to FieldCodecManagerLocal::add of a non-standard TypedFieldCodec<uint32> to be used by this Codec to identify message types.
+    /// \param dccl_id_codec Default instantiation of the IDFieldCodec to use
+    /// \tparam IDFieldCodec The type of the TypedFieldCodec<uint32> to be used as the ID codec
+    template <class IDFieldCodec,
+              typename std::enable_if<std::is_base_of<FieldCodecBase, IDFieldCodec>::value,
+                                      int>::type = 0>
+    Codec(const std::string& dccl_id_codec_name, const IDFieldCodec& dccl_id_codec) // NOLINT
+        : id_codec_(dccl_id_codec_name)
+    {
+        set_default_codecs();
+        manager_.add<IDFieldCodec>(dccl_id_codec_name);
+    }
 
     /// \brief Destructor
     virtual ~Codec();
+
+    Codec(const Codec&) = delete;
+    Codec& operator=(const Codec&) = delete;
 
     /// \brief Add codecs and/or load messages present in the given shared library handle
     ///
@@ -164,7 +181,8 @@ class Codec
     /// \param os Pointer to a stream to write this information (if 0, written to dccl::dlog)
     /// \param user_id Custom user_speicified dccl id to identify a message, if user_id is not specified or <0, then the first
     /// dccl_id with the message descriptor corresponding to that of msg will be used
-    template <typename ProtobufMessage> void info(std::ostream* os = 0, int user_id = -1) const
+    template <typename ProtobufMessage>
+    void info(std::ostream* os = nullptr, int user_id = -1) const
     {
         info(ProtobufMessage::descriptor(), os, user_id);
     }
@@ -174,13 +192,13 @@ class Codec
     /// \param os Pointer to a stream to write this information (if 0, writes to dccl::dlog)
     /// \param user_id Custom user_speicified dccl id to identify a message, if user_id is not specified or <0, then the first
     /// dccl id with the message descriptor corresponding to that of msg will be used
-    void info(const google::protobuf::Descriptor* desc, std::ostream* os = 0,
+    void info(const google::protobuf::Descriptor* desc, std::ostream* os = nullptr,
               int user_id = -1) const;
 
     /// \brief Writes a human readable summary (including field sizes) of all the loaded (validated) DCCL types
     ///
     /// \param os Pointer to a stream to write this information (if 0, writes to dccl::dlog)
-    void info_all(std::ostream* os = 0) const;
+    void info_all(std::ostream* os = nullptr) const;
 
     /// \brief Gives the DCCL id (defined by the custom message option extension "(dccl.msg).id" in the .proto file). This ID is used on the wire to unique identify incoming message types.
     ///
@@ -222,7 +240,7 @@ class Codec
         // pass the hard coded id, that is, (dccl.msg).id,
         // through encode/decode to allow a custom ID codec (if in use)
         // to always take effect.
-        id_codec()->field_encode(&id_bits, hardcoded_id, 0);
+        id_codec()->field_encode(&id_bits, hardcoded_id, nullptr);
         std::string id_bytes(id_bits.to_byte_string());
         return id(id_bytes);
     }
@@ -290,20 +308,20 @@ class Codec
 
     /// \brief An alterative form for decoding messages for message types <i>not</i> known at compile-time ("dynamic").
     ///
-    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like boost::shared_ptr included)
+    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like std::shared_ptr included)
     /// \param bytes the byte string returned by encode
     /// \param header_only If true, only decode the header (do not try to decrypt (if applicable) and decode the message body)
     /// \throw Exception if message cannot be decoded
-    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
+    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. std::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
     template <typename GoogleProtobufMessagePointer>
     GoogleProtobufMessagePointer decode(const std::string& bytes, bool header_only = false);
 
     /// \brief An alterative form for decoding messages for message types <i>not</i> known at compile-time ("dynamic"), where the bytes used are stripped from the front of the encoded message.
     ///
-    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like boost::shared_ptr included)
+    /// \tparam GoogleProtobufMessagePointer anything that acts like a pointer (has operator*) to a google::protobuf::Message (smart pointers like std::shared_ptr included)
     /// \param bytes encoded message to decode (must already have been validated) which will have the used bytes stripped from the front of the encoded message
     /// \throw Exception if message cannot be decoded
-    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. boost::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
+    /// \return pointer to decoded message (a google::protobuf::Message). You are responsible for deleting the memory used by this pointer, so we recommend using a smart pointer here (e.g. std::shared_ptr or the C++11 equivalent). This message can be examined using the Google Reflection/Descriptor API.
     template <typename GoogleProtobufMessagePointer>
     GoogleProtobufMessagePointer decode(std::string* bytes);
 
@@ -351,15 +369,13 @@ class Codec
                 return dccl::DCCLFieldOptions::descriptor()
                     ->FindFieldByName("codec")
                     ->default_value_string();
-            default: return "dccl.default" + boost::lexical_cast<std::string>(version);
+            default: return "dccl.default" + std::to_string(version);
         }
     }
 
-  private:
-    friend class v2::DefaultMessageCodec;
-    Codec(const Codec&);
-    Codec& operator=(const Codec&);
+    FieldCodecManagerLocal& manager() { return manager_; }
 
+  private:
     void encode_internal(const google::protobuf::Message& msg, bool header_only,
                          Bitset& header_bits, Bitset& body_bits, int user_id);
     std::string get_all_error_fields_in_message(const google::protobuf::Message& msg,
@@ -370,9 +386,9 @@ class Codec
 
     void set_default_codecs();
 
-    boost::shared_ptr<FieldCodecBase> id_codec() const
+    std::shared_ptr<FieldCodecBase> id_codec() const
     {
-        return FieldCodecManager::find(google::protobuf::FieldDescriptor::TYPE_UINT32, id_codec_);
+        return manager_.find(google::protobuf::FieldDescriptor::TYPE_UINT32, id_codec_);
     }
 
   private:
@@ -380,10 +396,10 @@ class Codec
     std::string crypto_key_;
 
     // strict mode setting
-    bool strict_;
+    bool strict_{false};
 
     // console outputting format width
-    unsigned console_width_;
+    unsigned console_width_{60};
 
     // set of DCCL IDs *not* to encrypt
     std::set<unsigned> skip_crypto_ids_;
@@ -395,6 +411,8 @@ class Codec
     std::vector<void*> dl_handles_;
 
     std::string build_guard_for_console_output(std::string& base, char guard_char) const;
+
+    FieldCodecManagerLocal manager_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Codec& codec)
@@ -411,13 +429,12 @@ GoogleProtobufMessagePointer dccl::Codec::decode(const std::string& bytes,
     unsigned this_id = id(bytes);
 
     if (!id2desc_.count(this_id))
-        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+        throw(Exception("Message id " + std::to_string(this_id) +
                         " has not been loaded. Call load() before decoding this type."));
 
     // ownership of this object goes to the caller of decode()
-    GoogleProtobufMessagePointer msg =
-        dccl::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(
-            id2desc_.find(this_id)->second);
+    auto msg = dccl::DynamicProtobufManager::new_protobuf_message<GoogleProtobufMessagePointer>(
+        id2desc_.find(this_id)->second);
     decode(bytes, &(*msg), header_only);
     return msg;
 }
@@ -428,7 +445,7 @@ GoogleProtobufMessagePointer dccl::Codec::decode(std::string* bytes)
     unsigned this_id = id(*bytes);
 
     if (!id2desc_.count(this_id))
-        throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+        throw(Exception("Message id " + std::to_string(this_id) +
                         " has not been loaded. Call load() before decoding this type."));
 
     GoogleProtobufMessagePointer msg =
@@ -443,8 +460,8 @@ template <typename CharIterator>
 unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
 {
     unsigned id_min_size = 0, id_max_size = 0;
-    id_codec()->field_min_size(&id_min_size, 0);
-    id_codec()->field_max_size(&id_max_size, 0);
+    id_codec()->field_min_size(&id_min_size, nullptr);
+    id_codec()->field_max_size(&id_max_size, nullptr);
 
     if (std::distance(begin, end) < (id_min_size / BITS_IN_BYTE))
         throw(Exception("Bytes passed (hex: " + hex_encode(begin, end) +
@@ -457,10 +474,10 @@ unsigned dccl::Codec::id(CharIterator begin, CharIterator end) const
     Bitset these_bits(&fixed_header_bits);
     these_bits.get_more_bits(id_min_size);
 
-    boost::any return_value;
-    id_codec()->field_decode(&these_bits, &return_value, 0);
+    dccl::any return_value;
+    id_codec()->field_decode(&these_bits, &return_value, nullptr);
 
-    return boost::any_cast<uint32>(return_value);
+    return dccl::any_cast<uint32>(return_value);
 }
 
 template <typename CharIterator>
@@ -475,7 +492,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             dlog << "Began decoding message of id: " << this_id << std::endl;
 
         if (!id2desc_.count(this_id))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(this_id) +
+            throw(Exception("Message id " + std::to_string(this_id) +
                             " has not been loaded. Call load() before decoding this type."));
 
         const google::protobuf::Descriptor* desc = msg->GetDescriptor();
@@ -483,8 +500,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
         dlog.is(logger::DEBUG1, logger::DECODE) && dlog << "Type name: " << desc->full_name()
                                                         << std::endl;
 
-        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
-        boost::shared_ptr<internal::FromProtoCppTypeBase> helper = internal::TypeHelper::find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+        std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
 
         CharIterator actual_end = end;
         if (codec)
@@ -494,7 +511,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             codec->base_max_size(&head_size_bits, desc, HEAD);
             codec->base_max_size(&body_size_bits, desc, BODY);
             unsigned id_size = 0;
-            id_codec()->field_size(&id_size, this_id, 0);
+            id_codec()->field_size(&id_size, this_id, nullptr);
             head_size_bits += id_size;
 
             unsigned head_size_bytes = ceil_bits2bytes(head_size_bits);
@@ -521,7 +538,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end,
             dlog.is(logger::DEBUG3, logger::DECODE) &&
                 dlog << "Unencrypted Head after ID bits removal (bin): " << head_bits << std::endl;
 
-            internal::MessageStack msg_stack;
+            internal::MessageStack msg_stack(manager_.codec_data().root_message_,
+                                             manager_.codec_data().message_data_);
             msg_stack.push(msg->GetDescriptor());
 
             codec->base_decode(&head_bits, msg, HEAD);

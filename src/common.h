@@ -29,15 +29,12 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-
-#include <boost/type_traits/is_floating_point.hpp>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <type_traits>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
-#include "dccl/bitset.h"
+#include "bitset.h"
 
 namespace dccl
 {
@@ -57,11 +54,11 @@ inline unsigned ceil_bits2bytes(unsigned bits)
 /// an unsigned 32 bit integer
 typedef google::protobuf::uint32 uint32;
 /// a signed 32 bit integer
-typedef google::protobuf::int32 int32;
+using int32 = google::protobuf::int32;
 /// an unsigned 64 bit integer
-typedef google::protobuf::uint64 uint64;
+using uint64 = google::protobuf::uint64;
 /// a signed 64 bit integer
-typedef google::protobuf::int64 int64;
+using int64 = google::protobuf::int64;
 
 const unsigned BITS_IN_BYTE = 8;
 
@@ -77,8 +74,8 @@ template <typename Float> Float round(Float d) { return std::floor(d + 0.5); }
 /// \param precision number of places past the decimal to round (e.g. dec=1 rounds to tenths)
 /// \return rounded value
 template <typename Float>
-typename boost::enable_if<boost::is_floating_point<Float>, Float>::type round(Float value,
-                                                                              int precision)
+typename std::enable_if<std::is_floating_point<Float>::value, Float>::type round(Float value,
+                                                                                 int precision)
 {
     Float scaling = std::pow(10.0, precision);
     return round(value * scaling) / scaling;
@@ -89,8 +86,8 @@ typename boost::enable_if<boost::is_floating_point<Float>, Float>::type round(Fl
 /// \param interval number defining the quantization step
 /// \return quantized value
 template <typename Float>
-typename boost::enable_if<boost::is_floating_point<Float>, Float>::type quantize(Float value,
-                                                                                 double interval)
+typename std::enable_if<std::is_floating_point<Float>::value, Float>::type quantize(Float value,
+                                                                                    double interval)
 {
     if (interval >= 1)
         return round(value / interval) * interval;
@@ -109,7 +106,7 @@ template <typename Int> Int abs(Int i) { return (i < 0) ? -i : i; }
 /// \param precision number of places past the decimal to round (e.g. dec=1 rounds to tenths)
 /// \return rounded value
 template <typename Int>
-typename boost::enable_if<boost::is_integral<Int>, Int>::type round(Int value, int precision)
+typename std::enable_if<std::is_integral<Int>::value, Int>::type round(Int value, int precision)
 {
     if (precision >= 0)
     {
@@ -134,7 +131,8 @@ typename boost::enable_if<boost::is_integral<Int>, Int>::type round(Int value, i
 /// \param interval number defining the quantization step
 /// \return quantized value
 template <typename Int>
-typename boost::enable_if<boost::is_integral<Int>, Int>::type quantize(Int value, double interval)
+typename std::enable_if<std::is_integral<Int>::value, Int>::type quantize(Int value,
+                                                                          double interval)
 {
     if ((interval - static_cast<uint64_t>(interval)) >= std::numeric_limits<double>::epsilon())
     {

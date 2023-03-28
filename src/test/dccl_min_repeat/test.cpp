@@ -23,17 +23,17 @@
 
 #include <fstream>
 
-#include "dccl/native_protobuf/dccl_native_protobuf.h"
+#include "../../native_protobuf/dccl_native_protobuf.h"
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
 dccl::Codec codec;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     codec.load<TestMsg>();

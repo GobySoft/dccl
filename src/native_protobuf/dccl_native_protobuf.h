@@ -34,8 +34,8 @@
 #include <google/protobuf/wire_format_lite_inl.h> // this .h has been removed in protobuf 3.8
 #endif
 
-#include "dccl/field_codec_fixed.h"
-#include "dccl/field_codec_typed.h"
+#include "../field_codec_fixed.h"
+#include "../field_codec_typed.h"
 
 namespace dccl
 {
@@ -182,7 +182,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_DOU
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kDoubleSize;
     }
@@ -199,7 +199,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FLO
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FLOAT>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFloatSize;
     }
@@ -216,7 +216,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_BOO
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_BOOL>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kBoolSize;
     }
@@ -232,7 +232,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIX
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FIXED64>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFixed64Size;
     }
@@ -249,7 +249,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_FIX
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_FIXED32>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kFixed32Size;
     }
@@ -266,7 +266,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFI
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_SFIXED64>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kSFixed64Size;
     }
@@ -283,7 +283,7 @@ struct PrimitiveTypeHelper<WireType, google::protobuf::FieldDescriptor::TYPE_SFI
     : public PrimitiveTypeHelperBase<WireType,
                                      google::protobuf::internal::WireFormatLite::TYPE_SFIXED32>
 {
-    unsigned byte_size(const WireType& wire_value)
+    unsigned byte_size(const WireType& /*wire_value*/)
     {
         return google::protobuf::internal::WireFormatLite::kSFixed32Size;
     }
@@ -302,7 +302,7 @@ class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
   private:
     unsigned presence_bit_size() { return this->use_required() ? 0 : 1; }
 
-    unsigned min_size()
+    unsigned min_size() override
     {
         // if required, minimum size is 1-byte (for varint) or full size (for non-varint)
         if (this->use_required())
@@ -319,29 +319,29 @@ class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
         }
     }
 
-    unsigned max_size()
+    unsigned max_size() override
     {
         // Int32 and Int64 use more space for large negative numbers
         return std::max<unsigned>(size(std::numeric_limits<WireType>::min()),
                                   size(std::numeric_limits<WireType>::max()));
     }
 
-    unsigned size() { return min_size(); }
+    unsigned size() override { return min_size(); }
 
-    unsigned size(const WireType& wire_value)
+    unsigned size(const WireType& wire_value) override
     {
         unsigned data_bytes = helper_.byte_size(wire_value);
         unsigned size = presence_bit_size() + BITS_IN_BYTE * data_bytes;
         return size;
     }
 
-    Bitset encode()
+    Bitset encode() override
     {
         // presence bit, not set
         return Bitset(min_size(), 0);
     }
 
-    Bitset encode(const WireType& wire_value)
+    Bitset encode(const WireType& wire_value) override
     {
         std::vector<google::protobuf::uint8> bytes(size(wire_value) / BITS_IN_BYTE, 0);
 
@@ -358,7 +358,7 @@ class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
         return data_bits;
     }
 
-    WireType decode(Bitset* bits)
+    WireType decode(Bitset* bits) override
     {
         if (!this->use_required())
         {
@@ -395,8 +395,8 @@ class EnumFieldCodec
                                      const google::protobuf::EnumValueDescriptor*>
 {
   public:
-    int pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value);
-    const google::protobuf::EnumValueDescriptor* post_decode(const int& wire_value);
+    int pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override;
+    const google::protobuf::EnumValueDescriptor* post_decode(const int& wire_value) override;
 };
 
 } // namespace native_protobuf

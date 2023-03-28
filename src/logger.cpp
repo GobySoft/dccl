@@ -24,21 +24,40 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <ctime>
 
-#include "dccl/logger.h"
+#include "logger.h"
 
 dccl::Logger dccl::dlog;
 
 int dccl::internal::LogBuffer::sync()
 {
+#if DCCL_THREAD_SUPPORT
+    if (verbosity() == logger::UNKNOWN)
+    {
+        std::cerr
+            << "Must use 'dlog.is(...) && dlog << ... << std::endl;' expression when running in "
+               "thread safe mode to allow the dlog mutex to be correctly locked and unlocked. "
+               "Offending line: "
+            << buffer_.front() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+#endif
+
     // all but last one
     while (buffer_.size() > 1)
     {
         display(buffer_.front());
         buffer_.pop_front();
     }
-    verbosity_ = logger::INFO;
-    group_ = logger::GENERAL;
 
+    if (!verbosity_.empty())
+        verbosity_.pop();
+    if (!group_.empty())
+        group_.pop();
+
+#if DCCL_THREAD_SUPPORT
+    g_dlog_mutex.unlock();
+#endif
     return 0;
 }
 
@@ -50,7 +69,7 @@ int dccl::internal::LogBuffer::overflow(int c)
     }
     else if (c == '\n')
     {
-        buffer_.push_back(std::string());
+        buffer_.emplace_back();
     }
     else
     {
@@ -59,8 +78,8 @@ int dccl::internal::LogBuffer::overflow(int c)
     return c;
 }
 
-void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl::logger::Group grp,
-                      std::ostream* os, bool add_timestamp)
+void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity /*vrb*/,
+                      dccl::logger::Group grp, std::ostream* os, bool add_timestamp)
 {
     std::string grp_str;
     switch (grp)
@@ -72,7 +91,7 @@ void dccl::to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl:
         case logger::SIZE: grp_str = "{size}: "; break;
     }
 
-    std::time_t now = std::time(0);
+    std::time_t now = std::time(nullptr);
     std::tm* t = std::gmtime(&now);
 
     if (add_timestamp)

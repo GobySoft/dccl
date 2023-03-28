@@ -28,10 +28,10 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/codec.h"
-#include "dccl/codecs3/field_codec_default.h"
+#include "../../codec.h"
+#include "../../codecs3/field_codec_default.h"
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
@@ -46,22 +46,23 @@ namespace test
 {
 class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
 {
-    double max() { return 100; }
-    double min() { return -100; }
-    double precision() { return 1; } // Deprecated
-    double resolution() { return 0.1; }
-    void validate() {}
+    double max() override { return 100; }
+    double min() override { return -100; }
+    double precision() override { return 1; } // Deprecated
+    double resolution() override { return 0.1; }
+    void validate() override {}
 };
 } // namespace test
 } // namespace dccl
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::FieldCodecManager::add<dccl::test::TestCodec>("test.grouptest");
-    dccl::FieldCodecManager::add<dccl::v3::DefaultMessageCodec,
-                                 google::protobuf::FieldDescriptor::TYPE_MESSAGE>("test.grouptest");
+    codec.manager().add<dccl::test::TestCodec>("test.grouptest");
+    codec.manager()
+        .add<dccl::v3::DefaultMessageCodec, google::protobuf::FieldDescriptor::TYPE_MESSAGE>(
+            "test.grouptest");
 
     check<TestMsg>(50, true);
     check<TestMsg>(-50, false);

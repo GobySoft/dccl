@@ -28,6 +28,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 namespace dccl
 {
@@ -41,13 +42,13 @@ class Option
     /// \param longname Full representation (e.g. "verbose" for "--verbose")
     /// \param has_argument Does the parameter take an argument?
     /// \param description Human description for the --help option
-    Option(char shortname, const char* longname, int has_argument, const std::string& description)
-        : description_(description)
+    Option(char shortname, const char* longname, int has_argument, std::string description)
+        : description_(std::move(description))
     {
         c_opt_.name = longname;
 
         c_opt_.has_arg = has_argument;
-        c_opt_.flag = 0;
+        c_opt_.flag = nullptr;
         c_opt_.val = shortname;
     }
 
@@ -87,12 +88,12 @@ class Option
     static void convert_vector(const std::vector<Option>& options, std::vector<option>* c_options,
                                std::string* opt_string)
     {
-        for (int i = 0, n = options.size(); i < n; ++i)
+        for (const auto& option : options)
         {
-            c_options->push_back(options[i].c_opt());
-            *opt_string += options[i].opt_code();
+            c_options->push_back(option.c_opt());
+            *opt_string += option.opt_code();
         }
-        option zero = {0, 0, 0, 0};
+        option zero = {nullptr, 0, nullptr, 0};
         c_options->push_back(zero);
     }
 

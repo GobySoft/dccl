@@ -1,4 +1,4 @@
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS test.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS test_arithmetic.proto)
 
 add_executable(dccl_test_arithmetic test.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 

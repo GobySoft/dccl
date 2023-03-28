@@ -25,7 +25,7 @@
 #include <iostream>
 #include <utility>
 
-#include "dccl/common.h"
+#include "../../common.h"
 
 bool same(double a, double b)
 {

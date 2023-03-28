@@ -26,15 +26,14 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/arithmetic/field_codec_arithmetic.h"
-#include "dccl/codec.h"
+#include "../../arithmetic/field_codec_arithmetic.h"
+#include "../../codec.h"
 
-#include "test.pb.h"
+#include "test_arithmetic.pb.h"
 
-#include "dccl/binary.h"
-using namespace dccl::test;
+#include "../../binary.h"
+using namespace dccl::test::arith;
 
-using dccl::operator<<;
 
 void run_test(dccl::arith::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in, bool set_model = true)
@@ -57,7 +56,7 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
     if (set_model)
     {
         model.set_name("model");
-        dccl::arith::ModelManager::set_model(model);
+        dccl::arith::ModelManager::set_model(codec, model);
     }
 
     codec.info(msg_in.GetDescriptor(), &std::cout);
@@ -73,7 +72,7 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
 
     std::cout << "Try decode..." << std::endl;
 
-    boost::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
+    std::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
     codec.decode(bytes, msg_out.get());
 
     std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
@@ -311,7 +310,7 @@ int main(int argc, char* argv[])
 
     // randomly generate a model and a message
     // loop over all message lengths from 0 to 100
-    srand(time(NULL));
+    srand(time(nullptr));
     for (unsigned i = 0; i <= ArithmeticDouble2TestMsg::descriptor()
                                   ->FindFieldByName("value")
                                   ->options()

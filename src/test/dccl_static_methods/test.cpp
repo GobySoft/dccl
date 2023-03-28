@@ -24,7 +24,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests receiving one of several static types
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
 using namespace dccl::test;
@@ -38,7 +38,7 @@ dccl::Codec codec;
 
 void decode(const std::string& bytes);
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

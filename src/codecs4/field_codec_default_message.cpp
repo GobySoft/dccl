@@ -21,11 +21,10 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "dccl/codecs4/field_codec_default_message.h"
-#include "dccl/codec.h"
-#include "dccl/oneof.h"
 
-using dccl::dlog;
+#include "field_codec_default_message.h"
+#include "../codec.h"
+#include "../oneof.h"
 
 std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
 
@@ -33,9 +32,9 @@ std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize
 // DefaultMessageCodec
 //
 
-void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& wire_value)
+void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const dccl::any& wire_value)
 {
-    if (wire_value.empty())
+    if (is_empty(wire_value))
     {
         *bits = Bitset(min_size());
     }
@@ -48,9 +47,9 @@ void dccl::v4::DefaultMessageCodec::any_encode(Bitset* bits, const boost::any& w
     }
 }
 
-unsigned dccl::v4::DefaultMessageCodec::any_size(const boost::any& wire_value)
+unsigned dccl::v4::DefaultMessageCodec::any_size(const dccl::any& wire_value)
 {
-    if (wire_value.empty())
+    if (is_empty(wire_value))
     {
         return min_size();
     }
@@ -67,17 +66,17 @@ unsigned dccl::v4::DefaultMessageCodec::any_size(const boost::any& wire_value)
     }
 }
 
-void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_value)
+void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_value)
 {
     try
     {
-        google::protobuf::Message* msg = boost::any_cast<google::protobuf::Message*>(*wire_value);
+        auto* msg = dccl::any_cast<google::protobuf::Message*>(*wire_value);
 
         if (is_optional())
         {
             if (!bits->to_ulong())
             {
-                *wire_value = boost::any();
+                *wire_value = dccl::any();
                 return;
             }
             else
@@ -108,32 +107,34 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
             if (!check_field(field_desc))
                 continue;
 
-            boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-            boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-                internal::TypeHelper::find(field_desc);
+            std::shared_ptr<FieldCodecBase> codec = find(field_desc);
+            std::shared_ptr<internal::FromProtoCppTypeBase> helper =
+                manager().type_helper().find(field_desc);
 
             if (field_desc->is_repeated())
             {
-                std::vector<boost::any> field_values;
+                std::vector<dccl::any> field_values;
                 if (field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
                     unsigned max_repeat =
                         field_desc->options().GetExtension(dccl::field).max_repeat();
                     for (unsigned j = 0, m = max_repeat; j < m; ++j)
-                        field_values.push_back(refl->AddMessage(msg, field_desc));
+                        field_values.emplace_back(refl->AddMessage(msg, field_desc));
 
                     codec->field_decode_repeated(bits, &field_values, field_desc);
 
                     // remove the unused messages
                     for (int j = field_values.size(), m = max_repeat; j < m; ++j)
-                    { refl->RemoveLast(msg, field_desc); }
+                    {
+                        refl->RemoveLast(msg, field_desc);
+                    }
                 }
                 else
                 {
                     // for primitive types
                     codec->field_decode_repeated(bits, &field_values, field_desc);
-                    for (int j = 0, m = field_values.size(); j < m; ++j)
-                        helper->add_value(field_desc, msg, field_values[j]);
+                    for (auto& field_value : field_values)
+                        helper->add_value(field_desc, msg, field_value);
                 }
             }
             else
@@ -157,13 +158,13 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
                         continue;
                 }
 
-                boost::any field_value;
+                dccl::any field_value;
                 if (field_desc->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
                 {
                     // allows us to propagate pointers instead of making many copies of entire messages
                     field_value = refl->MutableMessage(msg, field_desc);
                     codec->field_decode(bits, &field_value, field_desc);
-                    if (field_value.empty())
+                    if (is_empty(field_value))
                         refl->ClearField(msg, field_desc);
                 }
                 else
@@ -179,7 +180,7 @@ void dccl::v4::DefaultMessageCodec::any_decode(Bitset* bits, boost::any* wire_va
         refl->ListFields(*msg, &set_fields);
         *wire_value = msg;
     }
-    catch (boost::bad_any_cast& e)
+    catch (dccl::bad_any_cast& e)
     {
         throw(Exception(
             "Bad type given to traverse mutable, expecting google::protobuf::Message*, got " +
@@ -242,8 +243,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             return false;
         }
-        else if (internal::MessageStack::current_part() ==
-                 UNKNOWN) // part not yet explicitly specified
+        else if (message_data().current_part() == UNKNOWN) // part not yet explicitly specified
         {
             if ((part() == HEAD && !dccl_field_options.in_head()) ||
                 (part() == BODY && dccl_field_options.in_head()))
@@ -251,8 +251,7 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
             else
                 return true;
         }
-        else if (internal::MessageStack::current_part() !=
-                 part()) // part specified and doesn't match
+        else if (message_data().current_part() != part()) // part specified and doesn't match
             return false;
         else
             return true;

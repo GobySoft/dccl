@@ -23,7 +23,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <google/protobuf/descriptor.h>
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 
 int main(int argc, char* argv[])
 {

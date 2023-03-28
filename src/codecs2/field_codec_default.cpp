@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <sstream>
 
-#include "dccl/codec.h"
-#include "dccl/codecs2/field_codec_default.h"
+#include "../codec.h"
+#include "field_codec_default.h"
 
 using namespace dccl::logger;
 
@@ -162,7 +162,7 @@ void dccl::v2::DefaultStringCodec::validate()
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
             "(dccl.field).max_length must be <= " +
-                boost::lexical_cast<std::string>(static_cast<int>(MAX_STRING_LENGTH)));
+                std::to_string(static_cast<int>(MAX_STRING_LENGTH)));
 }
 
 //
@@ -193,7 +193,7 @@ dccl::Bitset dccl::v2::DefaultBytesCodec::encode(const std::string& wire_value)
 
 unsigned dccl::v2::DefaultBytesCodec::size() { return min_size(); }
 
-unsigned dccl::v2::DefaultBytesCodec::size(const std::string& wire_value) { return max_size(); }
+unsigned dccl::v2::DefaultBytesCodec::size(const std::string& /*wire_value*/) { return max_size(); }
 
 std::string dccl::v2::DefaultBytesCodec::decode(Bitset* bits)
 {

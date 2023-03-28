@@ -6,17 +6,31 @@
 # this project is intended to be built out of source by using 
 # > ./build.sh
 
-cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
 # FILE GLOB_RECURSE calls should not follow symlinks by default.
 cmake_policy(SET CMP0009 NEW)
+# MACOSX_RPATH is enabled by default.
+cmake_policy(SET CMP0042 NEW)
 
 project(dccl)
 
+# boost for units and any (pre C++17)
+find_package(Boost 1.62.0 QUIET)
+if(Boost_FOUND)
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+endif()
+
 if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
-  message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
-  set(CMAKE_CXX_STANDARD 14)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  if(Boost_FOUND)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL (when Boost is available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
+  else()
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    message ("Setting CMAKE_CXX_STANDARD to 17 as required by DCCL (when Boost is not available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly. If you wish to use C++14, install Boost (libboost-dev)")
+  endif()
 endif()
 
 ## allows us to write custom modules or modifying existing ones
@@ -153,7 +167,10 @@ endif()
 include(GNUInstallDirs)
 
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
+
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
+install(DIRECTORY ${dccl_SRC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dccl
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
 install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
@@ -163,35 +180,14 @@ message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LI
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
 
-## for MAC OS X 
-if(${APPLE})
-  ## MacPorts
-  include_directories(/opt/local/include)
-  link_directories(/opt/local/lib)
-  ## Fink
-  include_directories(/sw/include)
-  link_directories(/sw/lib)
-endif()
-
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
   "${dccl_INC_DIR};${dccl_FORMER_BIN_DIR};${dccl_FORMER_LIB_DIR};${dccl_FORMER_INC_DIR};${dccl_FORMER_SHARE_DIR};${dccl_PYTHON_DIR}/dccl/option_extensions_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.pyc"
   )
-
-## boost
-find_package(Boost 1.40.0)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 find_package(ProtobufDCCL REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
 message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
-
-# Protobuf uses pthread so we need to link it too (if it's here)
-find_package(Threads)
-
-# work around OLD compilers and systems (like gcc3.3 ...) where reentrancy matters to boost::signals2.  Dccl Bug #1090022.
-add_definitions(-D_REENTRANT)
-add_definitions(-pthread)
 
 # optional
 ## cryptopp
@@ -207,7 +203,7 @@ endif()
 if(enable_cryptography)
   find_package(Cryptopp REQUIRED)
   set(DCCL_HAS_CRYPTOPP "1")
-  include_directories(${Cryptopp_INCLUDE_DIRS})
+  include_directories(SYSTEM ${Cryptopp_INCLUDE_DIRS})
 else()
   set(DCCL_HAS_CRYPTOPP "0")
 endif()
@@ -225,7 +221,7 @@ endif()
 if(enable_b64)
   find_package(B64 REQUIRED)
   set(DCCL_HAS_B64 "1")
-  include_directories(${B64_INCLUDE_DIRS})
+  include_directories(SYSTEM ${B64_INCLUDE_DIRS})
 else()
   set(DCCL_HAS_B64 "0")
 endif()
@@ -244,21 +240,83 @@ endif()
 if(enable_lua)
   find_package(Lua REQUIRED)
   set(DCCL_HAS_LUA "1")
-  include_directories(${LUA_INCLUDE_DIR})
+  include_directories(SYSTEM ${LUA_INCLUDE_DIR})
 else()
   set(DCCL_HAS_LUA "0")
 endif()
 
-option(enable_units "Enable static unit-safety functionality" ON)
+option(enable_thread_safety "Enable DCCL thread safety (uses std::mutex)" ON)
+if(enable_thread_safety)
+  set(DCCL_HAS_THREAD_SUPPORT "1")
+  # Protobuf uses pthread so we need to link it too (if it's here)
+  find_package(Threads)
+else()
+  set(DCCL_HAS_THREAD_SUPPORT "0")
+endif()
 
-## copy to dccl/include
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
+## boost for units
+set(UNITS_DOC_STRING "Enable static unit-safety functionality (requires Boost)")
+if(Boost_FOUND)
+  option(enable_units ${UNITS_DOC_STRING} ON) 
+else()
+  option(enable_units ${UNITS_DOC_STRING} OFF)
+endif()
+
+## clang-tidy
+option(enable_clang_tidy "Run code through clang-tidy" OFF)
+
+if(enable_clang_tidy)
+  # Find clang-tidy
+  find_program(CLANG_TIDY_BIN NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+  if(CLANG_TIDY_BIN)
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_BIN}")
+    string(CONCAT CLANG_TIDY_CHECKS "-checks="
+      "misc-static-assert,"
+      "misc-unused-using-decls,"
+      "misc-unused-parameters,"
+      "misc-definitions-in-headers,"
+      "misc-static-assert,"
+      "modernize-use-override,"
+      "modernize-deprecated-headers,"
+      "modernize-pass-by-value,"
+      "modernize-use-using,"
+      "modernize-use-emplace,"
+      "modernize-use-nullptr,"
+      "modernize-use-equals-default,"
+      "modernize-use-equals-delete,"
+      "modernize-use-default-member-init,"
+      "modernize-use-auto,"
+      "modernize-raw-string-literal,"
+      "modernize-make-shared,"
+      "modernize-make-unique,"
+      "modernize-loop-convert,"
+      "readability-mismatched-tags,"
+      "readability-make-member-function-const")
+    
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_BIN}" "-fix" ${CLANG_TIDY_CHECKS} "-header-filter=^.*[^(pb)]\\.h$")
+  else()
+    message(FATAL_ERROR "clang-tidy not found")
+  endif()
+endif()
+
+
+set(DCCL_DEBUG_OPTIONS -Wall -Wno-sign-compare -Wno-unknown-warning-option)
+add_compile_options("$<$<CONFIG:DEBUG>:${DCCL_DEBUG_OPTIONS}>")
+add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
+
+## configure to build/include/dccl
+file(GLOB_RECURSE COPY_INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
+foreach(I ${COPY_INCLUDE_FILES})
+  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} COPYONLY)
+endforeach()
+
+file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/def.h src/version.h)
 foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
 configure_file(${dccl_PYTHON_DIR}/setup.py.in ${dccl_PYTHON_DIR}/setup.py @ONLY)
 

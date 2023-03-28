@@ -23,7 +23,7 @@
 #ifndef FIELD_CODEC_PRESENCE_20190722H
 #define FIELD_CODEC_PRESENCE_20190722H
 
-#include "dccl/field_codec_typed.h"
+#include "../field_codec_typed.h"
 
 namespace dccl
 {
@@ -44,18 +44,18 @@ class PresenceBitCodec
     : public TypedFieldCodec<typename WrappedType::wire_type, typename WrappedType::field_type>
 {
   public:
-    typedef TypedFieldCodec<typename WrappedType::wire_type, typename WrappedType::field_type> Base;
+    using Base = TypedFieldCodec<typename WrappedType::wire_type, typename WrappedType::field_type>;
 
     /// The codec type of the "wrapped" codec
-    typedef WrappedType wrapped_type;
+    using wrapped_type = WrappedType;
 
     /// The wire_type of the "wrapped" codec
-    typedef typename Base::wire_type wire_type;
+    using wire_type = typename Base::wire_type;
 
     /// The field_type of the "wrapped" codec
-    typedef typename Base::field_type field_type;
+    using field_type = typename Base::field_type;
 
-  protected:
+  private:
     /// Instance of the "wrapped" codec
     WrappedType _inner_codec;
 
@@ -63,28 +63,28 @@ class PresenceBitCodec
     PresenceBitCodec() { _inner_codec.set_force_use_required(true); }
 
     // required when wire_type != field_type
-    virtual wire_type pre_encode(const field_type& field_value)
+    wire_type pre_encode(const field_type& field_value) override
     {
         return _inner_codec.pre_encode(field_value);
     }
 
     // required when wire_type != field_type
-    virtual field_type post_decode(const wire_type& wire_value)
+    field_type post_decode(const wire_type& wire_value) override
     {
         return _inner_codec.post_decode(wire_value);
     }
 
     /// Calls _inner_codec.validate()
-    virtual void validate() { _inner_codec.validate(); }
+    void validate() override { _inner_codec.validate(); }
 
     /// Encodes an empty field as a single 0 bit
-    virtual Bitset encode()
+    Bitset encode() override
     {
         return Bitset(1, 0); // presence bit == false
     }
 
     /// Encodes a non-empty field, adding a 1 bit to the front for optional fields
-    virtual Bitset encode(const wire_type& value)
+    Bitset encode(const wire_type& value) override
     {
         Bitset encoded = _inner_codec.encode(value);
 
@@ -96,7 +96,7 @@ class PresenceBitCodec
     }
 
     /// Decodes a field, first evaluating the presence bit if necessary
-    virtual wire_type decode(Bitset* bits)
+    wire_type decode(Bitset* bits) override
     {
         if (!this->use_required())
         {
@@ -115,20 +115,20 @@ class PresenceBitCodec
     }
 
     /// Size of an empty field (1 bit)
-    virtual unsigned size()
+    unsigned size() override
     {
         // empty field is always 1 bit (only occurs for optional fields)
         return 1;
     }
 
     /// Size of a non-empty field; gets size from "wrapped" codec, adds 1 for optional fields
-    virtual unsigned size(const wire_type& wire_value)
+    unsigned size(const wire_type& wire_value) override
     {
         int presence_bits = this->use_required() ? 0 : 1;
         return presence_bits + _inner_codec.size(wire_value);
     }
 
-    virtual unsigned max_size()
+    unsigned max_size() override
     {
         if (this->use_required())
         {
@@ -142,7 +142,7 @@ class PresenceBitCodec
         }
     }
 
-    virtual unsigned min_size()
+    unsigned min_size() override
     {
         if (this->use_required())
         {
@@ -154,6 +154,12 @@ class PresenceBitCodec
             // optional fields encode as 1 bit minimum
             return 1;
         }
+    }
+
+    void set_manager(FieldCodecManagerLocal* manager) override
+    {
+        _inner_codec.set_manager(manager);
+        FieldCodecBase::set_manager(manager);
     }
 };
 } // namespace v3

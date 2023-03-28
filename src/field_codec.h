@@ -28,21 +28,19 @@
 #include <map>
 #include <string>
 
-#include <boost/any.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/message.h>
 
+#include "any.h"
+#include "binary.h"
 #include "common.h"
-#include "dccl/binary.h"
-#include "dccl/dynamic_conditions.h"
-#include "dccl/option_extensions.pb.h"
+#include "dynamic_conditions.h"
 #include "exception.h"
 #include "internal/field_codec_message_stack.h"
 #include "internal/type_helper.h"
 #include "oneof.h"
+#include "option_extensions.pb.h"
 
 namespace dccl
 {
@@ -60,7 +58,7 @@ class FieldCodecBase
     //@{
 
     FieldCodecBase();
-    virtual ~FieldCodecBase() {}
+    virtual ~FieldCodecBase() = default;
     //@}
 
     /// \name Information Methods
@@ -80,10 +78,7 @@ class FieldCodecBase
     /// \brief Returns the FieldDescriptor (field schema  meta-data) for this field
     ///
     /// \return FieldDescriptor for the current field or 0 if this codec is encoding the base message.
-    const google::protobuf::FieldDescriptor* this_field() const
-    {
-        return !internal::MessageStack::field_.empty() ? internal::MessageStack::field_.back() : 0;
-    }
+    const google::protobuf::FieldDescriptor* this_field() const;
 
     /// \brief Returns the Descriptor (message schema meta-data) for the immediate parent Message
     ///
@@ -98,45 +93,31 @@ class FieldCodecBase
     /// returns Descriptor for Foo if this_field() == 0
     /// returns Descriptor for Foo if this_field() == FieldDescriptor for bar
     /// returns Descriptor for FooBar if this_field() == FieldDescriptor for baz
-    static const google::protobuf::Descriptor* this_descriptor()
-    {
-        return !internal::MessageStack::desc_.empty() ? internal::MessageStack::desc_.back() : 0;
-    }
+    const google::protobuf::Descriptor* this_descriptor();
 
-    static const google::protobuf::Message* this_message()
-    {
-        return !internal::MessageStack::messages_.empty()
-                   ? internal::MessageStack::messages_.back().msg
-                   : 0;
-    }
+    const google::protobuf::Message* this_message();
 
     // currently encoded or (partially) decoded root message
-    static const google::protobuf::Message* root_message() { return root_message_; }
+    const google::protobuf::Message* root_message();
 
-    static bool has_codec_group()
-    {
-        if (root_descriptor_)
-        {
-            return root_descriptor_->options().GetExtension(dccl::msg).has_codec_group() ||
-                   root_descriptor_->options().GetExtension(dccl::msg).has_codec_version();
-        }
-        else
-            return false;
-    }
+    const google::protobuf::Descriptor* root_descriptor();
+
+    internal::MessageStackData& message_data();
+
+    const internal::MessageStackData& message_data() const;
+
+    bool has_codec_group();
 
     static std::string codec_group(const google::protobuf::Descriptor* desc);
 
-    static std::string codec_group() { return codec_group(root_descriptor_); }
+    std::string codec_group();
 
-    static int codec_version()
-    {
-        return root_descriptor_->options().GetExtension(dccl::msg).codec_version();
-    }
+    int codec_version();
 
-    /// \brief the part of the message currently being encoded (head or body).
-    static MessagePart part() { return part_; }
+    /// \brief the part of the message currently being encoded (head or body)
+    MessagePart part();
 
-    static bool strict() { return strict_; }
+    bool strict();
 
     /// \brief Force the codec to always use the "required" field encoding, regardless of the FieldDescriptor setting. Useful when wrapping this codec in another that handles optional and repeated fields
     void set_force_use_required(bool force_required = true) { force_required_ = force_required; }
@@ -223,7 +204,7 @@ class FieldCodecBase
     ///
     /// \param wire_value Will be set to the converted field_value
     /// \param field_value Value to convert to the appropriate wire_value
-    void field_pre_encode(boost::any* wire_value, const boost::any& field_value)
+    void field_pre_encode(dccl::any* wire_value, const dccl::any& field_value)
     {
         any_pre_encode(wire_value, field_value);
     }
@@ -232,8 +213,8 @@ class FieldCodecBase
     ///
     /// \param wire_values Should be set to the converted field_values
     /// \param field_values Values to convert to the appropriate wire_values
-    void field_pre_encode_repeated(std::vector<boost::any>* wire_values,
-                                   const std::vector<boost::any>& field_values)
+    void field_pre_encode_repeated(std::vector<dccl::any>* wire_values,
+                                   const std::vector<dccl::any>& field_values)
     {
         any_pre_encode_repeated(wire_values, field_values);
     }
@@ -245,7 +226,7 @@ class FieldCodecBase
     /// \param bits Pointer to bitset to store encoded bits. Bits are added to the most significant end of `bits`
     /// \param field_value Value to encode (FieldType)
     /// \param field Protobuf descriptor to the field to encode. Set to 0 for base message.
-    void field_encode(Bitset* bits, const boost::any& field_value,
+    void field_encode(Bitset* bits, const dccl::any& field_value,
                       const google::protobuf::FieldDescriptor* field);
 
     /// \brief Encode a repeated field.
@@ -253,7 +234,7 @@ class FieldCodecBase
     /// \param bits Pointer to bitset to store encoded bits. Bits are added to the most significant end of `bits`
     /// \param field_values Values to encode (FieldType)
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-    void field_encode_repeated(Bitset* bits, const std::vector<boost::any>& field_values,
+    void field_encode_repeated(Bitset* bits, const std::vector<dccl::any>& field_values,
                                const google::protobuf::FieldDescriptor* field);
 
     /// \brief Calculate the size of a field
@@ -261,7 +242,7 @@ class FieldCodecBase
     /// \param bit_size Location to <i>add</i> calculated bit size to. Be sure to zero `bit_size` if you want only the size of this field.
     /// \param field_value Value calculate size of (FieldType)
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-    void field_size(unsigned* bit_size, const boost::any& field_value,
+    void field_size(unsigned* bit_size, const dccl::any& field_value,
                     const google::protobuf::FieldDescriptor* field);
 
     /// \brief Calculate the size of a repeated field
@@ -269,7 +250,7 @@ class FieldCodecBase
     /// \param bit_size Location to <i>add</i> calculated bit size to. Be sure to zero `bit_size` if you want only the size of this field.
     /// \param field_values Values to calculate size of (FieldType)
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-    void field_size_repeated(unsigned* bit_size, const std::vector<boost::any>& field_values,
+    void field_size_repeated(unsigned* bit_size, const std::vector<dccl::any>& field_values,
                              const google::protobuf::FieldDescriptor* field);
 
     // traverse mutable
@@ -278,7 +259,7 @@ class FieldCodecBase
     /// \param bits Bits to decode. Used bits are consumed (erased) from the least significant end
     /// \param field_value Location to store decoded value (FieldType)
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-    void field_decode(Bitset* bits, boost::any* field_value,
+    void field_decode(Bitset* bits, dccl::any* field_value,
                       const google::protobuf::FieldDescriptor* field);
 
     /// \brief Decode a repeated field
@@ -286,14 +267,14 @@ class FieldCodecBase
     /// \param bits Bits to decode. Used bits are consumed (erased) from the least significant end
     /// \param field_values Location to store decoded values (FieldType)
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
-    void field_decode_repeated(Bitset* bits, std::vector<boost::any>* field_values,
+    void field_decode_repeated(Bitset* bits, std::vector<dccl::any>* field_values,
                                const google::protobuf::FieldDescriptor* field);
 
     /// \brief Post-decodes a non-repeated (i.e. optional or required) field by converting the WireType (the type used in the encoded DCCL message) representation into the FieldType representation (the Google Protobuf representation). This allows for type-converting codecs.
     ///
     /// \param wire_value Should be set to the desired value to translate
     /// \param field_value Will be set to the converted wire_value
-    void field_post_decode(const boost::any& wire_value, boost::any* field_value)
+    void field_post_decode(const dccl::any& wire_value, dccl::any* field_value)
     {
         any_post_decode(wire_value, field_value);
     }
@@ -302,8 +283,8 @@ class FieldCodecBase
     ///
     /// \param wire_values Should be set to the desired values to translate
     /// \param field_values Will be set to the converted wire_values
-    void field_post_decode_repeated(const std::vector<boost::any>& wire_values,
-                                    std::vector<boost::any>* field_values)
+    void field_post_decode_repeated(const std::vector<dccl::any>& wire_values,
+                                    std::vector<dccl::any>* field_values)
     {
         any_post_decode_repeated(wire_values, field_values);
     }
@@ -365,11 +346,25 @@ class FieldCodecBase
         }
     }
 
-    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field)
+    DynamicConditions& dynamic_conditions(const google::protobuf::FieldDescriptor* field);
+
+    FieldCodecManagerLocal& manager()
     {
-        dynamic_conditions_.set_field(field);
-        return dynamic_conditions_;
+        if (manager_)
+            return *manager_;
+        else
+            throw(Exception("FieldCodecManagerLocal is not set"));
     }
+
+    const FieldCodecManagerLocal& manager() const
+    {
+        if (manager_)
+            return *manager_;
+        else
+            throw(Exception("FieldCodecManagerLocal is not set"));
+    }
+
+    virtual void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }
 
   protected:
     /// \brief Whether to use the required or optional encoding
@@ -400,24 +395,24 @@ class FieldCodecBase
     // VIRTUAL
     //
 
-    // contain boost::any
+    // contain dccl::any
     /// \brief Virtual method used to encode
     ///
     /// \param bits Bitset to store encoded bits. Bits is <i>just</i> the bits from the current operation (unlike base_encode() and field_encode() where bits are added to the most significant end).
     /// \param wire_value Value to encode (WireType)
-    virtual void any_encode(Bitset* bits, const boost::any& wire_value) = 0;
+    virtual void any_encode(Bitset* bits, const dccl::any& wire_value) = 0;
 
     /// \brief Virtual method used to decode
     ///
     /// \param bits Bitset containing bits to decode. This will initially contain min_size() bits. If you need more bits, call get_more_bits() with the number of bits required. This bits will be consumed from the bit pool and placed in `bits`.
     /// \param wire_value Place to store decoded value (as FieldType)
-    virtual void any_decode(Bitset* bits, boost::any* wire_value) = 0;
+    virtual void any_decode(Bitset* bits, dccl::any* wire_value) = 0;
 
     /// \brief Virtual method used to pre-encode (convert from FieldType to WireType). The default implementation of this method is for when WireType == FieldType and simply copies the field_value to the wire_value.
     ///
     /// \param wire_value Converted value (WireType)
     /// \param field_value Value to convert (FieldType)
-    virtual void any_pre_encode(boost::any* wire_value, const boost::any& field_value)
+    virtual void any_pre_encode(dccl::any* wire_value, const dccl::any& field_value)
     {
         *wire_value = field_value;
     }
@@ -426,7 +421,7 @@ class FieldCodecBase
     ///
     /// \param wire_value Value to convert (WireType)
     /// \param field_value Converted value (FieldType)
-    virtual void any_post_decode(const boost::any& wire_value, boost::any* field_value)
+    virtual void any_post_decode(const dccl::any& wire_value, dccl::any* field_value)
     {
         *field_value = wire_value;
     }
@@ -435,9 +430,9 @@ class FieldCodecBase
     ///
     /// \param wire_value Value to calculate size of
     /// \return Size of field (in bits)
-    virtual unsigned any_size(const boost::any& wire_value) = 0;
+    virtual unsigned any_size(const dccl::any& wire_value) = 0;
 
-    // no boost::any
+    // no dccl::any
     /// \brief Validate a field. Use require() inside your overloaded validate() to assert requirements or throw Exceptions directly as needed.
     virtual void validate() {}
 
@@ -456,22 +451,21 @@ class FieldCodecBase
     /// \return Minimum size of this field (in bits).
     virtual unsigned min_size() = 0;
 
-    virtual void any_encode_repeated(Bitset* bits, const std::vector<boost::any>& wire_values);
-    virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<boost::any>* field_values);
+    virtual void any_encode_repeated(Bitset* bits, const std::vector<dccl::any>& wire_values);
+    virtual void any_decode_repeated(Bitset* repeated_bits, std::vector<dccl::any>* field_values);
 
-    virtual void any_pre_encode_repeated(std::vector<boost::any>* wire_values,
-                                         const std::vector<boost::any>& field_values);
+    virtual void any_pre_encode_repeated(std::vector<dccl::any>* wire_values,
+                                         const std::vector<dccl::any>& field_values);
 
-    virtual void any_post_decode_repeated(const std::vector<boost::any>& wire_values,
-                                          std::vector<boost::any>* field_values);
+    virtual void any_post_decode_repeated(const std::vector<dccl::any>& wire_values,
+                                          std::vector<dccl::any>* field_values);
 
-    virtual unsigned any_size_repeated(const std::vector<boost::any>& wire_values);
+    virtual unsigned any_size_repeated(const std::vector<dccl::any>& wire_values);
     virtual unsigned max_size_repeated();
     virtual unsigned min_size_repeated();
+    void check_repeat_settings() const;
 
-    void check_repeat_settings();
-
-    friend class FieldCodecManager;
+    friend class FieldCodecManagerLocal;
 
   private:
     // codec information
@@ -500,56 +494,28 @@ class FieldCodecBase
     // and unsets them on destruction
     struct BaseRAII
     {
-        BaseRAII(MessagePart part, const google::protobuf::Descriptor* root_descriptor,
-                 bool strict = false)
-        {
-            FieldCodecBase::part_ = part;
-            FieldCodecBase::strict_ = strict;
-            FieldCodecBase::root_message_ = 0;
-            FieldCodecBase::root_descriptor_ = root_descriptor;
-        }
+        BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                 const google::protobuf::Descriptor* root_descriptor, bool strict = false);
 
-        BaseRAII(MessagePart part, const google::protobuf::Message* root_message,
-                 bool strict = false)
-        {
-            FieldCodecBase::part_ = part;
-            FieldCodecBase::strict_ = strict;
-            FieldCodecBase::root_message_ = root_message;
-            FieldCodecBase::root_descriptor_ = root_message->GetDescriptor();
-        }
-        ~BaseRAII()
-        {
-            FieldCodecBase::part_ = dccl::UNKNOWN;
-            FieldCodecBase::strict_ = false;
-            FieldCodecBase::root_message_ = 0;
-            FieldCodecBase::root_descriptor_ = 0;
-        }
+        BaseRAII(FieldCodecBase* field_codec, MessagePart part,
+                 const google::protobuf::Message* root_message, bool strict = false);
+        ~BaseRAII();
+
+      private:
+        FieldCodecBase* field_codec_;
     };
-
-    static MessagePart part_;
-    static bool strict_;
-    static const google::protobuf::Message* root_message_;
-    static const google::protobuf::Descriptor* root_descriptor_;
+    friend struct BaseRAII;
 
     std::string name_;
     google::protobuf::FieldDescriptor::Type field_type_;
     google::protobuf::FieldDescriptor::CppType wire_type_;
 
-    bool force_required_;
+    bool force_required_{false};
 
-    static DynamicConditions dynamic_conditions_;
+    FieldCodecManagerLocal* manager_{nullptr};
 };
 
-inline std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec)
-{
-    using google::protobuf::FieldDescriptor;
-    using internal::TypeHelper;
-    return os
-           << "[FieldCodec '" << field_codec.name()
-           << "']: field type: " << TypeHelper::find(field_codec.field_type())->as_str() << " ("
-           << TypeHelper::find(FieldDescriptor::TypeToCppType(field_codec.field_type()))->as_str()
-           << ") | wire type: " << TypeHelper::find(field_codec.wire_type())->as_str();
-}
+std::ostream& operator<<(std::ostream& os, const FieldCodecBase& field_codec);
 
 inline Exception type_error(const std::string& action, const std::type_info& expected,
                             const std::type_info& got)

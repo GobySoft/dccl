@@ -23,12 +23,11 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of a custom DCCL ID codec
 
-#include "dccl/codec.h"
-#include "dccl/field_codec.h"
+#include "../../codec.h"
+#include "../../field_codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
 
 namespace dccl
 {
@@ -37,15 +36,15 @@ namespace test
 class MicroModemMiniPacketDCCLIDCodec : public dccl::TypedFixedFieldCodec<dccl::uint32>
 {
   private:
-    dccl::Bitset encode(const dccl::uint32& wire_value);
+    dccl::Bitset encode(const dccl::uint32& wire_value) override;
 
-    dccl::Bitset encode() { return encode(MINI_ID_OFFSET); }
+    dccl::Bitset encode() override { return encode(MINI_ID_OFFSET); }
 
-    dccl::uint32 decode(dccl::Bitset* bits) { return bits->to_ulong() + MINI_ID_OFFSET; }
+    dccl::uint32 decode(dccl::Bitset* bits) override { return bits->to_ulong() + MINI_ID_OFFSET; }
 
-    unsigned size() { return MINI_ID_SIZE; }
+    unsigned size() override { return MINI_ID_SIZE; }
 
-    void validate() {}
+    void validate() override {}
 
     // Add this value when decoding to put us safely in our own namespace
     // from the normal default DCCL Codec
@@ -79,13 +78,12 @@ dccl::Bitset dccl::test::MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uin
     return dccl::Bitset(MINI_ID_SIZE, wire_value - MINI_ID_OFFSET);
 }
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     {
-        dccl::FieldCodecManager::add<dccl::test::MicroModemMiniPacketDCCLIDCodec>("mini_id_codec");
-        dccl::Codec codec("mini_id_codec");
+        dccl::Codec codec("mini_id_codec", dccl::test::MicroModemMiniPacketDCCLIDCodec());
         codec.set_crypto_passphrase("309ldskjfla39");
 
         codec.load<MiniUser>();

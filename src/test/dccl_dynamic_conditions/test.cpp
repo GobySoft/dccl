@@ -27,8 +27,8 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 
 #if CODEC_VERSION == 3
 #include "test3.pb.h"
@@ -49,7 +49,7 @@ void test2();
 void test3();
 #endif
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     test0();
