@@ -36,14 +36,6 @@
 
 #include "bitset.h"
 
-#if __cplusplus >= 202002L
-#define DCCL_HAS_CPP20
-#endif
-
-#if __cplusplus >= 201703L
-#define DCCL_HAS_CPP17
-#endif
-
 namespace dccl
 {
 inline unsigned floor_bits2bytes(unsigned bits) { return bits >> 3; }

@@ -26,7 +26,7 @@
 #ifndef DCCLAny
 #define DCCLAny
 
-#include "common.h"
+#include "dccl/def.h"
 
 #ifdef DCCL_HAS_CPP17
 #include <any>
