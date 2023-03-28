@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
 # FILE GLOB_RECURSE calls should not follow symlinks by default.
 cmake_policy(SET CMP0009 NEW)
+# MACOSX_RPATH is enabled by default.
+cmake_policy(SET CMP0042 NEW)
 
 project(dccl)
 
@@ -177,16 +179,6 @@ message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LI
 
 ## let cmake know where the headers are
 include_directories(${dccl_INC_DIR})
-
-## for MAC OS X 
-if(${APPLE})
-  ## MacPorts
-  include_directories(/opt/local/include)
-  link_directories(/opt/local/lib)
-  ## Fink
-  include_directories(/sw/include)
-  link_directories(/sw/lib)
-endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
   "${dccl_INC_DIR};${dccl_FORMER_BIN_DIR};${dccl_FORMER_LIB_DIR};${dccl_FORMER_INC_DIR};${dccl_FORMER_SHARE_DIR};${dccl_PYTHON_DIR}/dccl/option_extensions_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.py;${dccl_SRC_DIR}/share/examples/quickstart_navreport/navreport_pb2.pyc"
