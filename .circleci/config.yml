@@ -254,7 +254,7 @@ workflows:
           <<: *filter-template-non-master
 
       - amd64-jammy-minimal-build:
-          <<: *filter-template-master-only
+          <<: *filter-template-non-master
           
       - get-orig-source:
           <<: *filter-template-master-only
