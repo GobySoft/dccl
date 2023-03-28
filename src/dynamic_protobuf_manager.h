@@ -168,7 +168,6 @@ class DynamicProtobufManager
 
     static void custom_deleter(DynamicProtobufManager* obj)
     {
-        LOCK_DYNAMIC_PROTOBUF_MANAGER_MUTEX
         delete obj;
     }
 
