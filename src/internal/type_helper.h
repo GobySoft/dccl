@@ -26,14 +26,13 @@
 
 #include <map>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/version.hpp>
+#include <memory>
 
 #include "protobuf_cpp_type_helpers.h"
 
 namespace dccl
 {
-class FieldCodecManager;
+class FieldCodecManagerLocal;
 
 namespace internal
 {
@@ -41,9 +40,11 @@ namespace internal
 class TypeHelper
 {
   public:
-    static boost::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type);
-    static boost::shared_ptr<FromProtoCppTypeBase>
-    find(const google::protobuf::FieldDescriptor* field)
+    TypeHelper() { initialize(); }
+    ~TypeHelper() = default;
+
+    std::shared_ptr<FromProtoTypeBase> find(google::protobuf::FieldDescriptor::Type type) const;
+    std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::FieldDescriptor* field) const
     {
         if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
             return find(field->message_type());
@@ -51,59 +52,46 @@ class TypeHelper
             return find(field->cpp_type());
     }
 
-    static boost::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc)
+    std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc) const
     {
         return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE, desc->full_name());
     }
 
-    static boost::shared_ptr<FromProtoCppTypeBase>
-    find(google::protobuf::FieldDescriptor::CppType cpptype, const std::string& type_name = "");
+    std::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype,
+                                               const std::string& type_name = "") const;
 
   private:
-    friend class ::dccl::FieldCodecManager;
-    template <typename ProtobufMessage> static void add()
+    friend class ::dccl::FieldCodecManagerLocal;
+    template <typename ProtobufMessage> void add()
     {
         custom_message_map_.insert(std::make_pair(
             ProtobufMessage::descriptor()->full_name(),
-            boost::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
+            std::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
     }
-    template <typename ProtobufMessage> static void remove()
+    template <typename ProtobufMessage> void remove()
     {
         custom_message_map_.erase(ProtobufMessage::descriptor()->full_name());
     }
-    static void reset() { inst_.reset(); }
-
-    TypeHelper() { initialize(); }
-    ~TypeHelper()
+    void reset()
     {
         type_map_.clear();
         cpptype_map_.clear();
         custom_message_map_.clear();
     }
-    TypeHelper(const TypeHelper&);
-    TypeHelper& operator=(const TypeHelper&);
+
     void initialize();
 
   public:
-    // so we can use shared_ptr to hold the singleton
-#if BOOST_VERSION >= 107000
-    template <typename T> friend void boost::checked_delete(T*) BOOST_NOEXCEPT;
-#else
-    template <typename T> friend void boost::checked_delete(T*);
-#endif
-    static boost::shared_ptr<TypeHelper> inst_;
+    using TypeMap =
+        std::map<google::protobuf::FieldDescriptor::Type, std::shared_ptr<FromProtoTypeBase>>;
+    TypeMap type_map_;
 
-    typedef std::map<google::protobuf::FieldDescriptor::Type, boost::shared_ptr<FromProtoTypeBase>>
-        TypeMap;
-    static TypeMap type_map_;
+    using CppTypeMap =
+        std::map<google::protobuf::FieldDescriptor::CppType, std::shared_ptr<FromProtoCppTypeBase>>;
+    CppTypeMap cpptype_map_;
 
-    typedef std::map<google::protobuf::FieldDescriptor::CppType,
-                     boost::shared_ptr<FromProtoCppTypeBase>>
-        CppTypeMap;
-    static CppTypeMap cpptype_map_;
-
-    typedef std::map<std::string, boost::shared_ptr<FromProtoCppTypeBase>> CustomMessageMap;
-    static CustomMessageMap custom_message_map_;
+    using CustomMessageMap = std::map<std::string, std::shared_ptr<FromProtoCppTypeBase>>;
+    CustomMessageMap custom_message_map_;
 };
 } // namespace internal
 } // namespace dccl

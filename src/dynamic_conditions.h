@@ -26,11 +26,8 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
-#include "dccl/option_extensions.pb.h"
-
-// clang-format off
-#define DCCL_HAS_LUA @DCCL_HAS_LUA@
-// clang-format on
+#include "dccl/def.h"
+#include "option_extensions.pb.h"
 
 namespace sol
 {

@@ -23,7 +23,7 @@
 #ifndef DCCLONEOF20210702H
 #define DCCLONEOF20210702H
 
-#include "dccl/binary.h"
+#include "binary.h"
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 

@@ -21,7 +21,10 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "dccl/logger.h"
+
+#include <cassert>
+
+#include "../../logger.h"
 
 /// asserts false if called - used for testing proper short-circuiting of logger calls
 inline std::ostream& stream_assert(std::ostream& os)
@@ -31,13 +34,13 @@ inline std::ostream& stream_assert(std::ostream& os)
     return os;
 }
 
-void info(const std::string& log_message, dccl::logger::Verbosity verbosity,
-          dccl::logger::Group group)
+void info(const std::string& log_message, dccl::logger::Verbosity /*verbosity*/,
+          dccl::logger::Group /*group*/)
 {
     printf("%s\n", log_message.c_str());
 }
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     using dccl::dlog;
     using namespace dccl::logger;

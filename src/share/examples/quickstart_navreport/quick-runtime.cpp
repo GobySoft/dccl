@@ -79,7 +79,7 @@ int main()
 
     // Add any -I for protoc
     dccl::DynamicProtobufManager::add_include_path(
-        "/home/toby/dccl/share/examples/quickstart_navreport");
+        "/home/toby/share/examples/quickstart_navreport");
 
     // FileDescriptor = type introspection on .proto
     const google::protobuf::FileDescriptor* nav_report_file_desc =

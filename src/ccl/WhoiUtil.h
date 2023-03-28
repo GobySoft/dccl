@@ -26,36 +26,36 @@
  * about 2 meters. The compressed form is stored in a LATLON_COMPRESSED struct, 
  * which is 3 bytes. 
 */
-typedef struct
+typedef struct //NOLINT
 {
     char compressed[3];
 } LATLON_COMPRESSED;
 
-typedef union {
+typedef union { //NOLINT
     long as_long;
     LATLON_COMPRESSED as_compressed;
 }
 
 LONG_AND_COMP;
 
-typedef struct
+typedef struct //NOLINT
 {
     unsigned char compressed[3];
 } TIME_DATE;
 
-typedef union {
+typedef union { //NOLINT
     long as_long;
     TIME_DATE as_time_date;
 } TIME_DATE_LONG;
 
-typedef enum
+typedef enum //NOLINT
 {
     SPEED_MODE_RPM = 0,
     SPEED_MODE_MSEC = 1,
     SPEED_MODE_KNOTS = 2
 } SPEED_MODE;
 
-typedef enum
+typedef enum //NOLINT
 {
     PS_DISABLED = 0,
     PS_SHIPS_POLE = 1,

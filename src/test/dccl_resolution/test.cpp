@@ -24,13 +24,11 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests bounds on DefaultNumericFieldCodec
 
-#include "dccl/codec.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
-using dccl::operator<<;
-
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

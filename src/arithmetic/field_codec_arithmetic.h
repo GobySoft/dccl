@@ -28,18 +28,17 @@
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 
-#include <boost/bimap.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include "dccl/field_codec_typed.h"
+#include "../field_codec_typed.h"
 
 #include "dccl/arithmetic/protobuf/arithmetic.pb.h"
 #include "dccl/arithmetic/protobuf/arithmetic_extensions.pb.h"
 
-#include "dccl/logger.h"
+#include "../logger.h"
 
-#include "dccl/binary.h"
+#include "../binary.h"
+#include "../thread_safety.h"
 
 extern "C"
 {
@@ -54,26 +53,37 @@ namespace dccl
 /// DCCL Arithmetic Encoder Library namespace
 namespace arith
 {
+class ModelManager;
+
+ModelManager& model_manager(FieldCodecManagerLocal& manager);
+
 class Model
 {
   public:
     typedef uint32 freq_type;
-    typedef int symbol_type; // google protobuf RepeatedField size type
-    typedef double value_type;
+    using symbol_type = int; // google protobuf RepeatedField size type
+    using value_type = double;
 
-    static const symbol_type OUT_OF_RANGE_SYMBOL = -1;
-    static const symbol_type EOF_SYMBOL = -2;
-    static const symbol_type MIN_SYMBOL = EOF_SYMBOL;
+    static constexpr symbol_type OUT_OF_RANGE_SYMBOL = -1;
+    static constexpr symbol_type EOF_SYMBOL = -2;
+    static constexpr symbol_type MIN_SYMBOL = EOF_SYMBOL;
 
-    static const int CODE_VALUE_BITS = 32;
-    static const int FREQUENCY_BITS = CODE_VALUE_BITS - 2;
+    static constexpr int CODE_VALUE_BITS = 32;
+    static constexpr int FREQUENCY_BITS = CODE_VALUE_BITS - 2;
 
-    static const freq_type MAX_FREQUENCY = (1 << FREQUENCY_BITS) - 1;
+    static constexpr freq_type MAX_FREQUENCY = (1 << FREQUENCY_BITS) - 1;
 
+#if DCCL_THREAD_SUPPORT
+    static std::recursive_mutex last_bits_map_mutex;
+#define LOCK_LAST_BITS_MAP_MUTEX \
+    std::lock_guard<std::recursive_mutex> l(dccl::arith::Model::last_bits_map_mutex);
+#else
+#define LOCK_LAST_BITS_MAP_MUTEX
+#endif
     // maps message name -> map of field name -> last size (bits)
     static std::map<std::string, std::map<std::string, Bitset>> last_bits_map;
 
-    Model(const protobuf::ArithmeticModel& user) : user_model_(user) {}
+    Model(protobuf::ArithmeticModel user) : user_model_(std::move(user)) {}
 
     enum ModelState
     {
@@ -94,10 +104,10 @@ class Model
 
     freq_type total_freq(ModelState state) const
     {
-        const boost::bimap<symbol_type, freq_type>& c_freqs =
+        const auto& c_freqs =
             (state == ENCODER) ? encoder_cumulative_freqs_ : decoder_cumulative_freqs_;
 
-        return c_freqs.left.at(max_symbol());
+        return c_freqs.at(max_symbol());
     }
 
     void update_model(symbol_type symbol, ModelState state);
@@ -111,23 +121,35 @@ class Model
 
   private:
     protobuf::ArithmeticModel user_model_;
-    boost::bimap<symbol_type, freq_type> encoder_cumulative_freqs_;
-    boost::bimap<symbol_type, freq_type> decoder_cumulative_freqs_;
+    std::map<symbol_type, freq_type> encoder_cumulative_freqs_;
+    std::map<symbol_type, freq_type> decoder_cumulative_freqs_;
 };
 
 class ModelManager
 {
   public:
-    static void set_model(const protobuf::ArithmeticModel& model)
+    static void set_model(dccl::Codec& codec, const protobuf::ArithmeticModel& model);
+
+    Model& find(const std::string& name)
+    {
+        auto it = arithmetic_models_.find(name);
+        if (it == arithmetic_models_.end())
+            throw(Exception("Cannot find model called: " + name));
+        else
+            return it->second;
+    }
+
+  private:
+    void _set_model(const protobuf::ArithmeticModel& model)
     {
         Model new_model(model);
-        create_and_validate_model(&new_model);
+        _create_and_validate_model(&new_model);
         if (arithmetic_models_.count(model.name()))
             arithmetic_models_.erase(model.name());
         arithmetic_models_.insert(std::make_pair(model.name(), new_model));
     }
 
-    static void create_and_validate_model(Model* model)
+    void _create_and_validate_model(Model* model)
     {
         if (!model->user_model_.IsInitialized())
         {
@@ -153,7 +175,7 @@ class ModelManager
                                 "All frequencies must be nonzero."));
             }
             cumulative_freq += freq;
-            model->encoder_cumulative_freqs_.left.insert(std::make_pair(symbol, cumulative_freq));
+            model->encoder_cumulative_freqs_.insert(std::make_pair(symbol, cumulative_freq));
         }
 
         // must have separate models for adaptive encoding.
@@ -163,7 +185,7 @@ class ModelManager
         {
             throw(Exception("Invalid model: " + model->user_model_.DebugString() +
                             "Sum of all frequencies must be less than " +
-                            boost::lexical_cast<std::string>(Model::MAX_FREQUENCY) +
+                            std::to_string(Model::MAX_FREQUENCY) +
                             " in order to use 64 bit arithmetic"));
         }
 
@@ -184,31 +206,22 @@ class ModelManager
         }
     }
 
-    static Model& find(const std::string& name)
-    {
-        std::map<std::string, Model>::iterator it = arithmetic_models_.find(name);
-        if (it == arithmetic_models_.end())
-            throw(Exception("Cannot find model called: " + name));
-        else
-            return it->second;
-    }
-
   private:
-    static std::map<std::string, Model> arithmetic_models_;
+    std::map<std::string, Model> arithmetic_models_;
 };
 
 template <typename FieldType = Model::value_type>
 class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_type, FieldType>
 {
   public:
-    static const uint64 TOP_VALUE =
+    static constexpr uint64 TOP_VALUE =
         (static_cast<uint64>(1) << Model::CODE_VALUE_BITS) - 1; // 11111111...
-    static const uint64 HALF =
+    static constexpr uint64 HALF =
         (static_cast<uint64>(1) << (Model::CODE_VALUE_BITS - 1)); // 10000000...
-    static const uint64 FIRST_QTR = HALF >> 1;                    // 01000000...
-    static const uint64 THIRD_QTR = HALF + FIRST_QTR;             // 11000000...
+    static constexpr uint64 FIRST_QTR = HALF >> 1;                // 01000000...
+    static constexpr uint64 THIRD_QTR = HALF + FIRST_QTR;         // 11000000...
 
-    Bitset encode_repeated(const std::vector<Model::value_type>& wire_value)
+    Bitset encode_repeated(const std::vector<Model::value_type>& wire_value) override
     {
         return encode_repeated(wire_value, true);
     }
@@ -217,7 +230,6 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     {
         using dccl::dlog;
         using namespace dccl::logger;
-
         Model& model = current_model();
 
         uint64 low = 0;          // lowest code value (0.0 in decimal version)
@@ -375,6 +387,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         if (FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
         {
+            LOCK_LAST_BITS_MAP_MUTEX
             // bit of a hack so I can get at the exact bit field sizes
             Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
                                 [FieldCodecBase::this_field()->name()] = bits;
@@ -400,13 +413,12 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         }
     }
 
-    std::vector<Model::value_type> decode_repeated(Bitset* bits)
+    std::vector<Model::value_type> decode_repeated(Bitset* bits) override
     {
         using dccl::dlog;
         using namespace dccl::logger;
 
         std::vector<Model::value_type> values;
-
         Model& model = current_model();
 
         uint64 value = 0;
@@ -487,6 +499,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         // for debugging / testing
         if (FieldCodecBase::dccl_field_options().GetExtension(arithmetic).debug_assert())
         {
+            LOCK_LAST_BITS_MAP_MUTEX
             // must consume same bits as encoded makes
             Bitset in = Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
                                             [FieldCodecBase::this_field()->name()];
@@ -502,7 +515,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return values;
     }
 
-    unsigned size_repeated(const std::vector<Model::value_type>& wire_values)
+    unsigned size_repeated(const std::vector<Model::value_type>& wire_values) override
     {
         // we should really cache this for efficiency
         return encode_repeated(wire_values, false).size();
@@ -510,10 +523,9 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
     // this maximum size will be upper bounded by: ceil(log_2(1/P)) + 1 where P is the
     // probability of this least probable set of symbols
-    unsigned max_size_repeated()
+    unsigned max_size_repeated() override
     {
         using dccl::log2;
-
         Model& model = current_model();
 
         // if user doesn't provide out_of_range frequency, set it to max to force this
@@ -527,7 +539,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
                                                           model.user_model().frequency().end()));
 
         // full of least probable symbols
-        unsigned size_least_probable = (unsigned)(std::ceil(
+        auto size_least_probable = (unsigned)(std::ceil(
             max_repeat() * (log2(model.total_freq(Model::ENCODER)) - log2(lowest_frequency))));
 
         dccl::dlog.is(dccl::logger::DEBUG3) &&
@@ -536,7 +548,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         Model::freq_type eof_freq = model.user_model().eof_frequency();
         // almost full of least probable symbols plus EOF
-        unsigned size_least_probable_plus_eof =
+        auto size_least_probable_plus_eof =
             (unsigned)((eof_freq != 0)
                            ? std::ceil(max_repeat() * log2(model.total_freq(Model::ENCODER)) -
                                        (max_repeat() - 1) * log2(lowest_frequency) - log2(eof_freq))
@@ -549,7 +561,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return std::max(size_least_probable_plus_eof, size_least_probable) + 1;
     }
 
-    unsigned min_size_repeated()
+    unsigned min_size_repeated() override
     {
         using dccl::log2;
         const Model& model = current_model();
@@ -565,7 +577,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
         Model::freq_type eof_freq = model.user_model().eof_frequency();
         // just EOF
-        unsigned size_empty =
+        auto size_empty =
             (unsigned)((eof_freq != 0)
                            ? std::ceil(log2(model.total_freq(Model::ENCODER)) - log2(eof_freq))
                            : std::numeric_limits<unsigned>::max());
@@ -578,7 +590,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
             std::max(out_of_range_freq, *std::max_element(model.user_model().frequency().begin(),
                                                           model.user_model().frequency().end()));
 
-        unsigned size_most_probable = (unsigned)(std::ceil(
+        auto size_most_probable = (unsigned)(std::ceil(
             max_repeat() * (log2(model.total_freq(Model::ENCODER)) - log2(highest_frequency))));
 
         dccl::dlog.is(dccl::logger::DEBUG3) &&
@@ -588,7 +600,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         return std::min(size_empty, size_most_probable);
     }
 
-    void validate()
+    void validate() override
     {
         FieldCodecBase::require(FieldCodecBase::dccl_field_options().HasExtension(arithmetic),
                                 "missing (dccl.field).arithmetic");
@@ -597,7 +609,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
             FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
         try
         {
-            ModelManager::find(model_name);
+            model_manager().find(model_name);
         }
         catch (Exception& e)
         {
@@ -671,8 +683,10 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
     Model& current_model()
     {
         std::string name = FieldCodecBase::dccl_field_options().GetExtension(arithmetic).model();
-        return ModelManager::find(name);
+        return model_manager().find(name);
     }
+
+    ModelManager& model_manager() { return dccl::arith::model_manager(this->manager()); }
 };
 
 // constant integer definitions
@@ -684,12 +698,12 @@ template <typename FieldType> const uint64 ArithmeticFieldCodecBase<FieldType>::
 template <typename FieldType>
 class ArithmeticFieldCodec : public ArithmeticFieldCodecBase<FieldType>
 {
-    Model::value_type pre_encode(const FieldType& field_value)
+    Model::value_type pre_encode(const FieldType& field_value) override
     {
         return static_cast<Model::value_type>(field_value);
     }
 
-    FieldType post_decode(const Model::value_type& wire_value)
+    FieldType post_decode(const Model::value_type& wire_value) override
     {
         return static_cast<FieldType>(wire_value);
     }
@@ -700,12 +714,14 @@ class ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*>
     : public ArithmeticFieldCodecBase<const google::protobuf::EnumValueDescriptor*>
 {
   public:
-    Model::value_type pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value)
+    Model::value_type
+    pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override
     {
         return field_value->number();
     }
 
-    const google::protobuf::EnumValueDescriptor* post_decode(const Model::value_type& wire_value)
+    const google::protobuf::EnumValueDescriptor*
+    post_decode(const Model::value_type& wire_value) override
     {
         const google::protobuf::EnumDescriptor* e = FieldCodecBase::this_field()->enum_type();
         const google::protobuf::EnumValueDescriptor* return_value =
@@ -717,6 +733,7 @@ class ArithmeticFieldCodec<const google::protobuf::EnumValueDescriptor*>
             throw NullValueException();
     }
 };
+
 } // namespace arith
 } // namespace dccl
 

@@ -53,8 +53,8 @@ int main()
 
     test_msg.set_pressure_with_units(pressure);
 
-    typedef boost::units::unit<boost::units::temperature_dimension, boost::units::si::system>
-        Kelvin;
+    using Kelvin =
+        boost::units::unit<boost::units::temperature_dimension, boost::units::si::system>;
     quantity<absolute<Kelvin>> temp(15 * absolute<celsius::temperature>());
     std::cout << temp << std::endl;
 
@@ -91,7 +91,7 @@ int main()
     status.set_y_with_units(500 * si::meters);
     status.set_heading_with_units(3.1415926535 / 2 * si::radians);
 
-    typedef metric::nautical_mile_base_unit::unit_type NauticalMile;
+    using NauticalMile = metric::nautical_mile_base_unit::unit_type;
     quantity<NauticalMile> x_nm(status.x_with_units());
     quantity<NauticalMile> y_nm(status.y_with_units());
 

@@ -236,7 +236,7 @@ workflows:
   version: 2
   commit:
     jobs:
-
+      
       - amd64-stretch-build:
           <<: *filter-template-non-master
       - amd64-buster-build:
@@ -249,7 +249,13 @@ workflows:
           <<: *filter-template-non-master
       - amd64-jammy-build:
           <<: *filter-template-non-master
-      
+
+      - osx-build:
+          <<: *filter-template-non-master
+
+      - amd64-jammy-minimal-build:
+          <<: *filter-template-non-master
+          
       - get-orig-source:
           <<: *filter-template-master-only
       - amd64-stretch-deb-build:
@@ -417,6 +423,46 @@ jobs:
           paths:
             - '*.tar.xz'
 
+  osx-build:
+    resource_class: medium
+    macos:
+      xcode: "13.0.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - checkout
+      - run:
+          name: Update Homebrew
+          command: brew update
+      - run:
+          name: Install CMake
+          command: brew install cmake protobuf
+      - run: &run-build
+          name: Build
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+      - run: &run-tests
+          name: Run tests
+          command: cd build && ctest --output-on-failure -j4
+
+  amd64-jammy-minimal-build:
+    docker:
+      - image: ubuntu:jammy
+    working_directory: /root/goby3
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+      DEBIAN_PRIORITY: "critical"
+    steps:
+      - run: 
+          name: Install apt packages
+          command: |
+            apt-get update &&
+            apt-get -y install git build-essential cmake libprotobuf-dev libprotoc-dev protobuf-compiler
+      - checkout
+      - run: 
+          name: Build
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON .. && cmake --build . -- -j4
+      - run: *run-tests    
+          
   amd64-stretch-build:
     <<: *job-template-amd64
     docker: *docker-base-stretch
@@ -452,9 +498,7 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-jammy
     environment:
-      <<: *environment-template-common
-
-      
+      <<: *environment-template-common      
       
   amd64-stretch-deb-build:
     <<: *job-template-deb-amd64

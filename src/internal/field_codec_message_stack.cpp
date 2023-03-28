@@ -21,14 +21,9 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "field_codec_message_stack.h"
-#include "dccl/field_codec.h"
-
-std::vector<const google::protobuf::FieldDescriptor*> dccl::internal::MessageStack::field_;
-std::vector<const google::protobuf::Descriptor*> dccl::internal::MessageStack::desc_;
-std::vector<dccl::MessagePart> dccl::internal::MessageStack::parts_;
-
-std::vector<dccl::internal::MessageStack::MessageAndField> dccl::internal::MessageStack::messages_;
+#include "../field_codec.h"
 
 // MessageStack
 //
@@ -36,52 +31,54 @@ std::vector<dccl::internal::MessageStack::MessageAndField> dccl::internal::Messa
 void dccl::internal::MessageStack::push(const google::protobuf::Descriptor* desc)
 
 {
-    desc_.push_back(desc);
+    data_.desc.push_back(desc);
     ++descriptors_pushed_;
 }
 
 void dccl::internal::MessageStack::push(const google::protobuf::FieldDescriptor* field)
 {
-    field_.push_back(field);
+    data_.field.push_back(field);
     ++fields_pushed_;
 }
 
 void dccl::internal::MessageStack::push(MessagePart part)
 {
-    parts_.push_back(part);
+    data_.parts.push_back(part);
     ++parts_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_desc()
 {
-    if (!desc_.empty())
-        desc_.pop_back();
+    if (!data_.desc.empty())
+        data_.desc.pop_back();
     --descriptors_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_field()
 {
-    if (!field_.empty())
-        field_.pop_back();
+    if (!data_.field.empty())
+        data_.field.pop_back();
     --fields_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_parts()
 {
-    if (!parts_.empty())
-        parts_.pop_back();
+    if (!data_.parts.empty())
+        data_.parts.pop_back();
     --parts_pushed_;
 }
 
 void dccl::internal::MessageStack::__pop_messages()
 {
-    if (!messages_.empty())
-        messages_.pop_back();
+    if (!data_.messages.empty())
+        data_.messages.pop_back();
     --messages_pushed_;
 }
 
-dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescriptor* field)
-    : descriptors_pushed_(0), fields_pushed_(0), parts_pushed_(0), messages_pushed_(0)
+dccl::internal::MessageStack::MessageStack(const google::protobuf::Message* root_message,
+                                           MessageStackData& data,
+                                           const google::protobuf::FieldDescriptor* field)
+    : data_(data), descriptors_pushed_(0), fields_pushed_(0), parts_pushed_(0), messages_pushed_(0)
 {
     if (field)
     {
@@ -101,51 +98,57 @@ dccl::internal::MessageStack::MessageStack(const google::protobuf::FieldDescript
             push(part);
             push(field->message_type());
         }
-        push_message(field);
+        push_message(root_message, field);
         push(field);
     }
 }
 
-void dccl::internal::MessageStack::update_index(const google::protobuf::FieldDescriptor* field,
+void dccl::internal::MessageStack::update_index(const google::protobuf::Message* root_message,
+                                                const google::protobuf::FieldDescriptor* field,
                                                 int index)
 {
-    push_message(field, index);
+    push_message(root_message, field, index);
 }
 
-void dccl::internal::MessageStack::push_message(const google::protobuf::FieldDescriptor* field,
+void dccl::internal::MessageStack::push_message(const google::protobuf::Message* root_message,
+                                                const google::protobuf::FieldDescriptor* field,
                                                 int index)
 {
-    if (messages_.empty() && dccl::FieldCodecBase::root_message())
+    if (data_.messages.empty() && root_message)
     {
-        messages_.push_back({dccl::FieldCodecBase::root_message(), nullptr});
+        data_.messages.push_back({root_message, nullptr});
         ++messages_pushed_;
     }
 
     if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
     {
         // replace if the previous push was the same field
-        if (!messages_.empty() && field == messages_.back().field && !messages_.empty())
+        if (!data_.messages.empty() && field == data_.messages.back().field &&
+            !data_.messages.empty())
         {
-            messages_.pop_back();
+            data_.messages.pop_back();
             --messages_pushed_;
         }
 
         // add the new message + field if possible
-        if (messages_.size() && messages_.back().msg->GetDescriptor() == field->containing_type())
+        if (data_.messages.size() &&
+            data_.messages.back().msg->GetDescriptor() == field->containing_type())
         {
-            const auto* refl = messages_.back().msg->GetReflection();
+            const auto* refl = data_.messages.back().msg->GetReflection();
             if (field->is_repeated())
             {
-                if (index >= 0 && index < refl->FieldSize(*messages_.back().msg, field))
+                if (index >= 0 && index < refl->FieldSize(*data_.messages.back().msg, field))
                 {
-                    messages_.push_back(
-                        {&refl->GetRepeatedMessage(*messages_.back().msg, field, index), field});
+                    data_.messages.push_back(
+                        {&refl->GetRepeatedMessage(*data_.messages.back().msg, field, index),
+                         field});
                     ++messages_pushed_;
                 }
             }
             else
             {
-                messages_.push_back({&refl->GetMessage(*messages_.back().msg, field), field});
+                data_.messages.push_back(
+                    {&refl->GetMessage(*data_.messages.back().msg, field), field});
                 ++messages_pushed_;
             }
         }

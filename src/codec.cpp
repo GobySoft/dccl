@@ -28,10 +28,11 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
+#include <utility>
 
 #include <dlfcn.h> // for shared library loading
 
-#include "dccl/codec.h"
+#include "codec.h"
 
 #if DCCL_HAS_CRYPTOPP
 #if CRYPTOPP_PATH_USES_PLUS_SIGN
@@ -47,17 +48,16 @@
 #endif // CRYPTOPP_PATH_USES_PLUS_SIGN
 #endif // HAS_CRYPTOPP
 
-#include "dccl/codecs2/field_codec_default.h"
-#include "dccl/codecs3/field_codec_default.h"
-#include "dccl/codecs3/field_codec_presence.h"
-#include "dccl/codecs3/field_codec_var_bytes.h"
-#include "dccl/codecs4/field_codec_default.h"
-#include "dccl/codecs4/field_codec_default_message.h"
-#include "dccl/field_codec_id.h"
+#include "codecs2/field_codec_default.h"
+#include "codecs3/field_codec_default.h"
+#include "codecs3/field_codec_presence.h"
+#include "codecs3/field_codec_var_bytes.h"
+#include "codecs4/field_codec_default.h"
+#include "codecs4/field_codec_default_message.h"
+#include "field_codec_id.h"
 
-#include "dccl/option_extensions.pb.h"
+#include "option_extensions.pb.h"
 
-using dccl::hex_decode;
 using dccl::hex_encode;
 
 using namespace dccl;
@@ -71,11 +71,11 @@ using google::protobuf::Reflection;
 // Codec
 //
 
-dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_path)
-    : strict_(false), id_codec_(dccl_id_codec), console_width_(60)
+dccl::Codec::Codec(std::string dccl_id_codec_name, const std::string& library_path)
+    : id_codec_(std::move(dccl_id_codec_name))
 {
     set_default_codecs();
-    FieldCodecManager::add<DefaultIdentifierCodec>(default_id_codec_name());
+    manager_.add<DefaultIdentifierCodec>(default_id_codec_name());
 
     if (!library_path.empty())
         load_library(library_path);
@@ -85,116 +85,92 @@ dccl::Codec::Codec(const std::string& dccl_id_codec, const std::string& library_
 
 dccl::Codec::~Codec()
 {
-    for (std::vector<void*>::iterator it = dl_handles_.begin(), n = dl_handles_.end(); it != n;
-         ++it)
+    for (auto& dl_handle : dl_handles_)
     {
-        unload_library(*it);
-        dlclose(*it);
+        unload_library(dl_handle);
+        dlclose(dl_handle);
     }
 }
 
 void dccl::Codec::set_default_codecs()
 {
-    // only need to load these once into the static FieldCodecManager
-    static bool defaults_loaded = false;
+    using google::protobuf::FieldDescriptor;
 
-    if (!defaults_loaded)
-    {
-        using google::protobuf::FieldDescriptor;
+    // version 2
+    manager_.add<v2::DefaultNumericFieldCodec<double>>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<float>>(default_codec_name());
+    manager_.add<v2::DefaultBoolCodec>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<int32>>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<int64>>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<uint32>>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<uint64>>(default_codec_name());
+    manager_.add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
+    manager_.add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
+    manager_.add<v2::DefaultEnumCodec>(default_codec_name());
+    manager_.add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
 
-        // version 2
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<double>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<float>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultBoolCodec>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int32>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<int64>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint32>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultNumericFieldCodec<uint64>>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(
-            default_codec_name());
-        FieldCodecManager::add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(
-            default_codec_name());
-        FieldCodecManager::add<v2::DefaultEnumCodec>(default_codec_name());
-        FieldCodecManager::add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
-            default_codec_name());
+    manager_.add<v2::TimeCodec<uint64>>("dccl.time2");
+    manager_.add<v2::TimeCodec<int64>>("dccl.time2");
+    manager_.add<v2::TimeCodec<double>>("dccl.time2");
 
-        FieldCodecManager::add<v2::TimeCodec<uint64>>("dccl.time2");
-        FieldCodecManager::add<v2::TimeCodec<int64>>("dccl.time2");
-        FieldCodecManager::add<v2::TimeCodec<double>>("dccl.time2");
+    manager_.add<v2::StaticCodec<std::string>>("dccl.static2");
+    manager_.add<v2::StaticCodec<double>>("dccl.static2");
+    manager_.add<v2::StaticCodec<float>>("dccl.static2");
+    manager_.add<v2::StaticCodec<int32>>("dccl.static2");
+    manager_.add<v2::StaticCodec<int64>>("dccl.static2");
+    manager_.add<v2::StaticCodec<uint32>>("dccl.static2");
+    manager_.add<v2::StaticCodec<uint64>>("dccl.static2");
 
-        FieldCodecManager::add<v2::StaticCodec<std::string>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<double>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<float>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<int32>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<int64>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<uint32>>("dccl.static2");
-        FieldCodecManager::add<v2::StaticCodec<uint64>>("dccl.static2");
+    // version 3
+    manager_.add<v3::DefaultNumericFieldCodec<double>>(default_codec_name(3));
+    manager_.add<v3::DefaultNumericFieldCodec<float>>(default_codec_name(3));
+    manager_.add<v3::DefaultBoolCodec>(default_codec_name(3));
+    manager_.add<v3::DefaultNumericFieldCodec<int32>>(default_codec_name(3));
+    manager_.add<v3::DefaultNumericFieldCodec<int64>>(default_codec_name(3));
+    manager_.add<v3::DefaultNumericFieldCodec<uint32>>(default_codec_name(3));
+    manager_.add<v3::DefaultNumericFieldCodec<uint64>>(default_codec_name(3));
+    manager_.add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(3));
+    manager_.add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(3));
+    manager_.add<v3::DefaultEnumCodec>(default_codec_name(3));
+    manager_.add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
 
-        // version 3
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<double>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<float>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultBoolCodec>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int32>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<int64>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint32>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultNumericFieldCodec<uint64>>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(
-            default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(
-            default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultEnumCodec>(default_codec_name(3));
-        FieldCodecManager::add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
-            default_codec_name(3));
+    // version 4
+    manager_.add<v4::DefaultNumericFieldCodec<double>>(default_codec_name(4));
+    manager_.add<v4::DefaultNumericFieldCodec<float>>(default_codec_name(4));
+    manager_.add<v4::DefaultBoolCodec>(default_codec_name(4));
+    manager_.add<v4::DefaultNumericFieldCodec<int32>>(default_codec_name(4));
+    manager_.add<v4::DefaultNumericFieldCodec<int64>>(default_codec_name(4));
+    manager_.add<v4::DefaultNumericFieldCodec<uint32>>(default_codec_name(4));
+    manager_.add<v4::DefaultNumericFieldCodec<uint64>>(default_codec_name(4));
+    manager_.add<v4::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(4));
+    manager_.add<v4::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(4));
+    manager_.add<v4::DefaultEnumCodec>(default_codec_name(4));
+    manager_.add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(4));
 
-        // version 4
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<double>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<float>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultBoolCodec>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<int32>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<int64>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<uint32>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultNumericFieldCodec<uint64>>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(
-            default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(
-            default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultEnumCodec>(default_codec_name(4));
-        FieldCodecManager::add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(
-            default_codec_name(4));
+    // presence bit codec, which encode empty optional fields with a single bit
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
 
-        // presence bit codec, which encode empty optional fields with a single bit
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>(
-            "dccl.presence");
-        FieldCodecManager::add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
+    // alternative bytes codec that more efficiently encodes variable length bytes fields
+    manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
 
-        // alternative bytes codec that more efficiently encodes variable length bytes fields
-        FieldCodecManager::add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
+    // for backwards compatibility
+    manager_.add<v2::TimeCodec<uint64>>("_time");
+    manager_.add<v2::TimeCodec<int64>>("_time");
+    manager_.add<v2::TimeCodec<double>>("_time");
 
-        // for backwards compatibility
-        FieldCodecManager::add<v2::TimeCodec<uint64>>("_time");
-        FieldCodecManager::add<v2::TimeCodec<int64>>("_time");
-        FieldCodecManager::add<v2::TimeCodec<double>>("_time");
-
-        FieldCodecManager::add<v2::StaticCodec<std::string>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<double>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<float>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<int32>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<int64>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<uint32>>("_static");
-        FieldCodecManager::add<v2::StaticCodec<uint64>>("_static");
-
-        defaults_loaded = true;
-    }
+    manager_.add<v2::StaticCodec<std::string>>("_static");
+    manager_.add<v2::StaticCodec<double>>("_static");
+    manager_.add<v2::StaticCodec<float>>("_static");
+    manager_.add<v2::StaticCodec<int32>>("_static");
+    manager_.add<v2::StaticCodec<int64>>("_static");
+    manager_.add<v2::StaticCodec<uint32>>("_static");
+    manager_.add<v2::StaticCodec<uint64>>("_static");
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,
@@ -222,18 +198,19 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         }
 
         if (!id2desc_.count(dccl_id))
-            throw(Exception("Message id " + boost::lexical_cast<std::string>(dccl_id) +
+            throw(Exception("Message id " + std::to_string(dccl_id) +
                             " has not been loaded. Call load() before encoding this type."));
 
-        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
-        boost::shared_ptr<internal::FromProtoCppTypeBase> helper = internal::TypeHelper::find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
+        std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
 
         if (codec)
         {
             //fixed header
-            id_codec()->field_encode(&head_bits, dccl_id, 0);
+            id_codec()->field_encode(&head_bits, dccl_id, nullptr);
 
-            internal::MessageStack msg_stack;
+            internal::MessageStack msg_stack(manager_.codec_data().root_message_,
+                                             manager_.codec_data().message_data_);
             msg_stack.push(msg.GetDescriptor());
             codec->base_encode(&head_bits, msg, HEAD, strict_);
 
@@ -413,7 +390,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
                             "message definition for " +
                             desc->full_name() + " to use the default DCCL4 codecs."));
 
-        boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+        std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
         unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
         unsigned head_size_bits, body_size_bits;
@@ -421,7 +398,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         codec->base_max_size(&body_size_bits, desc, BODY);
 
         unsigned id_bits = 0;
-        id_codec()->field_size(&id_bits, dccl_id, 0);
+        id_codec()->field_size(&id_bits, dccl_id, nullptr);
         head_size_bits += id_bits;
 
         const unsigned byte_size =
@@ -436,12 +413,18 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         codec->base_validate(desc, BODY);
 
         if (id2desc_.count(dccl_id) && desc != id2desc_.find(dccl_id)->second)
-            throw(Exception("`dccl id` " + boost::lexical_cast<std::string>(dccl_id) +
-                            " is already in use by Message " +
-                            id2desc_.find(dccl_id)->second->full_name() + ": " +
-                            boost::lexical_cast<std::string>(id2desc_.find(dccl_id)->second)));
+        {
+            std::stringstream ss;
+            ss << "`dccl id` " << dccl_id << " is already in use by Message "
+               << id2desc_.find(dccl_id)->second->full_name() << ": "
+               << id2desc_.find(dccl_id)->second;
+
+            throw(Exception(ss.str()));
+        }
         else
+        {
             id2desc_.insert(std::make_pair(dccl_id, desc));
+        }
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
                                 << std::endl;
@@ -468,8 +451,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
 void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
 {
     unsigned int erased = 0;
-    for (std::map<int32, const google::protobuf::Descriptor*>::iterator it = id2desc_.begin();
-         it != id2desc_.end();)
+    for (auto it = id2desc_.begin(); it != id2desc_.end();)
     {
         if (it->second == desc)
         {
@@ -506,14 +488,14 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
     unsigned head_size_bits;
     codec->base_size(&head_size_bits, msg, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_size(&id_bits, dccl_id, 0);
+    id_codec()->field_size(&id_bits, dccl_id, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -526,13 +508,13 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
 
 unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 {
-    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_max_size(&head_size_bits, desc, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_max_size(&id_bits, 0);
+    id_codec()->field_max_size(&id_bits, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -545,13 +527,13 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
 
 unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 {
-    boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+    std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_min_size(&head_size_bits, desc, HEAD);
 
     unsigned id_bits = 0;
-    id_codec()->field_min_size(&id_bits, 0);
+    id_codec()->field_min_size(&id_bits, nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -565,13 +547,17 @@ unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
 void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* param_os /*= 0 */,
                        int user_id /* = -1 */) const
 {
-    std::ostream* os = (param_os) ? param_os : &dlog;
+    bool is_dlog = false;
+    if (!param_os || param_os == &dlog)
+        is_dlog = true;
+    std::stringstream ss;
+    std::ostream* os = (is_dlog) ? &ss : param_os;
 
-    if (param_os || dlog.is(INFO))
+    if (!is_dlog || dlog.check(INFO))
     {
         try
         {
-            boost::shared_ptr<FieldCodecBase> codec = FieldCodecManager::find(desc);
+            std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
             unsigned config_head_bit_size, body_bit_size;
             codec->base_max_size(&config_head_bit_size, desc, HEAD);
@@ -579,7 +565,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
 
             unsigned dccl_id = (user_id < 0) ? id(desc) : user_id;
             unsigned id_bit_size = 0;
-            id_codec()->field_size(&id_bit_size, dccl_id, 0);
+            id_codec()->field_size(&id_bit_size, dccl_id, nullptr);
 
             const unsigned bit_size = id_bit_size + config_head_bit_size + body_bit_size;
 
@@ -589,8 +575,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name =
-                boost::lexical_cast<std::string>(dccl_id) + ": " + desc->full_name();
+            std::string message_name = std::to_string(dccl_id) + ": " + desc->full_name();
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -619,21 +604,25 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string header_str = "Header";
             std::string header_guard = build_guard_for_console_output(header_str, '-');
 
-            *os << header_guard << " " << header_str << " " << header_guard << std::endl;
+            *os << header_guard << " " << header_str << " " << header_guard << "\n";
             *os << bits_dccl_head_str << std::setfill('.')
                 << std::setw(bits_width - bits_dccl_head_str.size() + spaces) << id_bit_size << " {"
                 << id_codec()->name() << "}\n";
             codec->base_info(os, desc, HEAD);
-            //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << std::endl;
+            //            *os << std::string(header_str.size() + 2 + 2*header_guard.size(), '-') << "\n";
 
             std::string body_str = "Body";
             std::string body_guard = build_guard_for_console_output(body_str, '-');
 
-            *os << body_guard << " " << body_str << " " << body_guard << std::endl;
+            *os << body_guard << " " << body_str << " " << body_guard << "\n";
             codec->base_info(os, desc, BODY);
-            //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << std::endl;
+            //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << "\n";
 
-            //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << std::endl;
+            //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << "\n";
+            os->flush();
+
+            if (is_dlog)
+                dlog.is(INFO) && dlog << ss.str() << std::endl;
         }
         catch (Exception& e)
         {
@@ -642,8 +631,6 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
                      << " cannot provide information due to invalid configuration. Reason: "
                      << e.what() << std::endl;
         }
-
-        os->flush();
     }
 }
 
@@ -746,24 +733,26 @@ void dccl::Codec::set_crypto_passphrase(
 
 void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 {
-    std::ostream* os = (param_os) ? param_os : &dlog;
-
-    if (param_os || dlog.is(INFO))
+    bool is_dlog = false;
+    if (!param_os || param_os == &dlog)
+        is_dlog = true;
+    std::stringstream ss;
+    std::ostream* os = (is_dlog) ? &ss : param_os;
+    if (!is_dlog || dlog.check(INFO))
     {
         std::string codec_str = "Dynamic Compact Control Language (DCCL) Codec";
         std::string codec_guard = build_guard_for_console_output(codec_str, '|');
 
-        *os << codec_guard << " " << codec_str << " " << codec_guard << std::endl;
+        *os << codec_guard << " " << codec_str << " " << codec_guard << "\n";
         *os << id2desc_.size() << " messages loaded.\n";
-        *os << "Field sizes are in bits unless otherwise noted." << std::endl;
+        *os << "Field sizes are in bits unless otherwise noted."
+            << "\n";
 
-        for (std::map<int32, const google::protobuf::Descriptor*>::const_iterator
-                 it = id2desc_.begin(),
-                 n = id2desc_.end();
-             it != n; ++it)
-            info(it->second, os, it->first);
+        for (auto it : id2desc_) info(it.second, os, it.first);
+        os->flush();
 
-        //        *os << std::string(codec_str.size() + 2 + 2*codec_guard.size(), '|') << std::endl;
+        if (is_dlog)
+            dlog.is(INFO) && dlog << ss.str() << std::endl;
     }
 }
 

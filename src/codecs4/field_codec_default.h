@@ -27,8 +27,8 @@
 #ifndef DCCLV4FIELDCODECDEFAULT20210701H
 #define DCCLV4FIELDCODECDEFAULT20210701H
 
-#include "dccl/codecs3/field_codec_default.h"
-#include "dccl/codecs3/field_codec_var_bytes.h"
+#include "../codecs3/field_codec_default.h"
+#include "../codecs3/field_codec_var_bytes.h"
 
 namespace dccl
 {

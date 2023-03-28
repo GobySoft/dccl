@@ -26,11 +26,11 @@
 
 #include <fstream>
 
-#include "dccl/native_protobuf/dccl_native_protobuf.h"
+#include "../../native_protobuf/dccl_native_protobuf.h"
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
@@ -39,7 +39,7 @@ dccl::Codec codec;
 // ensure we link in dccl_native_protobuf.so
 dccl::native_protobuf::EnumFieldCodec dummy;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

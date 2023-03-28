@@ -29,11 +29,8 @@
 #include <iomanip>
 #include <sstream>
 
-#include "dccl/common.h"
-
-// clang-format off
-#define DCCL_HAS_B64 @DCCL_HAS_B64@
-// clang-format on
+#include "common.h"
+#include "dccl/def.h"
 
 #if DCCL_HAS_B64
 #include <cstdio>
@@ -53,9 +50,9 @@ namespace dccl
 /// \param out pointer to string to store result (e.g. "TOM").
 inline void hex_decode(const std::string& in, std::string* out)
 {
-    static const short char0_9_to_number = 48;
-    static const short charA_F_to_number = 55;
-    static const short chara_f_to_number = 87;
+    static constexpr short char0_9_to_number = 48;
+    static constexpr short charA_F_to_number = 55;
+    static constexpr short chara_f_to_number = 87;
 
     int in_size = in.size();
     int out_size = in_size >> 1;
@@ -103,9 +100,9 @@ template <typename CharIterator>
 inline void hex_encode(CharIterator begin, CharIterator end, std::string* out,
                        bool upper_case = false)
 {
-    static const short char0_9_to_number = 48;
-    static const short charA_F_to_number = 55;
-    static const short chara_f_to_number = 87;
+    static constexpr short char0_9_to_number = 48;
+    static constexpr short charA_F_to_number = 55;
+    static constexpr short chara_f_to_number = 87;
 
     size_t in_size = std::distance(begin, end);
     size_t out_size = in_size << 1;
@@ -197,11 +194,7 @@ inline unsigned long ceil_log2(long i) { return ceil_log2(static_cast<dccl::uint
 
 inline unsigned long ceil_log2(unsigned i) { return ceil_log2(static_cast<dccl::uint64>(i)); }
 
-inline double log2(double d)
-{
-    static double log_2 = log(2);
-    return log(d) / log_2;
-}
+inline double log2(double d) { return std::log2(d); }
 
 //@}
 } // namespace dccl

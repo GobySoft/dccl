@@ -26,15 +26,15 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/binary.h"
-#include "dccl/codec.h"
+#include "../../binary.h"
+#include "../../codec.h"
 #include "test.pb.h"
 using namespace dccl::test;
 
 void decode_check(const TestMsg& msg_in);
 dccl::Codec codec;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 

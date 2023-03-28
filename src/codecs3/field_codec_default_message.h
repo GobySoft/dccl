@@ -25,8 +25,8 @@
 #ifndef DCCLFIELDCODECDEFAULTMESSAGEV320140421H
 #define DCCLFIELDCODECDEFAULTMESSAGEV320140421H
 
-#include "dccl/field_codec.h"
-#include "dccl/field_codec_manager.h"
+#include "../field_codec.h"
+#include "../field_codec_manager.h"
 
 #include "dccl/option_extensions.pb.h"
 
@@ -38,34 +38,34 @@ namespace v3
 class DefaultMessageCodec : public FieldCodecBase
 {
   private:
-    void any_encode(Bitset* bits, const boost::any& wire_value);
-    void any_decode(Bitset* bits, boost::any* wire_value);
-    unsigned max_size();
-    unsigned min_size();
-    unsigned any_size(const boost::any& wire_value);
+    void any_encode(Bitset* bits, const dccl::any& wire_value) override;
+    void any_decode(Bitset* bits, dccl::any* wire_value) override;
+    unsigned max_size() override;
+    unsigned min_size() override;
+    unsigned any_size(const dccl::any& wire_value) override;
 
-    boost::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
+    std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
-        return FieldCodecManager::find(field_desc, has_codec_group(), codec_group());
+        return manager().find(field_desc, has_codec_group(), codec_group());
     }
 
     bool is_optional() { return this_field() && this_field()->is_optional(); }
 
-    void validate();
-    std::string info();
+    void validate() override;
+    std::string info() override;
     bool check_field(const google::protobuf::FieldDescriptor* field);
 
     struct Size
     {
-        static void repeated(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
-                             const std::vector<boost::any>& field_values,
+        static void repeated(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+                             const std::vector<dccl::any>& field_values,
                              const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_size_repeated(return_value, field_values, field_desc);
         }
 
-        static void single(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
-                           const boost::any& field_value,
+        static void single(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+                           const dccl::any& field_value,
                            const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_size(return_value, field_value, field_desc);
@@ -74,15 +74,15 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Encoder
     {
-        static void repeated(boost::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
-                             const std::vector<boost::any>& field_values,
+        static void repeated(std::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
+                             const std::vector<dccl::any>& field_values,
                              const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_encode_repeated(return_value, field_values, field_desc);
         }
 
-        static void single(boost::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
-                           const boost::any& field_value,
+        static void single(std::shared_ptr<FieldCodecBase> codec, Bitset* return_value,
+                           const dccl::any& field_value,
                            const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_encode(return_value, field_value, field_desc);
@@ -91,7 +91,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct MaxSize
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_max_size(return_value, field_desc);
@@ -100,7 +100,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct MinSize
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, unsigned* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             // defer minimum size calculation for dynamic conditions (since omit == 0)
@@ -116,7 +116,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Validate
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, bool* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, bool* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_validate(return_value, field_desc);
@@ -125,7 +125,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     struct Info
     {
-        static void field(boost::shared_ptr<FieldCodecBase> codec, std::stringstream* return_value,
+        static void field(std::shared_ptr<FieldCodecBase> codec, std::stringstream* return_value,
                           const google::protobuf::FieldDescriptor* field_desc)
         {
             codec->field_info(return_value, field_desc);
@@ -149,14 +149,13 @@ class DefaultMessageCodec : public FieldCodecBase
     }
 
     template <typename Action, typename ReturnType>
-    ReturnType traverse_const_message(const boost::any& wire_value)
+    ReturnType traverse_const_message(const dccl::any& wire_value)
     {
         try
         {
             ReturnType return_value = ReturnType();
 
-            const google::protobuf::Message* msg =
-                boost::any_cast<const google::protobuf::Message*>(wire_value);
+            const auto* msg = dccl::any_cast<const google::protobuf::Message*>(wire_value);
             const google::protobuf::Descriptor* desc = msg->GetDescriptor();
             const google::protobuf::Reflection* refl = msg->GetReflection();
 
@@ -167,13 +166,13 @@ class DefaultMessageCodec : public FieldCodecBase
                 if (!check_field(field_desc))
                     continue;
 
-                boost::shared_ptr<FieldCodecBase> codec = find(field_desc);
-                boost::shared_ptr<internal::FromProtoCppTypeBase> helper =
-                    internal::TypeHelper::find(field_desc);
+                std::shared_ptr<FieldCodecBase> codec = find(field_desc);
+                std::shared_ptr<internal::FromProtoCppTypeBase> helper =
+                    manager().type_helper().find(field_desc);
 
                 if (field_desc->is_repeated())
                 {
-                    std::vector<boost::any> field_values;
+                    std::vector<dccl::any> field_values;
                     for (int j = 0, m = refl->FieldSize(*msg, field_desc); j < m; ++j)
                         field_values.push_back(helper->get_repeated_value(field_desc, *msg, j));
 
@@ -197,7 +196,7 @@ class DefaultMessageCodec : public FieldCodecBase
             }
             return return_value;
         }
-        catch (boost::bad_any_cast& e)
+        catch (dccl::bad_any_cast& e)
         {
             throw(Exception("Bad type given to traverse const, expecting const "
                             "google::protobuf::Message*, got " +

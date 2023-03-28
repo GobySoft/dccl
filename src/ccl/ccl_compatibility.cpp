@@ -22,13 +22,13 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <chrono>
 #include <ctime>
 
-#include <boost/date_time.hpp>
-
+#include "../codec.h"
 #include "WhoiUtil.h"
 #include "ccl_compatibility.h"
-#include "dccl/codec.h"
 
 extern "C"
 {
@@ -37,24 +37,24 @@ extern "C"
         using namespace dccl;
         using namespace dccl::legacyccl;
 
-        FieldCodecManager::add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
+        dccl->manager().add<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
 
         if (dccl->get_id_codec() != "dccl.ccl.id")
             dccl->set_id_codec("dccl.ccl.id");
 
-        FieldCodecManager::add<LatLonCompressedCodec>("_ccl_latloncompressed");
-        FieldCodecManager::add<FixAgeCodec>("_ccl_fix_age");
-        FieldCodecManager::add<TimeDateCodec>("_ccl_time_date");
-        FieldCodecManager::add<HeadingCodec>("_ccl_heading");
-        FieldCodecManager::add<DepthCodec>("_ccl_depth");
-        FieldCodecManager::add<VelocityCodec>("_ccl_velocity");
-        FieldCodecManager::add<WattsCodec>("_ccl_watts");
-        FieldCodecManager::add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-        FieldCodecManager::add<SpeedCodec>("_ccl_speed");
-        FieldCodecManager::add<HiResAltitudeCodec>("_ccl_hires_altitude");
-        FieldCodecManager::add<TemperatureCodec>("_ccl_temperature");
-        FieldCodecManager::add<SalinityCodec>("_ccl_salinity");
-        FieldCodecManager::add<SoundSpeedCodec>("_ccl_sound_speed");
+        dccl->manager().add<LatLonCompressedCodec>("_ccl_latloncompressed");
+        dccl->manager().add<FixAgeCodec>("_ccl_fix_age");
+        dccl->manager().add<TimeDateCodec>("_ccl_time_date");
+        dccl->manager().add<HeadingCodec>("_ccl_heading");
+        dccl->manager().add<DepthCodec>("_ccl_depth");
+        dccl->manager().add<VelocityCodec>("_ccl_velocity");
+        dccl->manager().add<WattsCodec>("_ccl_watts");
+        dccl->manager().add<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        dccl->manager().add<SpeedCodec>("_ccl_speed");
+        dccl->manager().add<HiResAltitudeCodec>("_ccl_hires_altitude");
+        dccl->manager().add<TemperatureCodec>("_ccl_temperature");
+        dccl->manager().add<SalinityCodec>("_ccl_salinity");
+        dccl->manager().add<SoundSpeedCodec>("_ccl_sound_speed");
 
         dccl->load<protobuf::CCLMDATEmpty>();
         dccl->load<protobuf::CCLMDATRedirect>();
@@ -78,20 +78,20 @@ extern "C"
         dccl->unload<protobuf::CCLMDATCommand>();
         dccl->unload<protobuf::CCLMDATError>();
 
-        FieldCodecManager::remove<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
-        FieldCodecManager::remove<LatLonCompressedCodec>("_ccl_latloncompressed");
-        FieldCodecManager::remove<FixAgeCodec>("_ccl_fix_age");
-        FieldCodecManager::remove<TimeDateCodec>("_ccl_time_date");
-        FieldCodecManager::remove<HeadingCodec>("_ccl_heading");
-        FieldCodecManager::remove<DepthCodec>("_ccl_depth");
-        FieldCodecManager::remove<VelocityCodec>("_ccl_velocity");
-        FieldCodecManager::remove<WattsCodec>("_ccl_watts");
-        FieldCodecManager::remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
-        FieldCodecManager::remove<SpeedCodec>("_ccl_speed");
-        FieldCodecManager::remove<HiResAltitudeCodec>("_ccl_hires_altitude");
-        FieldCodecManager::remove<TemperatureCodec>("_ccl_temperature");
-        FieldCodecManager::remove<SalinityCodec>("_ccl_salinity");
-        FieldCodecManager::remove<SoundSpeedCodec>("_ccl_sound_speed");
+        dccl->manager().remove<dccl::legacyccl::IdentifierCodec>("dccl.ccl.id");
+        dccl->manager().remove<LatLonCompressedCodec>("_ccl_latloncompressed");
+        dccl->manager().remove<FixAgeCodec>("_ccl_fix_age");
+        dccl->manager().remove<TimeDateCodec>("_ccl_time_date");
+        dccl->manager().remove<HeadingCodec>("_ccl_heading");
+        dccl->manager().remove<DepthCodec>("_ccl_depth");
+        dccl->manager().remove<VelocityCodec>("_ccl_velocity");
+        dccl->manager().remove<WattsCodec>("_ccl_watts");
+        dccl->manager().remove<GFIPitchOilCodec>("_ccl_gfi_pitch_oil");
+        dccl->manager().remove<SpeedCodec>("_ccl_speed");
+        dccl->manager().remove<HiResAltitudeCodec>("_ccl_hires_altitude");
+        dccl->manager().remove<TemperatureCodec>("_ccl_temperature");
+        dccl->manager().remove<SalinityCodec>("_ccl_salinity");
+        dccl->manager().remove<SoundSpeedCodec>("_ccl_sound_speed");
     }
 }
 
@@ -142,36 +142,38 @@ dccl::uint64 dccl::legacyccl::TimeDateCodec::decode(Bitset* bits)
     short mon, day, hour, min, sec;
     Decode_time_date(decoded.as_time_date, &mon, &day, &hour, &min, &sec);
 
-    // \todo chrismurf FIX ME! with timegm
-    // assume current year
-    int year = boost::gregorian::day_clock::universal_day().year();
+    // Get the current time
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
 
-    boost::posix_time::ptime time_date(boost::gregorian::date(year, mon, day),
-                                       boost::posix_time::time_duration(hour, min, sec));
+    // Get the current year
+    std::tm current_year_tm = *std::gmtime(&now_time_t);
+    int current_year = current_year_tm.tm_year + 1900;
 
-    return to_uint64_time(time_date);
+    // Construct a tm structure with the given date and time
+    std::tm input_tm;
+    input_tm.tm_year = current_year - 1900;
+    input_tm.tm_mon = mon - 1;
+    input_tm.tm_mday = day;
+    input_tm.tm_hour = hour;
+    input_tm.tm_min = min;
+    input_tm.tm_sec = sec;
+    input_tm.tm_isdst = -1; // Let the system determine the DST setting
+
+    // Convert the input tm structure to a time_t
+    std::time_t input_time_t = timegm(&input_tm);
+
+    return to_uint64_time(input_time_t);
 }
 
-dccl::uint64
-dccl::legacyccl::TimeDateCodec::to_uint64_time(const boost::posix_time::ptime& time_date)
+dccl::uint64 dccl::legacyccl::TimeDateCodec::to_uint64_time(const std::time_t& time_date)
 {
-    using namespace boost::posix_time;
-    using namespace boost::gregorian;
-
-    if (time_date == not_a_date_time)
-        return std::numeric_limits<uint64>::max();
-    else
-    {
-        const int MICROSEC_IN_SEC = 1000000;
-
-        date_duration date_diff = time_date.date() - date(1970, 1, 1);
-        time_duration time_diff = time_date.time_of_day();
-
-        return static_cast<uint64>(date_diff.days()) * 24 * 3600 * MICROSEC_IN_SEC +
-               static_cast<uint64>(time_diff.total_seconds()) * MICROSEC_IN_SEC +
-               static_cast<uint64>(time_diff.fractional_seconds()) /
-                   (time_duration::ticks_per_second() / MICROSEC_IN_SEC);
-    }
+    std::chrono::system_clock::duration input_duration =
+        std::chrono::system_clock::from_time_t(time_date) -
+        std::chrono::system_clock::from_time_t(0); // UNIX Epoch
+    uint64_t microseconds_since_epoch =
+        std::chrono::duration_cast<std::chrono::microseconds>(input_duration).count();
+    return microseconds_since_epoch;
 }
 
 unsigned dccl::legacyccl::TimeDateCodec::size()

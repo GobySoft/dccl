@@ -22,6 +22,7 @@ set(SRC
   codecs4/field_codec_default_message.cpp
   internal/type_helper.cpp
   internal/field_codec_message_stack.cpp
+  thread_safety.cpp
   ${PROTO_SRCS} ${PROTO_HDRS}
   ) 
 

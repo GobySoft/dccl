@@ -27,15 +27,15 @@
 
 #include <google/protobuf/descriptor.pb.h>
 
-#include "dccl/codec.h"
-#include "dccl/codecs2/field_codec_default.h"
+#include "../../codec.h"
+#include "../../codecs2/field_codec_default.h"
 
-#include "dccl/binary.h"
+#include "../../binary.h"
 #include "test.pb.h"
 
 using namespace dccl::test;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/ [])
 {
     //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
     // check the empty messages

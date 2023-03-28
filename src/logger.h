@@ -25,12 +25,16 @@
 #ifndef DCCLLOGGER20121009H
 #define DCCLLOGGER20121009H
 
-#include <boost/signals2.hpp>
 #include <cstdio>
 #include <deque>
+#include <functional>
 #include <iomanip>
 #include <iostream>
+#include <stack>
 #include <string>
+#include <vector>
+
+#include "thread_safety.h"
 
 namespace dccl
 {
@@ -49,7 +53,8 @@ enum Verbosity
     INFO_PLUS = INFO | (INFO - 1),
     DEBUG1_PLUS = DEBUG1 | (DEBUG1 - 1),
     DEBUG2_PLUS = DEBUG2 | (DEBUG2 - 1),
-    DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1)
+    DEBUG3_PLUS = DEBUG3 | (DEBUG3 - 1),
+    UNKNOWN = 0
 };
 enum Group
 {
@@ -64,84 +69,101 @@ enum Group
 void to_ostream(const std::string& msg, dccl::logger::Verbosity vrb, dccl::logger::Group grp,
                 std::ostream* os, bool add_timestamp);
 
+class Logger;
+
 namespace internal
 {
 class LogBuffer : public std::streambuf
 {
   public:
-    LogBuffer() : verbosity_(logger::INFO), group_(logger::GENERAL), buffer_(1) {}
-    ~LogBuffer() {}
+    LogBuffer() : buffer_(1) {}
+    ~LogBuffer() override = default;
 
     /// connect a signal to a slot (function pointer or similar)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
     {
         enabled_verbosities_ |= verbosity_mask;
         if (verbosity_mask & logger::WARN)
-            warn_signal.connect(slot);
+            warn_signal.emplace_back(slot);
         if (verbosity_mask & logger::INFO)
-            info_signal.connect(slot);
+            info_signal.emplace_back(slot);
         if (verbosity_mask & logger::DEBUG1)
-            debug1_signal.connect(slot);
+            debug1_signal.emplace_back(slot);
         if (verbosity_mask & logger::DEBUG2)
-            debug2_signal.connect(slot);
+            debug2_signal.emplace_back(slot);
         if (verbosity_mask & logger::DEBUG3)
-            debug3_signal.connect(slot);
+            debug3_signal.emplace_back(slot);
     }
 
     void disconnect(int verbosity_mask)
     {
         enabled_verbosities_ &= ~verbosity_mask;
         if (verbosity_mask & logger::WARN)
-            warn_signal.disconnect_all_slots();
+            warn_signal.clear();
         if (verbosity_mask & logger::INFO)
-            info_signal.disconnect_all_slots();
+            info_signal.clear();
         if (verbosity_mask & logger::DEBUG1)
-            debug1_signal.disconnect_all_slots();
+            debug1_signal.clear();
         if (verbosity_mask & logger::DEBUG2)
-            debug2_signal.disconnect_all_slots();
+            debug2_signal.clear();
         if (verbosity_mask & logger::DEBUG3)
-            debug3_signal.disconnect_all_slots();
+            debug3_signal.clear();
     }
 
     /// sets the verbosity level until the next sync()
-    void set_verbosity(logger::Verbosity verbosity) { verbosity_ = verbosity; }
+    void set_verbosity(logger::Verbosity verbosity) { verbosity_.push(verbosity); }
 
-    void set_group(logger::Group group) { group_ = group; }
+    void set_group(logger::Group group) { group_.push(group); }
 
-    bool contains(logger::Verbosity verbosity) { return verbosity & enabled_verbosities_; }
+    bool contains(logger::Verbosity verbosity) const { return verbosity & enabled_verbosities_; }
 
   private:
     /// virtual inherited from std::streambuf.
     /// Called when std::endl or std::flush is inserted into the stream
-    int sync();
+    int sync() override;
 
     /// virtual inherited from std::streambuf. Called when something is inserted into the stream
     /// Called when std::endl or std::flush is inserted into the stream
-    int overflow(int c = EOF);
+    int overflow(int c = EOF) override;
 
     void display(const std::string& s)
     {
-        if (verbosity_ & logger::WARN)
-            warn_signal(s, logger::WARN, group_);
-        if (verbosity_ & logger::INFO)
-            info_signal(s, logger::INFO, group_);
-        if (verbosity_ & logger::DEBUG1)
-            debug1_signal(s, logger::DEBUG1, group_);
-        if (verbosity_ & logger::DEBUG2)
-            debug2_signal(s, logger::DEBUG2, group_);
-        if (verbosity_ & logger::DEBUG3)
-            debug3_signal(s, logger::DEBUG3, group_);
+        if (verbosity() & logger::WARN)
+        {
+            for (auto& slot : warn_signal) slot(s, logger::WARN, group());
+        }
+        if (verbosity() & logger::INFO)
+        {
+            for (auto& slot : info_signal) slot(s, logger::INFO, group());
+        }
+        if (verbosity() & logger::DEBUG1)
+        {
+            for (auto& slot : debug1_signal) slot(s, logger::DEBUG1, group());
+        }
+        if (verbosity() & logger::DEBUG2)
+        {
+            for (auto& slot : debug2_signal) slot(s, logger::DEBUG2, group());
+        }
+        if (verbosity() & logger::DEBUG3)
+        {
+            for (auto& slot : debug3_signal) slot(s, logger::DEBUG3, group());
+        }
     }
 
+    logger::Verbosity verbosity()
+    {
+        return verbosity_.empty() ? logger::UNKNOWN : verbosity_.top();
+    }
+    logger::Group group() { return group_.empty() ? logger::GENERAL : group_.top(); }
+
   private:
-    logger::Verbosity verbosity_;
-    logger::Group group_;
+    std::stack<logger::Verbosity> verbosity_;
+    std::stack<logger::Group> group_;
     std::deque<std::string> buffer_;
     int enabled_verbosities_; // mask of verbosity settings enabled
 
-    typedef boost::signals2::signal<void(const std::string& msg, logger::Verbosity vrb,
-                                         logger::Group grp)>
-        LogSignal;
+    using LogSignal = std::vector<
+        std::function<void(const std::string& msg, logger::Verbosity vrb, logger::Group grp)>>;
 
     LogSignal warn_signal, info_signal, debug1_signal, debug2_signal, debug3_signal;
 };
@@ -152,9 +174,12 @@ class Logger : public std::ostream
 {
   public:
     Logger() : std::ostream(&buf_) {}
-    virtual ~Logger() {}
+    ~Logger() override = default;
 
-    /// \brief Indicates the verbosity of the Logger until the next std::flush or std::endl. The boolean return is used to take advantage of short-circuit evaluation of && to avoid spending CPU time generating log files that if they are not used.
+    /// \brief Same as is() but doesn't set the verbosity or lock the mutex.
+    bool check(logger::Verbosity verbosity) { return buf_.contains(verbosity); }
+
+    /// \brief Indicates the verbosity of the Logger until the next std::flush or std::endl. The boolean return is used to take advantage of short-circuit evaluation of && to avoid spending CPU time generating log files that if they are not used. This locks the dlog mutex when running with DCCL_THREAD_SUPPORT
     ///
     /// The typical usage is
     /// \code
@@ -171,6 +196,9 @@ class Logger : public std::ostream
         }
         else
         {
+#if DCCL_THREAD_SUPPORT
+            g_dlog_mutex.lock();
+#endif
             buf_.set_verbosity(verbosity);
             buf_.set_group(group);
             return true;
@@ -180,10 +208,11 @@ class Logger : public std::ostream
     /// \brief Connect the output of one or more given verbosities to a slot (function pointer or similar)
     ///
     /// \param verbosity_mask A bitmask representing the verbosity or verbosities to send to this slot. For example, you can use connect(WARN | INFO, slot) to send both WARN and INFO messages to slot.
-    /// \param slot The slot must be a function pointer or like object (e.g. boost::function) of type
+    /// \param slot The slot must be a function pointer or like object (e.g. std::function) of type
     /// (void*) (const std::string& msg, logger::Verbosity vrb, logger::Group grp)
     template <typename Slot> void connect(int verbosity_mask, Slot slot)
     {
+        DCCL_LOCK_DLOG_MUTEX
         buf_.connect(verbosity_mask, slot);
     }
 
@@ -198,12 +227,9 @@ class Logger : public std::ostream
                  void (Obj::*mem_func)(const std::string& msg, logger::Verbosity vrb,
                                        logger::Group grp))
     {
-#if BOOST_VERSION >= 106000
-        using boost::placeholders::_1;
-        using boost::placeholders::_2;
-        using boost::placeholders::_3;
-#endif
-        connect(verbosity_mask, boost::bind(mem_func, obj, _1, _2, _3));
+        DCCL_LOCK_DLOG_MUTEX
+        connect(verbosity_mask, std::bind(mem_func, obj, std::placeholders::_1,
+                                          std::placeholders::_2, std::placeholders::_3));
     }
 
     /// \brief Connect the output of one or more given verbosities to a std::ostream
@@ -213,16 +239,18 @@ class Logger : public std::ostream
     /// \param add_timestamp If true, prepend the current timestamp of the message to each log message.
     void connect(int verbosity_mask, std::ostream* os, bool add_timestamp = true)
     {
-#if BOOST_VERSION >= 106000
-        using boost::placeholders::_1;
-        using boost::placeholders::_2;
-        using boost::placeholders::_3;
-#endif
-        buf_.connect(verbosity_mask, boost::bind(to_ostream, _1, _2, _3, os, add_timestamp));
+        DCCL_LOCK_DLOG_MUTEX
+        buf_.connect(verbosity_mask,
+                     std::bind(to_ostream, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, os, add_timestamp));
     }
 
     /// \brief Disconnect all slots for one or more given verbosities
-    void disconnect(int verbosity_mask) { buf_.disconnect(verbosity_mask); }
+    void disconnect(int verbosity_mask)
+    {
+        DCCL_LOCK_DLOG_MUTEX
+        buf_.disconnect(verbosity_mask);
+    }
 
   private:
     internal::LogBuffer buf_;
