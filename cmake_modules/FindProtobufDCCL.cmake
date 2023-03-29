@@ -126,7 +126,7 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL LOAD_FILE SRCS HDRS)
 
     add_custom_command(
       OUTPUT "${FIL_PATH}/${FIL_WE}.pb.cc"
-             "${FIL_PATH}/${FIL_WE}.pb.h"
+             "${FIL_PATH}/${FIL_WE}.pb.h" ${LOAD_FILE}
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
       ARGS --cpp_out ${dccl_INC_DIR} --proto_path ${dccl_INC_DIR} ${dccl_INC_DIR}/dccl/${REL_FIL} -I ${PROTOBUF_INCLUDE_DIRS} -I ${dccl_INC_DIR} ${DCCL_PROTOC_ARGS}
       # add guards for Clang static analyzer (scan-build)
