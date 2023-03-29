@@ -25,6 +25,9 @@ add_subdirectory(dccl_min_repeat)
   
 if(enable_units)
   add_subdirectory(dccl_units)
+
+  # requires DCCL protoc plugin, which requires units
+  add_subdirectory(dccl_load_file)
 endif()
 
 if(build_ccl)

@@ -54,21 +54,32 @@
 
 function(PROTOBUF_GENERATE_CPP SRCS HDRS)
   if(enable_units)
-    protobuf_generate_cpp_internal("True" PROTO_SRCS PROTO_HDRS ${ARGN})
+    protobuf_generate_cpp_internal("True" "" PROTO_SRCS PROTO_HDRS ${ARGN})
   else()
-    protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+    protobuf_generate_cpp_internal("False" "" PROTO_SRCS PROTO_HDRS ${ARGN})
   endif()
   set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
   set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
 endfunction()
 
 function(PROTOBUF_GENERATE_CPP_NO_DCCL SRCS HDRS)
-  protobuf_generate_cpp_internal("False" PROTO_SRCS PROTO_HDRS ${ARGN})
+  protobuf_generate_cpp_internal("False" "" PROTO_SRCS PROTO_HDRS ${ARGN})
   set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
   set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
 endfunction()
 
-function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
+function(PROTOBUF_GENERATE_CPP_LOAD_FILE LOAD_FILE SRCS HDRS)
+  if(enable_units)
+    protobuf_generate_cpp_internal("True" ${LOAD_FILE} PROTO_SRCS PROTO_HDRS ${ARGN})
+  else()
+    protobuf_generate_cpp_internal("False" "" PROTO_SRCS PROTO_HDRS ${ARGN})
+  endif()
+  set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
+  set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
+endfunction()
+
+
+function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL LOAD_FILE SRCS HDRS)
   if(NOT ARGN)
     message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP() called without any proto files")
     return()
@@ -99,7 +110,18 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
     list(APPEND ${HDRS} "${FIL_PATH}/${FIL_WE}.pb.h")
 
     if(USE_DCCL)
-      set(DCCL_PROTOC_ARGS --dccl_out ${dccl_INC_DIR} --plugin ${dccl_EXEC_DIR}/protoc-gen-dccl)
+      string(COMPARE EQUAL "${LOAD_FILE}" "" result)
+      if(result)
+        set(DCCL_LOAD_FILE_ARG "")
+        set(DCCL_PROTOC_COMMENT "Running C++ and DCCL protocol buffer compiler on ${FIL}")
+      else()
+        set(DCCL_LOAD_FILE_ARG "dccl3_load_file=${LOAD_FILE}:")
+        set(DCCL_PROTOC_COMMENT "Running C++ and DCCL protocol buffer compiler on ${FIL}: load_file: ${LOAD_FILE}")
+      endif()
+      
+      separate_arguments(DCCL_PROTOC_ARGS UNIX_COMMAND "--dccl_out=${DCCL_LOAD_FILE_ARG}${dccl_INC_DIR} --plugin ${dccl_EXEC_DIR}/protoc-gen-dccl")
+    else()
+      set(DCCL_PROTOC_COMMENT "Running C++ protocol buffer compiler on ${FIL}")
     endif()
 
     add_custom_command(
@@ -111,7 +133,7 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL SRCS HDRS)
       COMMAND /bin/bash
       ARGS -c "FILE=${FIL_PATH}/${FIL_WE}.pb.cc && TMPFILE=\${FILE}.\${RANDOM} && cat <(echo '#ifndef __clang_analyzer__') \${FILE} <(echo -e '\\n#endif // __clang_analyzer__') > \${TMPFILE} && mv \${TMPFILE} \${FILE}"
       DEPENDS ${ABS_FIL}
-      COMMENT "Running C++ protocol buffer compiler on ${FIL}"
+      COMMENT ${DCCL_PROTOC_COMMENT}
       VERBATIM )
 
   endforeach()
