@@ -305,14 +305,8 @@ add_compile_options("$<$<CXX_COMPILER_ID:Clang>:-Wdocumentation>")
 ## configure to build/include/dccl
 file(GLOB_RECURSE COPY_INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/*.h src/*.proto src/*.hpp)
 foreach(I ${COPY_INCLUDE_FILES})
-  configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} COPYONLY)
-endforeach()
-
-file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${dccl_SRC_DIR} src/def.h src/version.h)
-foreach(I ${INCLUDE_FILES})
   configure_file(${dccl_SRC_DIR}/${I} ${dccl_INC_DIR}/dccl/${I} @ONLY)
 endforeach()
-
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dccl.h ${dccl_INC_DIR}/dccl.h @ONLY)
 
