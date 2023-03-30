@@ -382,7 +382,7 @@ void DCCLGenerator::generate_load_file_headers() const
     {
         for (std::string line; getline(*load_file_output_, line);)
         {
-            if (line.find(filename_h_) != std::string::npos)
+            if (line.find("\"" + filename_h_ + "\"") != std::string::npos)
             {
                 header_already_written = true;
                 break;
@@ -416,7 +416,7 @@ void DCCLGenerator::generate_load_file_message_loader(
     bool loader_already_written = false;
     for (std::string line; getline(*load_file_output_, line);)
     {
-        if (line.find(cpp_name) != std::string::npos)
+        if (line.find("<" + cpp_name + ">") != std::string::npos)
         {
             loader_already_written = true;
             break;
