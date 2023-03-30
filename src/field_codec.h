@@ -93,14 +93,14 @@ class FieldCodecBase
     /// returns Descriptor for Foo if this_field() == 0
     /// returns Descriptor for Foo if this_field() == FieldDescriptor for bar
     /// returns Descriptor for FooBar if this_field() == FieldDescriptor for baz
-    const google::protobuf::Descriptor* this_descriptor();
+    const google::protobuf::Descriptor* this_descriptor() const;
 
     const google::protobuf::Message* this_message();
 
     // currently encoded or (partially) decoded root message
     const google::protobuf::Message* root_message();
 
-    const google::protobuf::Descriptor* root_descriptor();
+    const google::protobuf::Descriptor* root_descriptor() const;
 
     internal::MessageStackData& message_data();
 
@@ -339,10 +339,12 @@ class FieldCodecBase
         {
             if (this_field())
                 throw(Exception("Field " + this_field()->name() +
-                                " failed validation: " + description));
+                                    " failed validation: " + description,
+                                this->this_descriptor()));
             else
                 throw(Exception("Message " + this_descriptor()->name() +
-                                " failed validation: " + description));
+                                    " failed validation: " + description,
+                                this->this_descriptor()));
         }
     }
 
@@ -353,7 +355,7 @@ class FieldCodecBase
         if (manager_)
             return *manager_;
         else
-            throw(Exception("FieldCodecManagerLocal is not set"));
+            throw(Exception("FieldCodecManagerLocal is not set"), this->this_descriptor());
     }
 
     const FieldCodecManagerLocal& manager() const
@@ -361,7 +363,7 @@ class FieldCodecBase
         if (manager_)
             return *manager_;
         else
-            throw(Exception("FieldCodecManagerLocal is not set"));
+            throw(Exception("FieldCodecManagerLocal is not set"), this->this_descriptor());
     }
 
     virtual void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }

@@ -158,8 +158,7 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, dccl::any* field_value,
     field_post_decode(wire_value, field_value);
 }
 
-void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits,
-                                                 std::vector<dccl::any>* field_values,
+void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits, std::vector<dccl::any>* field_values,
                                                  const google::protobuf::FieldDescriptor* field)
 {
     internal::MessageStack msg_handler(root_message(), message_data(), field);
@@ -295,9 +294,9 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     std::stringstream ss;
     int depth = msg_handler.count();
 
-    std::string name = ((this_field()) ? std::to_string(this_field()->number()) +
-                                             ". " + this_field()->name()
-                                       : this_descriptor()->full_name());
+    std::string name =
+        ((this_field()) ? std::to_string(this_field()->number()) + ". " + this_field()->name()
+                        : this_descriptor()->full_name());
     if (this_field() && this_field()->is_repeated())
         name += "[" +
                 (dccl_field_options().has_min_repeat()
@@ -343,7 +342,6 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
                         : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 
-
     if (!is_zero_size)
         *os << ss.str() << "\n";
 
@@ -377,13 +375,13 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
         throw(
             dccl::OutOfRangeException(std::string("Repeated size exceeds max_repeat for field: ") +
                                           FieldCodecBase::this_field()->DebugString(),
-                                      this->this_field()));
+                                      this->this_field(), this->this_descriptor()));
 
     if (wire_values.size() < dccl_field_options().min_repeat() && strict())
         throw(dccl::OutOfRangeException(
             std::string("Repeated size is less than min_repeat for field: ") +
                 FieldCodecBase::this_field()->DebugString(),
-            this->this_field()));
+            this->this_field(), this->this_descriptor()));
 
     // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat)
     if (codec_version() > 2)
@@ -499,13 +497,16 @@ void dccl::FieldCodecBase::check_repeat_settings() const
 {
     if (!dccl_field_options().has_max_repeat())
         throw(Exception("Missing (dccl.field).max_repeat option on `repeated` field: " +
-                        this_field()->DebugString()));
+                            this_field()->DebugString(),
+                        this->this_descriptor()));
     else if (dccl_field_options().max_repeat() < 1)
         throw(Exception("(dccl.field).max_repeat must not be less than 1: " +
-                        this_field()->DebugString()));
+                            this_field()->DebugString(),
+                        this->this_descriptor()));
     else if (dccl_field_options().max_repeat() < dccl_field_options().min_repeat())
         throw(Exception("(dccl.field).max_repeat must not be less than (dccl.field).min_repeat: " +
-                        this_field()->DebugString()));
+                            this_field()->DebugString(),
+                        this->this_descriptor()));
 }
 
 unsigned dccl::FieldCodecBase::max_size_repeated()
@@ -598,7 +599,7 @@ const google::protobuf::FieldDescriptor* dccl::FieldCodecBase::this_field() cons
     return message_data().top_field();
 }
 
-const google::protobuf::Descriptor* dccl::FieldCodecBase::this_descriptor()
+const google::protobuf::Descriptor* dccl::FieldCodecBase::this_descriptor() const
 {
     return message_data().top_descriptor();
 }
@@ -613,7 +614,7 @@ const google::protobuf::Message* dccl::FieldCodecBase::root_message()
     return manager().codec_data().root_message_;
 }
 
-const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor()
+const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor() const
 {
     return manager().codec_data().root_descriptor_;
 }
