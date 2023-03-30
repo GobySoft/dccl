@@ -28,6 +28,16 @@ import "dccl/option_extensions.proto";
 
 package dccl.test;
 
+message TestMessage3SupersetName
+{
+    option (dccl.msg) = {
+        id: 7,
+        max_bytes: 64,
+        codec_version: 4
+    };
+
+    optional int32 d = 1 [(dccl.field) = { min: 0, max: 100 }];
+}
 
 message TestMessage3
 {
@@ -39,5 +49,3 @@ message TestMessage3
 
     optional int32 c = 1 [(dccl.field) = { min: 0, max: 100 }];
 }
-
-

@@ -68,5 +68,9 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in3.set_c(53);
     run_test(codec, msg_in3);
 
+    TestMessage3SupersetName msg_in4;
+    msg_in4.set_d(12);
+    run_test(codec, msg_in4);
+
     std::cout << "all tests passed" << std::endl;
 }
