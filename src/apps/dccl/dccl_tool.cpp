@@ -197,7 +197,23 @@ int main(int argc, char* argv[])
     }
 }
 
-void analyze(dccl::Codec& dccl, const dccl::tool::Config& /*cfg*/) { dccl.info_all(&std::cout); }
+void analyze(dccl::Codec& codec, const dccl::tool::Config& cfg)
+{
+    if (cfg.message.size() == 0)
+    {
+        codec.info_all(&std::cout);
+    }
+    else
+    {
+        for (const auto &it : cfg.message)
+        {
+            const google::protobuf::Descriptor* desc =
+                dccl::DynamicProtobufManager::find_descriptor(it);
+
+            codec.info(desc, &std::cout);
+        }
+    }
+}
 
 void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 {
