@@ -110,10 +110,7 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
 
                     // remove the unused messages
                     for (int j = field_values.size(), m = max_repeat; j < m; ++j)
-                    {
-                        refl->RemoveLast(msg, field_desc);
-                    }
-                }
+                    { refl->RemoveLast(msg, field_desc); } }
                 else
                 {
                     // for primitive types
@@ -200,7 +197,7 @@ void dccl::v3::DefaultMessageCodec::validate()
     const google::protobuf::Descriptor* desc = FieldCodecBase::this_descriptor();
 
     if (desc->oneof_decl_count() != 0)
-        throw(Exception("DCCL Codec Version 3 does not support 'oneof' declarations"));
+        throw(Exception("DCCL Codec Version 3 does not support 'oneof' declarations"), desc);
 
     traverse_descriptor<Validate>(&b);
 }

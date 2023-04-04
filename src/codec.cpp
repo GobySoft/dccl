@@ -194,12 +194,13 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
                   "with errors: \n"
                << get_all_error_fields_in_message(msg);
 
-            throw(Exception(ss.str()));
+            throw(Exception(ss.str(), desc));
         }
 
         if (!id2desc_.count(dccl_id))
             throw(Exception("Message id " + std::to_string(dccl_id) +
-                            " has not been loaded. Call load() before encoding this type."));
+                            " has not been loaded. Call load() before encoding this type."),
+                  desc);
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
         std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
@@ -231,7 +232,8 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         else
         {
             throw(Exception("Failed to find (dccl.msg).codec `" +
-                            desc->options().GetExtension(dccl::msg).codec() + "`"));
+                            desc->options().GetExtension(dccl::msg).codec() + "`"),
+                  desc);
         }
     }
     catch (dccl::OutOfRangeException& e)
@@ -249,7 +251,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         ss << "Message " << desc->full_name() << " failed to encode. Reason: " << e.what();
 
         dlog.is(DEBUG1, ENCODE) && dlog << ss.str() << std::endl;
-        throw(Exception(ss.str()));
+        throw(Exception(ss.str(), desc));
     }
 }
 
@@ -377,18 +379,21 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         if (user_id < 0 && !desc->options().GetExtension(dccl::msg).has_id())
             throw(
                 Exception("Missing message option `(dccl.msg).id`. Specify a unique id (e.g. 3) in "
-                          "the body of your .proto message using \"option (dccl.msg).id = 3\""));
+                          "the body of your .proto message using \"option (dccl.msg).id = 3\"",
+                          desc));
         if (!desc->options().GetExtension(dccl::msg).has_max_bytes())
             throw(Exception("Missing message option `(dccl.msg).max_bytes`. Specify a maximum "
                             "(encoded) message size in bytes (e.g. 32) in the body of your .proto "
-                            "message using \"option (dccl.msg).max_bytes = 32\""));
+                            "message using \"option (dccl.msg).max_bytes = 32\"",
+                            desc));
 
         if (!desc->options().GetExtension(dccl::msg).has_codec_version())
-            throw(Exception("No (dccl.msg).codec_version set for DCCL Message '" +
-                            desc->full_name() +
-                            "'. For new messages, set 'option (dccl.msg).codec_version = 4' in the "
-                            "message definition for " +
-                            desc->full_name() + " to use the default DCCL4 codecs."));
+            throw(Exception(
+                "No (dccl.msg).codec_version set for DCCL Message '" + desc->full_name() +
+                    "'. For new messages, set 'option (dccl.msg).codec_version = 4' in the "
+                    "message definition for " +
+                    desc->full_name() + " to use the default DCCL4 codecs.",
+                desc));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
@@ -404,10 +409,15 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
         const unsigned byte_size =
             ceil_bits2bytes(head_size_bits) + ceil_bits2bytes(body_size_bits);
 
-        if (byte_size > desc->options().GetExtension(dccl::msg).max_bytes())
-            throw(Exception(
-                "Actual maximum size of message exceeds allowed maximum (dccl.max_bytes). Tighten "
-                "bounds, remove fields, improve codecs, or increase the allowed dccl.max_bytes"));
+        auto actual_max = byte_size;
+        auto allowed_max = desc->options().GetExtension(dccl::msg).max_bytes();
+        if (actual_max > allowed_max)
+            throw(Exception("Actual maximum size of message (" + std::to_string(actual_max) +
+                                "B) exceeds allowed maximum (" + std::to_string(allowed_max) +
+                                "B). Tighten "
+                                "bounds, remove fields, improve codecs, or increase the allowed "
+                                "value in (dccl.msg).max_bytes",
+                            desc));
 
         codec->base_validate(desc, HEAD);
         codec->base_validate(desc, BODY);
@@ -419,7 +429,7 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
                << id2desc_.find(dccl_id)->second->full_name() << ": "
                << id2desc_.find(dccl_id)->second;
 
-            throw(Exception(ss.str()));
+            throw(Exception(ss.str(), desc));
         }
         else
         {
