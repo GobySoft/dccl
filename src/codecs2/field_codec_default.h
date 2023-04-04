@@ -182,7 +182,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 throw(dccl::OutOfRangeException(
                     std::string("Value exceeds min/max bounds for field: ") +
                         FieldCodecBase::this_field()->DebugString(),
-                    this->this_field()));
+                    this->this_field(), this->this_descriptor()));
             // non-strict (default): if out-of-bounds, send as zeros
             else
                 return Bitset(size());

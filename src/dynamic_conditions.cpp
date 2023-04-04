@@ -96,7 +96,8 @@ void dccl::DynamicConditions::regenerate(const google::protobuf::Message* this_m
         {
             sol::error err = decode_message;
             throw(Exception(std::string("Failed to load condition script into the Lua program: ") +
-                            err.what()));
+                                err.what(),
+                            this_msg_->GetDescriptor()));
         }
 
         auto index = index_;

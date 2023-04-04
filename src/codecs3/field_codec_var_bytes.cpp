@@ -37,7 +37,7 @@ dccl::Bitset dccl::v3::VarBytesCodec::encode(const std::string& wire_value)
         if (this->strict())
             throw(dccl::OutOfRangeException(std::string("Bytes too long for field: ") +
                                                 FieldCodecBase::this_field()->DebugString(),
-                                            this->this_field()));
+                                            this->this_field(), this->this_descriptor()));
 
         dccl::dlog.is(DEBUG2) &&
             dccl::dlog << "Bytes " << s << " exceeds `dccl.max_length`, truncating" << std::endl;

@@ -30,32 +30,56 @@
 
 namespace dccl
 {
+inline std::string exception_string(const std::string& in, const google::protobuf::Descriptor* desc,
+                                    const google::protobuf::FieldDescriptor* field)
+{
+    std::string out;
+    if (desc)
+        out += std::string("Message: ") + desc->full_name() + ": ";
+    if (field)
+        out += std::string("Field: ") + field->full_name() + ": ";
+
+    out += in;
+    return out;
+}
+
 /// \brief Exception class for DCCL
 class Exception : public std::runtime_error
 {
   public:
-    Exception(const std::string& s) : std::runtime_error(s) {}
+    Exception(const std::string& s, const google::protobuf::Descriptor* desc = nullptr)
+        : std::runtime_error(exception_string(s, desc, nullptr)), desc_(desc)
+    {
+    }
+
+    const google::protobuf::Descriptor* desc() const { return desc_; }
+
+  private:
+    const google::protobuf::Descriptor* desc_;
 };
 
 /// \brief Exception used to signal null (non-existent) value within field codecs during decode.
 class NullValueException : public Exception
 {
   public:
-    NullValueException() : Exception("NULL Value") {}
+    NullValueException() : Exception(exception_string("NULL value", nullptr, nullptr)) {}
 };
 
 class OutOfRangeException : public std::out_of_range
 {
   public:
-    OutOfRangeException(const std::string& s, const google::protobuf::FieldDescriptor* field)
-        : std::out_of_range(s), field_(field)
+    OutOfRangeException(const std::string& s, const google::protobuf::FieldDescriptor* field,
+                        const google::protobuf::Descriptor* desc = nullptr)
+        : std::out_of_range(exception_string(s, desc, field)), field_(field), desc_(desc)
     {
     }
 
     const google::protobuf::FieldDescriptor* field() const { return field_; }
+    const google::protobuf::Descriptor* desc() const { return desc_; }
 
   private:
     const google::protobuf::FieldDescriptor* field_;
+    const google::protobuf::Descriptor* desc_;
 };
 } // namespace dccl
 
