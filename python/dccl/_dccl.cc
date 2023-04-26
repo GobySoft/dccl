@@ -134,7 +134,7 @@ static int Codec_init(Codec *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
-// Get the ID for an encoded message
+// Get the ID for an encoded message, or a message descriptor as a string (not the raw DESCRIPTOR object).
 static PyObject *Codec_id(Codec *self, PyObject *args) {
     const char *bytes;
     Py_ssize_t bytes_len;
@@ -143,7 +143,14 @@ static PyObject *Codec_id(Codec *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "s#", &bytes, &bytes_len))
         return NULL;
     try {
-        id = self->codec->id(std::string(bytes, bytes_len));
+        std::string bytes_as_string = std::string(bytes, bytes_len);
+        const gp::Descriptor* desc = dccl::DynamicProtobufManager::find_descriptor(bytes_as_string);
+        if (!desc) {
+            id = self->codec->id(bytes_as_string);
+        }
+        else {
+            id = self->codec->id(desc);
+        }
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
         return NULL;
