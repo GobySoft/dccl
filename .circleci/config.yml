@@ -22,10 +22,6 @@ environment-template-armhf: &environment-template-armhf
   TARGET_ARCH: "armhf"
   DEB_BUILD_OPTIONS: "parallel=4 nocheck"
   
-environment-template-stretch: &environment-template-stretch
-  DISTRO_RELEASE_CODENAME: "stretch"
-  DISTRO_RELEASE_VERSION: "debian9"
-
 environment-template-buster: &environment-template-buster
   DISTRO_RELEASE_CODENAME: "buster"
   DISTRO_RELEASE_VERSION: "debian10"
@@ -48,13 +44,6 @@ environment-template-jammy: &environment-template-jammy
 
   
 ## Pre-declare Docker containers
-docker-base-stretch: &docker-base-stretch
-  - image: gobysoft/dccl-debian-build-base:9.1
-docker-arm64-stretch: &docker-arm64-stretch
-  - image: gobysoft/dccl-debian-build-arm64:9.1
-docker-armhf-stretch: &docker-armhf-stretch
-  - image: gobysoft/dccl-debian-build-armhf:9.1
-
 docker-base-buster: &docker-base-buster
   - image: gobysoft/dccl-debian-build-base:10.1
 docker-arm64-buster: &docker-arm64-buster
@@ -237,8 +226,6 @@ workflows:
   commit:
     jobs:
       
-      - amd64-stretch-build:
-          <<: *filter-template-non-master
       - amd64-buster-build:
           <<: *filter-template-non-master
       - amd64-bullseye-build:
@@ -258,18 +245,6 @@ workflows:
           
       - get-orig-source:
           <<: *filter-template-master-only
-      - amd64-stretch-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - get-orig-source
-      - arm64-stretch-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-stretch-deb-build
-      - armhf-stretch-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-stretch-deb-build
 
       - amd64-buster-deb-build:
           <<: *filter-template-master-only
@@ -342,21 +317,18 @@ workflows:
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
-            - amd64-stretch-deb-build
             - amd64-bullseye-deb-build
             - amd64-buster-deb-build
             - amd64-bionic-deb-build
             - amd64-focal-deb-build
             - amd64-jammy-deb-build
 
-            - arm64-stretch-deb-build
             - arm64-bullseye-deb-build
             - arm64-buster-deb-build
             - arm64-bionic-deb-build
             - arm64-focal-deb-build
             - arm64-jammy-deb-build
 
-            - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
@@ -371,21 +343,18 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - amd64-stretch-deb-build
             - amd64-bullseye-deb-build
             - amd64-buster-deb-build
             - amd64-bionic-deb-build
             - amd64-focal-deb-build
             - amd64-jammy-deb-build
 
-            - arm64-stretch-deb-build
             - arm64-bullseye-deb-build
             - arm64-buster-deb-build
             - arm64-bionic-deb-build
             - arm64-focal-deb-build
             - arm64-jammy-deb-build
 
-            - armhf-stretch-deb-build
             - armhf-bullseye-deb-build
             - armhf-buster-deb-build
             - armhf-bionic-deb-build
@@ -463,12 +432,6 @@ jobs:
           command: mkdir -p build && cd build && cmake -Denable_testing=ON .. && cmake --build . -- -j4
       - run: *run-tests    
           
-  amd64-stretch-build:
-    <<: *job-template-amd64
-    docker: *docker-base-stretch
-    environment:
-      <<: *environment-template-common
-
   amd64-buster-build:
     <<: *job-template-amd64
     docker: *docker-base-buster
@@ -500,27 +463,6 @@ jobs:
     environment:
       <<: *environment-template-common      
       
-  amd64-stretch-deb-build:
-    <<: *job-template-deb-amd64
-    docker: *docker-base-stretch
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-amd64
-  arm64-stretch-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-arm64-stretch
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-arm64
-  armhf-stretch-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-armhf-stretch
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-stretch
-      <<: *environment-template-armhf
   amd64-buster-deb-build:
     <<: *job-template-deb-amd64
     docker: *docker-base-buster
