@@ -134,7 +134,7 @@ static int Codec_init(Codec *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
-// Get the ID for an encoded message
+// Get the ID for an encoded message, or a message descriptor as a string (not the raw DESCRIPTOR object).
 static PyObject *Codec_id(Codec *self, PyObject *args) {
     const char *bytes;
     Py_ssize_t bytes_len;
