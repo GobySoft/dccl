@@ -22,6 +22,10 @@ os.environ["CXX"]='@CMAKE_CXX_COMPILER@'
 build_host="@CMAKE_HOST_SYSTEM_PROCESSOR@"
 build_target="@CMAKE_SYSTEM_PROCESSOR@"
 
+cmake_arch_to_gnu_type = { "aarch64": "aarch64-linux-gnu",
+                           "arm": "arm-linux-gnueabihf",
+                           "x86_64": "x86_64-linux-gnu" }
+
 def get_version():
   # Resolves a PEP 440 warning for invalid versions when, e.g., version is 4.0.0~alpha0.
   return open('@CMAKE_SOURCE_DIR@/version.txt', 'r').readline().strip().split('~')[0]
@@ -53,9 +57,10 @@ class build_py(_build_py):
 # and must be changed for cross-compiling
 class build_ext(_build_ext):
     def get_ext_filename(self, ext_name):      
-      filename = super().get_ext_filename(ext_name)      
-      # Replace the build architecture with the target architecture
-      filename = filename.replace(build_host, build_target)
+      filename = super().get_ext_filename(ext_name)
+      if build_host != build_target:
+        # Replace the build architecture with the target architecture
+        filename = filename.replace(cmake_arch_to_gnu_type.get(build_host), cmake_arch_to_gnu_type.get(build_target))
       return filename    
     
 setup(
