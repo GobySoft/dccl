@@ -186,7 +186,7 @@ sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
 # optionally
 sudo apt install python3-dccl4
 \endcode
-<li> Compiled continuous (latest HEAD of the 3.0 branch) binary packages for Ubuntu / Debian: https://packages.gobysoft.org/ubuntu/continuous/
+<li> Compiled continuous (latest HEAD of the 4.0 branch) binary packages for Ubuntu / Debian: https://packages.gobysoft.org/ubuntu/continuous/
 \code
 echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
 sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
