@@ -21,7 +21,6 @@ if(Boost_FOUND)
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
-
 message("Build host architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 message("Build target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
