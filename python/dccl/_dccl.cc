@@ -71,7 +71,7 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
         PyObject *pvalue;
         PyObject *ptraceback;
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-        PyErr_SetString(PyExc_RuntimeError, PyString_AS_STRING(PyObject_Repr(pvalue)));
+        PyErr_SetString(PyExc_RuntimeError, PyString_AS_STRING(pvalue));
         delete msg;
         return 0;
     } else if (!PyBytes_Check(result)) {
