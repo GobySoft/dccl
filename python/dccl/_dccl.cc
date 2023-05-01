@@ -74,8 +74,7 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
         PyErr_SetString(PyExc_RuntimeError, PyString_AS_STRING(PyObject_Repr(pvalue)));
         delete msg;
         return 0;
-    }
-    else if (!PyBytes_Check(result)) {
+    } else if (!PyBytes_Check(result)) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to Serialize python protobuf message.");
         delete msg;
         return 0;
