@@ -44,7 +44,7 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
         return 0;
     }
 
-    std::string full_name(ch_full_name); 
+    std::string full_name(ch_full_name);
     Py_DECREF(py_full_name);
     if (full_name.empty()) {
         PyErr_SetString(PyExc_TypeError, "Message full_name was not a string.");
@@ -63,10 +63,19 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
         PyErr_SetString(DcclException, "Unexpected exception");
         return 0;
     }
-    
+
     // Now that we have the C++ type, serialize the python data, and populate the C++ object.
     PyObject *result = PyObject_CallMethod(pyMsg, "SerializeToString", NULL);
-    if (!result || !PyBytes_Check(result)) {
+    if (!result) {
+        PyObject *ptype;
+        PyObject *pvalue;
+        PyObject *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        PyErr_SetString(PyExc_RuntimeError, PyString_AS_STRING(PyObject_Repr(pvalue)));
+        delete msg;
+        return 0;
+    }
+    else if (!PyBytes_Check(result)) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to Serialize python protobuf message.");
         delete msg;
         return 0;
@@ -86,7 +95,7 @@ static PyObject* cpp_pbmsg_to_py_pbmsg(gp::Message *cppMsg) {
     PyObject *msg = PyObject_CallObject(cls, NULL);
     Py_DECREF(cls);
     if (!msg) return NULL;
-    
+
     // Populate the python object from the C++ message
     std::string encoded;
     cppMsg->SerializeToString(&encoded);
@@ -166,11 +175,11 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
     std::string bytes;
     gp::Message *msg = NULL;
     int header_only = 0;
-    
+
     // Parse and convert the input into a gp::Message
     if (!PyArg_ParseTuple(args, "O&|i", &py_pbmsg_to_cpp_pbmsg, &msg, &header_only))
         return NULL;
-    
+
     // Do the DCCL Encoding, and return the value as a string.
     try {
         self->codec->encode(&bytes, *msg, header_only != 0);
@@ -199,11 +208,11 @@ static PyObject *Codec_encode(Codec *self, PyObject *args) {
 static PyObject *Codec_size(Codec *self, PyObject *args) {
     unsigned size = 0;
     gp::Message *msg = NULL;
-    
+
     // Parse and convert the input into a gp::Message
     if (!PyArg_ParseTuple(args, "O&", &py_pbmsg_to_cpp_pbmsg, &msg))
         return NULL;
-    
+
     // Do the DCCL Encoding, and return the value as a string.
     try {
         size = self->codec->size(*msg);
@@ -224,7 +233,7 @@ static PyObject *Codec_decode(Codec *self, PyObject *args) {
     const char *bytes;
     Py_ssize_t size = 0;
     int header_only = 0;
-    
+
     // Parse inputs and convert to string
     if (!PyArg_ParseTuple(args, "s#|i", &bytes, &size, &header_only))
         return NULL;
@@ -238,7 +247,7 @@ static PyObject *Codec_decode(Codec *self, PyObject *args) {
         PyErr_SetString(DcclException, e.what());
         return NULL;
     }
-    
+
     // Convert the gp::Message to a Python Protobuf Message
     PyObject* pyMsg = cpp_pbmsg_to_py_pbmsg(msg);
     delete msg;
@@ -256,7 +265,7 @@ static PyObject *Codec_load(Codec *self, PyObject *args) {
     if (!desc) {
         PyErr_SetString(PyExc_LookupError, "Could not find a type by that name.");
         return NULL;
-    }  
+    }
     try {
         self->codec->load(desc);
     } catch (dccl::Exception &e) {
