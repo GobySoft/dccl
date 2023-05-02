@@ -21,6 +21,9 @@ if(Boost_FOUND)
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
+message("Build host architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+message("Build target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+
 if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
   if(Boost_FOUND)
     set(CMAKE_CXX_STANDARD 14)
