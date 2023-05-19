@@ -78,7 +78,7 @@ class Bitset : public std::deque<bool>
         if (rhs.size() != size())
             throw(dccl::Exception("Bitset operator&= requires this->size() == rhs.size()"));
 
-        for (size_type i = 0; i != this->size(); ++i) (*this)[i] = (*this)[i] & rhs[i];
+        for (size_type i = 0; i != this->size(); ++i) (*this)[i] &= rhs[i];
         return *this;
     }
 
@@ -93,7 +93,7 @@ class Bitset : public std::deque<bool>
         if (rhs.size() != size())
             throw(dccl::Exception("Bitset operator|= requires this->size() == rhs.size()"));
 
-        for (size_type i = 0; i != this->size(); ++i) (*this)[i] = (*this)[i] | rhs[i];
+        for (size_type i = 0; i != this->size(); ++i) (*this)[i] |= rhs[i];
         return *this;
     }
 
@@ -108,7 +108,7 @@ class Bitset : public std::deque<bool>
         if (rhs.size() != size())
             throw(dccl::Exception("Bitset operator^= requires this->size() == rhs.size()"));
 
-        for (size_type i = 0; i != this->size(); ++i) (*this)[i] = (*this)[i] ^ rhs[i];
+        for (size_type i = 0; i != this->size(); ++i) (*this)[i] ^= rhs[i];
         return *this;
     }
 
