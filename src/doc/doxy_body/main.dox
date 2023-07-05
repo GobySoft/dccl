@@ -12,7 +12,7 @@ DCCL provides two main components: 1) an \ref idl "interface descriptor language
 <li> Grab dependencies:
 \code
 echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
 sudo apt update
 sudo apt install libdccl4-dev
 \endcode
@@ -180,7 +180,7 @@ cd dccl
 <li> Compiled release binary packages for Ubuntu LTS and Debian stable/oldstable: https://packages.gobysoft.org/ubuntu/release/
 \code
 echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
 sudo apt update
 sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
 # optionally
@@ -189,7 +189,7 @@ sudo apt install python3-dccl4
 <li> Compiled continuous (latest HEAD of the 4.0 branch) binary packages for Ubuntu / Debian: https://packages.gobysoft.org/ubuntu/continuous/
 \code
 echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
+sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
 sudo apt update
 sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
 # optionally
