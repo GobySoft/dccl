@@ -407,10 +407,12 @@ jobs:
           command: brew update
       - run:
           name: Install CMake
-          command: brew install cmake protobuf
+          # Protobuf@23 has CMake linking problems with abseil that we don't yet support
+          command: brew install cmake protobuf@21
       - run: &run-build
           name: Build
-          command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+          command: |
+            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH=/usr/local/opt/protobuf@21 -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure -j4
@@ -586,7 +588,7 @@ jobs:
           command: |
             mkdir -p build && cd build &&
             scan-build --use-cc=/usr/bin/clang --use-c++=/usr/bin/clang++ cmake .. -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug &&
-            scan-build --exclude /usr/include/boost --use-cc=/usr/bin/clang --use-c++=/usr/bin/clang++ --status-bugs cmake --build . -- -j${SANITIZER_NUM_JOBS}
+            scan-build --exclude /usr/include/boost --exclude src/thirdparty --use-cc=/usr/bin/clang --use-c++=/usr/bin/clang++ --status-bugs cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run:
           name: Store static analyzer results
           command: cd /tmp && tar cfvz scan-build.tar.gz scan-build*
