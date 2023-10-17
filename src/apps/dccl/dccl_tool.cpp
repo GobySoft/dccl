@@ -111,7 +111,7 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg);
 void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 
-void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc,
+bool load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc,
                const std::string& name);
 void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console_width_);
 
@@ -176,11 +176,15 @@ int main(int argc, char* argv[])
         }
 
         // Load up all the messages
-        for (const auto& it : cfg.message)
+        for (auto it = cfg.message.begin(); it != cfg.message.end();)
         {
             const google::protobuf::Descriptor* desc =
-                dccl::DynamicProtobufManager::find_descriptor(it);
-            load_desc(&dccl, desc, it);
+                dccl::DynamicProtobufManager::find_descriptor(*it);
+            // if we can't load the message, erase it from our set of messages
+            if (!load_desc(&dccl, desc, *it))
+                it = cfg.message.erase(it);
+            else
+                ++it;
         }
 
         switch (cfg.action)
@@ -199,19 +203,11 @@ int main(int argc, char* argv[])
 
 void analyze(dccl::Codec& codec, const dccl::tool::Config& cfg)
 {
-    if (cfg.message.size() == 0)
+    for (const auto& name : cfg.message)
     {
-        codec.info_all(&std::cout);
-    }
-    else
-    {
-        for (const auto &it : cfg.message)
-        {
-            const google::protobuf::Descriptor* desc =
-                dccl::DynamicProtobufManager::find_descriptor(it);
-
-            codec.info(desc, &std::cout);
-        }
+        const google::protobuf::Descriptor* desc =
+            dccl::DynamicProtobufManager::find_descriptor(name);
+        codec.info(desc, &std::cout);
     }
 }
 
@@ -219,9 +215,9 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 {
     if (cfg.message.size() > 1)
     {
-        std::cerr
-            << "No more than one DCCL message can be specified with -m or --message for encoding."
-            << std::endl;
+        std::cerr << "No more than one DCCL message can be specified with -m or --message for "
+                     "encoding."
+                  << std::endl;
         exit(EXIT_FAILURE);
     }
     else if (cfg.message.size() == 0)
@@ -256,7 +252,12 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
             {
                 const google::protobuf::Descriptor* desc =
                     dccl::DynamicProtobufManager::find_descriptor(name);
-                load_desc(&dccl, desc, name);
+                if (!load_desc(&dccl, desc, name))
+                {
+                    std::cerr << "Could not load descriptor for message " << name << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+
                 cfg.message.insert(name);
             }
 
@@ -419,17 +420,18 @@ void disp_proto(dccl::Codec& /*dccl*/, const dccl::tool::Config& cfg)
     }
 }
 
-void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, const std::string& name)
+bool load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, const std::string& name)
 {
     if (desc)
     {
         try
         {
             dccl->load(desc);
+            return true;
         }
         catch (std::exception& e)
         {
-            std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\nWhy: " << e.what()
+            std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\n\tWhy: " << e.what()
                       << std::endl;
         }
     }
@@ -439,8 +441,8 @@ void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, cons
                   << " found! Make sure you have loaded all the necessary .proto files and/or "
                      "shared libraries. Try --help."
                   << std::endl;
-        exit(EXIT_FAILURE);
     }
+    return false;
 }
 
 void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console_width_)
