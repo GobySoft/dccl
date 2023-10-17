@@ -372,7 +372,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* = -1 */)
+std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* = -1 */)
 {
     try
     {
@@ -438,6 +438,12 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
                                 << std::endl;
+
+        std::size_t hash_value = 0;
+        codec->base_hash(&hash_value, desc, HEAD);
+        codec->base_hash(&hash_value, desc, BODY);
+        id2hash_.insert(std::make_pair(dccl_id, hash_value));
+        return hash_value;
     }
     catch (Exception& e)
     {
@@ -585,7 +591,12 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name = std::to_string(dccl_id) + ": " + desc->full_name();
+            std::string hash;
+            if (id2hash_.count(dccl_id))
+                hash = hash_as_string(id2hash_.at(dccl_id));
+
+            std::string message_name =
+                std::to_string(dccl_id) + ": " + desc->full_name() + " {" + hash + "}";
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";

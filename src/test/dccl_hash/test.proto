@@ -1,0 +1,264 @@
+// Copyright 2019-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//   Davide Fenucci <davfen@noc.ac.uk>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message EmbeddedMsg1
+{
+    optional double val = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 126,
+        (dccl.field).precision = 3
+    ];
+}
+
+message TestMsg
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+
+    oneof test_oneof1
+    {
+        double double_oneof1 = 118 [
+            (dccl.field).min = -100,
+            (dccl.field).max = 126,
+            (dccl.field).precision = 2
+        ];
+
+        EmbeddedMsg1 msg_oneof1 = 119;
+    }
+
+    oneof test_oneof2
+    {
+        int32 int32_oneof2 = 120
+            [(dccl.field).min = -20, (dccl.field).max = 3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
+}
+
+message TestMsgNoHashableChanges
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 2.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+
+    oneof test_oneof1
+    {
+        double double_oneof1 = 118 [
+            (dccl.field).min = -100,
+            (dccl.field).max = 126,
+            (dccl.field).precision = 2
+        ];
+
+        EmbeddedMsg1 msg_oneof1 = 119;
+    }
+
+    oneof test_oneof2
+    {
+        int32 int32_oneof2 = 120
+            [(dccl.field).min = -20, (dccl.field).max = 3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
+}
+
+message TestMsgNewID
+{
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+
+    oneof test_oneof1
+    {
+        double double_oneof1 = 118 [
+            (dccl.field).min = -100,
+            (dccl.field).max = 126,
+            (dccl.field).precision = 2
+        ];
+
+        EmbeddedMsg1 msg_oneof1 = 119;
+    }
+
+    oneof test_oneof2
+    {
+        int32 int32_oneof2 = 120
+            [(dccl.field).min = -20, (dccl.field).max = 3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
+}
+
+message TestMsgNewEnum
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+        VALUE3 = 3;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+
+    oneof test_oneof1
+    {
+        double double_oneof1 = 118 [
+            (dccl.field).min = -100,
+            (dccl.field).max = 126,
+            (dccl.field).precision = 2
+        ];
+
+        EmbeddedMsg1 msg_oneof1 = 119;
+    }
+
+    oneof test_oneof2
+    {
+        int32 int32_oneof2 = 120
+            [(dccl.field).min = -20, (dccl.field).max = 3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
+}
+
+message TestMsgNewBounds
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: -1, max: 10, precision: 1 }];
+
+    oneof test_oneof1
+    {
+        double double_oneof1 = 118 [
+            (dccl.field).min = -100,
+            (dccl.field).max = 126,
+            (dccl.field).precision = 2
+        ];
+
+        EmbeddedMsg1 msg_oneof1 = 119;
+    }
+
+    oneof test_oneof2
+    {
+        int32 int32_oneof2 = 120
+            [(dccl.field).min = -20, (dccl.field).max = 3000];
+        EmbeddedMsg1 msg_oneof2 = 121;
+    }
+}
+
+message TestMsgV2
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 2;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+}
+
+message TestMsgV3
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 3;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+}
+
+message TestMsgV4
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+}

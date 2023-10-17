@@ -186,6 +186,14 @@ class FieldCodecBase
     /// \param desc Descriptor to get information on. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
     /// \param part the part of the Message to act on.
     void base_info(std::ostream* os, const google::protobuf::Descriptor* desc, MessagePart part);
+
+    /// \brief Provide a hash of the DCCL message definition to detect changes in the DCCL message
+    ///
+    /// \param hash Hash value of this message part
+    /// \param desc Descriptor to validate. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
+    /// \param part part of the Message
+    /// \return Hash value of this message part
+    void base_hash(std::size_t* hash, const google::protobuf::Descriptor* desc, MessagePart part);
     //@}
 
     /// \name Field functions (primitive types and embedded messages)
@@ -314,6 +322,12 @@ class FieldCodecBase
     /// \param os Stream to write info to.
     /// \param field Protobuf descriptor to the field. Set to 0 for base message.
     void field_info(std::ostream* os, const google::protobuf::FieldDescriptor* field);
+
+    /// \brief Provide a hash for this field definition
+    ///
+    /// \param hash Hash value of this field
+    /// \param field Protobuf descriptor to the field. Set to 0 for base message.
+    void field_hash(std::size_t* hash, const google::protobuf::FieldDescriptor* field);
     //@}
 
     /// \brief Get the DCCL field option extension value for the current field
@@ -442,6 +456,9 @@ class FieldCodecBase
     ///
     /// \return string containing information to display.
     virtual std::string info();
+
+    /// \brief Generate a field specific hash to be combined with the descriptor hash
+    virtual std::size_t hash() { return 0; }
 
     /// \brief Calculate maximum size of the field in bits
     ///

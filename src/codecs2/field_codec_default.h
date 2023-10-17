@@ -308,7 +308,11 @@ class DefaultEnumCodec
 
   private:
     void validate() override {}
-
+    std::size_t hash() override
+    {
+        return std::hash<std::string>{}(this_field()->enum_type()->DebugString());
+    }
+    
     double max() override
     {
         const google::protobuf::EnumDescriptor* e = this_field()->enum_type();

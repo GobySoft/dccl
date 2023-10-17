@@ -58,6 +58,10 @@ class DefaultEnumCodec
     int32 pre_encode(const google::protobuf::EnumValueDescriptor* const& field_value) override;
     const google::protobuf::EnumValueDescriptor* post_decode(const int32& wire_value) override;
     void validate() override {}
+    std::size_t hash() override
+    {
+        return std::hash<std::string>{}(this_field()->enum_type()->DebugString());
+    }
 
   private:
     double max() override;
