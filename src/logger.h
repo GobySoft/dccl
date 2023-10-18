@@ -30,6 +30,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <string>
 #include <vector>
