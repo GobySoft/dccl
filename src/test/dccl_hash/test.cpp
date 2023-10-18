@@ -73,4 +73,117 @@ int main(int /*argc*/, char* /*argv*/[])
     expect_different<TestMsg, TestMsgNewBounds>();
     expect_different<TestMsgV2, TestMsgV3>();
     expect_different<TestMsgV3, TestMsgV4>();
+
+    {
+        std::cout << "TestMsg desc: " << TestMsg::descriptor() << std::endl;
+
+        auto hash = codec.load<TestMsg>();
+        codec.info<TestMsg>();
+
+        TestMsg msg_in, msg_out;
+        msg_in.set_e(TestMsg::VALUE1);
+        msg_in.set_hash_req(0x1234); // dummy value - overwritten by dccl.hash codec
+
+        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+        std::cout << "Try decode..." << std::endl;
+        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+
+        codec.decode(bytes, &msg_out);
+
+        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+
+        msg_in.set_hash_opt(hash & 0xFFFF);
+        msg_in.set_hash_req(hash & 0xFFFFFFFF);
+        std::cout << hash << std::endl;
+        std::cout << "Message in (with hash):\n" << msg_in.DebugString() << std::endl;
+
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+        codec.unload<TestMsg>();
+    }
+
+    {
+        std::cout << "TestMsg desc: " << TestMsg::descriptor() << std::endl;
+
+        codec.load<TestMsg>();
+
+        TestMsg msg_in;
+        TestMsgNewEnum msg_out;
+
+        msg_in.set_e(TestMsg::VALUE1);
+        msg_in.set_hash_req(0x1234); // dummy value - overwritten by dccl.hash codec
+
+        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+        std::cout << "Try decode..." << std::endl;
+        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+
+        codec.unload<TestMsg>();
+        codec.load<TestMsgNewEnum>();
+
+        try
+        {
+            codec.decode(bytes, &msg_out);
+            assert(false);
+        }
+        catch (const std::exception& e)
+        {
+            // expecting exception
+            std::cout << "Caught expected exception: " << e.what() << std::endl;
+        }
+    }
+
+    {
+        std::cout << "TestMsgMultiHash desc: " << TestMsgMultiHash::descriptor() << std::endl;
+
+        auto hash = codec.load<TestMsgMultiHash>();
+        codec.info<TestMsgMultiHash>();
+
+        TestMsgMultiHash msg_in, msg_out;
+
+        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+
+        std::cout << "Try decode..." << std::endl;
+        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+
+        codec.decode(bytes, &msg_out);
+
+        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+
+        msg_in.set_hash4(hash & ((1 << 4) - 1));
+        msg_in.set_hash6(hash & ((1 << 6) - 1));
+        msg_in.set_hash8(hash & ((1 << 8) - 1));
+        msg_in.set_hash13(hash & ((1 << 13) - 1));
+        msg_in.set_hash26(hash & ((1 << 26) - 1));
+        std::cout << hash << std::endl;
+        std::cout << "Message in (with hash):\n" << msg_in.DebugString() << std::endl;
+
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+        codec.unload<TestMsgMultiHash>();
+    }
+
+    try
+    {
+        codec.load<TestMsgHashMaxTooLarge>();
+        assert(false);
+    }
+    catch (const std::exception& e)
+    {
+        // expecting exception
+        std::cout << "Caught expected exception: " << e.what() << std::endl;
+    }
+
+    std::cout << "All tests passed" << std::endl;
 }
