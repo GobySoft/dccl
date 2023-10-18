@@ -192,7 +192,6 @@ class FieldCodecBase
     /// \param hash Hash value of this message part
     /// \param desc Descriptor to validate. Use google::protobuf::Message::GetDescriptor() or MyProtobufType::descriptor() to get this object.
     /// \param part part of the Message
-    /// \return Hash value of this message part
     void base_hash(std::size_t* hash, const google::protobuf::Descriptor* desc, MessagePart part);
     //@}
 

@@ -54,6 +54,7 @@
 #include "codecs3/field_codec_var_bytes.h"
 #include "codecs4/field_codec_default.h"
 #include "codecs4/field_codec_default_message.h"
+#include "codecs4/field_codec_hash.h"
 #include "field_codec_id.h"
 
 #include "option_extensions.pb.h"
@@ -155,6 +156,9 @@ void dccl::Codec::set_default_codecs()
     manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence");
     manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence");
     manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
+
+    // hash codec
+    manager_.add<v4::HashCodec>("dccl.hash");
 
     // alternative bytes codec that more efficiently encodes variable length bytes fields
     manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
@@ -442,7 +446,7 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
         std::size_t hash_value = 0;
         codec->base_hash(&hash_value, desc, HEAD);
         codec->base_hash(&hash_value, desc, BODY);
-        id2hash_.insert(std::make_pair(dccl_id, hash_value));
+        manager_.set_hash(desc, hash_value);
         return hash_value;
     }
     catch (Exception& e)
@@ -592,8 +596,8 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
             std::string hash;
-            if (id2hash_.count(dccl_id))
-                hash = hash_as_string(id2hash_.at(dccl_id));
+            if (manager_.has_hash(desc))
+                hash = hash_as_string(manager_.hash(desc));
 
             std::string message_name =
                 std::to_string(dccl_id) + ": " + desc->full_name() + " {" + hash + "}";

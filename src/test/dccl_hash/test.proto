@@ -69,6 +69,15 @@ message TestMsg
             [(dccl.field).min = -20, (dccl.field).max = 3000];
         EmbeddedMsg1 msg_oneof2 = 121;
     }
+
+    optional uint32 hash_opt = 200 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFF  // 16 bits
+    ];
+    required uint32 hash_req = 201 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFFFFFF  // 32 bits
+    ];
 }
 
 message TestMsgNoHashableChanges
@@ -104,6 +113,14 @@ message TestMsgNoHashableChanges
             [(dccl.field).min = -20, (dccl.field).max = 3000];
         EmbeddedMsg1 msg_oneof2 = 121;
     }
+    optional uint32 hash_opt = 200 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFF  // 16 bits
+    ];
+    required uint32 hash_req = 201 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFFFFFF  // 32 bits
+    ];
 }
 
 message TestMsgNewID
@@ -139,6 +156,14 @@ message TestMsgNewID
             [(dccl.field).min = -20, (dccl.field).max = 3000];
         EmbeddedMsg1 msg_oneof2 = 121;
     }
+    optional uint32 hash_opt = 200 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFF  // 16 bits
+    ];
+    required uint32 hash_req = 201 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFFFFFF  // 32 bits
+    ];
 }
 
 message TestMsgNewEnum
@@ -175,6 +200,14 @@ message TestMsgNewEnum
             [(dccl.field).min = -20, (dccl.field).max = 3000];
         EmbeddedMsg1 msg_oneof2 = 121;
     }
+    optional uint32 hash_opt = 200 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFF  // 16 bits
+    ];
+    required uint32 hash_req = 201 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFFFFFF  // 32 bits
+    ];
 }
 
 message TestMsgNewBounds
@@ -210,6 +243,15 @@ message TestMsgNewBounds
             [(dccl.field).min = -20, (dccl.field).max = 3000];
         EmbeddedMsg1 msg_oneof2 = 121;
     }
+
+    optional uint32 hash_opt = 200 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFF  // 16 bits
+    ];
+    required uint32 hash_req = 201 [
+        (dccl.field).codec = "dccl.hash",
+        (dccl.field).max = 0xFFFFFFFF  // 32 bits
+    ];
 }
 
 message TestMsgV2
@@ -261,4 +303,39 @@ message TestMsgV4
     required E e = 5;
     optional double d = 6
         [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+}
+
+message TestMsgMultiHash
+{
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    // selection of odd sized hashes
+
+    optional uint32 hash4 = 1
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 0xF];
+
+    optional uint32 hash6 = 2
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 0x3F];
+
+    optional uint32 hash8 = 3
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 0xFF];
+
+    optional uint32 hash13 = 4
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 0x1FFF];
+
+    optional uint32 hash26 = 5
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 0X3ffffff];
+}
+
+message TestMsgHashMaxTooLarge
+{
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    // too large
+    optional uint32 hash34 = 1
+        [(dccl.field).codec = "dccl.hash", (dccl.field).max = 17179869183];
 }
