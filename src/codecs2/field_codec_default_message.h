@@ -51,6 +51,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     void validate() override;
     std::string info() override;
+    std::size_t hash() override;
     bool check_field(const google::protobuf::FieldDescriptor* field);
 
     struct Size
@@ -123,6 +124,16 @@ class DefaultMessageCodec : public FieldCodecBase
         }
     };
 
+    struct Hash
+    {
+        static void field(std::shared_ptr<FieldCodecBase> codec, std::size_t* return_value,
+                          const google::protobuf::FieldDescriptor* field_desc)
+        {
+            codec->field_hash(return_value, field_desc);
+        }
+    };
+
+    
     template <typename Action, typename ReturnType>
     void traverse_descriptor(ReturnType* return_value)
     {

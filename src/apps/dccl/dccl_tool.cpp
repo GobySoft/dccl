@@ -97,11 +97,13 @@ struct Config
     std::set<std::string> include;
     std::vector<std::string> dlopen;
     std::set<std::string> message;
+    std::map<std::string, std::size_t> hash;
     std::set<std::string> proto_file;
     Format format{BINARY};
     std::string id_codec;
     bool verbose{false};
     bool omit_prefix{false};
+    bool hash_only{false};
 };
 } // namespace tool
 } // namespace dccl
@@ -111,8 +113,9 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg);
 void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 void disp_proto(dccl::Codec& dccl, const dccl::tool::Config& cfg);
 
-void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc,
-               const std::string& name);
+// return { success, hash }
+std::pair<bool, std::size_t> load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc,
+                                       const std::string& name);
 void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console_width_);
 
 int main(int argc, char* argv[])
@@ -176,11 +179,23 @@ int main(int argc, char* argv[])
         }
 
         // Load up all the messages
-        for (const auto& it : cfg.message)
+        for (auto it = cfg.message.begin(); it != cfg.message.end();)
         {
             const google::protobuf::Descriptor* desc =
-                dccl::DynamicProtobufManager::find_descriptor(it);
-            load_desc(&dccl, desc, it);
+                dccl::DynamicProtobufManager::find_descriptor(*it);
+            // if we can't load the message, erase it from our set of messages
+            bool success;
+            std::size_t hash;
+            std::tie(success, hash) = load_desc(&dccl, desc, *it);
+            if (!success)
+            {
+                it = cfg.message.erase(it);
+            }
+            else
+            {
+                cfg.hash.insert(std::make_pair(*it, hash));
+                ++it;
+            }
         }
 
         switch (cfg.action)
@@ -199,18 +214,20 @@ int main(int argc, char* argv[])
 
 void analyze(dccl::Codec& codec, const dccl::tool::Config& cfg)
 {
-    if (cfg.message.size() == 0)
+    for (const auto& name : cfg.message)
     {
-        codec.info_all(&std::cout);
-    }
-    else
-    {
-        for (const auto &it : cfg.message)
+        if (!cfg.hash_only)
         {
             const google::protobuf::Descriptor* desc =
-                dccl::DynamicProtobufManager::find_descriptor(it);
-
+                dccl::DynamicProtobufManager::find_descriptor(name);
             codec.info(desc, &std::cout);
+        }
+        else
+        {
+            // only write name when providing hashes for multiple messages
+            if (cfg.message.size() > 1)
+                std::cout << name << ": ";
+            std::cout << dccl::hash_as_string(cfg.hash.at(name)) << std::endl;
         }
     }
 }
@@ -219,9 +236,9 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 {
     if (cfg.message.size() > 1)
     {
-        std::cerr
-            << "No more than one DCCL message can be specified with -m or --message for encoding."
-            << std::endl;
+        std::cerr << "No more than one DCCL message can be specified with -m or --message for "
+                     "encoding."
+                  << std::endl;
         exit(EXIT_FAILURE);
     }
     else if (cfg.message.size() == 0)
@@ -256,7 +273,12 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
             {
                 const google::protobuf::Descriptor* desc =
                     dccl::DynamicProtobufManager::find_descriptor(name);
-                load_desc(&dccl, desc, name);
+                if (!load_desc(&dccl, desc, name).first)
+                {
+                    std::cerr << "Could not load descriptor for message " << name << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+
                 cfg.message.insert(name);
             }
 
@@ -419,18 +441,20 @@ void disp_proto(dccl::Codec& /*dccl*/, const dccl::tool::Config& cfg)
     }
 }
 
-void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, const std::string& name)
+std::pair<bool, std::size_t> load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc,
+                                       const std::string& name)
 {
     if (desc)
     {
         try
         {
-            dccl->load(desc);
+            std::size_t hash = dccl->load(desc);
+            return {true, hash};
         }
         catch (std::exception& e)
         {
-            std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\nWhy: " << e.what()
-                      << std::endl;
+            std::cerr << "Not a valid DCCL message: " << desc->full_name()
+                      << "\n\tWhy: " << e.what() << std::endl;
         }
     }
     else
@@ -439,8 +463,8 @@ void load_desc(dccl::Codec* dccl, const google::protobuf::Descriptor* desc, cons
                   << " found! Make sure you have loaded all the necessary .proto files and/or "
                      "shared libraries. Try --help."
                   << std::endl;
-        exit(EXIT_FAILURE);
     }
+    return {false, 0};
 }
 
 void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console_width_)
@@ -473,6 +497,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
     options.emplace_back('V', "version", no_argument, "DCCL Version");
     options.emplace_back('w', "console_width", required_argument,
                          "Maximum number of characters used for prettifying console outputs.");
+    options.emplace_back('H', "hash_only", no_argument, "Only display hash for --analyze action.");
 
     std::vector<option> long_options;
     std::string opt_string;
@@ -542,6 +567,7 @@ void parse_options(int argc, char* argv[], dccl::tool::Config* cfg, int& console
             case 'i': cfg->id_codec = optarg; break;
             case 'v': cfg->verbose = true; break;
             case 'o': cfg->omit_prefix = true; break;
+            case 'H': cfg->hash_only = true; break;
 
             case 'h':
                 std::cout << "Usage of the Dynamic Compact Control Language (DCCL) tool ('dccl'): "

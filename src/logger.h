@@ -30,6 +30,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <string>
 #include <vector>
@@ -257,6 +258,15 @@ class Logger : public std::ostream
 };
 
 extern Logger dlog;
+
+inline std::string hash_as_string(std::size_t hash)
+{
+    std::stringstream hash_stream;
+    hash_stream << "0x" << std::setfill('0') << std::setw(sizeof(std::size_t) * 2) << std::hex
+                << hash;
+    return hash_stream.str();
+}
+
 } // namespace dccl
 
 #endif // DCCLLOGGER20121009H

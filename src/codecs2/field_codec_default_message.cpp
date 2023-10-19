@@ -159,6 +159,13 @@ std::string dccl::v2::DefaultMessageCodec::info()
     return ss.str();
 }
 
+std::size_t dccl::v2::DefaultMessageCodec::hash()
+{
+    std::size_t hash = 0;
+    traverse_descriptor<Hash>(&hash);
+    return hash;
+}
+
 bool dccl::v2::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
 {
     if (!field)

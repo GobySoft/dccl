@@ -27,6 +27,7 @@
 #define DCCLConstants20091211H
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <type_traits>
@@ -146,5 +147,13 @@ typename std::enable_if<std::is_integral<Int>::value, Int>::type quantize(Int va
         value += interval;
     return value;
 }
+
+/// hash combine - from boost::hash_combine
+template <class T> inline void hash_combine(std::size_t& seed, const T& v)
+{
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 } // namespace dccl
 #endif

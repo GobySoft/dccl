@@ -21,6 +21,7 @@ add_subdirectory(dccl_dynamic_protobuf)
 add_subdirectory(dccl_presence)
 add_subdirectory(dccl_resolution)
 add_subdirectory(dccl_min_repeat)
+add_subdirectory(dccl_hash)
 
   
 if(enable_units)

@@ -54,6 +54,7 @@
 #include "codecs3/field_codec_var_bytes.h"
 #include "codecs4/field_codec_default.h"
 #include "codecs4/field_codec_default_message.h"
+#include "codecs4/field_codec_hash.h"
 #include "field_codec_id.h"
 
 #include "option_extensions.pb.h"
@@ -155,6 +156,9 @@ void dccl::Codec::set_default_codecs()
     manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence");
     manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence");
     manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
+
+    // hash codec
+    manager_.add<v4::HashCodec>("dccl.hash");
 
     // alternative bytes codec that more efficiently encodes variable length bytes fields
     manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
@@ -372,7 +376,7 @@ void dccl::Codec::decode(const std::string& bytes, google::protobuf::Message* ms
 
 // makes sure we can actual encode / decode a message of this descriptor given the loaded FieldCodecs
 // checks all bounds on the message
-void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* = -1 */)
+std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* = -1 */)
 {
     try
     {
@@ -438,6 +442,12 @@ void dccl::Codec::load(const google::protobuf::Descriptor* desc, int user_id /* 
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
                                 << std::endl;
+
+        std::size_t hash_value = 0;
+        codec->base_hash(&hash_value, desc, HEAD);
+        codec->base_hash(&hash_value, desc, BODY);
+        manager_.set_hash(desc, hash_value);
+        return hash_value;
     }
     catch (Exception& e)
     {
@@ -585,7 +595,12 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             const unsigned allowed_byte_size = desc->options().GetExtension(dccl::msg).max_bytes();
             const unsigned allowed_bit_size = allowed_byte_size * BITS_IN_BYTE;
 
-            std::string message_name = std::to_string(dccl_id) + ": " + desc->full_name();
+            std::string hash;
+            if (manager_.has_hash(desc))
+                hash = hash_as_string(manager_.hash(desc));
+
+            std::string message_name =
+                std::to_string(dccl_id) + ": " + desc->full_name() + " {" + hash + "}";
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";

@@ -160,6 +160,13 @@ class FieldCodecManagerLocal
     internal::CodecData& codec_data() { return codec_data_; }
     const internal::CodecData& codec_data() const { return codec_data_; }
 
+    void set_hash(const google::protobuf::Descriptor* desc, std::size_t hash)
+    {
+        hashes_[desc] = hash;
+    }
+    bool has_hash(const google::protobuf::Descriptor* desc) const { return hashes_.count(desc); }
+    std::size_t hash(const google::protobuf::Descriptor* desc) const { return hashes_.at(desc); }
+
   private:
     std::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
                                            const std::string& codec_name,
@@ -216,6 +223,8 @@ class FieldCodecManagerLocal
 
     internal::TypeHelper type_helper_;
     internal::CodecData codec_data_;
+
+    std::map<const google::protobuf::Descriptor*, std::size_t> hashes_;
 };
 
 class FieldCodecManager
