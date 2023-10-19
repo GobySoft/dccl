@@ -338,7 +338,7 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     int width = this_field() ? full_width - name.size() : full_width - name.size() + spaces;
     ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str()
        << " {"
-       << (this_field() ? manager().find(this_field(), has_codec_group(), codec_group())->name()
+       << (this_field() ? manager().find(this_field(), codec_version(), has_codec_group(), codec_group())->name()
                         : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 

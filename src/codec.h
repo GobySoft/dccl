@@ -49,6 +49,7 @@
 #include "codecs2/field_codec_default_message.h"
 #include "codecs3/field_codec_default_message.h"
 #include "dccl/def.h"
+#include "dccl/version.h"
 #include "field_codec_manager.h"
 
 /// Dynamic Compact Control Language namespace
@@ -368,14 +369,7 @@ class Codec
 
     static std::string default_codec_name(int version = 2)
     {
-        switch (version)
-        {
-            case 2:
-                return dccl::DCCLFieldOptions::descriptor()
-                    ->FindFieldByName("codec")
-                    ->default_value_string();
-            default: return "dccl.default" + std::to_string(version);
-        }
+        return "dccl.default" + std::to_string(version);
     }
 
     FieldCodecManagerLocal& manager() { return manager_; }
@@ -393,7 +387,8 @@ class Codec
 
     std::shared_ptr<FieldCodecBase> id_codec() const
     {
-        return manager_.find(google::protobuf::FieldDescriptor::TYPE_UINT32, id_codec_);
+        return manager_.find(google::protobuf::FieldDescriptor::TYPE_UINT32, DCCL_VERSION_MAJOR,
+                             id_codec_);
     }
 
   private:
