@@ -28,6 +28,12 @@
 #include "../codec.h"
 #include "field_codec_default.h"
 
+#if DCCL_THREAD_SUPPORT
+std::mutex dccl::v2::TimeCodecClock::clock_mutex_;
+#endif
+
+std::function<dccl::int64()> dccl::v2::TimeCodecClock::epoch_sec_func_;
+
 using namespace dccl::logger;
 
 //

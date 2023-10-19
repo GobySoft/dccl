@@ -55,6 +55,8 @@
 #include "codecs4/field_codec_default.h"
 #include "codecs4/field_codec_default_message.h"
 #include "codecs4/field_codec_hash.h"
+#include "codecs4/field_codec_presence.h"
+#include "codecs4/field_codec_var_bytes.h"
 #include "field_codec_id.h"
 
 #include "option_extensions.pb.h"
@@ -98,17 +100,17 @@ void dccl::Codec::set_default_codecs()
     using google::protobuf::FieldDescriptor;
 
     // version 2
-    manager_.add<v2::DefaultNumericFieldCodec<double>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<float>>(default_codec_name());
-    manager_.add<v2::DefaultBoolCodec>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<int32>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<int64>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<uint32>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<uint64>>(default_codec_name());
-    manager_.add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
-    manager_.add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
-    manager_.add<v2::DefaultEnumCodec>(default_codec_name());
-    manager_.add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
+    manager_.add<v2::DefaultNumericFieldCodec<double>>(default_codec_name(2));
+    manager_.add<v2::DefaultNumericFieldCodec<float>>(default_codec_name(2));
+    manager_.add<v2::DefaultBoolCodec>(default_codec_name(2));
+    manager_.add<v2::DefaultNumericFieldCodec<int32>>(default_codec_name(2));
+    manager_.add<v2::DefaultNumericFieldCodec<int64>>(default_codec_name(2));
+    manager_.add<v2::DefaultNumericFieldCodec<uint32>>(default_codec_name(2));
+    manager_.add<v2::DefaultNumericFieldCodec<uint64>>(default_codec_name(2));
+    manager_.add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(2));
+    manager_.add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(2));
+    manager_.add<v2::DefaultEnumCodec>(default_codec_name(2));
+    manager_.add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(2));
 
     manager_.add<v2::TimeCodec<uint64>>("dccl.time2");
     manager_.add<v2::TimeCodec<int64>>("dccl.time2");
@@ -135,6 +137,30 @@ void dccl::Codec::set_default_codecs()
     manager_.add<v3::DefaultEnumCodec>(default_codec_name(3));
     manager_.add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
 
+    manager_.add<v3::TimeCodec<uint64>>("dccl.time3");
+    manager_.add<v3::TimeCodec<int64>>("dccl.time3");
+    manager_.add<v3::TimeCodec<double>>("dccl.time3");
+
+    manager_.add<v3::StaticCodec<std::string>>("dccl.static3");
+    manager_.add<v3::StaticCodec<double>>("dccl.static3");
+    manager_.add<v3::StaticCodec<float>>("dccl.static3");
+    manager_.add<v3::StaticCodec<int32>>("dccl.static3");
+    manager_.add<v3::StaticCodec<int64>>("dccl.static3");
+    manager_.add<v3::StaticCodec<uint32>>("dccl.static3");
+    manager_.add<v3::StaticCodec<uint64>>("dccl.static3");
+
+    // presence bit codec, which encode empty optional fields with a single bit
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence3");
+    manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence3");
+
+    // alternative bytes codec that more efficiently encodes variable length bytes fields
+    manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes3");
+
     // version 4
     manager_.add<v4::DefaultNumericFieldCodec<double>>(default_codec_name(4));
     manager_.add<v4::DefaultNumericFieldCodec<float>>(default_codec_name(4));
@@ -148,20 +174,32 @@ void dccl::Codec::set_default_codecs()
     manager_.add<v4::DefaultEnumCodec>(default_codec_name(4));
     manager_.add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(4));
 
-    // presence bit codec, which encode empty optional fields with a single bit
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
+    manager_.add<v4::TimeCodec<uint64>>("dccl.time4");
+    manager_.add<v4::TimeCodec<int64>>("dccl.time4");
+    manager_.add<v4::TimeCodec<double>>("dccl.time4");
 
-    // hash codec
-    manager_.add<v4::HashCodec>("dccl.hash");
+    manager_.add<v4::StaticCodec<std::string>>("dccl.static4");
+    manager_.add<v4::StaticCodec<double>>("dccl.static4");
+    manager_.add<v4::StaticCodec<float>>("dccl.static4");
+    manager_.add<v4::StaticCodec<int32>>("dccl.static4");
+    manager_.add<v4::StaticCodec<int64>>("dccl.static4");
+    manager_.add<v4::StaticCodec<uint32>>("dccl.static4");
+    manager_.add<v4::StaticCodec<uint64>>("dccl.static4");
 
-    // alternative bytes codec that more efficiently encodes variable length bytes fields
-    manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<double>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<float>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<int32>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<int64>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<uint32>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<uint64>>>("dccl.presence4");
+    manager_.add<v4::PresenceBitCodec<v4::DefaultEnumCodec>>("dccl.presence4");
+
+    manager_.add<v4::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes4");
+
+    // hash codec - backport for older versions
+    manager_.add<v4::HashCodec>("dccl.hash2");
+    manager_.add<v4::HashCodec>("dccl.hash3");
+    manager_.add<v4::HashCodec>("dccl.hash4");
 
     // for backwards compatibility
     manager_.add<v2::TimeCodec<uint64>>("_time");

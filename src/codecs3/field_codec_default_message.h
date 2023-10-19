@@ -46,7 +46,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
-        return manager().find(field_desc, has_codec_group(), codec_group());
+        return manager().find(field_desc, this->codec_version(), has_codec_group(), codec_group());
     }
 
     bool is_optional() { return this_field() && this_field()->is_optional(); }

@@ -48,7 +48,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field_desc)
     {
-        return manager().find(field_desc, has_codec_group(), codec_group());
+        return manager().find(field_desc, this->codec_version(), has_codec_group(), codec_group());
     }
 
     bool is_optional() { return this_field() && this_field()->is_optional() && !use_required(); }
@@ -261,9 +261,9 @@ class DefaultMessageCodec : public FieldCodecBase
             // Add oneof field's info
             for (auto i = 0; i < oneof_desc->field_count(); ++i)
             {
-                auto codec = field_codec->manager().find(oneof_desc->field(i),
-                                                         field_codec->has_codec_group(),
-                                                         field_codec->codec_group());
+                auto codec = field_codec->manager().find(
+                    oneof_desc->field(i), field_codec->codec_version(),
+                    field_codec->has_codec_group(), field_codec->codec_group());
                 codec->field_info(return_value, oneof_desc->field(i));
             }
 
