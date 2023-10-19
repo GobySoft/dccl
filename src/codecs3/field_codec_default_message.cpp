@@ -110,7 +110,10 @@ void dccl::v3::DefaultMessageCodec::any_decode(Bitset* bits, dccl::any* wire_val
 
                     // remove the unused messages
                     for (int j = field_values.size(), m = max_repeat; j < m; ++j)
-                    { refl->RemoveLast(msg, field_desc); } }
+                    {
+                        refl->RemoveLast(msg, field_desc);
+                    }
+                }
                 else
                 {
                     // for primitive types
@@ -207,6 +210,13 @@ std::string dccl::v3::DefaultMessageCodec::info()
     std::stringstream ss;
     traverse_descriptor<Info>(&ss);
     return ss.str();
+}
+
+std::size_t dccl::v3::DefaultMessageCodec::hash()
+{
+    std::size_t hash = 0;
+    traverse_descriptor<Hash>(&hash);
+    return hash;
 }
 
 bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)

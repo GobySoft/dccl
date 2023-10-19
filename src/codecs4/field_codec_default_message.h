@@ -55,6 +55,7 @@ class DefaultMessageCodec : public FieldCodecBase
 
     void validate() override;
     std::string info() override;
+    std::size_t hash() override;
     bool check_field(const google::protobuf::FieldDescriptor* field);
 
     struct Size
@@ -237,8 +238,8 @@ class DefaultMessageCodec : public FieldCodecBase
             std::stringstream ss;
             int depth = msg_handler.count();
 
-            std::string name = std::to_string(oneof_desc->index()) + ". " +
-                               oneof_desc->name() + " [oneof]";
+            std::string name =
+                std::to_string(oneof_desc->index()) + ". " + oneof_desc->name() + " [oneof]";
 
             // Calculate indentation
             const int spaces = 8;
@@ -267,6 +268,26 @@ class DefaultMessageCodec : public FieldCodecBase
             }
 
             *return_value << indent << "}\n";
+        }
+    };
+
+    struct Hash
+    {
+        static void field(std::shared_ptr<FieldCodecBase> codec, std::size_t* return_value,
+                          const google::protobuf::FieldDescriptor* field_desc)
+        {
+            codec->field_hash(return_value, field_desc);
+        }
+
+        static void oneof(std::size_t* return_value,
+                          const google::protobuf::OneofDescriptor* oneof_desc,
+                          FieldCodecBase* field_codec)
+        {
+            // Do nothing if the oneof descriptor is null
+            if (!oneof_desc)
+                return;
+
+            hash_combine(*return_value, oneof_desc->DebugString());
         }
     };
 

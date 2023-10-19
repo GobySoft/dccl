@@ -29,7 +29,7 @@ struct CodecData
     const google::protobuf::Descriptor* root_descriptor_{nullptr};
     MessageStackData message_data_;
     DynamicConditions dynamic_conditions_;
-
+    
     template <typename FieldCodecType>
     void set_codec_specific_data(std::shared_ptr<dccl::any> data)
     {

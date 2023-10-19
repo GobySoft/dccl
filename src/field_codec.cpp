@@ -350,6 +350,62 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
         *os << specific_info;
 }
 
+void dccl::FieldCodecBase::base_hash(std::size_t* hash, const google::protobuf::Descriptor* desc,
+                                     MessagePart part)
+{
+    BaseRAII scoped_globals(this, part, desc);
+
+    internal::MessageStack msg_handler(root_message(), message_data());
+    if (desc)
+        msg_handler.push(desc);
+    else
+        throw(Exception("Hash called with NULL Descriptor"));
+
+    field_hash(hash, static_cast<google::protobuf::FieldDescriptor*>(nullptr));
+}
+
+void dccl::FieldCodecBase::field_hash(std::size_t* hash_value,
+                                      const google::protobuf::FieldDescriptor* field)
+{
+    internal::MessageStack msg_handler(root_message(), message_data(), field);
+
+    if (field && dccl_field_options().in_head() && variable_size())
+        throw(Exception("Variable size codec used in header - header fields must be encoded with "
+                        "fixed size codec."));
+
+    if (field && dccl_field_options().in_head() && is_part_of_oneof(field))
+        throw(Exception(
+            "Oneof field used in header - oneof fields cannot be encoded in the header."));
+
+    if (this_field())
+    {
+        google::protobuf::FieldDescriptorProto field_to_hash;
+        this_field()->CopyTo(&field_to_hash);
+
+        // name doesn't affect encoding
+        field_to_hash.clear_name();
+        // we will handle dccl options separately, non-dccl options don't affect encoding
+        field_to_hash.clear_options();
+        field_to_hash.clear_type_name();
+        field_to_hash.clear_default_value();
+
+        dccl::DCCLFieldOptions dccl_opts = dccl_field_options();
+
+        hash_combine(*hash_value, field_to_hash.DebugString());
+        hash_combine(*hash_value, dccl_opts.DebugString());
+    }
+    else
+    {
+        // root level message
+        dccl::DCCLMessageOptions dccl_opts = this_descriptor()->options().GetExtension(dccl::msg);
+        dccl_opts.clear_max_bytes(); // max bytes doesn't affect encoding
+
+        hash_combine(*hash_value, dccl_opts.DebugString());
+    }
+
+    hash_combine(*hash_value, hash());
+}
+
 std::string dccl::FieldCodecBase::codec_group(const google::protobuf::Descriptor* desc)
 {
     if (desc->options().GetExtension(dccl::msg).has_codec_group())
