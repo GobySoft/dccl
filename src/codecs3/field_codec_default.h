@@ -74,7 +74,8 @@ class DefaultEnumCodec
 /// [length of following string size: ceil(log2(max_length))][string]
 class DefaultStringCodec : public TypedFieldCodec<std::string>
 {
-  private:
+  public:
+    void validate() override;
     Bitset encode() override;
     Bitset encode(const std::string& wire_value) override;
     std::string decode(Bitset* bits) override;
@@ -82,7 +83,6 @@ class DefaultStringCodec : public TypedFieldCodec<std::string>
     unsigned size(const std::string& wire_value) override;
     unsigned max_size() override;
     unsigned min_size() override;
-    void validate() override;
 };
 
 } // namespace v3
