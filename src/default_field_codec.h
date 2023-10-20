@@ -38,92 +38,171 @@ namespace dccl
 //
 // Helper functions to reduce copy/paste in set_default_codecs()
 //
-template <int version> struct DefaultFieldCodecAdder
+template <int version> struct DefaultFieldCodecLoader
 {
-    template <int dummy> static void add(FieldCodecManagerLocal& manager);
-    template <int dummy, typename T, typename... Types>
-    static void add(FieldCodecManagerLocal& manager);
+    static_assert(sizeof(DefaultFieldCodecLoader) == 0,
+                  "Must use specialization of DefaultFieldCodecLoader");
 };
 
-template <int version> void add_time_field_codecs(FieldCodecManagerLocal& manager) {}
-template <int version, typename T, typename... Types>
-void add_time_field_codecs(FieldCodecManagerLocal& manager)
+template <int version> struct TimeCodecLoader
 {
-    std::string name = "dccl.time" + std::to_string(version);
-    switch (version)
-    {
-        case 2: manager.add<v2::TimeCodec<T>>(name); break;
-        case 3: manager.add<v3::TimeCodec<T>>(name); break;
-        case 4: manager.add<v4::TimeCodec<T>>(name); break;
-    }
-    add_time_field_codecs<version, Types...>(manager);
-}
+    static_assert(sizeof(TimeCodecLoader) == 0, "Must use specialization of TimeCodecLoader");
+};
 
-template <int version> void add_static_field_codecs(FieldCodecManagerLocal& manager) {}
-template <int version, typename T, typename... Types>
-void add_static_field_codecs(FieldCodecManagerLocal& manager)
+template <int version> struct StaticCodecLoader
 {
-    std::string name = "dccl.static" + std::to_string(version);
-    switch (version)
-    {
-        case 2: manager.add<v2::StaticCodec<T>>(name); break;
-        case 3: manager.add<v3::StaticCodec<T>>(name); break;
-        case 4: manager.add<v4::StaticCodec<T>>(name); break;
-    }
-    add_static_field_codecs<version, Types...>(manager);
-}
+    static_assert(sizeof(StaticCodecLoader) == 0, "Must use specialization of StaticCodecLoader");
+};
 
-template <int version> void add_presence_field_codecs(FieldCodecManagerLocal& manager)
+template <int version> struct PresenceCodecLoader
 {
-    std::string name = "dccl.presence" + std::to_string(version);
-    switch (version)
-    {
-        case 3: manager.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>(name); break;
-        case 4: manager.add<v4::PresenceBitCodec<v4::DefaultEnumCodec>>(name); break;
-    }
-}
-template <int version, typename T, typename... Types>
-void add_presence_field_codecs(FieldCodecManagerLocal& manager)
+    static_assert(sizeof(PresenceCodecLoader) == 0,
+                  "Must use specialization of PresenceCodecLoader");
+};
+
+template <int version> struct VarBytesCodecLoader
 {
-    std::string name = "dccl.presence" + std::to_string(version);
-    switch (version)
-    {
-        case 3: manager.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<T>>>(name); break;
-        case 4: manager.add<v4::PresenceBitCodec<v4::DefaultNumericFieldCodec<T>>>(name); break;
-    }
-    add_presence_field_codecs<version, Types...>(manager);
-}
+    static_assert(sizeof(VarBytesCodecLoader) == 0,
+                  "Must use specialization of VarBytesCodecLoader");
+};
+
+template <int version> struct HashCodecLoader
+{
+    static_assert(sizeof(HashCodecLoader) == 0, "Must use specialization of HashCodecLoader");
+};
+
 } // namespace dccl
 #endif
 
 namespace dccl
 {
-
-template <>
-template <int dummy>
-void DefaultFieldCodecAdder<CODEC_VERSION>::add(FieldCodecManagerLocal& manager)
+// replace recursion with C++ 17 fold expression when we can
+template <> struct DefaultFieldCodecLoader<CODEC_VERSION>
 {
-    using namespace CODEC_VERSION_NAMESPACE;
-    using google::protobuf::FieldDescriptor;
+    // entry
+    static void add(FieldCodecManagerLocal& manager)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        using google::protobuf::FieldDescriptor;
 
-    std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
-    manager.add<DefaultBoolCodec>(name);
-    manager.add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(name);
-    manager.add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(name);
-    manager.add<DefaultEnumCodec>(name);
-    manager.add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(name);
-}
+        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        manager.add<DefaultBoolCodec>(name);
+        manager.add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(name);
+        manager.add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(name);
+        manager.add<DefaultEnumCodec>(name);
+        manager.add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(name);
 
-template <>
-template <int dummy, typename T, typename... Types>
-void DefaultFieldCodecAdder<CODEC_VERSION>::add(FieldCodecManagerLocal& manager)
-{
-    using namespace CODEC_VERSION_NAMESPACE;
-    std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
-    manager.add<DefaultNumericFieldCodec<T>>(name);
+        add<true, double, float, int32, int64, uint32, uint64>(manager);
+    }
+
     // recurse
-    add<0, Types...>(manager);
-}
+    template <bool enable, typename T, typename... Types>
+    static void add(FieldCodecManagerLocal& manager)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        manager.add<DefaultNumericFieldCodec<T>>(name);
+        // recurse
+        add<enable, Types...>(manager);
+    }
+
+    // last
+    template <bool enable> static void add(FieldCodecManagerLocal& manager) {}
+};
+
+template <int version> struct TimeCodecLoader;
+template <> struct TimeCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager,
+                    const std::string& name = "dccl.time" + std::to_string(CODEC_VERSION))
+    {
+        add<true, double, int64, uint64>(manager, name);
+    }
+
+    template <bool enable, typename T, typename... Types>
+    static void add(FieldCodecManagerLocal& manager, const std::string& name)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        manager.add<TimeCodec<T>>(name);
+        add<enable, Types...>(manager, name);
+    }
+    template <bool enable> static void add(FieldCodecManagerLocal& manager, const std::string& name)
+    {
+    }
+};
+
+template <> struct StaticCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager,
+                    const std::string& name = "dccl.static" + std::to_string(CODEC_VERSION))
+    {
+        add<true, std::string, double, float, int32, int64, uint32, uint64>(manager, name);
+    }
+
+    template <bool enable, typename T, typename... Types>
+    static void add(FieldCodecManagerLocal& manager, const std::string& name)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        manager.add<StaticCodec<T>>(name);
+        add<enable, Types...>(manager, name);
+    }
+
+    template <bool enable> static void add(FieldCodecManagerLocal& manager, const std::string& name)
+    {
+    }
+};
+
+#if CODEC_VERSION >= 3
+template <> struct PresenceCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        manager.add<PresenceBitCodec<DefaultEnumCodec>>(name_);
+        add<true, double, float, int32, int64, uint32, uint64>(manager);
+    }
+
+    template <bool enable, typename T, typename... Types>
+    static void add(FieldCodecManagerLocal& manager)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        manager.add<PresenceBitCodec<DefaultNumericFieldCodec<T>>>(name_);
+        add<enable, Types...>(manager);
+    }
+
+    template <bool enable> static void add(FieldCodecManagerLocal& manager) {}
+
+  private:
+    static const std::string name_;
+};
+
+const std::string PresenceCodecLoader<CODEC_VERSION>::name_{"dccl.presence" +
+                                                            std::to_string(CODEC_VERSION)};
+
+template <> struct VarBytesCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager)
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        manager.add<VarBytesCodec>("dccl.var_bytes" + std::to_string(CODEC_VERSION));
+    }
+};
+
+#endif
+
+#if CODEC_VERSION >= 4
+template <> struct HashCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager, std::set<int> versions = {CODEC_VERSION})
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        // backport versions
+        for (int v : versions) manager.add<HashCodec>("dccl.hash" + std::to_string(v));
+    }
+};
+
+#endif
 
 } // namespace dccl
 
