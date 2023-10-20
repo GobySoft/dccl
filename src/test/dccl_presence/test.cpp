@@ -26,11 +26,10 @@
 #include "test/dccl_presence/test.pb.h"
 using namespace dccl::test;
 
-
 void test1(dccl::Codec&);
 void test2(dccl::Codec&);
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int /*argc*/, char* /*argv*/[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
@@ -106,6 +105,9 @@ void test2(dccl::Codec& codec)
     msg_in.set_opt_float(-900.12345);
     msg_in.set_opt_double(900.12345678);
     msg_in.set_opt_enum(ENUM2_A);
+    msg_in.set_opt_bool(true);
+    msg_in.set_opt_str("ABCDE");
+    msg_in.set_opt_bytes("XY");
 
     msg_in.add_repeat_i32(500);
     msg_in.add_repeat_enum(ENUM2_A);
@@ -115,7 +117,7 @@ void test2(dccl::Codec& codec)
     std::string encoded;
     codec.encode(&encoded, msg_in);
 
-    assert(encoded.size() == 33);
+    assert(encoded.size() == 41);
 
     PresenceMsg msg_out;
     codec.decode(encoded, &msg_out);

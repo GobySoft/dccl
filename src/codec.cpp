@@ -97,33 +97,35 @@ void dccl::Codec::set_default_codecs()
 {
     using google::protobuf::FieldDescriptor;
 
+    //
     // version 2
-    DefaultFieldCodecLoader<2>::add(manager_);
-    TimeCodecLoader<2>::add(manager_);
-    StaticCodecLoader<2>::add(manager_);
+    //
+    internal::DefaultFieldCodecLoader<2>::add(manager_);
+    internal::TimeCodecLoader<2>::add(manager_);
+    internal::StaticCodecLoader<2>::add(manager_);
 
     // backwards compatibility names (deprecated)
-    TimeCodecLoader<2>::add(manager_, "_time");
-    StaticCodecLoader<2>::add(manager_, "_static");
+    internal::TimeCodecLoader<2>::add(manager_, "_time");
+    internal::StaticCodecLoader<2>::add(manager_, "_static");
 
     //
     // version 3
     //
-    DefaultFieldCodecLoader<3>::add(manager_);
-    TimeCodecLoader<3>::add(manager_);
-    StaticCodecLoader<3>::add(manager_);
-    PresenceCodecLoader<3>::add(manager_);
-    VarBytesCodecLoader<3>::add(manager_);
+    internal::DefaultFieldCodecLoader<3>::add(manager_);
+    internal::TimeCodecLoader<3>::add(manager_);
+    internal::StaticCodecLoader<3>::add(manager_);
+    internal::PresenceCodecLoader<3>::add(manager_);
+    internal::VarBytesCodecLoader<3>::add(manager_);
 
     //
     // version 4
     //
-    DefaultFieldCodecLoader<4>::add(manager_);
-    TimeCodecLoader<4>::add(manager_);
-    StaticCodecLoader<4>::add(manager_);
-    PresenceCodecLoader<4>::add(manager_);
-    VarBytesCodecLoader<4>::add(manager_);
-    HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
+    internal::DefaultFieldCodecLoader<4>::add(manager_);
+    internal::TimeCodecLoader<4>::add(manager_);
+    internal::StaticCodecLoader<4>::add(manager_);
+    internal::PresenceCodecLoader<4>::add(manager_);
+    internal::VarBytesCodecLoader<4>::add(manager_);
+    internal::HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,
