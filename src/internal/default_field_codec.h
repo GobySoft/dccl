@@ -35,6 +35,10 @@
 
 namespace dccl
 {
+
+namespace internal
+{
+
 //
 // Helper functions to reduce copy/paste in set_default_codecs()
 //
@@ -71,12 +75,15 @@ template <int version> struct HashCodecLoader
     static_assert(sizeof(HashCodecLoader) == 0, "Must use specialization of HashCodecLoader");
 };
 
+} // namespace internal
 } // namespace dccl
 #endif
 
 namespace dccl
 {
-// replace recursion with C++ 17 fold expression when we can
+namespace internal
+{
+// replace recursion with C++ 17 fold expression when we switch to C++ 17 or newer
 template <> struct DefaultFieldCodecLoader<CODEC_VERSION>
 {
     // entry
@@ -85,7 +92,7 @@ template <> struct DefaultFieldCodecLoader<CODEC_VERSION>
         using namespace CODEC_VERSION_NAMESPACE;
         using google::protobuf::FieldDescriptor;
 
-        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        std::string name = ::dccl::Codec::default_codec_name(CODEC_VERSION);
         manager.add<DefaultBoolCodec>(name);
         manager.add<DefaultStringCodec, FieldDescriptor::TYPE_STRING>(name);
         manager.add<DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(name);
@@ -100,7 +107,7 @@ template <> struct DefaultFieldCodecLoader<CODEC_VERSION>
     static void add(FieldCodecManagerLocal& manager)
     {
         using namespace CODEC_VERSION_NAMESPACE;
-        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        std::string name = ::dccl::Codec::default_codec_name(CODEC_VERSION);
         manager.add<DefaultNumericFieldCodec<T>>(name);
         // recurse
         add<enable, Types...>(manager);
@@ -158,7 +165,15 @@ template <> struct PresenceCodecLoader<CODEC_VERSION>
     static void add(FieldCodecManagerLocal& manager)
     {
         using namespace CODEC_VERSION_NAMESPACE;
+        using google::protobuf::FieldDescriptor;
+
+        manager.add<PresenceBitCodec<DefaultBoolCodec>>(name_);
+        manager.add<PresenceBitCodec<DefaultStringCodec>, FieldDescriptor::TYPE_STRING>(name_);
+        manager.add<PresenceBitCodec<DefaultBytesCodec>, FieldDescriptor::TYPE_BYTES>(name_);
         manager.add<PresenceBitCodec<DefaultEnumCodec>>(name_);
+
+        // use normal default meessage codec
+        manager.add<DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(name_);
         add<true, double, float, int32, int64, uint32, uint64>(manager);
     }
 
@@ -166,7 +181,7 @@ template <> struct PresenceCodecLoader<CODEC_VERSION>
     static void add(FieldCodecManagerLocal& manager)
     {
         using namespace CODEC_VERSION_NAMESPACE;
-        std::string name = dccl::Codec::default_codec_name(CODEC_VERSION);
+        std::string name = ::dccl::Codec::default_codec_name(CODEC_VERSION);
         manager.add<PresenceBitCodec<DefaultNumericFieldCodec<T>>>(name_);
         add<enable, Types...>(manager);
     }
@@ -204,6 +219,7 @@ template <> struct HashCodecLoader<CODEC_VERSION>
 
 #endif
 
+} // namespace internal
 } // namespace dccl
 
 #undef CODEC_VERSION

@@ -35,7 +35,7 @@ namespace v3
 // if repeated: [M bits - prefix with the number of repeated values][same as "required" for value with index 0][same as "required" for index = 1]...[same as required for last index]
 class VarBytesCodec : public dccl::TypedFieldCodec<std::string>
 {
-  private:
+  public:
     dccl::Bitset encode() override;
     dccl::Bitset encode(const std::string& wire_value) override;
     std::string decode(dccl::Bitset* bits) override;
