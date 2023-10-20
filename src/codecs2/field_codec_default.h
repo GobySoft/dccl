@@ -255,11 +255,12 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
 /// [presence bit (0 bits if required, 1 bit if optional)][value (1 bit)]
 class DefaultBoolCodec : public TypedFixedFieldCodec<bool>
 {
-  private:
+  public:
     Bitset encode(const bool& wire_value) override;
     Bitset encode() override;
     bool decode(Bitset* bits) override;
     unsigned size() override;
+    unsigned size(const bool& wire_value) override { return size(); }
     void validate() override;
 };
 
@@ -288,7 +289,7 @@ class DefaultStringCodec : public TypedFieldCodec<std::string>
 /// \brief Provides an fixed length byte string encoder.
 class DefaultBytesCodec : public TypedFieldCodec<std::string>
 {
-  private:
+  public:
     Bitset encode() override;
     Bitset encode(const std::string& wire_value) override;
     std::string decode(Bitset* bits) override;
