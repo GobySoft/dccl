@@ -1,0 +1,77 @@
+// Copyright 2019-2022:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message TestMsgOmit1
+{
+    option (dccl.msg).omit_id = true;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    // test default enc/dec
+    required double d = 1 [
+        (dccl.field).min = -100,
+        (dccl.field).max = 126,
+        (dccl.field).precision = 2
+    ];
+    optional int32 i = 3 [(dccl.field).min = -20, (dccl.field).max = 3000];
+}
+
+message TestMsgOmit2
+{
+    option (dccl.msg).omit_id = true;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required uint32 u = 1 [(dccl.field).min = 10, (dccl.field).max = 20];
+}
+
+message TestMsgNormal
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required float f = 1 [
+        (dccl.field).min = -10,
+        (dccl.field).max = 10,
+        (dccl.field).precision = 1
+    ];
+}
+
+
+message TestMsgNormalId3
+{
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required float f = 1 [
+        (dccl.field).min = -10,
+        (dccl.field).max = 10,
+        (dccl.field).precision = 1
+    ];
+}
