@@ -37,9 +37,10 @@ namespace v3
 {
 // all these are the same as version 2
 template <typename WireType, typename FieldType = WireType>
-class DefaultNumericFieldCodec : public v2::DefaultNumericFieldCodec<WireType, FieldType>
-{
-};
+using DefaultNumericFieldCodec = v2::DefaultNumericFieldCodec<WireType, FieldType>;
+
+template <typename TimeType> using TimeCodec = v2::TimeCodec<TimeType>;
+template <typename T> using StaticCodec = v2::StaticCodec<T>;
 
 using DefaultBoolCodec = v2::DefaultBoolCodec;
 using DefaultBytesCodec = v2::DefaultBytesCodec;
@@ -68,31 +69,13 @@ class DefaultEnumCodec
     double min() override;
 };
 
-template <typename TimeType> class TimeCodec : public v2::TimeCodecBase<TimeType, 0>
-{
-    static_assert(sizeof(TimeCodec) == 0, "Must use specialization of TimeCodec");
-};
-
-template <> class TimeCodec<uint64> : public v2::TimeCodecBase<uint64, 1000000>
-{
-};
-template <> class TimeCodec<int64> : public v2::TimeCodecBase<int64, 1000000>
-{
-};
-template <> class TimeCodec<double> : public v2::TimeCodecBase<double, 1>
-{
-};
-
-template <typename T> class StaticCodec : public v2::StaticCodec<T>
-{
-};
-
 /// \brief Provides an variable length ASCII string encoder.
 ///
 /// [length of following string size: ceil(log2(max_length))][string]
 class DefaultStringCodec : public TypedFieldCodec<std::string>
 {
-  private:
+  public:
+    void validate() override;
     Bitset encode() override;
     Bitset encode(const std::string& wire_value) override;
     std::string decode(Bitset* bits) override;
@@ -100,7 +83,6 @@ class DefaultStringCodec : public TypedFieldCodec<std::string>
     unsigned size(const std::string& wire_value) override;
     unsigned max_size() override;
     unsigned min_size() override;
-    void validate() override;
 };
 
 } // namespace v3

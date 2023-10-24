@@ -37,5 +37,14 @@ message GobyMessage
     required Header header = 2 [(dccl.field).in_head = true];
 
     optional int32 const_int = 3
-        [(dccl.field).static_value = "3", (dccl.field).codec = "_static"];
+        [(dccl.field).static_value = "3", (dccl.field).codec = "dccl.static"];
+}
+
+message TimeTest
+{
+    option (dccl.msg).id = 4;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 4;
+    
+    required uint64 time = 1 [(dccl.field).codec = "dccl.time"];
 }
