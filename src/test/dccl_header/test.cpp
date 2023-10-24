@@ -25,6 +25,7 @@
 // tests proper encoding of standard Goby header
 
 #include "../../codec.h"
+#include "../../codecs2/field_codec_default.h"
 #include "test.pb.h"
 
 #include <sys/time.h>
@@ -32,55 +33,88 @@
 #include "../../binary.h"
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/ [])
+template <dccl::int64 fixed_time_usec> struct DummyClock
+{
+    using time_point = std::chrono::time_point<std::chrono::system_clock>;
+    static time_point now() { return time_point(std::chrono::microseconds(fixed_time_usec)); }
+};
+
+int main(int /*argc*/, char* /*argv*/[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::Codec codec;
+    {
+        dccl::Codec codec;
+        GobyMessage msg_in1;
 
-    GobyMessage msg_in1;
+        msg_in1.set_telegram("hello!");
 
-    msg_in1.set_telegram("hello!");
+        timeval t;
+        gettimeofday(&t, nullptr);
+        dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
 
-    timeval t;
-    gettimeofday(&t, nullptr);
-    dccl::int64 now = 1000000 * static_cast<dccl::int64>(t.tv_sec);
+        msg_in1.mutable_header()->set_time(now);
+        msg_in1.mutable_header()->set_time_signed(now);
+        msg_in1.mutable_header()->set_time_double(now / 1000000);
 
-    msg_in1.mutable_header()->set_time(now);
-    msg_in1.mutable_header()->set_time_signed(now);
-    msg_in1.mutable_header()->set_time_double(now / 1000000);
+        dccl::int64 past = now / 1000000.0 - 200000;   // Pick a time 2+ days in the past.
+        dccl::int64 future = now / 1000000.0 + 200000; // Pick a time 2+ days in the future.
+        msg_in1.mutable_header()->set_pasttime_double(past);
+        msg_in1.mutable_header()->set_futuretime_double(future);
 
-    dccl::int64 past = now / 1000000.0 - 200000;   // Pick a time 2+ days in the past.
-    dccl::int64 future = now / 1000000.0 + 200000; // Pick a time 2+ days in the future.
-    msg_in1.mutable_header()->set_pasttime_double(past);
-    msg_in1.mutable_header()->set_futuretime_double(future);
+        dccl::int64 msec = t.tv_usec / 1000 * 1000;
+        msg_in1.mutable_header()->set_time_precision(now + msec);
+        msg_in1.mutable_header()->set_time_double_precision((now + t.tv_usec) / 1000000.0);
 
-    dccl::int64 msec = t.tv_usec / 1000 * 1000;
-    msg_in1.mutable_header()->set_time_precision(now + msec);
-    msg_in1.mutable_header()->set_time_double_precision((now + t.tv_usec) / 1000000.0);
+        msg_in1.mutable_header()->set_source_platform(1);
+        msg_in1.mutable_header()->set_dest_platform(3);
+        msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
+        msg_in1.set_const_int(3);
 
-    msg_in1.mutable_header()->set_source_platform(1);
-    msg_in1.mutable_header()->set_dest_platform(3);
-    msg_in1.mutable_header()->set_dest_type(Header::PUBLISH_OTHER);
-    msg_in1.set_const_int(3);
+        codec.info(msg_in1.GetDescriptor(), &std::cout);
+        std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
+        codec.load(msg_in1.GetDescriptor());
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes1;
+        codec.encode(&bytes1, msg_in1);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
 
-    codec.info(msg_in1.GetDescriptor(), &std::cout);
-    std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
-    codec.load(msg_in1.GetDescriptor());
-    std::cout << "Try encode..." << std::endl;
-    std::string bytes1;
-    codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
+        // test that adding garbage to the end does not affect decoding
+        bytes1 += std::string(10, '\0');
 
-    // test that adding garbage to the end does not affect decoding
-    bytes1 += std::string(10, '\0');
+        std::cout << "Try decode..." << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+        auto* msg_out1 = codec.decode<GobyMessage*>(bytes1);
+        std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
+        assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
+        delete msg_out1;
+    }
 
-    auto* msg_out1 = codec.decode<GobyMessage*>(bytes1);
-    std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
-    assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
-    delete msg_out1;
+    // test non-standard clock for time to allow post processing of dccl.time messages
+    {
+        dccl::Codec codec;
+        // some fixed historic time
+        constexpr dccl::int64 past_now = 1597743788000000;
+
+        // received one second later
+        dccl::v2::TimeCodecClock::set_clock<DummyClock<past_now + 1000000>>();
+
+        TimeTest msg_in1;
+        // some time in the past
+        msg_in1.set_time(past_now);
+
+        std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
+        codec.load(msg_in1.GetDescriptor());
+        std::cout << "Try encode..." << std::endl;
+        std::string bytes1;
+        codec.encode(&bytes1, msg_in1);
+        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
+
+        std::cout << "Try decode..." << std::endl;
+        auto msg_out1 = codec.decode<std::unique_ptr<google::protobuf::Message>>(bytes1);
+        std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
+        assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
+    }
 
     std::cout << "all tests passed" << std::endl;
 }

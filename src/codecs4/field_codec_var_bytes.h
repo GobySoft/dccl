@@ -1,9 +1,7 @@
-// Copyright 2009-2022:
+// Copyright 2018:
 //   GobySoft, LLC (2013-)
-//   Massachusetts Institute of Technology (2007-2014)
 //   Community contributors (see AUTHORS file)
 // File authors:
-//   Davide Fenucci <davfen@noc.ac.uk>
 //   Toby Schneider <toby@gobysoft.org>
 //
 //
@@ -22,32 +20,16 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-// implements FieldCodecBase for all the basic DCCL types for version 3
+#ifndef FIELD_CODEC4_VAR_BYTES_H
+#define FIELD_CODEC4_VAR_BYTES_H
 
-#ifndef DCCLV4FIELDCODECDEFAULT20210701H
-#define DCCLV4FIELDCODECDEFAULT20210701H
-
-#include "../codecs3/field_codec_default.h"
 #include "../codecs3/field_codec_var_bytes.h"
 
 namespace dccl
 {
-/// DCCL version 4 default field codecs
 namespace v4
 {
-// all these are the same as version 3
-template <typename WireType, typename FieldType = WireType>
-using DefaultNumericFieldCodec = v3::DefaultNumericFieldCodec<WireType, FieldType>;
-
-using DefaultBoolCodec = v3::DefaultBoolCodec;
-using DefaultEnumCodec = v3::DefaultEnumCodec;
-
-using DefaultBytesCodec = v3::VarBytesCodec;
-using DefaultStringCodec = v3::VarBytesCodec;
-
-template <typename TimeType> using TimeCodec = v3::TimeCodec<TimeType>;
-template <typename T> using StaticCodec = v3::StaticCodec<T>;
-
+using VarBytesCodec = v3::VarBytesCodec;
 } // namespace v4
 } // namespace dccl
 

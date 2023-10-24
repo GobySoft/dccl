@@ -37,20 +37,20 @@ message Header
     // microseconds since Unix
 
     // second precision (default)
-    required uint64 time = 10 [(dccl.field).codec = "_time"];
+    required uint64 time = 10 [(dccl.field).codec = "dccl.time"];
 
-    optional int64 time_signed = 20 [(dccl.field).codec = "_time"];
-    optional double time_double = 21 [(dccl.field).codec = "_time"];
+    optional int64 time_signed = 20 [(dccl.field).codec = "dccl.time"];
+    optional double time_double = 21 [(dccl.field).codec = "dccl.time"];
     optional double pasttime_double = 22
-        [(dccl.field).codec = "_time", (dccl.field).num_days = 6];
+        [(dccl.field).codec = "dccl.time", (dccl.field).num_days = 6];
     optional double futuretime_double = 23
-        [(dccl.field).codec = "_time", (dccl.field).num_days = 6];
+        [(dccl.field).codec = "dccl.time", (dccl.field).num_days = 6];
 
     // microsecond precision
     optional int64 time_precision = 24
-        [(dccl.field).codec = "_time", (dccl.field).precision = -3];
+        [(dccl.field).codec = "dccl.time", (dccl.field).precision = -3];
     optional double time_double_precision = 25
-        [(dccl.field).codec = "_time", (dccl.field).precision = 6];
+        [(dccl.field).codec = "dccl.time", (dccl.field).precision = 6];
 
     //
     // source

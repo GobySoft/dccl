@@ -112,14 +112,15 @@ class FieldCodecManagerLocal
 
     /// \brief Find the codec for a given field. For embedded messages, prefers (dccl.field).codec (inside field) over (dccl.msg).codec (inside embedded message).
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::FieldDescriptor* field,
-                                         bool has_codec_group, const std::string& codec_group) const
+                                         int codec_version, bool has_codec_group,
+                                         const std::string& codec_group) const
     {
         std::string name = __find_codec(field, has_codec_group, codec_group);
 
         if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
-            return find(field->message_type(), name);
+            return find(field->message_type(), codec_version, name);
         else
-            return __find(field->type(), name);
+            return __find(field->type(), codec_version, name, "");
     }
 
     /// \brief Find the codec for a given base (or embedded) message.
@@ -127,7 +128,7 @@ class FieldCodecManagerLocal
     /// \param desc Message descriptor to find codec for
     /// \param name Codec name (used for embedded messages to prefer the codec listed as a field option). Omit for finding the codec of a base message (one that is not embedded).
     std::shared_ptr<FieldCodecBase> find(const google::protobuf::Descriptor* desc,
-                                         std::string name = "") const
+                                         int codec_version = 0, std::string name = "") const
     {
         // this was called on the root message
         if (name.empty())
@@ -137,15 +138,17 @@ class FieldCodecManagerLocal
                 name = desc->options().GetExtension(dccl::msg).codec();
             else
                 name = FieldCodecBase::codec_group(desc);
+            codec_version = desc->options().GetExtension(dccl::msg).codec_version();
         }
 
-        return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE, name, desc->full_name());
+        return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE, codec_version, name,
+                      desc->full_name());
     }
 
     std::shared_ptr<FieldCodecBase> find(google::protobuf::FieldDescriptor::Type type,
-                                         std::string name) const
+                                         int codec_version, std::string name) const
     {
-        return __find(type, name);
+        return __find(type, codec_version, name, "");
     }
 
     void clear()
@@ -169,8 +172,8 @@ class FieldCodecManagerLocal
 
   private:
     std::shared_ptr<FieldCodecBase> __find(google::protobuf::FieldDescriptor::Type type,
-                                           const std::string& codec_name,
-                                           const std::string& type_name = "") const;
+                                           int codec_version, const std::string& codec_name,
+                                           const std::string& type_name) const;
 
     std::string __mangle_name(const std::string& codec_name, const std::string& type_name) const
     {
@@ -217,6 +220,8 @@ class FieldCodecManagerLocal
             return dccl_field_options.codec();
     }
 
+    void check_deprecated(const std::string& name) const;
+
   private:
     using InsideMap = std::map<std::string, std::shared_ptr<FieldCodecBase>>;
     std::map<google::protobuf::FieldDescriptor::Type, InsideMap> codecs_;
@@ -225,6 +230,7 @@ class FieldCodecManagerLocal
     internal::CodecData codec_data_;
 
     std::map<const google::protobuf::Descriptor*, std::size_t> hashes_;
+    std::map<std::string, std::string> deprecated_names_;
 };
 
 class FieldCodecManager

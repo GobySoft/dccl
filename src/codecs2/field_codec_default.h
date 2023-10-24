@@ -30,7 +30,7 @@
 #ifndef DCCLFIELDCODECDEFAULT20110322H
 #define DCCLFIELDCODECDEFAULT20110322H
 
-#include <sys/time.h>
+#include <chrono>
 
 #include <google/protobuf/descriptor.h>
 
@@ -39,6 +39,7 @@
 #include "../binary.h"
 #include "../field_codec.h"
 #include "../field_codec_fixed.h"
+#include "../thread_safety.h"
 #include "field_codec_default_message.h"
 
 namespace dccl
@@ -254,11 +255,12 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
 /// [presence bit (0 bits if required, 1 bit if optional)][value (1 bit)]
 class DefaultBoolCodec : public TypedFixedFieldCodec<bool>
 {
-  private:
+  public:
     Bitset encode(const bool& wire_value) override;
     Bitset encode() override;
     bool decode(Bitset* bits) override;
     unsigned size() override;
+    unsigned size(const bool& wire_value) override { return size(); }
     void validate() override;
 };
 
@@ -287,7 +289,7 @@ class DefaultStringCodec : public TypedFieldCodec<std::string>
 /// \brief Provides an fixed length byte string encoder.
 class DefaultBytesCodec : public TypedFieldCodec<std::string>
 {
-  private:
+  public:
     Bitset encode() override;
     Bitset encode(const std::string& wire_value) override;
     std::string decode(Bitset* bits) override;
@@ -312,7 +314,7 @@ class DefaultEnumCodec
     {
         return std::hash<std::string>{}(this_field()->enum_type()->DebugString());
     }
-    
+
     double max() override
     {
         const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
@@ -321,14 +323,65 @@ class DefaultEnumCodec
     double min() override { return 0; }
 };
 
+class TimeCodecClock
+{
+  public:
+    TimeCodecClock()
+    {
+        // if no other clock, set std::chrono::system_clock as clock
+        if (!this->has_clock())
+            this->set_clock<std::chrono::system_clock>();
+    }
+
+    template <typename Clock> static void set_clock()
+    {
+#if DCCL_THREAD_SUPPORT
+        const std::lock_guard<std::mutex> lock(clock_mutex_);
+#endif
+
+        epoch_sec_func_ = []() -> int64
+        {
+            typename Clock::time_point now = Clock::now();
+            std::chrono::seconds sec =
+                std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+            return sec.count();
+        };
+    }
+    static bool has_clock()
+    {
+#if DCCL_THREAD_SUPPORT
+        const std::lock_guard<std::mutex> lock(clock_mutex_);
+#endif
+        return epoch_sec_func_ ? true : false;
+    }
+
+  protected:
+    static int64 epoch_sec()
+    {
+#if DCCL_THREAD_SUPPORT
+        const std::lock_guard<std::mutex> lock(clock_mutex_);
+#endif
+        return epoch_sec_func_();
+    }
+
+  private:
+#if DCCL_THREAD_SUPPORT
+    static std::mutex clock_mutex_;
+#endif
+    static std::function<int64()> epoch_sec_func_;
+};
+
 typedef double time_wire_type;
 /// \brief Encodes time of day (default: second precision, but can be set with (dccl.field).precision extension)
 ///
 /// \tparam TimeType A type representing time: See the various specializations of this class for allowed types.
 template <typename TimeType, int conversion_factor>
-class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
+class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>,
+                      public TimeCodecClock
 {
   public:
+    TimeCodecBase() {}
+
     time_wire_type pre_encode(const TimeType& time_of_day) override
     {
         time_wire_type max_secs = max();
@@ -337,22 +390,16 @@ class TimeCodecBase : public DefaultNumericFieldCodec<time_wire_type, TimeType>
 
     TimeType post_decode(const time_wire_type& encoded_time) override
     {
-        auto max_secs = (int64)max();
-        timeval t;
-        gettimeofday(&t, nullptr);
-        int64 now = t.tv_sec;
-        int64 daystart = now - (now % max_secs);
-        int64 today_time = now - daystart;
+        auto max_secs = static_cast<int64>(max());
+        int64_t now_secs = this->epoch_sec();
+        int64 daystart = now_secs - (now_secs % max_secs);
+        int64 today_time = now_secs - daystart;
 
         // If time is more than 12 hours ahead of now, assume it's yesterday.
         if ((encoded_time - today_time) > (max_secs / 2))
-        {
             daystart -= max_secs;
-        }
         else if ((today_time - encoded_time) > (max_secs / 2))
-        {
             daystart += max_secs;
-        }
 
         return dccl::round((TimeType)(conversion_factor * (daystart + encoded_time)),
                            precision() - std::log10((double)conversion_factor));

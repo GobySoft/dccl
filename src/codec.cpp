@@ -48,14 +48,14 @@
 #endif // CRYPTOPP_PATH_USES_PLUS_SIGN
 #endif // HAS_CRYPTOPP
 
-#include "codecs2/field_codec_default.h"
-#include "codecs3/field_codec_default.h"
-#include "codecs3/field_codec_presence.h"
 #include "codecs3/field_codec_var_bytes.h"
-#include "codecs4/field_codec_default.h"
-#include "codecs4/field_codec_default_message.h"
 #include "codecs4/field_codec_hash.h"
+#include "codecs4/field_codec_var_bytes.h"
 #include "field_codec_id.h"
+
+#include "codecs2/default_field_codec_impl.h"
+#include "codecs3/default_field_codec_impl.h"
+#include "codecs4/default_field_codec_impl.h"
 
 #include "option_extensions.pb.h"
 
@@ -97,84 +97,35 @@ void dccl::Codec::set_default_codecs()
 {
     using google::protobuf::FieldDescriptor;
 
+    //
     // version 2
-    manager_.add<v2::DefaultNumericFieldCodec<double>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<float>>(default_codec_name());
-    manager_.add<v2::DefaultBoolCodec>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<int32>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<int64>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<uint32>>(default_codec_name());
-    manager_.add<v2::DefaultNumericFieldCodec<uint64>>(default_codec_name());
-    manager_.add<v2::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name());
-    manager_.add<v2::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name());
-    manager_.add<v2::DefaultEnumCodec>(default_codec_name());
-    manager_.add<v2::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name());
+    //
+    internal::DefaultFieldCodecLoader<2>::add(manager_);
+    internal::TimeCodecLoader<2>::add(manager_);
+    internal::StaticCodecLoader<2>::add(manager_);
 
-    manager_.add<v2::TimeCodec<uint64>>("dccl.time2");
-    manager_.add<v2::TimeCodec<int64>>("dccl.time2");
-    manager_.add<v2::TimeCodec<double>>("dccl.time2");
+    // backwards compatibility names (deprecated)
+    internal::TimeCodecLoader<2>::add(manager_, "_time");
+    internal::StaticCodecLoader<2>::add(manager_, "_static");
 
-    manager_.add<v2::StaticCodec<std::string>>("dccl.static2");
-    manager_.add<v2::StaticCodec<double>>("dccl.static2");
-    manager_.add<v2::StaticCodec<float>>("dccl.static2");
-    manager_.add<v2::StaticCodec<int32>>("dccl.static2");
-    manager_.add<v2::StaticCodec<int64>>("dccl.static2");
-    manager_.add<v2::StaticCodec<uint32>>("dccl.static2");
-    manager_.add<v2::StaticCodec<uint64>>("dccl.static2");
-
+    //
     // version 3
-    manager_.add<v3::DefaultNumericFieldCodec<double>>(default_codec_name(3));
-    manager_.add<v3::DefaultNumericFieldCodec<float>>(default_codec_name(3));
-    manager_.add<v3::DefaultBoolCodec>(default_codec_name(3));
-    manager_.add<v3::DefaultNumericFieldCodec<int32>>(default_codec_name(3));
-    manager_.add<v3::DefaultNumericFieldCodec<int64>>(default_codec_name(3));
-    manager_.add<v3::DefaultNumericFieldCodec<uint32>>(default_codec_name(3));
-    manager_.add<v3::DefaultNumericFieldCodec<uint64>>(default_codec_name(3));
-    manager_.add<v3::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(3));
-    manager_.add<v3::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(3));
-    manager_.add<v3::DefaultEnumCodec>(default_codec_name(3));
-    manager_.add<v3::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(3));
+    //
+    internal::DefaultFieldCodecLoader<3>::add(manager_);
+    internal::TimeCodecLoader<3>::add(manager_);
+    internal::StaticCodecLoader<3>::add(manager_);
+    internal::PresenceCodecLoader<3>::add(manager_);
+    internal::VarBytesCodecLoader<3>::add(manager_);
 
+    //
     // version 4
-    manager_.add<v4::DefaultNumericFieldCodec<double>>(default_codec_name(4));
-    manager_.add<v4::DefaultNumericFieldCodec<float>>(default_codec_name(4));
-    manager_.add<v4::DefaultBoolCodec>(default_codec_name(4));
-    manager_.add<v4::DefaultNumericFieldCodec<int32>>(default_codec_name(4));
-    manager_.add<v4::DefaultNumericFieldCodec<int64>>(default_codec_name(4));
-    manager_.add<v4::DefaultNumericFieldCodec<uint32>>(default_codec_name(4));
-    manager_.add<v4::DefaultNumericFieldCodec<uint64>>(default_codec_name(4));
-    manager_.add<v4::DefaultStringCodec, FieldDescriptor::TYPE_STRING>(default_codec_name(4));
-    manager_.add<v4::DefaultBytesCodec, FieldDescriptor::TYPE_BYTES>(default_codec_name(4));
-    manager_.add<v4::DefaultEnumCodec>(default_codec_name(4));
-    manager_.add<v4::DefaultMessageCodec, FieldDescriptor::TYPE_MESSAGE>(default_codec_name(4));
-
-    // presence bit codec, which encode empty optional fields with a single bit
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<double>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<float>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int32>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<int64>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint32>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultNumericFieldCodec<uint64>>>("dccl.presence");
-    manager_.add<v3::PresenceBitCodec<v3::DefaultEnumCodec>>("dccl.presence");
-
-    // hash codec
-    manager_.add<v4::HashCodec>("dccl.hash");
-
-    // alternative bytes codec that more efficiently encodes variable length bytes fields
-    manager_.add<v3::VarBytesCodec, FieldDescriptor::TYPE_BYTES>("dccl.var_bytes");
-
-    // for backwards compatibility
-    manager_.add<v2::TimeCodec<uint64>>("_time");
-    manager_.add<v2::TimeCodec<int64>>("_time");
-    manager_.add<v2::TimeCodec<double>>("_time");
-
-    manager_.add<v2::StaticCodec<std::string>>("_static");
-    manager_.add<v2::StaticCodec<double>>("_static");
-    manager_.add<v2::StaticCodec<float>>("_static");
-    manager_.add<v2::StaticCodec<int32>>("_static");
-    manager_.add<v2::StaticCodec<int64>>("_static");
-    manager_.add<v2::StaticCodec<uint32>>("_static");
-    manager_.add<v2::StaticCodec<uint64>>("_static");
+    //
+    internal::DefaultFieldCodecLoader<4>::add(manager_);
+    internal::TimeCodecLoader<4>::add(manager_);
+    internal::StaticCodecLoader<4>::add(manager_);
+    internal::PresenceCodecLoader<4>::add(manager_);
+    internal::VarBytesCodecLoader<4>::add(manager_);
+    internal::HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,
