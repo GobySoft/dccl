@@ -758,9 +758,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @CMAKE_SOURCE_DIR@/src/doc/doxy_body/main.dox \
-                         @CMAKE_SOURCE_DIR@/src/doc/doxy_body/idl.dox \
-                         @CMAKE_SOURCE_DIR@/src/doc/doxy_body/codecs.dox \
+INPUT                  = @CMAKE_SOURCE_DIR@/src/doc/markdown \
                          @dccl_INC_DIR@ \
                          @CMAKE_SOURCE_DIR@/src
 
@@ -807,8 +805,7 @@ FILE_PATTERNS          = *.c \
                          *.php3 \
                          *.inc \
                          *.m \
-                         *.mm \
-                         *.dox \
+                         *.mm \                       
                          *.py \
                          *.f90 \
                          *.f \
@@ -833,7 +830,8 @@ FILE_PATTERNS          = *.c \
                          *.VHD \
                          *.VHDL \
                          *.proto \
-                         *.doxy
+                         *.doxy \
+                         *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -954,7 +952,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE =
+USE_MDFILE_AS_MAINPAGE = page01_main.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
