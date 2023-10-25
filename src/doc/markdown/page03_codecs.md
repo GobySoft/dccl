@@ -137,31 +137,62 @@ Sub-messages are encoded recursively. In the case of an optional message, a pres
 
 ### Mathematical formulas for Default Field Codecs
 
-See "Table 1" in the IDL for symbol definitions. The formulas below in Table 2 refer to DCCLv3 defaults (i.e., codec_version = 3 which is equivalent to codec = "dccl.default3"). A few things that may make it easier to read this table:
-- Left bit-shifting by N bits (\f$x << N\f$) is equivalent to multiplying by powers of two to the N (\f$x \cdot 2^N\f$).
-- Right bit-shifting by N bits (\f$x >> N\f$) is equivalent to dividing by powers of two to the N (\f$x / 2^N\f$).
-- \f$\lceil x \rceil\f$ is the ceiling function, rounding up to the nearest integer.
-- \f$\lfloor x \rfloor\f$ is the floor function, rounding down to the nearest integer.
+#### DCCL Version 3
 
-| Field Type       | Encoding Bit Length Calculation | Example                                                                                                                      |
-|------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Identifier       | \f$\lceil \log_2(N + 1) \rceil\f$ if \f$N < 128\f$, \f$\lceil \log_2(N + 1) \rceil + 1\f$ if \f$N \geq 128\f$ | For ID 240, use \f$\lceil \log_2(240 + 1) \rceil + 1 = \lceil 8 \rceil + 1 = 9\f$ bits                                         |
-| Numeric          | \f$\lceil \log_2((\text{max} - \text{min}) \cdot 10^{\text{precision}} + 2) \rceil\f$                  | For a field with min = -10000, max = 10000, and precision = 1, use \f$\lceil \log_2(20000 \cdot 10 + 2) \rceil = 18\f$ bits    |
-| Enumeration      | \f$\lceil \log_2(\text{number of enum keys} + 1) \rceil\f$                                           | For an enum with keys: AUV, USV, SHIP, use \f$\lceil \log_2(3 + 1) \rceil = 2\f$ bits                                          |
-| Boolean          | 1 bit for required, \f$\lceil \log_2(3) \rceil\f$ = 2 bits for optional                             | Required boolean: 1 bit, Optional tribool: 2 bits                                                                           |
-| String           | \f$\lceil \log_2(\text{max_length} + 1) \rceil + 8 \cdot \text{actual length}\f$                     | For max_length = 10 and "HELLO": \f$\lceil \log_2(11) \rceil + 8 \cdot 5 = 4 + 40 = 44\f$ bits                                 |
-| Bytes            | \f$\text{max_length} \cdot 8\f$ + 1 if optional                                                     | For max_length = 10: \f$10 \cdot 8 = 80\f$ bits, 81 if optional                                                                |
-| Message          | Sum of bit lengths of all fields + 1 if optional                                                  | For a message with 3 numeric fields (each 18 bits) and 1 optional boolean: \f$3 \cdot 18 + 2 = 56\f$ bits, 57 if optional      |
+See Table 1 in the [IDL](page02_idl.md) for symbol definitions. The formulas below in Table 2 refer to DCCLv3 defaults (i.e. codec_version = 3 which is equivalent to codec = "dccl.default3"). A few things that may make it easier to read this table:
 
+- Left bit-shifting by N bits (\f$x << N\f$) is equivalent to multiplying by powers of two to the N (\f$x \cdot 2^N\f$). 
+<li> \f$\lceil \hbox{log}_2(b-a+1) \rceil\f$ is the fewest number of bits that can hold all the values between \f$a\f$ and \f$b\f$. For example, \f$a=0\f$ through \f$b=7\f$ can be stored in 3 (\f$\lceil \hbox{log}_2(7-0+1) \rceil\f$) bits. Even if \f$b\f$ was 4, 5, or 6, it would still take 3 bits since you cannot have partial bits, hence the ceiling function (\f$\lceil \ldots \rceil\f$).
+- Appending bits in this context means adding these bits to the most signficant end (the left side if the bits are written MSB to LSB from left to right). For example, appending a Bitset of size 2 with decimal value 3 (b11) to a Bitset of size 3 with decimal value 1 (b001) would yield a Bitset of size 5 with value 25 (b11001). This is equivalent to the mathematical expression \f$1+3\cdot 2^3 = 25\f$
 
 ![Codecs Table](codecs-table.png)
 
+#### DCCL Version 4
+
+The DCCLv4 Default Field Codecs are identical to those from DCCLv3 (see Table 2 above), *except* for the `string` and `bytes` types, which use the `VarBytesCodec` described below for both types.
+
+## Additional Built-in Codecs
+
+In addition to the default codecs, the DCCL library provides a number of built-in codecs for certain data types or use cases.
+
+### VarBytesCodec (string / bytes)
+
+**This codec is now the default for bytes and string fields since DCCLv4.**
+
+In DCCLv3 this codec can be enabled by setting the field option `(dccl.field).codec="dccl.var_bytes"` on a `string` or `bytes` field.
+
+**TODO: FINISH DOCUMENTING**
+
+### PresenceBitCodec (all types)
+
+**TODO: FINISH DOCUMENTING**
+
+### TimeCodec (uint64, int64, double)
+
+**TODO: FINISH DOCUMENTING**
+
+## Additional Codec libraries
+
+DCCL also includes several add-on libraries that provide special purpose codecs that are not loaded by default but can be used by loading the appropriate add-on library and setting the required options.
+
+### Arithmetic Encoder
+
+**TODO: FINISH DOCUMENTING**
+
+### Native Protobuf
+
+**TODO: FINISH DOCUMENTING**
+
+### REMUS CCL
+
+**TODO: FINISH DOCUMENTING**
+
 ## Custom Field Codecs
 
-To define your own codecs:
+To write your own codecs:
 1. Subclass one of the base classes  	dccl::TypedFixedFieldCodec,  	dccl::TypedFieldCodec or  	dccl::RepeatedTypedFieldCodec
-2. Add the class into the `dccl::FieldCodecManager` with a given string name
-3. Set a given field's `(dccl.field).codec` to the name given to `dccl::FieldCodecManager`, or the `(dccl.msg).codec` to change the entire message's field codec.
+2. Add the class into the dccl::Codec's manager (dccl::FieldCodecManagerLocal) with a given string name, e.g., `dccl::Codec codec; codec.manager().add<MyFieldCodec>("my_field_codec")`
+3. Set a given field's `(dccl.field).codec` to the name given to the dccl::Codec's manager (e.g., `(dccl.field).codec = "my_field_codec"`), or the `(dccl.msg).codec` to change the entire message's field codec. Or you can use `(dccl.msg).codec_group` to set the codec for the message and all fields within it. In this last case, the codec must be defined for all types within the message, and the message itself.
 
 See also:
 - `dccl_custom_message/test.proto`

@@ -75,12 +75,16 @@ In addition to the built-in codecs, further field codecs can be defined as exten
            5. battery_ok..........................2 {dccl.default4}
    ```
 
-5. Run protoc to generate navreport.pb.h and navreport.pb.cc C++ files from your navreport.proto file.
+At this point you can decide to use C++, Python, or the command line tool `dccl`.
+
+### C++
+
+1. Run protoc to generate navreport.pb.h and navreport.pb.cc C++ files from your navreport.proto file.
    ```shell
    protoc --cpp_out=. navreport.proto -I . -I /usr/include
    ```
 
-6. Use the dccl::Codec in your C++ code to encode and decode messages (quick.cpp):
+2. Use the dccl::Codec in your C++ code to encode and decode messages (quick.cpp):
    ```cpp
    #include <iostream>
 
@@ -115,37 +119,30 @@ In addition to the built-in codecs, further field codecs can be defined as exten
    }
    ```
 
-7. Compile it:
+3. Compile it:
    ```shell
    g++ quick.cpp -o quick navreport.pb.cc -ldccl -lprotobuf 
    ```
 
-8. Run it:
+4. Run it:
    ```shell
    $ ./quick                                                                   
    x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
    ```
 
-9. Or skip steps 5-8 and use the command line tool 'dccl' instead (apt install dccl4-apps):
+### Python
+
+1. Install the Python DCCL apt package:
    ```shell
-   $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
-   0000000: f834 9871 7046 3213                      .4.qpF2.
-   $ cat msg.txt | dccl --decode -f navreport.proto --omit_prefix
-   x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
+  $ sudo apt install python3-dccl4
    ```
 
-10. Or skip steps 5-9 and use Python:
-
-  ```bash
-  $ sudo apt install python3-dccl4
-  ```
-
-11. Compile the Python output of your DCCL message
-  ```bash
+2. Compile the Python output of your DCCL message
+  ```shell
   $ protoc --python_out=. navreport.proto -I . -I /usr/include
   ```
 
-12. Create a Python script (quick.py):
+3. Create a Python script (quick.py):
   ```python
   import os, dccl, navreport_pb2
 
@@ -165,7 +162,7 @@ In addition to the built-in codecs, further field codecs can be defined as exten
   print(decoded_msg)
   ```
 
-13. Run it:
+4. Run it:
   ```bash
   $ python3 quick.py
   x: 450.0
@@ -174,6 +171,22 @@ In addition to the built-in codecs, further field codecs can be defined as exten
   veh_class: AUV
   battery_ok: true
   ```
+
+
+### dccl Command Line tool
+
+1. Install the `dccl` tool
+   ```shell
+   sudo apt install dccl4-apps
+   ```
+ 
+2.  Encode using the command line tool `dccl`
+   ```shell
+   $ echo "x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true" | dccl --encode --proto_file navreport.proto > msg.txt && xxd msg.txt
+   0000000: f834 9871 7046 3213                      .4.qpF2.
+   $ cat msg.txt | dccl --decode -f navreport.proto --omit_prefix
+   x: 450 y: 550 z: -100 veh_class: AUV battery_ok: true
+   ```
 
 
 ## Code
@@ -211,7 +224,7 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
   sudo apt install python3-dccl4
   ```
 
-- Debian packaging files (for Debian or derivatives): [https://code.launchpad.net/~dccl-dev/dccl/debian3](https://code.launchpad.net/~dccl-dev/dccl/debian3)
+- Debian packaging files (for Debian or derivatives): 
   ```bash
   git clone https://github.com/GobySoft/dccl.git
   cd dccl
@@ -220,8 +233,8 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
 
 ## Reference
 
-- [idl](#idl) - documents the extensions to the Google Protocol Buffers language that encompass the DCCL interface descriptor language.
-- [codecs](#codecs) - gives the default codecs and describes the DCCL encoding and decoding process.
+- [DCCL Interface Descriptor Language (IDL) ](page02_idl.md) - documents the extensions to the Google Protocol Buffers language that encompass the DCCL interface descriptor language.
+- [DCCL Encoders/Decoders (codecs)](page03_codecs.md) - gives the default codecs and describes the DCCL encoding and decoding process.
 - [OCEANS 2015 Conference Paper](http://gobysoft.org/dl/oceans2015_dccl.pdf) on *The Dynamic Compact Control Language Version 3* presented in Genova, Italy in May 2015.
 
 ## History
