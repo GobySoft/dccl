@@ -4,18 +4,18 @@ DCCL messages are encoded and decoded using a set of "field codecs" that are res
 
 ## Encoding algorithm
 
-The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v4::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. Keep in mind that DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
+The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v4::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
 
 ```pseudo
 function Encode(DCCL Message)
 1: Initialize global Bits to an empty bitset
 2: Encode the identifier by calling EncodeId with the value of dccl.msg.id
 3: Encode the header by calling EncodeFields with all fields in the DCCL Message where in_head is true
-5: Encode the body by calling in sequence
-     EncodeOneof with all the oneofs defined in the DCCL Message, when present
-     EncodeFields with all fields in the DCCL Message where in_head is false
-6: Optionally encrypt the body using the header as a nonce
-7: Convert Bits to a string of bytes and return this string
+4: Encode the body by calling in sequence
+5: EncodeOneof with all the oneofs defined in the DCCL Message, when present
+6: EncodeFields with all fields in the DCCL Message where in_head is false
+7: Optionally encrypt the body using the header as a nonce
+8: Convert Bits to a string of bytes and return this string
 ```
 
 ```pseudo
@@ -33,13 +33,13 @@ function EncodeOneof(oneofs)
 ```pseudo
 function EncodeFields(fields)
 1: For each field in fields
-2:   Find the correct FieldCodec by the name given to dccl::FieldCodecManager::add()
-       If (dccl.field).codec is explicitly set use that name.
-       Else if this is an embedded message type and (dccl.msg).codec is explicitly set in that message definition, then use that name.
-       Else if (dccl.msg).codec_group is set in the root message, use that name.
-       Else use the name "dccl.defaultN", where (dccl.msg).codec_version = N (set in the root message or defaults to 2)
-3:   Encode field and append result to Bits. If field belongs to a oneof, it is encoded as a required field if and only if it is set. If field is an embedded Message, EncodeFields is called recursively with the fields of the embedded Message.
-4: Append zero bits to Bits until the length of Bits is an integer number of bytes
+2:    Find the correct FieldCodec by the name given to dccl::FieldCodecManager::add(), where "N" = to_string((dccl.msg).codec_version) (set in the root message)
+3:    If (dccl.field).codec is explicitly set use that name concatenated with "N" if it exists, otherwise use that name.
+4:    Else if this is an embedded message type and (dccl.msg).codec is explicitly set in that message definition, then use that name concatenated with "N" if it exists, otherwise use that name.
+5:    Else if (dccl.msg).codec_group is set in the root message, use that name concatenated with "N" if it exists, otherwise use that name.
+6:    Else use the name "dccl.defaultN"
+7:    Encode field and append result to Bits. If field belongs to a oneof, it is encoded as a required field if and only if it is set. If field is an embedded Message, EncodeFields is called recursively with the fields of the embedded Message.
+8: Append zero bits to Bits until the length of Bits is an integer number of bytes
 ```
 
 Definitions:
@@ -47,16 +47,20 @@ Definitions:
 2. **Field**: a numbered field in the Google Protobuf Message
 3. **dccl::Bitset**: A set of bits without byte boundaries. The **front** is the least significant bit, and the **back** is the most significant bit. Thus, appending to a Bitset means add these bits to the most significant bit.
 
-
 ## Example Encoding
 
 The following DCCL Message "CommandMessage" illustrates a basic command's DCCL definition, showing the components of the encoded message. Note: LSB = least significant byte, MSB = most significant byte.
 
 ![CommandMessage Example](codecs-ex-msg.png)
 
-An example of encoding the DCCL "CommandMessage" for a set of representative values is provided. The table displays the unencoded \f$x\f$ and encoded \f$x_{enc}\f$ values, according to the formulas in the [Default Field Codec Reference](#codecs-math). Below the table, the encoded message is shown in little endian format, in both hexadecimal and binary notations.
+An example of encoding the DCCL "CommandMessage" for a set of representative values is provided. The table displays the unencoded \f$x\f$ and encoded \f$x_{enc}\f$ values, according to the formulas in the Default Field Codec Reference. Below the table, the encoded message is shown in little endian format, in both hexadecimal and binary notations.
 
 ![Encoded CommandMessage](codecs-ex-enc.png)
+
+
+## Decoding
+
+Decoding is the reverse of encoding, with the requirement that each field codec consumes (reads) only the exact number of bits that the encoder produced. This allows the fields to be concatenated, and allows entire DCCL messages to be concatenated without any delimiters or other header data.
 
 
 ## Default Field Codec Reference
@@ -83,7 +87,7 @@ Numeric values are all encoded essentially the same way. Integers are treated as
 
 To encode, the numeric value is rounded to the desired precision, and then multiplied by the appropriate power of ten to make it an integer. Then it is increased or decreased so that zero (0) represents the minimum encodable value. At this point, it is simply an unsigned integer. To encode the optional field's "not set", an additional value (not an additional bit) is reserved. To allow "not set" to be the zero (0) encoded value, all other values are incremented by one.
 
-This default encoder assumes unset fields are rare. If you commonly have unset optional fields, you may want to implement a "presence bit" encoder that uses a separate bit to indicate if a field is set or not. These are two extremes of the more general purpose idea of an entropy encoder, such as the arithmetic encoder. In that case, "not set" is simply another symbol that has a probability mass relative to the actual values to capture the frequency with which fields are set or not set.
+This default encoder assumes unset fields are rare. If you commonly have unset optional fields, you may want to use the PresenceBitCodec which uses a separate bit to indicate if a field is set or not. These are two extremes of the more general purpose idea of an entropy encoder, such as the arithmetic encoder. In that case, "not set" is simply another symbol that has a probability mass relative to the actual values to capture the frequency with which fields are set or not set.
 
 For example:
 ```
@@ -99,7 +103,7 @@ Say we wanted to encode the value 10.56:
 
 ### Default Enumeration Codec
 
-Enumerations are treated like unsigned integers, where the enumeration keys are given values based on the order they are declared (not the value given in the .proto file).
+Enumerations are treated like unsigned integers, where the enumeration keys are given values based on the order they are declared (not the value given in the .proto file, unless `packed_enum=false` in which case the opposite is true).
 
 For example:
 ```
@@ -109,11 +113,15 @@ optional VehicleClass veh_class = 4;
 
 In this case (for encoding): AUV is 0, USV is 1, SHIP is 2. After this mapping, the field is encoded exactly like an equivalent integer field (with max = 2, min = 0 in this case).
 
+If `packed_enum=false`, the values are used as-is, and the field is encoded as an integer with max = 10, min = 3 (where values 4, 6, 7, 8, and 9 are unused).
+
 ### Default Boolean Codec
 
 Booleans are simple. If they are required, they are encoded with false = 0, true = 1. If they are optional, they are tribools with "not set" = 0, false = 1, true = 2.
 
 ### Default String Codec
+
+#### DCCLv3
 
 Strings are given a maximum size in the proto file (max_length). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
 
@@ -127,9 +135,21 @@ Say we want to encode "HELLO":
 - Following, we add the ASCII values: 01001111 01001100 01001100 01000101 01001000
 - The full encoded value is thus 0100 11110100 11000100 11000100 01010100 10000101
 
+#### DCCLv4 
+
+See the VarBytesCodec below.
+
+
 ### Default Bytes Codec
 
+#### DCCLv3
+
 Like the string codec, but not variable length. It always takes max_length bytes in the message, and if it is optional, a presence bit is added at the front. If the presence bit is false, the bytes are omitted.
+
+#### DCCLv4 
+
+See the VarBytesCodec below.
+
 
 ### Default Message Codec
 
@@ -137,7 +157,7 @@ Sub-messages are encoded recursively. In the case of an optional message, a pres
 
 ### Mathematical formulas for Default Field Codecs
 
-#### DCCL Version 3
+#### DCCLv3
 
 See Table 1 in the [IDL](page02_idl.md) for symbol definitions. The formulas below in Table 2 refer to DCCLv3 defaults (i.e. codec_version = 3 which is equivalent to codec = "dccl.default3"). A few things that may make it easier to read this table:
 
@@ -147,7 +167,7 @@ See Table 1 in the [IDL](page02_idl.md) for symbol definitions. The formulas bel
 
 ![Codecs Table](codecs-table.png)
 
-#### DCCL Version 4
+#### DCCLv4
 
 The DCCLv4 Default Field Codecs are identical to those from DCCLv3 (see Table 2 above), *except* for the `string` and `bytes` types, which use the `VarBytesCodec` described below for both types.
 

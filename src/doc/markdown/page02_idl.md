@@ -41,9 +41,9 @@ The available DCCL options is given in the following Table 1:
 | `(dccl.msg).codec_group` | string         | Group of codecs to be used for encoding the fields.                                |                   |        | dccl.defaultN |
 | `(dccl.msg).unit_system` | string         | Unit system to use for all fields in this message (unless explicitly specified in the field definition.)                                |                   |        | "si" |
 | **Field Extensions (core)** *[b]*   |           |                                         |                   |        |           |
-| `(dccl.field).precision` | int32          | Decimal digits to preserve; can be negative.                                       | double, float, (u)intN (negative values of precision only)    | \f$p\f$    | 0            |
+| `(dccl.field).precision` | int32          | Decimal digits to preserve; can be negative.                                       | double, float, (u)intN *[c]* (negative values of precision only)    | \f$p\f$    | 0            |
 | `(dccl.field).resolution` | double          |Defines the spacing between encoded values (generalized alternative to *precision*)  | double, float, (u)intN |  \f$dx = 10^{-p}\f$    | 1            |
-| `(dccl.field).min`       | double         | Minimum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$     | (u)intN *[c]*, double, float | \f$x_m\f$ | -  |
+| `(dccl.field).min`       | double         | Minimum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$     | (u)intN , double, float | \f$x_m\f$ | -  |
 | `(dccl.field).max`       | double         | Maximum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$                              | (u)intN, double, float | \f$x_M\f$ | -  |
 | `(dccl.field).max_length`| uint32         | Maximum length (in bytes) that can be encoded                                      | string, bytes     | \f$L_M\f$  | -            |
 | `(dccl.field).min_repeat`| uint32         | Minimum number of repeated values.                                                 | all _repeated_    | \f$r_m\f$  | -            |
