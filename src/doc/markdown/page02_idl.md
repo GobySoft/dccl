@@ -1,6 +1,6 @@
 # DCCL Interface Descriptor Language (IDL)
 
-DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf usage before reading the rest of this document: see [http://code.google.com/apis/protocolbuffers/docs/overview.html](http://code.google.com/apis/protocolbuffers/docs/overview.html).
+DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. The DCCL IDL is defined as extensions to the Protobuf language message and field options to allow more compact encoding than is possible with the default Protobuf meta-data. You should familiarize yourself with basic Protobuf usage before reading the rest of this document: see [https://protobuf.dev/overview/](https://protobuf.dev/overview/).
 
 An example DCCL message is as follows:
 
@@ -26,9 +26,41 @@ The full Protobuf definition of the DCCL extensions is given in option_extension
 
 ## DCCL options
 
-The core set of DCCL options is given in the following table: 
+The available DCCL options is given in the following Table 1:
 
-![IDL Table](idl-table.png)
+### Table 1: Definition of the DCCL Interface Description Language
+
+| Extension Name           | Extension Type | Explanation                                                                        | Applicable Fields | Symbol | Default      |
+|--------------------------|----------------|------------------------------------------------------------------------------------|-------------------|--------|--------------|
+| **Message Extensions** *[a]*   |           |                                         |                   |        |            |
+| `(dccl.msg).id`          | int32          | Unique identifying integer for this message                                        |                   |        | -            |
+| `(dccl.msg).omit_id`          | bool          | If true, omit (dccl.msg).id from the message definition and encoded message. This requires some other means of determining the message type at the receiver (useful when wrapping DCCL messages in another protocol or when using only a single DCCL type in a particular link). |                   |        | False           |
+| `(dccl.msg).max_bytes`   | uint32         | Enforced upper bound for the encoded message length                                |                   |        | -            |
+| `(dccl.msg).codec_version` | int32        | Default codec set to use (corresponds to DCCL major version)                       |                   |        | -            |
+| `(dccl.msg).codec`       | string         | Name of the codec to use for encoding the base message.                            |                   |        | dccl.defaultN, where N is codec_version |
+| `(dccl.msg).codec_group` | string         | Group of codecs to be used for encoding the fields.                                |                   |        | dccl.defaultN |
+| `(dccl.msg).unit_system` | string         | Unit system to use for all fields in this message (unless explicitly specified in the field definition.)                                |                   |        | "si" |
+| **Field Extensions (core)** *[b]*   |           |                                         |                   |        |           |
+| `(dccl.field).precision` | int32          | Decimal digits to preserve; can be negative.                                       | double, float, (u)intN (negative values of precision only)    | \f$p\f$    | 0            |
+| `(dccl.field).resolution` | double          |Defines the spacing between encoded values (generalized alternative to *precision*)  | double, float, (u)intN |  \f$dx = 10^{-p}\f$    | 1            |
+| `(dccl.field).min`       | double         | Minimum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$     | (u)intN *[c]*, double, float | \f$x_m\f$ | -  |
+| `(dccl.field).max`       | double         | Maximum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$                              | (u)intN, double, float | \f$x_M\f$ | -  |
+| `(dccl.field).max_length`| uint32         | Maximum length (in bytes) that can be encoded                                      | string, bytes     | \f$L_M\f$  | -            |
+| `(dccl.field).min_repeat`| uint32         | Minimum number of repeated values.                                                 | all _repeated_    | \f$r_m\f$  | -            |
+| `(dccl.field).max_repeat`| uint32         | Maximum number of repeated values.                                                 | all _repeated_    | \f$r_M\f$  | -            |
+| `(dccl.field).codec`     | string         | Codec to use for this field (if omitted, the default is used). | all | - | - |
+| `(dccl.field).units`     | Units     | Physical dimensions and units system information                                   | (u)intN, double, float | - | - |
+| `(dccl.field).dynamic_conditions`     | Conditions     | Runtime defined field inclusion or bounds using Lua scripts                                  | all | - | - |
+| **Field Extensions (special purpose)** *[b]*   |           |                                         |                   |        |             |
+| `(dccl.field).omit`      | bool           | Do not include field in encoded message                          | all               | -      | False        |
+| `(dccl.field).in_head`      | bool           | If true, the field is included in the DCCL header (encoded after the DCCL ID but before the rest of the fields. Not encrypted when using encryption)                          | all               | -      | False        |
+| `(dccl.field).packed_enum`     | bool     | If false, encode use enum assigned values, not enum index values (0-N in order of definition)                                  | enum | - | True |
+| `(dccl.field).static_value`     | string     | Statically defined value for StaticCodec (codec = "dccl.static")                                 | all | - | - |
+| `(dccl.field).num_days`     | uint32     |  Number of days to include in TimeCodec  (codec = "dccl.time") encoding (+/- 12 hours of validity for each day added.)                                 | double, (u)int64 | - | 1 |
+
+- *[a]*: Extensions of `google.protobuf.MessageOptions`
+- *[b]*: Extensions of `google.protobuf.FieldOptions`
+- *[c]*: (u)intN refers to any of the integer types: int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64
 
 ### DCCL ID: (dccl.msg).id
 
@@ -41,6 +73,14 @@ This value is the maximum message size before you get an error from DCCL. This i
 ### DCCL Codec Version: (dccl.msg).codec_version
 
 This option sets the default codec version (which is not wire-compatibility between Goby/DCCL 2, DCCL 3, and DCCL 4). This should always be set to "4" when you are able to use DCCL v4 for all nodes that deploy this message, or an earlier version if required (e.g., if one of the nodes has access only to DCCL3, use "3").
+
+### Precision versus Resolution
+
+DCCL numeric fields originally were only defined using *precision* which is a negative power of 10 to which the message should be rounded. For example, a precision of 2 will round the message the hundredths place (\f$10^{-2}\f$), and a precision of -1 will round to the tens place (\f$10^1\f$). 
+
+Now DCCL also provides a more generalized and intuitive option *resolution* that can be used instead of *precision*. *Resolution* doesn't have to be a power of 10, so for example, a resolution of 0.25 would round to the closest quarter of a value, and a resolution of 30 would round to the nearest multiple of 30 (-30, 0, 30, 60, etc.). When using *resolution*, the *min* and *max* values must be a multiple of the resolution. For example, if *resolution* is 0.25, *min* could be -0.5, 0.75, etc. but not 0.33 or -0.12 (and similarly for *max*).
+
+Use whichever definition you prefer, and keep in mind that when using precision this is exactly equivalent to setting resolution as \f$10^-precision\f$ (e.g., *precision* of 2 is a *resolution* of 0.01).
 
 ## DCCL Static Units
 

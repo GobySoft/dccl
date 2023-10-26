@@ -197,7 +197,7 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
   ```bash
   git clone https://github.com/GobySoft/dccl.git
   ```
-  To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. On Debian/Ubuntu systems, this would be
+  To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. (Boost is  optional, but provides the Units functionality and supports non-C++17 compliant compilers). On Debian/Ubuntu systems, this would be
   ```bash
   sudo apt install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
   cd dccl
@@ -241,4 +241,4 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
 DCCL grew out of the Goby project ([https://goby.software](https://goby.software)), where versions 1.0 and 2.0 still reside (in the equivalent Goby version). Goby 2.1 is the first version of that project to use the standalone DCCL version 3. DCCL v3 messages are compatible with Goby/DCCL v2 when messages are defined with `codec_version = 2` (the default). Goby/DCCL v1 uses XML for the IDL definition language, which can be converted to DCCL v2 messages using the `dccl_xml_to_dccl_proto` tool included in Goby. DCCL 4 changes the wire protocol slightly to fix usability bugs in the string and bytes fields.
 
 ## Authors
-DCCL is a collaboration of those in the DCCL Developers group ([https://github.com/orgs/GobySoft/teams/dccl-dev](https://github.com/orgs/GobySoft/teams/dccl-dev)). The original author and lead developer is Toby Schneider (GobySoft, LLC [https://gobysoft.org](https://gobysoft.org)).
+DCCL is a collaboration of those in the [DCCL Developers group](https://github.com/orgs/GobySoft/teams/dccl-dev) and [other members of the open source community](https://github.com/GobySoft/dccl/graphs/contributors). The original author and lead developer is [Toby Schneider](https://github.com/tsaubergine) (GobySoft, LLC: [https://gobysoft.org](https://gobysoft.org)).
