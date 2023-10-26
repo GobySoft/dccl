@@ -116,10 +116,10 @@ message DCCLMessageOptions
     optional int32 id = 1;
     optional uint32 max_bytes = 2;
 
-    optional string codec = 3 [default = "dccl.default2"];
+    optional string codec = 3;
 
-    optional string codec_group = 4 [default = "dccl.default2"];
-    optional int32 codec_version = 5 [default = 2];
+    optional string codec_group = 4;
+    optional int32 codec_version = 5;
 
     optional bool omit_id = 10 [default = false];
 
