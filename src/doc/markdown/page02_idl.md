@@ -80,7 +80,7 @@ DCCL numeric fields originally were only defined using *precision* which is a ne
 
 Now DCCL also provides a more generalized and intuitive option *resolution* that can be used instead of *precision*. *Resolution* doesn't have to be a power of 10, so for example, a resolution of 0.25 would round to the closest quarter of a value, and a resolution of 30 would round to the nearest multiple of 30 (-30, 0, 30, 60, etc.). When using *resolution*, the *min* and *max* values must be a multiple of the resolution. For example, if *resolution* is 0.25, *min* could be -0.5, 0.75, etc. but not 0.33 or -0.12 (and similarly for *max*).
 
-Use whichever definition you prefer, and keep in mind that when using precision this is exactly equivalent to setting resolution as \f$10^-precision\f$ (e.g., *precision* of 2 is a *resolution* of 0.01).
+Use whichever definition you prefer, and keep in mind that when using precision this is exactly equivalent to setting resolution as \f$10^{-precision}\f$ (e.g., *precision* of 2 is a *resolution* of 0.01).
 
 ## DCCL Static Units
 
