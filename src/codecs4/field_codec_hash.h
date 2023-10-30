@@ -20,7 +20,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-
 #ifndef DCCLV4FIELDCODECHASHH
 #define DCCLV4FIELDCODECHASHH
 

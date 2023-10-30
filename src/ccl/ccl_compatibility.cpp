@@ -1,4 +1,4 @@
-// Copyright 2012-2020:
+// Copyright 2012-2023:
 //   GobySoft, LLC (2013-)
 //   Massachusetts Institute of Technology (2007-2014)
 //   Community contributors (see AUTHORS file)
@@ -22,7 +22,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-
 #include <chrono>
 #include <ctime>
 
