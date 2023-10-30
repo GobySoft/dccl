@@ -8,8 +8,6 @@
 //   Denis <dbiryukov@slb.com>
 //   Nathan Knotts <nknotts@gmail.com>
 //   Chris Murphy <cmurphy@aphysci.com>
-//   Davide Fenucci <davfen@noc.ac.uk>
-//   Kyle Guilbert <kguilbert@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library

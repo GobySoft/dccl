@@ -1,7 +1,8 @@
-// Copyright 2019:
+// Copyright 2019-2023:
 //   GobySoft, LLC (2013-)
 //   Community contributors (see AUTHORS file)
 // File authors:
+//   Toby Schneider <toby@gobysoft.org>
 //   Kyle Guilbert <kguilbert@aphysci.com>
 //
 //

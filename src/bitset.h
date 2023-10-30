@@ -1,10 +1,11 @@
-// Copyright 2012-2017:
+// Copyright 2012-2023:
 //   GobySoft, LLC (2013-)
 //   Massachusetts Institute of Technology (2007-2014)
 //   Community contributors (see AUTHORS file)
 // File authors:
 //   Toby Schneider <toby@gobysoft.org>
 //   Nathan Knotts <nknotts@gmail.com>
+//   philboske <philboske@gmail.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library

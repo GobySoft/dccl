@@ -1,8 +1,9 @@
-// Copyright 2019:
+// Copyright 2019-2023:
 //   GobySoft, LLC (2013-)
 //   Community contributors (see AUTHORS file)
 // File authors:
 //   Chris Murphy <cmurphy@aphysci.com>
+//   Toby Schneider <toby@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library

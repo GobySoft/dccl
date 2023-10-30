@@ -4,9 +4,6 @@
 //   Community contributors (see AUTHORS file)
 // File authors:
 //   Toby Schneider <toby@gobysoft.org>
-//   Davide Fenucci <davfen@noc.ac.uk>
-//   Kyle Guilbert <kguilbert@aphysci.com>
-//   Nathan Knotts <nknotts@gmail.com>
 //   Chris Murphy <cmurphy@aphysci.com>
 //
 //

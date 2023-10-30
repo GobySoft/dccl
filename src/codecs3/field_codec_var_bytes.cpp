@@ -1,4 +1,4 @@
-// Copyright 2018-2019:
+// Copyright 2018-2023:
 //   GobySoft, LLC (2013-)
 //   Community contributors (see AUTHORS file)
 // File authors:
@@ -20,7 +20,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-
 #include "field_codec_var_bytes.h"
 #include "../field_codec_manager.h"
 #include "field_codec_default.h"

@@ -1,10 +1,9 @@
-// Copyright 2015-2019:
+// Copyright 2015-2023:
 //   GobySoft, LLC (2013-)
 //   Community contributors (see AUTHORS file)
 // File authors:
-//   Stephanie Petillo <stephanie@gobysoft.org>
 //   Toby Schneider <toby@gobysoft.org>
-//   Nathan Knotts <nknotts@gmail.com>
+//   Stephanie Petillo <stephanie@gobysoft.org>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
