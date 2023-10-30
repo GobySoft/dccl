@@ -161,7 +161,14 @@ class Codec
     /// \param passphrase Plain-text passphrase
     /// \param do_not_encrypt_ids_ Optional set of DCCL ids for which to skip encrypting or decrypting
     void set_crypto_passphrase(const std::string& passphrase,
-                               const std::set<int32>& do_not_encrypt_ids_ = std::set<int32>());
+                               const std::set<int32>& do_not_encrypt_ids = std::set<int32>());
+
+    void set_crypto_passphrase(const std::string& passphrase,
+                               const std::set<unsigned>& do_not_encrypt_ids)
+    {
+        std::set<int32> s_ids{do_not_encrypt_ids.begin(), do_not_encrypt_ids.end()};
+        set_crypto_passphrase(passphrase, s_ids);
+    }
 
     /// \brief Set "strict" mode where a dccl::OutOfRangeException will be thrown for encode if the value(s) provided are out of range
     ///

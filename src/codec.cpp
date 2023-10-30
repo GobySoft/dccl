@@ -684,7 +684,7 @@ void dccl::Codec::unload_library(void* dl_handle)
 
 void dccl::Codec::set_crypto_passphrase(
     const std::string& passphrase,
-    const std::set<int32>& do_not_encrypt_ids_ /*= std::set<int32>()*/)
+    const std::set<int32>& do_not_encrypt_ids /*= std::set<int32>()*/)
 {
     if (!crypto_key_.empty())
         crypto_key_.clear();
@@ -703,7 +703,7 @@ void dccl::Codec::set_crypto_passphrase(
                             << std::endl;
 #endif
 
-    skip_crypto_ids_ = do_not_encrypt_ids_;
+    skip_crypto_ids_ = do_not_encrypt_ids;
 }
 
 void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
