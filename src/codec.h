@@ -507,25 +507,31 @@ GoogleProtobufMessagePointer dccl::Codec::decode(std::string* bytes)
 template <typename CharIterator>
 dccl::int32 dccl::Codec::id(CharIterator begin, CharIterator end) const
 {
-    unsigned id_min_size = 0, id_max_size = 0;
-    id_codec()->field_min_size(&id_min_size, nullptr);
-    id_codec()->field_max_size(&id_max_size, nullptr);
+    try
+    {
+        unsigned id_min_size = 0, id_max_size = 0;
+        id_codec()->field_min_size(&id_min_size, nullptr);
+        id_codec()->field_max_size(&id_max_size, nullptr);
+        Bitset fixed_header_bits;
 
-    if (std::distance(begin, end) < (id_min_size / BITS_IN_BYTE))
-        throw(Exception("Bytes passed (hex: " + hex_encode(begin, end) +
-                        ") is too small to be a valid DCCL message"));
+        // ensure we don't go past-the-end if fewer bytes are passed in than id_max_size
+        int incr = std::min<size_t>(
+            static_cast<size_t>(std::distance(begin, end)),
+            static_cast<size_t>(std::ceil(static_cast<double>(id_max_size) / BITS_IN_BYTE)));
+        fixed_header_bits.from_byte_stream(begin, begin + incr);
 
-    Bitset fixed_header_bits;
-    fixed_header_bits.from_byte_stream(
-        begin, begin + (size_t)std::ceil(double(id_max_size) / BITS_IN_BYTE));
+        Bitset these_bits(&fixed_header_bits);
+        these_bits.get_more_bits(id_min_size);
 
-    Bitset these_bits(&fixed_header_bits);
-    these_bits.get_more_bits(id_min_size);
-
-    dccl::any return_value;
-    id_codec()->field_decode(&these_bits, &return_value, nullptr);
-
-    return dccl::any_cast<uint32>(return_value);
+        dccl::any return_value;
+        id_codec()->field_decode(&these_bits, &return_value, nullptr);
+        return dccl::any_cast<uint32>(return_value);
+    }
+    catch (const dccl::Exception& e)
+    {
+        throw(Exception("Failed to decoded id from bytes passed (hex: " + hex_encode(begin, end) +
+                        ")"));
+    }
 }
 
 template <typename CharIterator, typename ProtobufMessage>

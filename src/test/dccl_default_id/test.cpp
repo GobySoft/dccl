@@ -27,7 +27,7 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int /*argc*/, char* /*argv*/[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
@@ -53,7 +53,30 @@ int main(int /*argc*/, char* /*argv*/ [])
         assert(codec.size(long_id_msg) == 2);
         codec.encode(&encoded, long_id_msg);
         assert(codec.id(encoded) == 10000);
+        assert(encoded.size() == 2);
         codec.decode(encoded, &long_id_msg);
+
+        // try decoding zero and single byte (should fail)
+        try
+        {
+            codec.id(std::string());
+            assert(false);
+        }
+        catch (const dccl::Exception& e)
+        {
+            // expected
+            std::cout << "Expected exception: " << e.what() << std::endl;
+        }
+        try
+        {
+            codec.id(encoded.substr(0, 1));
+            assert(false);
+        }
+        catch (const dccl::Exception& e)
+        {
+            // expected
+            std::cout << "Expected exception: " << e.what() << std::endl;
+        }
     }
 
     {
