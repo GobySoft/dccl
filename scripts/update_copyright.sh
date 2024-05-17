@@ -69,7 +69,7 @@ pushd ../src
 export -f gen_authors_prepend_header header_strip
 export here endtext
 grep -lr "$endtext" | egrep "\.cpp$|\.h$|\.proto$" | parallel header_strip
-find -type f -regex ".*\.h$\|.*\.cpp$\|.*\.proto$" | parallel gen_authors_prepend_header
+find -type f -regex ".*\.h$\|.*\.cpp$\|.*\.proto$" -not -path "*/thirdparty/*" | parallel gen_authors_prepend_header
 
 popd
 
