@@ -230,7 +230,8 @@ TIME_DATE Encode_time_date(long secs_since_1970)
     TIME_DATE_LONG comp;
     /* Note: substitute localtime() for local timezone 
    * instead of GMT. */
-    tm = *gmtime(&secs_since_1970);
+    time_t secs_since_1970_time_t(secs_since_1970);
+    tm = *gmtime(&secs_since_1970_time_t);
     comp.as_long = (unsigned long)tm.tm_sec >> 2;
     comp.as_long += (unsigned long)tm.tm_min << 4;
     comp.as_long += (unsigned long)tm.tm_hour << (4 + 6);
