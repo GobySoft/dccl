@@ -26,6 +26,9 @@ cmake_arch_to_gnu_type = { "aarch64": "aarch64-linux-gnu",
                            "arm": "arm-linux-gnueabihf",
                            "x86_64": "x86_64-linux-gnu" }
 
+gnu_arch_host_type=cmake_arch_to_gnu_type.get(build_host)
+gnu_arch_target_type=cmake_arch_to_gnu_type.get(build_target)
+
 def get_version():
   # Resolves a PEP 440 warning for invalid versions when, e.g., version is 4.0.0~alpha0.
   return open('@CMAKE_SOURCE_DIR@/version.txt', 'r').readline().strip().split('~')[0]
@@ -60,7 +63,7 @@ class build_ext(_build_ext):
       filename = super().get_ext_filename(ext_name)
       if build_host != build_target:
         # Replace the build architecture with the target architecture
-        filename = filename.replace(cmake_arch_to_gnu_type.get(build_host), cmake_arch_to_gnu_type.get(build_target))
+        filename = filename.replace(gnu_arch_host_type, gnu_arch_target_type)
       return filename    
     
 setup(
@@ -78,7 +81,7 @@ setup(
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
             include_dirs=['@dccl_INC_DIR@'],
-            library_dirs=['@dccl_LIB_DIR@'],
+            library_dirs=['@dccl_LIB_DIR@', f'/usr/lib/{gnu_arch_target_type}'],
             extra_compile_args = ["-Wno-write-strings", "-std=c++@CMAKE_CXX_STANDARD@"], # Hide a bunch of c++ warnings.
         )
     ],
