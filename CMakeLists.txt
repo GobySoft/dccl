@@ -84,7 +84,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2023.10.30")
+   set(DCCL_VERSION_DATE "2024.05.21")
 endif()
 
 
