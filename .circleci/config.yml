@@ -384,7 +384,7 @@ jobs:
   osx-build:
     resource_class: medium
     macos:
-      xcode: "15.0.0"
+      xcode: "16.1.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
