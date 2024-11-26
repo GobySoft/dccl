@@ -38,6 +38,7 @@
 
 std::set<std::string> systems_to_include_;
 std::set<std::string> base_units_to_include_;
+std::set<std::string> custom_unit_headers_to_include_;
 std::string filename_h_;
 std::string load_file_cpp_;
 std::shared_ptr<std::fstream> load_file_output_;
@@ -179,9 +180,11 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
         includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
 
-        for (const auto& it : systems_to_include_) { include_units_headers(it, includes_ss); }
-        for (const auto& it : base_units_to_include_)
-        { include_base_unit_headers(it, includes_ss); }
+        for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
+        for (const auto& it : base_units_to_include_) include_base_unit_headers(it, includes_ss);
+        for (const auto& it : custom_unit_headers_to_include_)
+            include_custom_unit_headers(it, includes_ss);
+
         include_printer.Print(includes_ss.str().c_str());
 
         return true;
@@ -231,7 +234,9 @@ void DCCLGenerator::generate_message(
             }
 
             for (int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
-            { generate_field(desc->field(field_i), &printer, message_unit_system); }
+            {
+                generate_field(desc->field(field_i), &printer, message_unit_system);
+            }
 
             for (int nested_type_i = 0, nested_type_n = desc->nested_type_count();
                  nested_type_i < nested_type_n; ++nested_type_i)
@@ -283,6 +288,23 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                          field->is_repeated());
             printer->Print(new_methods.str().c_str());
             base_units_to_include_.insert(dccl_field_options.units().unit());
+        }
+        else if (dccl_field_options.units().has_custom())
+        {
+            std::stringstream new_methods;
+
+            construct_units_typedef_from_custom_unit(
+                field->name(), dccl_field_options.units().custom().unit(),
+                dccl_field_options.units().relative_temperature(),
+                dccl_field_options.units().prefix(), new_methods);
+            construct_field_class_plugin(field->name(), new_methods,
+                                         dccl::units::get_field_type_name(field->cpp_type()),
+                                         field->is_repeated());
+            printer->Print(new_methods.str().c_str());
+
+            if (dccl_field_options.units().custom().has_header())
+                custom_unit_headers_to_include_.insert(
+                    dccl_field_options.units().custom().header());
         }
         else if (dccl_field_options.units().has_base_dimensions())
         {

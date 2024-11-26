@@ -90,6 +90,12 @@ message DCCLFieldOptions
         optional bool relative_temperature = 4 [default = false];
         optional string unit = 5;
         optional string prefix = 6;
+        message CustomUnit
+        {
+            required string unit = 1;
+            optional string header = 2;
+        }
+        optional CustomUnit custom = 7;
     }
     optional Units units = 30;
 

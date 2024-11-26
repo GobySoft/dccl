@@ -38,6 +38,8 @@
 
 #include <boost/units/base_units/metric/nautical_mile.hpp>
 
+#include "dccl/units/conductivity.h"
+
 int main()
 {
     CTDTestMessage test_msg;
@@ -73,6 +75,8 @@ int main()
     test_msg.set_auv_speed_with_units(auv_spd);
     std::cout << "auv_spd: " << auv_spd << std::endl;
 
+    test_msg.set_conductivity_with_units(45.0 * dccl::units::siemens_per_m);
+
     test_msg.set_salinity_with_units(38.9 * si::dimensionless());
 
     std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
@@ -85,6 +89,8 @@ int main()
     std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
     std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
     std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
+
+    assert(test_msg.conductivity() == 450000); // uS/cm
 
     AUVStatus status;
     status.set_x_with_units(1000 * si::meters);
