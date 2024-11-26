@@ -394,7 +394,8 @@ jobs:
           command: brew update
       - run:
           name: Install CMake
-          command: brew install cmake protobuf
+          # Protobuf@23 has CMake linking problems with abseil that we don't yet support
+          command: brew install cmake protobuf@21
       - run: &run-build
           name: Build
           command: |
