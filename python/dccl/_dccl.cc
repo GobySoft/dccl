@@ -261,7 +261,7 @@ static PyObject *Codec_decode_by_full_name(Codec *self, PyObject *args) {
 
     // Parse inputs and convert to string
     if (!PyArg_ParseTuple(args, "s#s|i", &bytes, &size, &full_name, &header_only)) {
-        return nullptr;
+        return NULL;
     }
     std::string bytestr(bytes, size);
 
@@ -318,7 +318,7 @@ static PyObject *Codec_decode_by_full_name(Codec *self, PyObject *args) {
         self->codec->decode(bytestr, msg, header_only);
     } catch (dccl::Exception &e) {
         PyErr_SetString(DcclException, e.what());
-        return nullptr;
+        return NULL;
     }
 
     // Convert the gp::Message to a Python Protobuf Message
