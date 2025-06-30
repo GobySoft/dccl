@@ -382,9 +382,9 @@ jobs:
             - '*.tar.xz'
 
   osx-build:
-    resource_class: medium
+    resource_class: m2pro.medium
     macos:
-      xcode: "15.0.0"
+      xcode: "16.4.0"
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
