@@ -30,6 +30,11 @@
 #include <set>
 #include <stdexcept>
 
+#include <google/protobuf/stubs/common.h>
+#if GOOGLE_PROTOBUF_VERSION >= 25000000
+#include <absl/strings/string_view.h>
+#endif
+
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -300,8 +305,13 @@ class DynamicProtobufManager
 
     class DLogMultiFileErrorCollector : public google::protobuf::compiler::MultiFileErrorCollector
     {
+#if GOOGLE_PROTOBUF_VERSION >= 25000000
+        void RecordError(absl::string_view filename, int line, int column,
+                         absl::string_view message) override;
+#else
         void AddError(const std::string& filename, int line, int column,
                       const std::string& message) override;
+#endif
     };
 
     std::shared_ptr<DLogMultiFileErrorCollector> error_collector_;
