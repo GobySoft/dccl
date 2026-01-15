@@ -2,10 +2,16 @@
 .DS_Store
 CMakeLists.txt.user
 *.swp
+__pycache__/
+*.pyc
 /bin
 /include
 /lib
 /share
 /python/build
+*.egg-info
 
 .vscode/
+/python/dccl/_dccl.cpython*
+/python/dccl/option_extensions_pb2.py
+/src/share/examples/quickstart_navreport/navreport_pb2.py
