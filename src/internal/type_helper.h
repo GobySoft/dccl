@@ -28,6 +28,7 @@
 
 #include <memory>
 
+#include "../string_compat.h"
 #include "protobuf_cpp_type_helpers.h"
 
 namespace dccl
@@ -54,7 +55,7 @@ class TypeHelper
 
     std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc) const
     {
-        return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE, desc->full_name());
+        return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE, dccl::to_std_string(desc->full_name()));
     }
 
     std::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype,
@@ -65,12 +66,12 @@ class TypeHelper
     template <typename ProtobufMessage> void add()
     {
         custom_message_map_.insert(std::make_pair(
-            ProtobufMessage::descriptor()->full_name(),
+            dccl::to_std_string(ProtobufMessage::descriptor()->full_name()),
             std::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
     }
     template <typename ProtobufMessage> void remove()
     {
-        custom_message_map_.erase(ProtobufMessage::descriptor()->full_name());
+        custom_message_map_.erase(dccl::to_std_string(ProtobufMessage::descriptor()->full_name()));
     }
     void reset()
     {

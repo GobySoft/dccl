@@ -35,6 +35,7 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
+#include "string_compat.h"
 #include "bitset.h"
 
 namespace dccl
@@ -65,7 +66,7 @@ const unsigned BITS_IN_BYTE = 8;
 
 inline std::ostream& operator<<(std::ostream& out, const google::protobuf::Message& msg)
 {
-    return (out << "[[" << msg.GetDescriptor()->name() << "]] " << msg.DebugString());
+    return (out << "[[" << dccl::to_std_string(msg.GetDescriptor()->name()) << "]] " << msg.DebugString());
 }
 
 template <typename Float> Float round(Float d) { return std::floor(d + 0.5); }

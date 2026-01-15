@@ -7,6 +7,10 @@ The Dynamic Compact Control Language (DCCL) is a marshalling and protocol langua
 - Continuous build Ubuntu/Debian Packages: http://packages.gobysoft.org/ubuntu/continuous/
 - Assigned DCCL IDs table: http://gobysoft.org/wiki/DcclIdTable
 
+# ---- Poseidons Forge Fork ----
+
+We forked the repos so we can test updates to DCCL, specifically around newer protobuf library compatibility.
+
 ## Packages
 
 The only officially supported distributions are Debian (stable and oldstable) and Ubuntu (currently supported LTS releases). Packages for these releases are built for the amd64, arm64, and armhf architectures and uploaded to http://packages.gobysoft.org:

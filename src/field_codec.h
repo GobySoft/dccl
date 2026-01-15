@@ -350,11 +350,11 @@ class FieldCodecBase
         if (!b)
         {
             if (this_field())
-                throw(Exception("Field " + this_field()->name() +
+                throw(Exception("Field " + dccl::to_std_string(this_field()->name()) +
                                     " failed validation: " + description,
                                 this->this_descriptor()));
             else
-                throw(Exception("Message " + this_descriptor()->name() +
+                throw(Exception("Message " + dccl::to_std_string(this_descriptor()->name()) +
                                     " failed validation: " + description,
                                 this->this_descriptor()));
         }

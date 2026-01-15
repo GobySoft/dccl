@@ -389,8 +389,8 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         {
             LOCK_LAST_BITS_MAP_MUTEX
             // bit of a hack so I can get at the exact bit field sizes
-            Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
-                                [FieldCodecBase::this_field()->name()] = bits;
+            Model::last_bits_map[dccl::to_std_string(FieldCodecBase::this_descriptor()->full_name())]
+                                [dccl::to_std_string(FieldCodecBase::this_field()->name())] = bits;
         }
 
         return bits;
@@ -501,8 +501,8 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
         {
             LOCK_LAST_BITS_MAP_MUTEX
             // must consume same bits as encoded makes
-            Bitset in = Model::last_bits_map[FieldCodecBase::this_descriptor()->full_name()]
-                                            [FieldCodecBase::this_field()->name()];
+            Bitset in = Model::last_bits_map[dccl::to_std_string(FieldCodecBase::this_descriptor()->full_name())]
+                                            [dccl::to_std_string(FieldCodecBase::this_field()->name())];
 
             dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) bits used is (" << bits->size()
                                     << "):     " << *bits << std::endl;

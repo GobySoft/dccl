@@ -167,11 +167,11 @@ int main(int argc, char* argv[])
             {
                 for (int i = 0, n = file_desc->message_type_count(); i < n; ++i)
                 {
-                    cfg.message.insert(file_desc->message_type(i)->full_name());
+                    cfg.message.insert(dccl::to_std_string(file_desc->message_type(i)->full_name()));
                     if (i == 0 && cfg.action == ENCODE)
                     {
                         std::cerr << "Encoding assuming message: "
-                                  << file_desc->message_type(i)->full_name() << std::endl;
+                                  << dccl::to_std_string(file_desc->message_type(i)->full_name()) << std::endl;
                         break;
                     }
                 }
@@ -422,7 +422,7 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
         std::shared_ptr<google::protobuf::Message> msg =
             dccl.decode<std::shared_ptr<google::protobuf::Message>>(&input);
         if (!cfg.omit_prefix)
-            std::cout << "|" << msg->GetDescriptor()->full_name() << "| ";
+            std::cout << "|" << dccl::to_std_string(msg->GetDescriptor()->full_name()) << "| ";
         std::cout << msg->ShortDebugString() << std::endl;
     }
 }
@@ -453,7 +453,7 @@ std::pair<bool, std::size_t> load_desc(dccl::Codec* dccl, const google::protobuf
         }
         catch (std::exception& e)
         {
-            std::cerr << "Not a valid DCCL message: " << desc->full_name()
+            std::cerr << "Not a valid DCCL message: " << dccl::to_std_string(desc->full_name())
                       << "\n\tWhy: " << e.what() << std::endl;
         }
     }

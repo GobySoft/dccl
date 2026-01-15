@@ -24,6 +24,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "gen_units_class_plugin.h"
 #include "option_extensions.pb.h"
+#include "../../string_compat.h"
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 #include <google/protobuf/compiler/cpp/cpp_generator.h>
@@ -153,7 +154,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
 
     try
     {
-        const std::string& filename = file->name();
+        const std::string filename = dccl::to_std_string(file->name());
         filename_h_ = filename.substr(0, filename.find(".proto")) + ".pb.h";
         //        std::string filename_cc = filename.substr(0, filename.find(".proto")) + ".pb.cc";
 
@@ -209,7 +210,7 @@ void DCCLGenerator::generate_message(
     {
         {
             std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
-                generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
+                generator_context->OpenForInsert(filename_h_, "class_scope:" + dccl::to_std_string(desc->full_name())));
             google::protobuf::io::Printer printer(output.get(), '$');
 
             if (desc->options().HasExtension(dccl::msg))
@@ -250,7 +251,7 @@ void DCCLGenerator::generate_message(
     }
     catch (std::exception& e)
     {
-        throw(std::runtime_error(std::string("Message: \n" + desc->full_name() + "\n" + e.what())));
+        throw(std::runtime_error(std::string("Message: \n" + dccl::to_std_string(desc->full_name()) + "\n" + e.what())));
     }
 }
 
@@ -284,10 +285,10 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             std::stringstream new_methods;
 
             construct_units_typedef_from_base_unit(
-                field->name(), dccl_field_options.units().unit(),
+                dccl::to_std_string(field->name()), dccl_field_options.units().unit(),
                 dccl_field_options.units().relative_temperature(),
                 dccl_field_options.units().prefix(), new_methods);
-            construct_field_class_plugin(field->name(), new_methods,
+            construct_field_class_plugin(dccl::to_std_string(field->name()), new_methods,
                                          dccl::units::get_field_type_name(field->cpp_type()),
                                          field->is_repeated());
             printer->Print(new_methods.str().c_str());
@@ -316,11 +317,11 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                         ? *message_unit_system
                         : dccl_field_options.units().system();
 
-                construct_base_dims_typedef(dimensions, powers, field->name(), unit_system,
+                construct_base_dims_typedef(dimensions, powers, dccl::to_std_string(field->name()), unit_system,
                                             dccl_field_options.units().relative_temperature(),
                                             dccl_field_options.units().prefix(), new_methods);
 
-                construct_field_class_plugin(field->name(), new_methods,
+                construct_field_class_plugin(dccl::to_std_string(field->name()), new_methods,
                                              dccl::units::get_field_type_name(field->cpp_type()),
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
@@ -352,11 +353,11 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                         ? *message_unit_system
                         : dccl_field_options.units().system();
 
-                construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system,
+                construct_derived_dims_typedef(dimensions, operators, dccl::to_std_string(field->name()), unit_system,
                                                dccl_field_options.units().relative_temperature(),
                                                dccl_field_options.units().prefix(), new_methods);
 
-                construct_field_class_plugin(field->name(), new_methods,
+                construct_field_class_plugin(dccl::to_std_string(field->name()), new_methods,
                                              dccl::units::get_field_type_name(field->cpp_type()),
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
@@ -414,11 +415,11 @@ void DCCLGenerator::generate_load_file_message_loader(
     load_file_output_->seekp(0, std::ios_base::beg);
 
     // cpp class name
-    std::string cpp_name = desc->full_name();
+    std::string cpp_name = dccl::to_std_string(desc->full_name());
     boost::algorithm::replace_all(cpp_name, ".", "::");
 
     // lower case class name with underscores
-    std::string loader_name = desc->full_name() + "_loader";
+    std::string loader_name = dccl::to_std_string(desc->full_name()) + "_loader";
     boost::algorithm::replace_all(loader_name, ".", "_");
     boost::algorithm::to_lower(loader_name);
 

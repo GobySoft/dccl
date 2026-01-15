@@ -142,7 +142,7 @@ class FieldCodecManagerLocal
         }
 
         return __find(google::protobuf::FieldDescriptor::TYPE_MESSAGE, codec_version, name,
-                      desc->full_name());
+                      dccl::to_std_string(desc->full_name()));
     }
 
     std::shared_ptr<FieldCodecBase> find(google::protobuf::FieldDescriptor::Type type,
@@ -313,7 +313,7 @@ typename std::enable_if<
 dccl::FieldCodecManagerLocal::add(const std::string& name)
 {
     type_helper_.add<typename Codec::wire_type>();
-    add_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
+    add_single_type<Codec>(__mangle_name(name, dccl::to_std_string(Codec::wire_type::descriptor()->full_name())),
                            google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                            google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
 }
@@ -385,7 +385,7 @@ typename std::enable_if<
 dccl::FieldCodecManagerLocal::remove(const std::string& name)
 {
     type_helper_.remove<typename Codec::wire_type>();
-    remove_single_type<Codec>(__mangle_name(name, Codec::wire_type::descriptor()->full_name()),
+    remove_single_type<Codec>(__mangle_name(name, dccl::to_std_string(Codec::wire_type::descriptor()->full_name())),
                               google::protobuf::FieldDescriptor::TYPE_MESSAGE,
                               google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE);
 }

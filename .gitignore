@@ -8,3 +8,4 @@ CMakeLists.txt.user
 /share
 /python/build
 
+.vscode/

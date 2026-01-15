@@ -131,7 +131,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
 {
     const Descriptor* desc = msg.GetDescriptor();
 
-    dlog.is(DEBUG1, ENCODE) && dlog << "Began encoding message of type: " << desc->full_name()
+    dlog.is(DEBUG1, ENCODE) && dlog << "Began encoding message of type: " << dccl::to_std_string(desc->full_name())
                                     << std::endl;
 
     try
@@ -193,7 +193,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
     catch (dccl::OutOfRangeException& e)
     {
         dlog.is(DEBUG1, ENCODE) &&
-            dlog << "Message " << desc->full_name()
+            dlog << "Message " << dccl::to_std_string(desc->full_name())
                  << " failed to encode because a field was out of bounds and strict == true: "
                  << e.what() << std::endl;
         throw;
@@ -202,7 +202,7 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
     {
         std::stringstream ss;
 
-        ss << "Message " << desc->full_name() << " failed to encode. Reason: " << e.what();
+        ss << "Message " << dccl::to_std_string(desc->full_name()) << " failed to encode. Reason: " << e.what();
 
         dlog.is(DEBUG1, ENCODE) && dlog << ss.str() << std::endl;
         throw(Exception(ss.str(), desc));
@@ -263,7 +263,7 @@ size_t dccl::Codec::encode(char* bytes, size_t max_len, const google::protobuf::
                  << std::endl;
     }
 
-    dlog.is(DEBUG1, ENCODE) && dlog << "Successfully encoded message of type: " << desc->full_name()
+    dlog.is(DEBUG1, ENCODE) && dlog << "Successfully encoded message of type: " << dccl::to_std_string(desc->full_name())
                                     << std::endl;
 
     return head_byte_size + body_byte_size;
@@ -304,7 +304,7 @@ void dccl::Codec::encode(std::string* bytes, const google::protobuf::Message& ms
             dlog << "Encrypted Body (hex): " << hex_encode(body_bytes) << std::endl;
     }
 
-    dlog.is(DEBUG1, ENCODE) && dlog << "Successfully encoded message of type: " << desc->full_name()
+    dlog.is(DEBUG1, ENCODE) && dlog << "Successfully encoded message of type: " << dccl::to_std_string(desc->full_name())
                                     << std::endl;
     *bytes += head_bytes + body_bytes;
 }
@@ -331,10 +331,10 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
 
         if (!msg_opt.has_codec_version())
             throw(Exception(
-                "No (dccl.msg).codec_version set for DCCL Message '" + desc->full_name() +
+                "No (dccl.msg).codec_version set for DCCL Message '" + dccl::to_std_string(desc->full_name()) +
                     "'. For new messages, set 'option (dccl.msg).codec_version = 4' in the "
                     "message definition for " +
-                    desc->full_name() + " to use the default DCCL4 codecs.",
+                    dccl::to_std_string(desc->full_name()) + " to use the default DCCL4 codecs.",
                 desc));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
@@ -370,7 +370,7 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
         {
             std::stringstream ss;
             ss << "`dccl id` " << dccl_id << " is already in use by Message "
-               << id2desc_.find(dccl_id)->second->full_name() << ": "
+               << dccl::to_std_string(id2desc_.find(dccl_id)->second->full_name()) << ": "
                << id2desc_.find(dccl_id)->second;
 
             throw(Exception(ss.str(), desc));
@@ -380,7 +380,7 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
             id2desc_.insert(std::make_pair(dccl_id, desc));
         }
 
-        dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
+        dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << dccl::to_std_string(desc->full_name())
                                 << std::endl;
 
         std::size_t hash_value = 0;
@@ -399,7 +399,7 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
         {
         }
 
-        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name() << ": " << desc
+        dlog.is(DEBUG1) && dlog << "Message " << dccl::to_std_string(desc->full_name()) << ": " << desc
                                 << " failed validation. Reason: " << e.what() << "\n"
                                 << "If possible, information about the Message are printed above. "
                                 << std::endl;
@@ -425,7 +425,7 @@ void dccl::Codec::unload(const google::protobuf::Descriptor* desc)
     }
     if (erased == 0)
     {
-        dlog.is(DEBUG1) && dlog << "Message " << desc->full_name()
+        dlog.is(DEBUG1) && dlog << "Message " << dccl::to_std_string(desc->full_name())
                                 << ": is not loaded. Ignoring unload request." << std::endl;
     }
 }
@@ -548,7 +548,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string message_name;
             if (!omit_id)
                 message_name += std::to_string(dccl_id) + ": ";
-            message_name += desc->full_name() + " {" + hash + "}";
+            message_name += dccl::to_std_string(desc->full_name()) + " {" + hash + "}";
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -591,7 +591,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             codec->base_info(os, desc, BODY);
             //            *os << std::string(body_str.size() + 2 + 2*body_guard.size(), '-') << "\n";
 
-            //            *os << std::string(desc->full_name().size() + 2 + 2*guard.size(), '=') << "\n";
+            //            *os << std::string(dccl::to_std_string(desc->full_name()).size() + 2 + 2*guard.size(), '=') << "\n";
             os->flush();
 
             if (is_dlog)
@@ -600,7 +600,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
         catch (Exception& e)
         {
             dlog.is(DEBUG1) &&
-                dlog << "Message " << desc->full_name()
+                dlog << "Message " << dccl::to_std_string(desc->full_name())
                      << " cannot provide information due to invalid configuration. Reason: "
                      << e.what() << std::endl;
         }
@@ -772,7 +772,7 @@ std::string dccl::Codec::get_all_error_fields_in_message(const google::protobuf:
             {
                 output_stream << std::string(depth * depth_spacing, ' ')
                               << descriptor->field(index)->number() << ": "
-                              << descriptor->field(index)->name() << "\n";
+                              << dccl::to_std_string(descriptor->field(index)->name()) << "\n";
             }
         }
     }
@@ -786,7 +786,7 @@ std::string dccl::Codec::get_all_error_fields_in_message(const google::protobuf:
         if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE)
         {
             output_stream << std::string(depth * depth_spacing, ' ') << field->number() << ": "
-                          << field->name() << "\n";
+                          << dccl::to_std_string(field->name()) << "\n";
 
             if (field->is_repeated())
             {

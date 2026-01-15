@@ -40,11 +40,11 @@ std::pair<std::size_t, std::size_t> compute_hashes()
 {
     std::size_t hash1 = codec.load<Msg1>();
     codec.unload<Msg1>();
-    std::cout << Msg1::descriptor()->full_name() << ": " << dccl::hash_as_string(hash1)
+    std::cout << dccl::to_std_string(Msg1::descriptor()->full_name()) << ": " << dccl::hash_as_string(hash1)
               << std::endl;
     std::size_t hash2 = codec.load<Msg2>();
     codec.unload<Msg2>();
-    std::cout << Msg2::descriptor()->full_name() << ": " << dccl::hash_as_string(hash2)
+    std::cout << dccl::to_std_string(Msg2::descriptor()->full_name()) << ": " << dccl::hash_as_string(hash2)
               << std::endl;
     return std::make_pair(hash1, hash2);
 }

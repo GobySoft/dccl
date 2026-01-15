@@ -39,6 +39,7 @@
 
 #include <memory>
 
+#include "string_compat.h"
 #include "binary.h"
 #include "dynamic_protobuf_manager.h"
 #include "exception.h"
@@ -424,7 +425,7 @@ class Codec
             if (desc2placeholder_id_.count(desc))
                 return desc2placeholder_id_.find(desc)->second;
             else
-                throw(Exception("Message " + desc->full_name() +
+                throw(Exception("Message " + dccl::to_std_string(desc->full_name()) +
                                 " has omit_id == true but has not been loaded, so id_internal() "
                                 "const cannot be called"));
         }
@@ -554,9 +555,9 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
 
             if (expected_id != received_id)
                 throw(Exception("Received message with id " + std::to_string(received_id) + " (" +
-                                id2desc_.at(received_id)->full_name() +
+                                dccl::to_std_string(id2desc_.at(received_id)->full_name()) +
                                 ") but decode was called with message of id " +
-                                std::to_string(expected_id) + " (" + desc->full_name() +
+                                std::to_string(expected_id) + " (" + dccl::to_std_string(desc->full_name()) +
                                 "). Ensure dccl::Codec::decode is called with the correct Protobuf "
                                 "message or use the dynamic overloads of decode."));
         }
@@ -564,7 +565,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
         dlog.is(logger::DEBUG1, logger::DECODE) &&
             dlog << "Began decoding message of id: " << received_id << std::endl;
 
-        dlog.is(logger::DEBUG1, logger::DECODE) && dlog << "Type name: " << desc->full_name()
+        dlog.is(logger::DEBUG1, logger::DECODE) && dlog << "Type name: " << dccl::to_std_string(desc->full_name())
                                                         << std::endl;
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
@@ -662,7 +663,7 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
         }
 
         dlog.is(logger::DEBUG1, logger::DECODE) &&
-            dlog << "Successfully decoded message of type: " << desc->full_name() << std::endl;
+            dlog << "Successfully decoded message of type: " << dccl::to_std_string(desc->full_name()) << std::endl;
         return actual_end;
     }
     catch (std::exception& e)

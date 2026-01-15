@@ -103,8 +103,8 @@ void dccl::DynamicConditions::regenerate(const google::protobuf::Message* this_m
         auto index = index_;
 
         sol::table decoded_message = decode_message(
-            this_msg_->SerializePartialAsString(), this_msg_->GetDescriptor()->full_name(),
-            root_msg_->SerializePartialAsString(), root_msg_->GetDescriptor()->full_name(), index);
+            this_msg_->SerializePartialAsString(), dccl::to_std_string(this_msg_->GetDescriptor()->full_name()),
+            root_msg_->SerializePartialAsString(), dccl::to_std_string(root_msg_->GetDescriptor()->full_name()), index);
     }
 #endif
 }

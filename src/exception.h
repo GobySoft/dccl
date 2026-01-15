@@ -27,6 +27,8 @@
 #include <google/protobuf/descriptor.h>
 #include <stdexcept>
 
+#include "string_compat.h"
+
 namespace dccl
 {
 inline std::string exception_string(const std::string& in, const google::protobuf::Descriptor* desc,
@@ -34,9 +36,9 @@ inline std::string exception_string(const std::string& in, const google::protobu
 {
     std::string out;
     if (desc)
-        out += std::string("Message: ") + desc->full_name() + ": ";
+        out += std::string("Message: ") + dccl::to_std_string(desc->full_name()) + ": ";
     if (field)
-        out += std::string("Field: ") + field->full_name() + ": ";
+        out += std::string("Field: ") + dccl::to_std_string(field->full_name()) + ": ";
 
     out += in;
     return out;

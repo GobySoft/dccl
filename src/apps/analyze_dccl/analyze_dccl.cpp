@@ -62,13 +62,13 @@ int main(int argc, char* argv[])
                 }
                 catch (std::exception& e)
                 {
-                    std::cerr << "Not a valid DCCL message: " << desc->full_name() << "\n"
+                    std::cerr << "Not a valid DCCL message: " << dccl::to_std_string(desc->full_name()) << "\n"
                               << e.what() << std::endl;
                 }
             }
             else
             {
-                std::cerr << "No descriptor with name " << file_desc->message_type(i)->full_name()
+                std::cerr << "No descriptor with name " << dccl::to_std_string(file_desc->message_type(i)->full_name())
                           << " found!" << std::endl;
                 exit(1);
             }
