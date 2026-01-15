@@ -31,7 +31,7 @@
 #include <stdexcept>
 
 #include <google/protobuf/stubs/common.h>
-#if GOOGLE_PROTOBUF_VERSION >= 25000000
+#if GOOGLE_PROTOBUF_VERSION >= 3025000
 #include <absl/strings/string_view.h>
 #endif
 
@@ -305,7 +305,7 @@ class DynamicProtobufManager
 
     class DLogMultiFileErrorCollector : public google::protobuf::compiler::MultiFileErrorCollector
     {
-#if GOOGLE_PROTOBUF_VERSION >= 25000000
+#if GOOGLE_PROTOBUF_VERSION >= 3025000
         void RecordError(absl::string_view filename, int line, int column,
                          absl::string_view message) override;
 #else
