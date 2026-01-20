@@ -392,7 +392,13 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 std::cout << "val = " << val_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
             }
 
-            // Need to round to the sig figs that fits
+            /// Need to round to the sig figs that fits
+            // For the bit dropping alorithm the value must be positive, so
+            // temporarily unsign the value
+            const auto val_is_negative = dccl::is_negative(val_sig);
+            if (val_is_negative) {
+                dccl::negate(val_sig);
+            }
             // Note: one bit of precision is implicit in the float and double representation
             if constexpr (std::is_same_v<WireType, float>) {
                 const auto num_bits_dropped = dccl::drop_to_sig_fig(val_sig, 24);
@@ -401,6 +407,11 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 const auto num_bits_dropped = dccl::drop_to_sig_fig(val_sig, 53);
                 val_exp += num_bits_dropped;
             }
+            // Rembereing to sign the value back
+            if (val_is_negative) {
+                dccl::negate(val_sig);
+            }
+
             const auto val_sig_raw_unsigned = dccl::fill_unsigned<unsigned_sig_t>(val_sig);
             const auto &val_sig_raw = reinterpret_cast<const sig_t &>(val_sig_raw_unsigned);
             std::cout << "val = " << val_sig_raw << "*2^(" << val_exp << ")" << std::endl;
