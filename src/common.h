@@ -26,6 +26,7 @@
 #ifndef DCCLConstants20091211H
 #define DCCLConstants20091211H
 
+#include <bitset>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -153,6 +154,210 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v)
 {
     std::hash<T> hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+/// decomposes float/double to a two-integer representation: a significant (aka mantissa)
+/// and exponent. The functionality is similar to std::frexp except the significant is
+/// represented as a integer type instead of a floating point representation.
+/// Conceptually: val = <return value> * 2 ^ exponent
+/// 
+/// \param val value to decompose
+/// \param exponent that allows the significant to be expressed without a decimal point
+/// \return the significand as an integer
+/// 
+/// If val is 0, exponent is 0, and 0 is returned
+/// If val is +Inf, exponent is unspecified, and most positive integer is returned
+/// If val is -Inf, exponent is unspecified, and most negative integer is returned
+/// If val is NaN, exponent is unspecified, and second most negative integer is returned
+inline int32_t decompose_float_format(float val, int16_t& exponent) {
+    uint32_t &val_bits = reinterpret_cast<uint32_t&>(val);
+
+    constexpr auto num_exp_bits = 8;
+    constexpr auto num_frac_bits = 23;
+    constexpr auto exponent_bias = 127;
+
+    constexpr auto sign_bit_mask = static_cast<uint32_t>(0b1) << (num_exp_bits + num_frac_bits);
+    constexpr auto exp_bits = (static_cast<uint32_t>(1u)<<num_exp_bits) - 1;
+    constexpr auto exp_bit_mask = exp_bits << num_frac_bits;
+    constexpr auto frac_bit_mask = (static_cast<uint32_t>(1u) << num_frac_bits) - 1;
+
+    uint32_t signed_bit = val_bits & sign_bit_mask;
+    uint16_t val_exp_bits = static_cast<uint16_t>((val_bits & exp_bit_mask) >> num_frac_bits);
+    uint32_t frac_bits = val_bits & frac_bit_mask;
+    if (val_exp_bits == exp_bits) {
+        if (frac_bits == 0) {
+            // val is an infinity
+            if (signed_bit > 0) {
+                return std::numeric_limits<int32_t>::lowest();
+            } else {
+                return std::numeric_limits<int32_t>::max();
+            }
+        } else {
+            // val is a NaN
+            return std::numeric_limits<int32_t>::lowest() + 1;
+        }
+    }
+
+    if (val_exp_bits == 0) {
+        if (frac_bits == 0) {
+            exponent = 0;
+            // val is zero
+            return 0;
+        } else {
+            // val is a subnormal number
+            exponent = -exponent_bias + 1 - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+            if (signed_bit > 0) {
+                return -static_cast<int32_t>(frac_bits);
+            } else {
+                return static_cast<int32_t>(frac_bits);
+            }
+        }
+    }
+
+    // val is a normal number
+    constexpr auto implicit_bit_mask = static_cast<uint32_t>(1u) << num_frac_bits;
+    exponent = static_cast<uint32_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+    if (signed_bit > 0) {
+        return -static_cast<int32_t>(frac_bits | implicit_bit_mask);
+    } else {
+        return static_cast<int32_t>(frac_bits | implicit_bit_mask);
+    }
+}
+
+inline int64_t decompose_float_format(double val, int16_t& exponent) {
+    uint64_t &val_bits = reinterpret_cast<uint64_t&>(val);
+
+    constexpr auto num_exp_bits = 11;
+    constexpr auto num_frac_bits = 52;
+    constexpr auto exponent_bias = 1023;
+
+    constexpr auto sign_bit_mask = static_cast<uint64_t>(0b1) << (num_exp_bits + num_frac_bits);
+    constexpr auto exp_bits = (static_cast<uint64_t>(1u)<<num_exp_bits) - 1;
+    constexpr auto exp_bit_mask = exp_bits << num_frac_bits;
+    constexpr auto frac_bit_mask = (static_cast<uint64_t>(1u) << num_frac_bits) - 1;
+
+    uint64_t signed_bit = val_bits & sign_bit_mask;
+    uint16_t val_exp_bits = static_cast<uint16_t>((val_bits & exp_bit_mask) >> num_frac_bits);
+    uint64_t frac_bits = val_bits & frac_bit_mask;
+    if (val_exp_bits == exp_bits) {
+        if (frac_bits == 0) {
+            // val is an infinity
+            if (signed_bit > 0) {
+                return std::numeric_limits<int64_t>::lowest();
+            } else {
+                return std::numeric_limits<int64_t>::max();
+            }
+        } else {
+            // val is a NaN
+            return std::numeric_limits<int64_t>::lowest() + 1;
+        }
+    }
+
+    if (val_exp_bits == 0) {
+        if (frac_bits == 0) {
+            exponent = 0;
+            // val is zero
+            return 0;
+        } else {
+            // val is a subnormal number
+            exponent = -exponent_bias + 1 - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+            if (signed_bit > 0) {
+                return -static_cast<int64_t>(frac_bits);
+            } else {
+                return static_cast<int64_t>(frac_bits);
+            }
+        }
+    }
+
+    // val is a normal number
+    constexpr auto implicit_bit_mask = static_cast<uint64_t>(1u) << num_frac_bits;
+    exponent = static_cast<uint64_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+    if (signed_bit > 0) {
+        return -static_cast<int64_t>(frac_bits | implicit_bit_mask);
+    } else {
+        return static_cast<int64_t>(frac_bits | implicit_bit_mask);
+    }
+}
+
+template<std::size_t N>
+inline void increment(std::bitset<N> &bits) {
+    for (auto i = 0ul; i < N; ++i) {
+        if ((bits[i] = !bits[i]) == true) {
+            break;
+        }
+    }
+}
+
+template<std::size_t N>
+inline bool is_negative(const std::bitset<N> &bits) {
+    return bits[N-1];
+}
+
+template<std::size_t N>
+inline void negate(std::bitset<N> &bits) {
+    bits.flip();
+    increment(bits);
+}
+
+template<std::size_t N>
+inline std::bitset<N> negated(const std::bitset<N> &bits) {
+    auto ret_val = bits;
+    negate(ret_val);
+    return ret_val;
+}
+
+template<std::size_t N>
+inline void add_to(std::bitset<N> &a, const std::bitset<N> &b) {
+    bool carry_bit = false;
+    for (auto i = 0ul; i < N; ++i) {
+        auto sum = carry_bit + a[i] + b[i];
+        a[i] = sum % 2;
+        carry_bit = sum > 1;
+    }
+}
+
+template<std::size_t N>
+inline std::bitset<N> add(const std::bitset<N> &a, const std::bitset<N> &b) {
+    auto ret_val = a;
+    add_to(ret_val, b);
+    return ret_val;
+}
+
+template<std::size_t N>
+inline std::bitset<N> subtract(const std::bitset<N> &a, const std::bitset<N> &b) {
+    auto ret_val = negated(b);
+    add_to(ret_val, a);
+    return ret_val;
+}
+
+template<std::size_t N>
+inline bool unsigned_geq(const std::bitset<N> &a, const std::bitset<N> &b) {
+    for (auto k = 0; k < N; ++k) {
+        const auto i = N - 1 - k;
+        if (a[i] > b[i]) {
+            return true;
+        } else if (b[i] > a[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<std::size_t N>
+inline std::bitset<N> unsigned_divide(const std::bitset<N> &n, const std::bitset<N> &d) {
+    auto q = std::bitset<N>{0};
+    auto r = std::bitset<N>{0};
+    for (auto k = 0; k < N; ++k) {
+        const auto i = N - 1 - k;
+        r <<= 1;
+        r[0] = n[i];
+        if (unsigned_geq(r, d)) {
+            r = subtract(r, d);
+            q[i] = true;
+        }
+    }
+
+    return q;
 }
 
 } // namespace dccl

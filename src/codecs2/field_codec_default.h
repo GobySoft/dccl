@@ -28,6 +28,7 @@
 #define DCCLFIELDCODECDEFAULT20110322H
 
 #include <chrono>
+#include <type_traits>
 
 #include <google/protobuf/descriptor.h>
 
@@ -168,12 +169,10 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             dlog << "Encode " << value << " with bounds: [" << min() << "," << max() << "]"
                  << std::endl;
 
-        // round first, before checking bounds
         double res = resolution();
-        WireType wire_value = dccl::quantize(value, res);
-
-        // check bounds
-        if (wire_value < min() || wire_value > max())
+        double tol = res / 2;
+        // check bounds in the input space (NaN-correct)
+        if (!(min() - tol <= value && value < max() + tol))
         {
             // strict mode
             if (this->strict())
@@ -186,13 +185,98 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 return Bitset(size());
         }
 
-        // calculate the encoded value: remove the minimum, scale for the resolution, cast to int.
-        wire_value -= dccl::quantize(static_cast<WireType>(min()), res);
-        if (res >= 1)
-            wire_value /= res;
-        else
-            wire_value *= (1.0 / res);
-        auto uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
+        dccl::uint64 uint_value = 0;
+        if constexpr (std::is_floating_point_v<std::decay_t<WireType>>) {
+            // Float cannot compete with the level of detail capable in (u)int32 types
+            // so we need to be careful with the computation. Here we perform computations
+            // on the significand/mantissa and exponent values separately for as long as we
+            // can, then only convert to a the WireType right before rounding.
+
+            int16_t val_exp, res_exp, min_exp;
+            auto val_sig_raw = dccl::decompose_float_format(value, val_exp);
+            auto res_sig_raw = dccl::decompose_float_format(static_cast<WireType>(res), res_exp);
+            auto min_sig_raw = dccl::decompose_float_format(static_cast<WireType>(min()), min_exp);
+            // Intentionally reduce precision here. If we can past the float tests with our hands cuffed,
+            // then we can be pretty confident when working with doubles too. We should not need the double
+            // representation for this to be correct. Also "something something optimisation".
+            std::cout << "value: " << value << " = " << val_sig_raw << "*2^(" << val_exp << ")" << std::endl;
+            std::cout << "min: " << min() << " = " << min_sig_raw << "*2^(" << min_exp << ")" << std::endl;
+            std::cout << "res: " << res << " = " << res_sig_raw << "*2^(" << res_exp << ")" << std::endl;
+
+            using sig_t = decltype(val_sig_raw);
+            using unsigned_sig_t = typename std::make_unsigned<sig_t>::type;
+            using wider_t = std::bitset<2*sizeof(sig_t)*8>;
+            const auto val_sign = std::signbit(val_sig_raw);
+            const auto res_sign = std::signbit(res_sig_raw);
+            const auto min_sign = std::signbit(min_sig_raw);
+
+            // Reexpress the values in a bitset to express negative numbers
+            auto val_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(val_sig_raw))};
+            if (val_sign) {
+                dccl::negate(val_sig);
+            }
+            auto res_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(res_sig_raw))};
+            if (res_sign) {
+                dccl::negate(res_sig);
+            }
+            auto min_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(min_sig_raw))};
+            if (min_sign) {
+                dccl::negate(min_sig);
+            }
+
+            // reexpress value, minimum, and resolution significands with minimum common exponent
+            auto common_exp = std::min({val_exp, min_exp, res_exp});
+
+            auto val_diff = val_exp - common_exp;
+            val_sig <<= val_diff;
+            val_exp -= val_diff;
+
+            auto min_diff = min_exp - common_exp;
+            min_sig <<= min_diff;
+            min_exp -= min_diff;
+
+            auto res_diff = res_exp - common_exp;
+            res_sig <<= res_diff;
+            res_exp -= res_diff;
+
+            if (dccl::is_negative(val_sig)) {
+                std::cout << "value': " << value << " = -" << dccl::negated(val_sig).to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+            } else {
+                std::cout << "value': " << value << " = " << val_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+            }
+            if (dccl::is_negative(min_sig)) {
+                std::cout << "min': " << min() << " = -" << dccl::negated(min_sig).to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+            } else {
+                std::cout << "min': " << min() << " = " << min_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+            }
+            if (dccl::is_negative(res_sig)) {
+                std::cout << "res': " << res << " = -" << dccl::negated(res_sig).to_ullong() << "*2^(" << res_exp << ")" << std::endl;
+            } else {
+                std::cout << "res': " << res << " = " << res_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
+            }
+
+            // Now we can compute round((val-min)/res)
+            // =floor((val-min)/res + 0.5)
+            // =floor((2*(val-min)+res)/2*res)
+            // Note that exp variables cancel
+            const auto top = dccl::add(dccl::subtract(val_sig, min_sig) << 1, res_sig);
+            const auto bottom = res_sig << 1;
+            assert(!dccl::is_negative(top));
+            assert(!dccl::is_negative(bottom));
+
+            // Value expected to be positive
+            const auto value_enc_bits = dccl::unsigned_divide(top, bottom);
+            assert(!dccl::is_negative(value_enc_bits));
+            const auto value_enc = value_enc_bits.to_ullong();
+            std::cout << "value_enc: " << value_enc << std::endl;
+
+            uint_value = static_cast<dccl::uint64>(value_enc);
+        } else {
+            // the value transformed to the encoded number space
+            const auto value_enc = (value - min()) / res;
+            assert(value_enc >= -0.5); // We just need the rounded value to be non-negative
+            uint_value = std::round(value_enc);
+        }
 
         // "presence" value (0)
         if (!FieldCodecBase::use_required())
