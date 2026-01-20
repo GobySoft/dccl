@@ -266,7 +266,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             // Value expected to be positive
             const auto value_enc_bits = dccl::unsigned_divide(top, bottom);
             assert(!dccl::is_negative(value_enc_bits));
-            const auto value_enc = value_enc_bits.to_ullong();
+            const auto value_enc = dccl::fill_unsigned<unsigned_sig_t>(value_enc_bits);
             std::cout << "value_enc: " << value_enc << std::endl;
 
             uint_value = static_cast<dccl::uint64>(value_enc);
@@ -401,7 +401,7 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 const auto num_bits_dropped = dccl::drop_to_sig_fig(val_sig, 53);
                 val_exp += num_bits_dropped;
             }
-            const auto val_sig_raw_unsigned = dccl::fill_unsigned<num_wider_bits, unsigned_sig_t>(val_sig);
+            const auto val_sig_raw_unsigned = dccl::fill_unsigned<unsigned_sig_t>(val_sig);
             const auto &val_sig_raw = reinterpret_cast<const sig_t &>(val_sig_raw_unsigned);
             std::cout << "val = " << val_sig_raw << "*2^(" << val_exp << ")" << std::endl;
             const auto value = compose_float_format(val_sig_raw, val_exp);
