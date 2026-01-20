@@ -279,6 +279,34 @@ inline int64_t decompose_float_format(double val, int16_t& exponent) {
     }
 }
 
+inline float compose_float_format(int32_t significand, int16_t exponent) {
+    if (significand == std::numeric_limits<int32_t>::lowest()) {
+        return -std::numeric_limits<float>::infinity();
+    } else if (significand == std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<float>::infinity();
+    } else if (significand == std::numeric_limits<int32_t>::lowest() + 1) {
+        return std::numeric_limits<float>::quiet_NaN();
+    } else if (significand == 0) {
+        return 0.0f;
+    }
+
+    return ldexp(static_cast<float>(significand), exponent);
+}
+
+inline double compose_float_format(int64_t significand, int16_t exponent) {
+    if (significand == std::numeric_limits<int64_t>::lowest()) {
+        return -std::numeric_limits<float>::infinity();
+    } else if (significand == std::numeric_limits<int64_t>::max()) {
+        return std::numeric_limits<float>::infinity();
+    } else if (significand == std::numeric_limits<int64_t>::lowest() + 1) {
+        return std::numeric_limits<float>::quiet_NaN();
+    } else if (significand == 0) {
+        return 0.0;
+    }
+
+    return ldexp(static_cast<double>(significand), exponent);
+}
+
 template<std::size_t N>
 inline void increment(std::bitset<N> &bits) {
     for (auto i = 0ul; i < N; ++i) {
@@ -317,7 +345,7 @@ inline void add_to(std::bitset<N> &a, const std::bitset<N> &b) {
 }
 
 template<std::size_t N>
-inline std::bitset<N> add(const std::bitset<N> &a, const std::bitset<N> &b) {
+inline std::bitset<N> sum(const std::bitset<N> &a, const std::bitset<N> &b) {
     auto ret_val = a;
     add_to(ret_val, b);
     return ret_val;
@@ -332,7 +360,7 @@ inline std::bitset<N> subtract(const std::bitset<N> &a, const std::bitset<N> &b)
 
 template<std::size_t N>
 inline bool unsigned_geq(const std::bitset<N> &a, const std::bitset<N> &b) {
-    for (auto k = 0; k < N; ++k) {
+    for (auto k = 0ul; k < N; ++k) {
         const auto i = N - 1 - k;
         if (a[i] > b[i]) {
             return true;
@@ -348,7 +376,7 @@ template<std::size_t N>
 inline std::bitset<N> unsigned_divide(const std::bitset<N> &n, const std::bitset<N> &d) {
     auto q = std::bitset<N>{0};
     auto r = std::bitset<N>{0};
-    for (auto k = 0; k < N; ++k) {
+    for (auto k = 0ul; k < N; ++k) {
         const auto i = N - 1 - k;
         r <<= 1;
         r[0] = n[i];
@@ -365,6 +393,70 @@ inline std::bitset<N> unsigned_divide(const std::bitset<N> &n, const std::bitset
     }
 
     return q;
+}
+
+// Reference: see Other notations at https://en.wikipedia.org/wiki/Multiplication_algorithm
+template<std::size_t N>
+inline std::bitset<2*N> unsigned_multiply(const std::bitset<N> &a, const std::bitset<N> &b) {
+    auto p = std::bitset<2*N>{0};
+    for (auto b_i = 0ul; b_i < N; ++b_i) {
+        bool carry = false;
+        for (auto a_i = 0ul; a_i < N; ++a_i) {
+            auto sum = p[a_i + b_i] + carry + (a[a_i] * b[b_i]);
+            carry = static_cast<bool>(sum >> 1);
+            p[a_i + b_i] = static_cast<bool>(sum % 2);
+        }
+        p[b_i + N] = carry;
+    }
+
+    return p;
+}
+
+// Drops least significant bits until it is represented with the given
+// number of significant bits. The most significant dropped bit is used
+// to round the result.
+// Returns the number of bits dropped.
+template <std::size_t N>
+inline int16_t drop_to_sig_fig(std::bitset<N> &bits, uint16_t target_sig_fig) {
+    if (target_sig_fig == 0) {
+        bits = std::bitset<N>{0};
+    }
+
+    // Find most significant bit
+    auto curr_sig_fig = static_cast<int16_t>(N);
+    while (curr_sig_fig > target_sig_fig) {
+        if (bits[curr_sig_fig-1]) {
+            break;
+        } else {
+            --curr_sig_fig;
+        }
+    }
+
+    auto num_bits_to_drop = curr_sig_fig - target_sig_fig;
+    if (num_bits_to_drop > 0) {
+        // Inspect most significant bit for rounding
+        bool need_to_increment = bits[num_bits_to_drop-1];
+        bits >>= num_bits_to_drop;
+        if (need_to_increment) {
+            increment(bits);
+        }
+    }
+    return num_bits_to_drop;
+}
+
+template <std::size_t N, typename T>
+inline T fill_unsigned(const std::bitset<N> &bits) {
+    auto ret_val = T{};
+
+    constexpr auto num_type_bits = sizeof(T)*8;
+    constexpr auto num_iter = std::min(N, num_type_bits);
+    for (auto k = 0ul; k < num_iter; ++k) {
+        const auto i = num_iter - 1 - k;
+        ret_val <<= 1;
+        ret_val += bits[i];
+    }
+
+    return ret_val;
 }
 
 } // namespace dccl
