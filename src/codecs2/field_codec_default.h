@@ -256,11 +256,9 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             }
 
             // Now we can compute round((val-min)/res)
-            // =floor((val-min)/res + 0.5)
-            // =floor((2*(val-min)+res)/2*res)
-            // Note that exp variables cancel
-            const auto top = dccl::add(dccl::subtract(val_sig, min_sig) << 1, res_sig);
-            const auto bottom = res_sig << 1;
+            // Note that the division will round and the exp variables cancel
+            const auto top = dccl::subtract(val_sig, min_sig);
+            const auto bottom = res_sig;
             assert(!dccl::is_negative(top));
             assert(!dccl::is_negative(bottom));
 

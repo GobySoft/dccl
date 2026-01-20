@@ -343,6 +343,7 @@ inline bool unsigned_geq(const std::bitset<N> &a, const std::bitset<N> &b) {
     return true;
 }
 
+// Reference: see Long division at https://en.wikipedia.org/wiki/Division_algorithm
 template<std::size_t N>
 inline std::bitset<N> unsigned_divide(const std::bitset<N> &n, const std::bitset<N> &d) {
     auto q = std::bitset<N>{0};
@@ -355,6 +356,12 @@ inline std::bitset<N> unsigned_divide(const std::bitset<N> &n, const std::bitset
             r = subtract(r, d);
             q[i] = true;
         }
+    }
+
+    // Remainder for rounding
+    r <<= 1;
+    if (unsigned_geq(r, d)) {
+        increment(q);
     }
 
     return q;
