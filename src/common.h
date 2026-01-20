@@ -444,7 +444,7 @@ inline int16_t drop_to_sig_fig(std::bitset<N> &bits, uint16_t target_sig_fig) {
     return num_bits_to_drop;
 }
 
-template <std::size_t N, typename T>
+template <typename T, std::size_t N>
 inline T fill_unsigned(const std::bitset<N> &bits) {
     auto ret_val = T{};
 
