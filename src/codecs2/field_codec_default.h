@@ -424,14 +424,18 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 std::cout << "quantised min = " << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
             }
 
-            const auto sum_pos_bits = dccl::sum(val_enc_sig, quant_min_sig);
-            if (dccl::is_negative(sum_pos_bits)) {
-                std::cout << "sum = -" << dccl::negated(sum_pos_bits).to_ullong() << "*2^(0)" << std::endl;
+            auto sum_pos_bits = dccl::sum(val_enc_sig, quant_min_sig);
+            const auto sum_sign = dccl::is_negative(sum_pos_bits);
+            if (sum_sign) {
+                dccl::negate(sum_pos_bits);
+            }
+            const auto sum_exp = 0;
+
+            if (sum_sign) {
+                std::cout << "sum = -" << sum_pos_bits.to_ullong() << "*2^(0)" << std::endl;
             } else {
                 std::cout << "sum = " << sum_pos_bits.to_ullong() << "*2^(0)" << std::endl;
             }
-            const auto sum_exp = 0;
-            const auto sum_sign = dccl::is_negative(sum_pos_bits);
 
             const auto sum_pos_raw_unsigned = dccl::fill_unsigned<unsigned_sig_t>(sum_pos_bits);
 
