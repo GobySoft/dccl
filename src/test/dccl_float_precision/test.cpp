@@ -110,5 +110,83 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
     }
 
+    // Test conversion of values at different precisions
+    codec.load<PrecisionRangeFloatMsg>();
+    codec.info<PrecisionRangeFloatMsg>(&dccl::dlog);
+
+    {
+        auto resolutions = std::array<double, 7>{};
+        for (auto field_idx = 0ul; field_idx < 7; ++field_idx) {
+            const auto field_name = "prec" + std::to_string(field_idx);
+            const auto *field_ptr = PrecisionRangeFloatMsg::GetDescriptor()->FindFieldByName(field_name);
+            assert(field_ptr);
+            const auto &field = *field_ptr;
+
+            const auto &opts = field.options();
+            const auto &dccl_ext = opts.GetExtension(dccl::field);
+
+            if (dccl_ext.has_precision()) {
+                resolutions[field_idx] = std::pow(10.0, -dccl_ext.precision());
+            } else {
+                resolutions[field_idx] = dccl_ext.resolution();
+            }
+
+            std::cout << "Tolerance for DCCL float number " << field_idx << " is " << resolutions[field_idx] << " / 2 = " << resolutions[field_idx]/2 << std::endl;
+        }
+
+        for (auto i = -100; i < 101; ++i) {
+            // Sweeping between the 6 and 7 decimal places of support for float.
+            // Float may not be able to express some of these values, but that's not
+            // in our scope. We're just making sure whatever float can express is
+            // preserved on the other end.
+
+            const auto test_val = 1000000+i;
+            std::cout << "Testing encoding of " << test_val << " on a range of precisions..." << std::endl;
+            auto msg_in = PrecisionRangeFloatMsg{};
+            msg_in.set_prec0(test_val * resolutions[0]);
+            msg_in.set_prec1(test_val * resolutions[1]);
+            msg_in.set_prec2(test_val * resolutions[2]);
+            msg_in.set_prec3(test_val * resolutions[3]);
+            msg_in.set_prec4(test_val * resolutions[4]);
+            msg_in.set_prec5(test_val * resolutions[5]);
+            msg_in.set_prec6(test_val * resolutions[6]);
+
+            auto encoded = std::string{};
+            codec.encode(&encoded, msg_in);
+
+            auto msg_out = PrecisionRangeFloatMsg{};
+            codec.decode(encoded, &msg_out);
+
+            const auto diff0 = std::abs(msg_out.prec0() - msg_in.prec0());
+            const auto diff1 = std::abs(msg_out.prec1() - msg_in.prec1());
+            const auto diff2 = std::abs(msg_out.prec2() - msg_in.prec2());
+            const auto diff3 = std::abs(msg_out.prec3() - msg_in.prec3());
+            const auto diff4 = std::abs(msg_out.prec4() - msg_in.prec4());
+            const auto diff5 = std::abs(msg_out.prec5() - msg_in.prec5());
+            const auto diff6 = std::abs(msg_out.prec6() - msg_in.prec6());
+            std::cout << "Checking if " << msg_out.prec0() << " is close enough to " << msg_in.prec0() << "...";
+            std::cout << " i.e. Difference " << diff0 << "<=" << resolutions[0]/2 << std::endl;
+            assert(diff0 <= resolutions[0]/2);
+            std::cout << "Checking if " << msg_out.prec1() << " is close enough to " << msg_in.prec1() << "...";
+            std::cout << " i.e. Difference " << diff1 << "<=" << resolutions[1]/2 << std::endl;
+            assert(diff1 <= resolutions[1]/2);
+            std::cout << "Checking if " << msg_out.prec2() << " is close enough to " << msg_in.prec2() << "...";
+            std::cout << " i.e. Difference " << diff2 << "<=" << resolutions[2]/2 << std::endl;
+            assert(diff2 <= resolutions[2]/2);
+            std::cout << "Checking if " << msg_out.prec3() << " is close enough to " << msg_in.prec3() << "...";
+            std::cout << " i.e. Difference " << diff3 << "<=" << resolutions[3]/2 << std::endl;
+            assert(diff3 <= resolutions[3]/2);
+            std::cout << "Checking if " << msg_out.prec4() << " is close enough to " << msg_in.prec4() << "...";
+            std::cout << " i.e. Difference " << diff4 << "<=" << resolutions[4]/2 << std::endl;
+            assert(diff4 <= resolutions[4]/2);
+            std::cout << "Checking if " << msg_out.prec5() << " is close enough to " << msg_in.prec5() << "...";
+            std::cout << " i.e. Difference " << diff5 << "<=" << resolutions[5]/2 << std::endl;
+            assert(diff5 <= resolutions[5]/2);
+            std::cout << "Checking if " << msg_out.prec6() << " is close enough to " << msg_in.prec6() << "...";
+            std::cout << " i.e. Difference " << diff6 << "<=" << resolutions[6]/2 << std::endl;
+            assert(diff6 <= resolutions[6]/2);
+        }
+    }
+
     std::cout << "all tests passed" << std::endl;
 }
