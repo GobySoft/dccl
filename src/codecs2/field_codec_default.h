@@ -211,70 +211,111 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             const auto res_sign = std::signbit(res_sig_raw);
             const auto min_sign = std::signbit(min_sig_raw);
 
-            // Reexpress the values in a bitset to express negative numbers
-            auto val_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(val_sig_raw))};
-            if (val_sign) {
-                dccl::negate(val_sig);
-            }
-            auto res_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(res_sig_raw))};
+            // Reexpress the values in a bitset of positive values
             assert(!res_sign);
-            auto min_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(min_sig_raw))};
-            if (min_sign) {
-                dccl::negate(min_sig);
-            }
+            auto val_pos_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(val_sig_raw))};
+            auto res_pos_sig = wider_t{static_cast<unsigned_sig_t>(res_sig_raw)};
+            auto min_pos_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(min_sig_raw))};
 
             // reexpress value, minimum, and resolution significands with minimum common exponent
             auto common_exp = std::min({val_exp, min_exp, res_exp});
 
             auto val_diff = val_exp - common_exp;
-            val_sig <<= val_diff;
+            val_pos_sig <<= val_diff;
             val_exp -= val_diff;
 
             auto min_diff = min_exp - common_exp;
-            min_sig <<= min_diff;
+            min_pos_sig <<= min_diff;
             min_exp -= min_diff;
 
             auto res_diff = res_exp - common_exp;
-            res_sig <<= res_diff;
+            res_pos_sig <<= res_diff;
             res_exp -= res_diff;
 
-            if (dccl::is_negative(val_sig)) {
-                std::cout << "value': " << value << " = -" << dccl::negated(val_sig).to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+            if (val_sign) {
+                std::cout << "value: = -" << val_pos_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
             } else {
-                std::cout << "value': " << value << " = " << val_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+                std::cout << "value: = " << val_pos_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
             }
-            if (dccl::is_negative(min_sig)) {
-                std::cout << "min': " << min() << " = -" << dccl::negated(min_sig).to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+            if (res_sign) {
+                std::cout << "res: = -" << res_pos_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
             } else {
-                std::cout << "min': " << min() << " = " << min_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+                std::cout << "res: = " << res_pos_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
             }
-            if (dccl::is_negative(res_sig)) {
-                std::cout << "res': " << res << " = -" << dccl::negated(res_sig).to_ullong() << "*2^(" << res_exp << ")" << std::endl;
+            if (min_sign) {
+                std::cout << "min: = -" << min_pos_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
             } else {
-                std::cout << "res': " << res << " = " << res_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
+                std::cout << "min: = " << min_pos_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
             }
 
-            // Now we can compute round((val-min)/res)
-            // Note that the division will round and the exp variables cancel
-            assert(val_exp == res_exp);
-            assert(res_exp == min_exp);
-            const auto top = dccl::subtract(val_sig, min_sig);
-            const auto bottom = res_sig;
-            assert(!dccl::is_negative(top));
-            assert(!dccl::is_negative(bottom));
+            // Do the division
+            auto quant_val_sig = dccl::unsigned_divide(val_pos_sig, res_pos_sig);
+            auto quant_val_exp = val_exp - res_exp;
+            auto quant_min_sig = dccl::unsigned_divide(min_pos_sig, res_pos_sig);
+            auto quant_min_exp = min_exp - res_exp;
 
-            // Value expected to be positive
-            const auto value_enc_bits = dccl::unsigned_divide(top, bottom);
+            if (dccl::is_negative(quant_val_sig)) {
+                std::cout << "quantised value = -" << dccl::negated(quant_val_sig).to_ullong() << "*2^(" << quant_val_exp << ")" << std::endl;
+            } else {
+                std::cout << "quantised value = " << quant_val_sig.to_ullong() << "*2^(" << quant_val_exp << ")" << std::endl;
+            }
+            if (dccl::is_negative(quant_min_sig)) {
+                std::cout << "quantised min = -" << dccl::negated(quant_min_sig).to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            } else {
+                std::cout << "quantised min = " << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            }
+
+            // Now we get them to exponent zero, rounding if necessary
+            if (quant_val_exp < 0) {
+                dccl::rounding_shift_right(quant_val_sig, static_cast<uint16_t>(-quant_val_exp));
+            } else {
+                quant_val_sig <<= quant_val_exp;
+            }
+            quant_val_exp = 0;
+            if (quant_min_exp < 0) {
+                dccl::rounding_shift_right(quant_min_sig, static_cast<uint16_t>(-quant_min_exp));
+            } else {
+                quant_min_sig <<= quant_min_exp;
+            }
+            quant_min_exp = 0;
+
+            // Apply signs
+            if (val_sign) {
+                dccl::negate(quant_val_sig);
+            }
+            if (min_sign) {
+                dccl::negate(quant_min_sig);
+            }
+
+            if (dccl::is_negative(quant_val_sig)) {
+                std::cout << "quantised value = -" << dccl::negated(quant_val_sig).to_ullong() << "*2^(" << quant_val_exp << ")" << std::endl;
+            } else {
+                std::cout << "quantised value = " << quant_val_sig.to_ullong() << "*2^(" << quant_val_exp << ")" << std::endl;
+            }
+            if (dccl::is_negative(quant_min_sig)) {
+                std::cout << "quantised min = -" << dccl::negated(quant_min_sig).to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            } else {
+                std::cout << "quantised min = " << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            }
+
+            const auto value_enc_bits = dccl::subtract(quant_val_sig, quant_min_sig);
+            // Encoding expected to be positive
             assert(!dccl::is_negative(value_enc_bits));
+
             const auto value_enc = dccl::fill_unsigned<unsigned_sig_t>(value_enc_bits);
             std::cout << "value_enc: " << value_enc << std::endl;
 
             uint_value = static_cast<dccl::uint64>(value_enc);
         } else {
-            // the value transformed to the encoded number space
-            const auto value_enc = (value - min()) / res;
-            assert(value_enc >= -0.5); // We just need the rounded value to be non-negative
-            uint_value = std::round(value_enc);
+            WireType wire_value = dccl::quantize(value, res);
+
+            // calculate the encoded value: remove the minimum, scale for the resolution, cast to int.
+            wire_value -= dccl::quantize(static_cast<WireType>(min()), res);
+            if (res >= 1)
+                wire_value /= res;
+            else
+                wire_value *= (1.0 / res);
+            uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
         }
 
         // "presence" value (0)
@@ -315,111 +356,109 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             using sig_t = decltype(res_sig_raw);
             using unsigned_sig_t = typename std::make_unsigned<sig_t>::type;
             constexpr auto num_narrow_bits = sizeof(sig_t)*8;
-            constexpr auto num_wider_bits = 2*sizeof(sig_t)*8;
-            using narrow_t = std::bitset<num_narrow_bits>;
+            constexpr auto num_wider_bits = 2*num_narrow_bits;
             using wider_t = std::bitset<num_wider_bits>;
 
             const auto res_sign = std::signbit(res_sig_raw);
             const auto min_sign = std::signbit(min_sig_raw);
 
             // Reexpress the values in a bitset to express negative numbers
-            // We will intentionally work with narrow types for res and the encoded value until we multiply
-            const auto res_sig = narrow_t{static_cast<unsigned_sig_t>(std::abs(res_sig_raw))};
             assert(!res_sign);
-            auto min_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(min_sig_raw))};
-            if (min_sign) {
-                dccl::negate(min_sig);
-            }
-
-            if (dccl::is_negative(min_sig)) {
-                std::cout << "min: " << min() << " = -" << dccl::negated(min_sig).to_ullong() << "*2^(" << min_exp << ")" << std::endl;
-            } else {
-                std::cout << "min: " << min() << " = " << min_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
-            }
-            if (dccl::is_negative(res_sig)) {
-                std::cout << "res: " << res << " = -" << dccl::negated(res_sig).to_ullong() << "*2^(" << res_exp << ")" << std::endl;
-            } else {
-                std::cout << "res: " << res << " = " << res_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
-            }
-
-            const auto val_enc_sig = narrow_t{uint_value};
+            auto res_pos_sig = wider_t{static_cast<unsigned_sig_t>(res_sig_raw)};
+            auto min_pos_sig = wider_t{static_cast<unsigned_sig_t>(std::abs(min_sig_raw))};
+            const auto val_enc_sig = wider_t{uint_value};
             const auto val_enc_exp = 0;
 
             if (dccl::is_negative(val_enc_sig)) {
-                std::cout << "value encoded = -" << dccl::negated(val_enc_sig).to_ullong() << "*2^(" << val_enc_exp << ")" << std::endl;
+                std::cout << "value_enc = -" << dccl::negated(val_enc_sig).to_ullong() << "*2^(" << val_enc_exp << ")" << std::endl;
             } else {
-                std::cout << "value encoded = " << val_enc_sig.to_ullong() << "*2^(" << val_enc_exp << ")" << std::endl;
+                std::cout << "value_enc = " << val_enc_sig.to_ullong() << "*2^(" << val_enc_exp << ")" << std::endl;
             }
 
-            /// Want to calculate (res * val + min)
-            // First calculate the product
-            auto prod_sig = unsigned_multiply(val_enc_sig, res_sig);
-            auto prod_exp = val_enc_exp + res_exp;
-
-            if (dccl::is_negative(prod_sig)) {
-                std::cout << "prod = -" << dccl::negated(prod_sig).to_ullong() << "*2^(" << prod_exp << ")" << std::endl;
-            } else {
-                std::cout << "prod = " << prod_sig.to_ullong() << "*2^(" << prod_exp << ")" << std::endl;
-            }
-
-            // Then we need to get to the lowest common exponent
-            const auto exp_diff = prod_exp - min_exp;
+            // Reexpress min and res to the lowest common exponent
+            const auto exp_diff = min_exp - res_exp;
+            std::cout << "exp_diff = " << exp_diff << std::endl;
             if (exp_diff >= 0) {
-                prod_sig <<= exp_diff;
-                prod_exp -= exp_diff;
+                min_pos_sig <<= exp_diff;
+                min_exp -= exp_diff;
             } else {
-                min_sig <<= -exp_diff;
-                min_exp -= -exp_diff;
+                res_pos_sig <<= -exp_diff;
+                res_exp -= -exp_diff;
             }
 
-            if (dccl::is_negative(prod_sig)) {
-                std::cout << "prod' = -" << dccl::negated(prod_sig).to_ullong() << "*2^(" << prod_exp << ")" << std::endl;
+            if (res_sign) {
+                std::cout << "res': = -" << res_pos_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
             } else {
-                std::cout << "prod' = " << prod_sig.to_ullong() << "*2^(" << prod_exp << ")" << std::endl;
+                std::cout << "res': = " << res_pos_sig.to_ullong() << "*2^(" << res_exp << ")" << std::endl;
             }
-            if (dccl::is_negative(min_sig)) {
-                std::cout << "min': " << min() << " = -" << dccl::negated(min_sig).to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+            if (min_sign) {
+                std::cout << "min': = -" << min_pos_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
             } else {
-                std::cout << "min': " << min() << " = " << min_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
+                std::cout << "min': = " << min_pos_sig.to_ullong() << "*2^(" << min_exp << ")" << std::endl;
             }
 
-            auto val_sig = dccl::sum(prod_sig, min_sig);
-            auto val_exp = prod_exp;
+            auto quant_min_sig = dccl::unsigned_divide(min_pos_sig, res_pos_sig);
+            auto quant_min_exp = min_exp - res_exp;
 
-            if (dccl::is_negative(val_sig)) {
-                std::cout << "val = -" << dccl::negated(val_sig).to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+            if (min_sign) {
+                std::cout << "quantised min = -" << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
             } else {
-                std::cout << "val = " << val_sig.to_ullong() << "*2^(" << val_exp << ")" << std::endl;
+                std::cout << "quantised min = " << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
             }
 
-            /// Need to round to the sig figs that fits
-            // For the bit dropping alorithm the value must be positive, so
-            // temporarily unsign the value
-            const auto val_is_negative = dccl::is_negative(val_sig);
-            if (val_is_negative) {
-                dccl::negate(val_sig);
-            }
-            // Note: one bit of precision is implicit in the float and double representation
-            if constexpr (std::is_same_v<WireType, float>) {
-                const auto num_bits_dropped = dccl::drop_to_sig_fig(val_sig, 24);
-                val_exp += num_bits_dropped;
+            if (quant_min_exp < 0) {
+                dccl::rounding_shift_right(quant_min_sig, static_cast<uint16_t>(-quant_min_exp));
             } else {
-                const auto num_bits_dropped = dccl::drop_to_sig_fig(val_sig, 53);
-                val_exp += num_bits_dropped;
+                quant_min_sig <<= quant_min_exp;
             }
-            // Rembereing to sign the value back
-            if (val_is_negative) {
-                dccl::negate(val_sig);
+            quant_min_exp = 0;
+
+            // Apply signs
+            if (min_sign) {
+                dccl::negate(quant_min_sig);
             }
 
-            const auto val_sig_raw_unsigned = dccl::fill_unsigned<unsigned_sig_t>(val_sig);
-            const auto &val_sig_raw = reinterpret_cast<const sig_t &>(val_sig_raw_unsigned);
-            std::cout << "val = " << val_sig_raw << "*2^(" << val_exp << ")" << std::endl;
-            const auto value = compose_float_format(val_sig_raw, val_exp);
+            if (dccl::is_negative(quant_min_sig)) {
+                std::cout << "quantised min = -" << dccl::negated(quant_min_sig).to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            } else {
+                std::cout << "quantised min = " << quant_min_sig.to_ullong() << "*2^(" << quant_min_exp << ")" << std::endl;
+            }
+
+            const auto sum_pos_bits = dccl::sum(val_enc_sig, quant_min_sig);
+            if (dccl::is_negative(sum_pos_bits)) {
+                std::cout << "sum = -" << dccl::negated(sum_pos_bits).to_ullong() << "*2^(0)" << std::endl;
+            } else {
+                std::cout << "sum = " << sum_pos_bits.to_ullong() << "*2^(0)" << std::endl;
+            }
+            const auto sum_exp = 0;
+            const auto sum_sign = dccl::is_negative(sum_pos_bits);
+
+            const auto sum_pos_raw_unsigned = dccl::fill_unsigned<unsigned_sig_t>(sum_pos_bits);
+
+            if (sum_sign) {
+                std::cout << "sum = -" << sum_pos_raw_unsigned << "*2^(" << sum_exp << ")" << std::endl;
+            } else {
+                std::cout << "sum = " << sum_pos_raw_unsigned << "*2^(" << sum_exp << ")" << std::endl;
+            }
+
+            auto value = sum_pos_raw_unsigned * res;
+            if (sum_sign) {
+                value = -value;
+            }
             std::cout << "val: " << value << std::endl;
             return value;
         } else {
-            return static_cast<WireType>(res * uint_value + min());
+            auto wire_value = (WireType)uint_value;
+            if (res >= 1)
+                wire_value *= res;
+            else
+                wire_value /= (1.0 / res);
+
+            // round values again to properly handle cases where double precision
+            // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
+            wire_value =
+                dccl::quantize(wire_value + dccl::quantize(static_cast<WireType>(min()), res), res);
+            return wire_value;
         }
     }
 

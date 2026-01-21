@@ -412,6 +412,16 @@ inline std::bitset<2*N> unsigned_multiply(const std::bitset<N> &a, const std::bi
     return p;
 }
 
+template <std::size_t N>
+inline void rounding_shift_right(std::bitset<N> &bits, uint16_t num_pos) {
+    // Inspect most significant bit for rounding
+    bool need_to_increment = bits[num_pos-1];
+    bits >>= num_pos;
+    if (need_to_increment) {
+        increment(bits);
+    }
+}
+
 // Drops least significant bits until it is represented with the given
 // number of significant bits. The most significant dropped bit is used
 // to round the result.
@@ -434,12 +444,7 @@ inline int16_t drop_to_sig_fig(std::bitset<N> &bits, uint16_t target_sig_fig) {
 
     auto num_bits_to_drop = curr_sig_fig - target_sig_fig;
     if (num_bits_to_drop > 0) {
-        // Inspect most significant bit for rounding
-        bool need_to_increment = bits[num_bits_to_drop-1];
-        bits >>= num_bits_to_drop;
-        if (need_to_increment) {
-            increment(bits);
-        }
+        rounding_shift_right(bits, num_bits_to_drop);
     }
     return num_bits_to_drop;
 }
