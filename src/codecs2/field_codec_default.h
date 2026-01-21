@@ -446,6 +446,13 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 value = -value;
             }
             std::cout << "val: " << value << std::endl;
+
+            // round values again to properly handle cases where double precision
+            // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
+            value = dccl::quantize(value , res);
+
+            std::cout << "quantised val: " << value << std::endl;
+
             return value;
         } else {
             auto wire_value = (WireType)uint_value;
