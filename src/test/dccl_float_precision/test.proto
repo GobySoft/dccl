@@ -37,3 +37,16 @@ message FloatMsg
         (dccl.field).precision = 7
     ];
 }
+
+message NegativePrecisionFloatMsg
+{
+    option (dccl.msg).id = 2101;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    optional float f = 1 [
+        (dccl.field).max = 20,
+        (dccl.field).min = -20,
+        (dccl.field).precision = -1
+    ];
+}

@@ -72,5 +72,43 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
     }
 
+    // Testing with negative precision
+    codec.load<NegativePrecisionFloatMsg>();
+    codec.info<NegativePrecisionFloatMsg>(&dccl::dlog);
+
+    {
+        const auto *field_ptr = NegativePrecisionFloatMsg::GetDescriptor()->FindFieldByName("f");
+        assert(field_ptr);
+        const auto &field = *field_ptr;
+
+        const auto &opts = field.options();
+        const auto &dccl_ext = opts.GetExtension(dccl::field);
+
+        auto res = std::numeric_limits<double>::quiet_NaN();
+        if (dccl_ext.has_precision()) {
+            res = std::pow(10.0, -dccl_ext.precision());
+        } else {
+            res = dccl_ext.resolution();
+        }
+
+        const auto tol = res/2;
+        std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
+
+        const auto test_cases = std::array<float, 3>{10.f, -10.f, 1.f};
+        for (const auto test_case : test_cases) {
+            auto msg_in = NegativePrecisionFloatMsg{};
+            msg_in.set_f(test_case);
+
+            auto encoded = std::string{};
+            codec.encode(&encoded, msg_in);
+
+            auto msg_out = NegativePrecisionFloatMsg{};
+            codec.decode(encoded, &msg_out);
+
+            std::cout << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
+            assert(std::abs(test_case - msg_out.f()) < tol);
+        }
+    }
+
     std::cout << "all tests passed" << std::endl;
 }
