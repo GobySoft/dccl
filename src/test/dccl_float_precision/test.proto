@@ -50,3 +50,46 @@ message NegativePrecisionFloatMsg
         (dccl.field).precision = -1
     ];
 }
+
+message PrecisionRangeFloatMsg
+{
+    option (dccl.msg).id = 2201;
+    option (dccl.msg).max_bytes = 256;
+    option (dccl.msg).codec_version = 4;
+
+    optional float prec0 = 1 [
+        (dccl.field).max = 10000000,
+        (dccl.field).min = -10000000,
+        (dccl.field).precision = 0
+    ];
+    optional float prec1 = 2 [
+        (dccl.field).max = 1000000,
+        (dccl.field).min = -1000000,
+        (dccl.field).precision = 1
+    ];
+    optional float prec2 = 3 [
+        (dccl.field).max = 100000,
+        (dccl.field).min = -100000,
+        (dccl.field).precision = 2
+    ];
+    optional float prec3 = 4 [
+        (dccl.field).max = 10000,
+        (dccl.field).min = -10000,
+        (dccl.field).precision = 3
+    ];
+    optional float prec4 = 5 [
+        (dccl.field).max = 1000,
+        (dccl.field).min = -1000,
+        (dccl.field).precision = 4
+    ];
+    optional float prec5 = 6 [
+        (dccl.field).max = 100,
+        (dccl.field).min = -100,
+        (dccl.field).precision = 5
+    ];
+    optional float prec6 = 7 [
+        (dccl.field).max = 10,
+        (dccl.field).min = -10,
+        (dccl.field).precision = 6
+    ];
+}
