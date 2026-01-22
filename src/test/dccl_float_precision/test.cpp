@@ -26,6 +26,9 @@
 
 #include "../../codec.h"
 #include "test.pb.h"
+
+#include <array>
+
 using namespace dccl::test;
 
 int main(int /*argc*/, char* /*argv*/ [])
