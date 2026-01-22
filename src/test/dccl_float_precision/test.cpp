@@ -56,7 +56,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         const auto tol = res/2;
         std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
 
-        const auto test_cases = std::array<float, 3>{0.000001f, 0.010001f, 1.000001f};
+        const auto test_cases = std::array<float, 3>{{0.000001f, 0.010001f, 1.000001f}};
         for (const auto test_case : test_cases) {
             auto msg_in = FloatMsg{};
             msg_in.set_f(test_case);
@@ -94,7 +94,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         const auto tol = res/2;
         std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
 
-        const auto test_cases = std::array<float, 3>{10.f, -10.f, 1.f};
+        const auto test_cases = std::array<float, 3>{{10.f, -10.f, 1.f}};
         for (const auto test_case : test_cases) {
             auto msg_in = NegativePrecisionFloatMsg{};
             msg_in.set_f(test_case);
@@ -115,7 +115,8 @@ int main(int /*argc*/, char* /*argv*/ [])
     codec.info<PrecisionRangeFloatMsg>(&dccl::dlog);
 
     {
-        auto resolutions = std::array<double, 7>{};
+        auto resolutions = std::vector<double>{};
+        resolutions.resize(7);
         for (auto field_idx = 0ul; field_idx < 7; ++field_idx) {
             const auto field_name = "prec" + std::to_string(field_idx);
             const auto *field_ptr = PrecisionRangeFloatMsg::GetDescriptor()->FindFieldByName(field_name);
