@@ -350,7 +350,7 @@ jobs:
             - '*.tar.xz'
 
   osx-build:
-    resource_class: m2pro.medium
+    resource_class: m4pro.medium
     macos:
       xcode: "16.4.0"
     environment:
