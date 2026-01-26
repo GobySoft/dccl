@@ -37,6 +37,7 @@
 #include "../binary.h"
 #include "../field_codec.h"
 #include "../field_codec_fixed.h"
+#include "../numeric.h"
 #include "../thread_safety.h"
 #include "field_codec_default_message.h"
 
