@@ -307,6 +307,12 @@ inline void include_base_unit_headers(const std::string& base_unit_category_and_
     os << "#include <boost/units/base_units/" << cat_name_sub << ".hpp>" << std::endl;
 }
 
+inline void include_custom_unit_headers(const std::string& header, std::ostream& os)
+{
+    os << std::endl;
+    os << "#include \"" << header << "\"" << std::endl;
+}
+
 inline void add_absolute(std::string& before, std::string& after)
 {
     before = "boost::units::absolute<" + before;
@@ -517,6 +523,35 @@ inline void construct_units_typedef_from_base_unit(const std::string& fieldname,
     os << "typedef " << before << "boost::units::" << base_unit_category_and_name
        << "_base_unit::unit_type " << after << fieldname << "_unit;" << std::endl;
 
+    os << std::endl;
+}
+
+//===========
+// Generate a unit typedef when given custom unit
+inline void construct_units_typedef_from_custom_unit(const std::string& fieldname,
+                                                     const std::string& unit_name,
+                                                     const bool& rel_temperature,
+                                                     const std::string& prefix, std::ostream& os)
+{
+    bool temperature_unit = false;
+
+    //expect to see "temperature::celsius" or "temperature::fahrenheit" or "si::kelvin"
+    if ((unit_name.find("temperature") != std::string::npos) ||
+        (unit_name.find("kelvin") != std::string::npos))
+        temperature_unit = true;
+
+    bool absolute = temperature_unit && !rel_temperature;
+
+    std::string before;
+    std::string after;
+    if (absolute)
+        add_absolute(before, after);
+
+    if (!prefix.empty())
+        add_prefix(prefix, before, after);
+
+    // Namespace and typedef the unit
+    os << "typedef " << before << unit_name << " " << after << fieldname << "_unit;" << std::endl;
     os << std::endl;
 }
 
