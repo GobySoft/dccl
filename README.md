@@ -39,3 +39,7 @@ deb http://packages.gobysoft.org/[ubuntu|debian]/continuous/ {release-codename}/
 ## Continuous Integration
 
 [![CircleCI](https://circleci.com/gh/GobySoft/dccl.svg?style=svg)](https://circleci.com/gh/GobySoft/dccl)
+
+### Security Metrics
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/GobySoft/dccl/badge)](https://scorecard.dev/viewer/?uri=github.com/GobySoft/dccl)
