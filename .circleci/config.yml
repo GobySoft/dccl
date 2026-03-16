@@ -362,11 +362,11 @@ jobs:
           command: brew update
       - run:
           name: Install dependencies
-          command: brew install cmake protobuf abseil
+          command: brew install cmake protobuf abseil boost
       - run:
           name: Build
           command: |
-            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH="$(brew --prefix protobuf);$(brew --prefix abseil)" -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH="$(brew --prefix protobuf);$(brew --prefix abseil);$(brew --prefix boost)" -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
       - run:
           name: Run tests
           command: cd build && ctest --output-on-failure -j4

@@ -175,7 +175,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
 
     try
     {
-        const std::string& filename = file->name();
+        const std::string filename(file->name());
         filename_h_ = filename.substr(0, filename.find(".proto")) + ".pb.h";
         //        std::string filename_cc = filename.substr(0, filename.find(".proto")) + ".pb.cc";
 
@@ -231,7 +231,7 @@ void DCCLGenerator::generate_message(
     {
         {
             std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> output(
-                generator_context->OpenForInsert(filename_h_, "class_scope:" + desc->full_name()));
+                generator_context->OpenForInsert(filename_h_, "class_scope:" + std::string(desc->full_name())));
             google::protobuf::io::Printer printer(output.get(), '$');
 
             if (desc->options().HasExtension(dccl::msg))
@@ -272,7 +272,7 @@ void DCCLGenerator::generate_message(
     }
     catch (std::exception& e)
     {
-        throw(std::runtime_error(std::string("Message: \n" + desc->full_name() + "\n" + e.what())));
+        throw(std::runtime_error(std::string("Message: \n") + std::string(desc->full_name()) + "\n" + e.what()));
     }
 }
 
@@ -306,10 +306,10 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             std::stringstream new_methods;
 
             construct_units_typedef_from_base_unit(
-                field->name(), dccl_field_options.units().unit(),
+                std::string(field->name()), dccl_field_options.units().unit(),
                 dccl_field_options.units().relative_temperature(),
                 dccl_field_options.units().prefix(), new_methods);
-            construct_field_class_plugin(field->name(), new_methods,
+            construct_field_class_plugin(std::string(field->name()), new_methods,
                                          dccl::units::get_field_type_name(field->cpp_type()),
                                          field->is_repeated());
             printer->Print(new_methods.str().c_str());
@@ -320,10 +320,10 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             std::stringstream new_methods;
 
             construct_units_typedef_from_custom_unit(
-                field->name(), dccl_field_options.units().custom().unit(),
+                std::string(field->name()), dccl_field_options.units().custom().unit(),
                 dccl_field_options.units().relative_temperature(),
                 dccl_field_options.units().prefix(), new_methods);
-            construct_field_class_plugin(field->name(), new_methods,
+            construct_field_class_plugin(std::string(field->name()), new_methods,
                                          dccl::units::get_field_type_name(field->cpp_type()),
                                          field->is_repeated());
             printer->Print(new_methods.str().c_str());
@@ -350,16 +350,16 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                     "'unit_system' defined when using 'base_dimensions'.")));
 
                 // default to system set in the field, otherwise use the system set at the message level
-                const std::string& unit_system =
+                const std::string unit_system =
                     (!dccl_field_options.units().has_system() && message_unit_system)
                         ? *message_unit_system
-                        : dccl_field_options.units().system();
+                        : std::string(dccl_field_options.units().system());
 
-                construct_base_dims_typedef(dimensions, powers, field->name(), unit_system,
+                construct_base_dims_typedef(dimensions, powers, std::string(field->name()), unit_system,
                                             dccl_field_options.units().relative_temperature(),
                                             dccl_field_options.units().prefix(), new_methods);
 
-                construct_field_class_plugin(field->name(), new_methods,
+                construct_field_class_plugin(std::string(field->name()), new_methods,
                                              dccl::units::get_field_type_name(field->cpp_type()),
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
@@ -367,9 +367,9 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             }
             else
             {
-                throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"" +
-                                                     dccl_field_options.units().base_dimensions() +
-                                                     "\"")));
+                throw(std::runtime_error(std::string("Failed to parse base_dimensions string: \"") +
+                                         std::string(dccl_field_options.units().base_dimensions()) +
+                                         "\""));
             }
         }
         else if (dccl_field_options.units().has_derived_dimensions())
@@ -386,16 +386,16 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                     throw(std::runtime_error(
                         std::string("Field must have 'system' defined or message must have "
                                     "'unit_system' defined when using 'derived_dimensions'.")));
-                const std::string& unit_system =
+                const std::string unit_system =
                     (!dccl_field_options.units().has_system() && message_unit_system)
                         ? *message_unit_system
-                        : dccl_field_options.units().system();
+                        : std::string(dccl_field_options.units().system());
 
-                construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system,
+                construct_derived_dims_typedef(dimensions, operators, std::string(field->name()), unit_system,
                                                dccl_field_options.units().relative_temperature(),
                                                dccl_field_options.units().prefix(), new_methods);
 
-                construct_field_class_plugin(field->name(), new_methods,
+                construct_field_class_plugin(std::string(field->name()), new_methods,
                                              dccl::units::get_field_type_name(field->cpp_type()),
                                              field->is_repeated());
                 printer->Print(new_methods.str().c_str());
@@ -404,8 +404,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             else
             {
                 throw(std::runtime_error(
-                    std::string("Failed to parse derived_dimensions string: \"" +
-                                dccl_field_options.units().derived_dimensions() + "\"")));
+                    std::string("Failed to parse derived_dimensions string: \"") +
+                    std::string(dccl_field_options.units().derived_dimensions()) + "\""));
             }
         }
     }
@@ -453,7 +453,7 @@ void DCCLGenerator::generate_load_file_message_loader(
     load_file_output_->seekp(0, std::ios_base::beg);
 
     // cpp class name
-    std::string cpp_name = desc->full_name();
+    std::string cpp_name(desc->full_name());
     {
         std::string::size_type pos = 0;
         while ((pos = cpp_name.find('.', pos)) != std::string::npos)
@@ -464,7 +464,7 @@ void DCCLGenerator::generate_load_file_message_loader(
     }
 
     // lower case class name with underscores
-    std::string loader_name = desc->full_name() + "_loader";
+    std::string loader_name = std::string(desc->full_name()) + "_loader";
     {
         std::string::size_type pos = 0;
         while ((pos = loader_name.find('.', pos)) != std::string::npos)
