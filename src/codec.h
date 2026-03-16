@@ -159,7 +159,7 @@ class Codec
     ///
     /// Encryption is performed using AES via the opertional Crypto++ library. If this library is not compiled in, no encryption will be performed.
     /// \param passphrase Plain-text passphrase
-    /// \param do_not_encrypt_ids_ Optional set of DCCL ids for which to skip encrypting or decrypting
+    /// \param do_not_encrypt_ids Optional set of DCCL ids for which to skip encrypting or decrypting
     void set_crypto_passphrase(const std::string& passphrase,
                                const std::set<int32>& do_not_encrypt_ids = std::set<int32>());
 
