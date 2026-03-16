@@ -45,4 +45,9 @@ message Proto3Msg
     // `optional` keyword enables field presence tracking.
     optional int32 opt_i32 = 3 [(dccl.field) = { min: -100, max: 500 }];
     optional uint32 opt_ui32 = 4 [(dccl.field) = { min: 0, max: 1022 }];
+
+    // Proto3 field with no presence tracking and no (dccl.field).required = true.
+    // The field always has a value (defaulting to 0 if unset); DCCL encodes it
+    // with a presence bit that is always 1, since the value is never "empty".
+    int32 opt_i32_pb3 = 5 [(dccl.field) = { min: -100, max: 500 }];
 }

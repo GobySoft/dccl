@@ -39,6 +39,7 @@ void test1(dccl::Codec& codec)
     msg_in.set_req_ui32(512);
     msg_in.set_opt_i32(200);
     msg_in.set_opt_ui32(100);
+    msg_in.set_opt_i32_pb3(75);
 
     std::string encoded;
     codec.encode(&encoded, msg_in);
@@ -52,6 +53,8 @@ void test1(dccl::Codec& codec)
     assert(msg_in.opt_i32() == msg_out.opt_i32());
     assert(msg_out.has_opt_ui32());
     assert(msg_in.opt_ui32() == msg_out.opt_ui32());
+    // opt_i32_pb3 has no presence tracking: value round-trips correctly
+    assert(msg_in.opt_i32_pb3() == msg_out.opt_i32_pb3());
 }
 
 // Test 2: encode/decode with optional fields left empty
@@ -72,6 +75,45 @@ void test2(dccl::Codec& codec)
     assert(msg_in.req_ui32() == msg_out.req_ui32());
     assert(!msg_out.has_opt_i32());
     assert(!msg_out.has_opt_ui32());
+    // opt_i32_pb3 has no presence tracking: default value (0) encodes and decodes correctly
+    assert(msg_out.opt_i32_pb3() == 0);
+}
+
+// Test 3: proto3 field with no presence tracking (no `optional`, no `required: true`)
+// encodes a non-zero default and a non-zero set value correctly
+void test3(dccl::Codec& codec)
+{
+    // Sub-test 3a: field is at its default value (0)
+    {
+        Proto3Msg msg_in;
+        msg_in.set_req_i32(1);
+        msg_in.set_req_ui32(1);
+        // opt_i32_pb3 not set, defaults to 0
+
+        std::string encoded;
+        codec.encode(&encoded, msg_in);
+
+        Proto3Msg msg_out;
+        codec.decode(encoded, &msg_out);
+
+        assert(msg_out.opt_i32_pb3() == 0);
+    }
+
+    // Sub-test 3b: field is explicitly set to a non-zero value
+    {
+        Proto3Msg msg_in;
+        msg_in.set_req_i32(1);
+        msg_in.set_req_ui32(1);
+        msg_in.set_opt_i32_pb3(-99);
+
+        std::string encoded;
+        codec.encode(&encoded, msg_in);
+
+        Proto3Msg msg_out;
+        codec.decode(encoded, &msg_out);
+
+        assert(msg_out.opt_i32_pb3() == -99);
+    }
 }
 
 int main(int /*argc*/, char* /*argv*/[])
@@ -84,6 +126,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     test1(codec);
     test2(codec);
+    test3(codec);
 
     std::cout << "all tests passed" << std::endl;
     return 0;

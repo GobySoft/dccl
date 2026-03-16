@@ -54,6 +54,7 @@ The available DCCL options is given in the following Table 1:
 | **Field Extensions (special purpose)** *[b]*   |           |                                         |                   |        |             |
 | `(dccl.field).omit`      | bool           | Do not include field in encoded message                          | all               | -      | False        |
 | `(dccl.field).in_head`      | bool           | If true, the field is included in the DCCL header (encoded after the DCCL ID but before the rest of the fields. Not encrypted when using encryption)                          | all               | -      | False        |
+| `(dccl.field).required`  | bool           | If true, encode field without a presence bit (always-present, compact encoding). In proto2, use the `required` label instead; in proto3, use this option together with or instead of the `optional` keyword to control DCCL encoding. | all (singular, non-repeated) | - | False |
 | `(dccl.field).packed_enum`     | bool     | If false, encode use enum assigned values, not enum index values (0-N in order of definition)                                  | enum | - | True |
 | `(dccl.field).static_value`     | string     | Statically defined value for StaticCodec (codec = "dccl.static")                                 | all | - | - |
 | `(dccl.field).num_days`     | uint32     |  Number of days to include in TimeCodec  (codec = "dccl.time") encoding (+/- 12 hours of validity for each day added.)                                 | double, (u)int64 | - | 1 |
@@ -328,3 +329,47 @@ dynamic_conditions { omit_if: "a = 3; return a == this.field_c" }
 The Lua Protobuf functionality uses this wonderful Github project: [https://github.com/starwing/lua-protobuf](https://github.com/starwing/lua-protobuf). Please reference the documentation in the event you need more details about the "this" or "root" tables, which are built using this library.
 
 For more details, and an example usage, see the dccl_dynamic_conditions unit test.
+
+## Using DCCL with Proto3
+
+DCCL supports both `syntax = "proto2"` and `syntax = "proto3"` message definitions. Proto3 eliminates the `required` field label (all singular fields are optional by default), which affects how DCCL determines presence and encoding. This section covers the differences.
+
+### Field Presence in Proto3
+
+In proto3, singular scalar fields declared without the `optional` keyword have **no presence tracking** — the runtime cannot distinguish between a field that was explicitly set to its default value (e.g., `0`) and one that was never set. DCCL handles these fields by always reading and encoding their current value (using the presence-bit path with the bit always set to 1, i.e., a 1-bit overhead, since the value is never "empty").
+
+Fields declared with the proto3 `optional` keyword do have presence tracking and behave identically to proto2 `optional` fields in DCCL (presence bit included in the encoding).
+
+### The `(dccl.field).required` Option
+
+To get compact DCCL-required encoding (no presence bit) in proto3 — matching the semantics of proto2 `required` — annotate the field with `(dccl.field).required = true`:
+
+```protobuf
+syntax = "proto3";
+import "dccl/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg) = { codec_version: 4 id: 124 max_bytes: 32 };
+
+  // DCCL-required: encoded without a presence bit (compact, always present).
+  double x = 1 [(dccl.field) = { required: true, min: -10000, max: 10000, precision: 1 }];
+  double y = 2 [(dccl.field) = { required: true, min: -10000, max: 10000, precision: 1 }];
+
+  // DCCL-optional with presence tracking (proto3 `optional` keyword).
+  optional int32 status = 3 [(dccl.field) = { min: 0, max: 15 }];
+
+  // Proto3 singular scalar field (no `optional`, no `required: true`).
+  // Always encoded; presence bit is always 1. Use `required: true` instead
+  // to eliminate the extra bit.
+  int32 mode = 4 [(dccl.field) = { min: 0, max: 7 }];
+}
+```
+
+### Summary: Field Encoding in Proto3
+
+| Proto3 field declaration                            | `(dccl.field).required` | DCCL encoding                          |
+|-----------------------------------------------------|-------------------------|----------------------------------------|
+| `int32 foo = N`                                     | not set (default false) | Presence bit always 1 + value          |
+| `int32 foo = N`                                     | `true`                  | Value only (no presence bit)           |
+| `optional int32 foo = N`                            | not set (default false) | Presence bit + value when set          |
+| `optional int32 foo = N`                            | `true`                  | Value only (no presence bit)           |
