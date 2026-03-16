@@ -204,10 +204,11 @@ if(PROTOBUFDCCL_FOUND)
 
     # Modern protobuf (22+) depends on abseil; locate its include directory so
     # that protobuf headers such as descriptor.h can find <absl/...> headers.
+    # Note: ABSL_INCLUDE_DIR is intentionally kept separate from PROTOBUF_INCLUDE_DIRS
+    # because PROTOBUF_INCLUDE_DIRS is also passed to protoc as -I flags (for .proto
+    # search paths), and mixing abseil's include directory in there confuses protoc.
+    # Callers should add ABSL_INCLUDE_DIR to their own include_directories() separately.
     find_path(ABSL_INCLUDE_DIR absl/base/attributes.h)
-    if(ABSL_INCLUDE_DIR)
-        list(APPEND PROTOBUF_INCLUDE_DIRS ${ABSL_INCLUDE_DIR})
-    endif()
 
     execute_process(COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --version
       OUTPUT_VARIABLE PROTOC_VERSION_STRING)

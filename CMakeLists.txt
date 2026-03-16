@@ -181,6 +181,11 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
 
 find_package(ProtobufDCCL REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
+# Abseil is a separate dependency of modern protobuf (22+); add it for C++ compilation
+# but not for protoc invocations (which use PROTOBUF_INCLUDE_DIRS as -I proto search paths).
+if(ABSL_INCLUDE_DIR)
+  include_directories(SYSTEM ${ABSL_INCLUDE_DIR})
+endif()
 
 message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
 
