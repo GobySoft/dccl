@@ -98,6 +98,17 @@ dccl::Bitset dccl::v2::DefaultStringCodec::encode(const std::string& wire_value)
         s.resize(dccl_field_options().max_length());
     }
 
+    if (s.size() < dccl_field_options().min_length())
+    {
+        if (this->strict())
+            throw(dccl::OutOfRangeException(std::string("String too short for field: ") +
+                                                FieldCodecBase::this_field()->DebugString(),
+                                            this->this_field(), this->this_descriptor()));
+
+        dccl::dlog.is(DEBUG2) &&
+            dccl::dlog << "String " << s << " is shorter than `dccl.min_length`" << std::endl;
+    }
+
     Bitset value_bits;
     value_bits.from_byte_string(s);
 
@@ -169,6 +180,8 @@ void dccl::v2::DefaultStringCodec::validate()
     require(dccl_field_options().max_length() <= MAX_STRING_LENGTH,
             "(dccl.field).max_length must be <= " +
                 std::to_string(static_cast<int>(MAX_STRING_LENGTH)));
+    require(dccl_field_options().max_length() >= dccl_field_options().min_length(),
+            "(dccl.field).max_length must be >= (dccl.field).min_length");
 }
 
 //

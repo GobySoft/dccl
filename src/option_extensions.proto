@@ -71,6 +71,7 @@ message DCCLFieldOptions
 
     // string, bytes
     optional uint32 max_length = 9;
+    optional uint32 min_length = 14 [default = 0];
 
     // any `repeated` field
     optional uint32 max_repeat = 10;
