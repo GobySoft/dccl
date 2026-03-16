@@ -395,14 +395,18 @@ class FieldCodecBase
 
         if (!field)
             return true;
-        else if (codec_version() > 3) // use required for repeated, required and oneof fields
-            return field->is_required() || field->is_repeated() || is_part_of_oneof(field) ||
-                   (dc.has_required_if() && dc.required());
+
+        // Check for explicit DCCL required option (used in proto3 where `required` label is unavailable)
+        bool dccl_required = dccl_field_options().required();
+
+        if (codec_version() > 3) // use required for repeated, required and oneof fields
+            return dccl_required || field->is_required() || field->is_repeated() ||
+                   is_part_of_oneof(field) || (dc.has_required_if() && dc.required());
         else if (codec_version() > 2) // use required for both repeated and required fields
-            return field->is_required() || field->is_repeated() ||
+            return dccl_required || field->is_required() || field->is_repeated() ||
                    (dc.has_required_if() && dc.required());
         else // use required only for required fields
-            return field->is_required();
+            return dccl_required || field->is_required();
     }
 
     //

@@ -1,0 +1,48 @@
+// Copyright 2023:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
+// Tests proto3 syntax support: uses (dccl.field).required = true to mark
+// fields that should be encoded without a presence bit (replacing proto2's
+// `required` label which does not exist in proto3).
+
+syntax = "proto3";
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+message Proto3Msg
+{
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_group = "dccl.presence";
+
+    // Use (dccl.field).required = true to request DCCL-required encoding
+    // (no presence bit) for these fields, matching proto2 `required` semantics.
+    int32 req_i32 = 1 [(dccl.field) = { required: true, min: -100, max: 500 }];
+    uint32 req_ui32 = 2 [(dccl.field) = { required: true, min: 0, max: 1022 }];
+
+    // These fields are DCCL-optional (presence bit used). In proto3, the
+    // `optional` keyword enables field presence tracking.
+    optional int32 opt_i32 = 3 [(dccl.field) = { min: -100, max: 500 }];
+    optional uint32 opt_ui32 = 4 [(dccl.field) = { min: 0, max: 1022 }];
+}
