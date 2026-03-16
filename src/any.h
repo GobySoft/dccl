@@ -23,9 +23,6 @@
 #ifndef DCCLAny
 #define DCCLAny
 
-#include "dccl/def.h"
-
-#ifdef DCCL_HAS_CPP17
 #include <any>
 namespace dccl
 {
@@ -41,22 +38,5 @@ template <class T> T* any_cast(any* operand) noexcept { return std::any_cast<T>(
 using bad_any_cast = std::bad_any_cast;
 inline bool is_empty(const any& a) { return !a.has_value(); }
 } // namespace dccl
-#else
-#include <boost/any.hpp>
-namespace dccl
-{
-using any = boost::any;
-template <class T> T any_cast(const any& operand) { return boost::any_cast<T>(operand); }
-template <class T> T any_cast(any& operand) { return boost::any_cast<T>(operand); }
-template <class T> T any_cast(any&& operand) { return boost::any_cast<T>(operand); }
-template <class T> const T* any_cast(const any* operand) noexcept
-{
-    return boost::any_cast<T>(operand);
-}
-template <class T> T* any_cast(any* operand) noexcept { return boost::any_cast<T>(operand); }
-using bad_any_cast = boost::bad_any_cast;
-inline bool is_empty(const any& a) { return a.empty(); }
-} // namespace dccl
-#endif
 
 #endif

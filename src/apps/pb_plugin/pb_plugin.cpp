@@ -24,7 +24,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "gen_units_class_plugin.h"
 #include "option_extensions.pb.h"
-#include <boost/algorithm/string.hpp>
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <google/protobuf/compiler/cpp/cpp_generator.h>
 #include <google/protobuf/compiler/plugin.h>
@@ -433,12 +434,27 @@ void DCCLGenerator::generate_load_file_message_loader(
 
     // cpp class name
     std::string cpp_name = desc->full_name();
-    boost::algorithm::replace_all(cpp_name, ".", "::");
+    {
+        std::string::size_type pos = 0;
+        while ((pos = cpp_name.find('.', pos)) != std::string::npos)
+        {
+            cpp_name.replace(pos, 1, "::");
+            pos += 2;
+        }
+    }
 
     // lower case class name with underscores
     std::string loader_name = desc->full_name() + "_loader";
-    boost::algorithm::replace_all(loader_name, ".", "_");
-    boost::algorithm::to_lower(loader_name);
+    {
+        std::string::size_type pos = 0;
+        while ((pos = loader_name.find('.', pos)) != std::string::npos)
+        {
+            loader_name.replace(pos, 1, "_");
+            pos += 1;
+        }
+    }
+    std::transform(loader_name.begin(), loader_name.end(), loader_name.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
 
     bool loader_already_written = false;
     for (std::string line; getline(*load_file_output_, line);)
