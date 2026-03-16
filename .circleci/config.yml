@@ -539,6 +539,7 @@ jobs:
           name: Run tests
           command: cd build && ctest --output-on-failure
   amd64+tsan-build:
+    # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
     environment:
       <<: *environment-template-common
       <<: *environment-template-noble
