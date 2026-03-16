@@ -22,8 +22,8 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests min_length for bytes fields (VarBytesCodec) and v4 string fields
 
-#include "../../binary.h"
-#include "../../codec.h"
+#include "dccl/binary.h"
+#include "dccl/codec.h"
 #include "test.pb.h"
 
 using namespace dccl::test;
@@ -62,13 +62,31 @@ int main(int /*argc*/, char* /*argv*/[])
     // Without min_length: prefix_size = ceil_log2(10 + 1) = ceil_log2(11) = 4 bits
     // So we save 1 bit on the required field.
     {
+        // DCCL ID = 8 bits
         // max_size for req_bytes (required, prefix_size=3): 3 + 10*8 = 83 bits
         // max_size for opt_bytes (optional, presence=1, prefix_size=ceil_log2(8-2+1)=3): 1+3+8*8=68 bits
         // max_size for str_field (optional, presence=1, prefix_size=ceil_log2(10-3+1)=3): 1+3+10*8=84 bits
-        // total max_size = 83 + 68 + 84 = 235 bits = 30 bytes (rounded up)
-        assert(codec.max_size<MinLengthMsg>() == 30);
-        std::cout << "max_size check: passed (30 bytes)" << std::endl;
+        // total max_size = 8 + 83 + 68 + 84 = 235 bits = 31 bytes (rounded up)
+        assert(codec.max_size<MinLengthMsg>() == 31);
+        std::cout << "max_size check: passed (31 bytes)" << std::endl;
     }
+
+    // --- Length less than min_length ---
+    {
+        MinLengthMsg msg_in;
+        // req_bytes: min_length=4, max_length=10 — provide less than min_length
+        msg_in.set_req_bytes(dccl::hex_decode("aabbcc"));
+
+        std::string encoded;
+        codec.encode(&encoded, msg_in);
+
+        MinLengthMsg msg_out;
+        codec.decode(encoded, &msg_out);
+
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+        std::cout << "Round-trip with fields below min_length: passed" << std::endl;
+    }
+    
 
     // --- Optional bytes absent ---
     {
