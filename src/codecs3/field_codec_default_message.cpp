@@ -218,6 +218,30 @@ std::size_t dccl::v3::DefaultMessageCodec::hash()
     return hash;
 }
 
+namespace
+{
+// Recursively checks if a message descriptor has any fields with in_head = true.
+// Only recurses into embedded message fields that do not have an explicit in_head setting,
+// since an explicit in_head=false forces all children to BODY.
+bool has_head_field(const google::protobuf::Descriptor* desc)
+{
+    for (int i = 0, n = desc->field_count(); i < n; ++i)
+    {
+        const auto* field = desc->field(i);
+        const auto field_opts = field->options().GetExtension(dccl::field);
+        if (field_opts.in_head())
+            return true;
+        if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
+            !field_opts.has_in_head())
+        {
+            if (has_head_field(field->message_type()))
+                return true;
+        }
+    }
+    return false;
+}
+} // namespace
+
 bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDescriptor* field)
 {
     if (!field)
@@ -235,7 +259,16 @@ bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             if ((part() == HEAD && !dccl_field_options.in_head()) ||
                 (part() == BODY && dccl_field_options.in_head()))
+            {
+                // For HEAD encoding of a message field without an explicit in_head setting,
+                // recursively check whether any nested field has in_head = true.  If so,
+                // include this field so that the nested head fields can be encoded.
+                if (part() == HEAD && !dccl_field_options.has_in_head() &&
+                    field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
+                    has_head_field(field->message_type()))
+                    return true;
                 return false;
+            }
             else
                 return true;
         }
