@@ -41,9 +41,6 @@ add_library(dccl
 
 target_link_libraries(dccl protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-if(enable_b64)
-  target_link_libraries(dccl ${B64_LIBRARIES})
-endif()
 
 if(enable_units)
   add_dependencies(dccl protoc-gen-dccl)

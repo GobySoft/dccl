@@ -208,23 +208,8 @@ else()
   set(DCCL_HAS_CRYPTOPP "0")
 endif()
 
-## b64 for base64 functions
-find_package(B64 QUIET)
-set(B64_DOC_STRING "Enable base64 functionality (requires libb64-dev: http://libb64.sourceforge.net/")
-if(B64_FOUND)
-  option(enable_b64 ${B64_DOC_STRING} ON)
-else()
-  option(enable_b64 ${B64_DOC_STRING} OFF)
-  message(">> setting enable_b64 to OFF ... if you need this functionality: 1) install libb64-dev; 2) run cmake -Denable_b64=ON")
-endif()
-
-if(enable_b64)
-  find_package(B64 REQUIRED)
-  set(DCCL_HAS_B64 "1")
-  include_directories(SYSTEM ${B64_INCLUDE_DIRS})
-else()
-  set(DCCL_HAS_B64 "0")
-endif()
+## base64 - bundled header-only library (tobiaslocker/base64)
+set(DCCL_HAS_B64 "1")
 
 
 ## LUA for dynamic conditionals
