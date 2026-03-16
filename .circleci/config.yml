@@ -539,14 +539,31 @@ jobs:
           name: Run tests
           command: cd build && ctest --output-on-failure
   amd64+tsan-build:
-    <<: *job-template-sanitizers
+    # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-noble
+      <<: *environment-template-amd64
+      SANITIZER_NUM_JOBS: 2
+    machine:
+      image: ubuntu-2404:current
+    resource_class: large
     steps:
       - checkout
-      - run: *run-update-apt
+      - run:
+          # Required to avoid "FATAL: ThreadSanitizer: unexpected memory mapping"
+          # on Linux kernels >= 6.x. See https://stackoverflow.com/questions/77850769
+          name: Set mmap_rnd_bits for ThreadSanitizer compatibility
+          command: sudo sysctl vm.mmap_rnd_bits=28
+      - run:
+          name: Update apt packages and install dependencies
+          command: sudo apt-get update && sudo apt-get dist-upgrade -y && sudo apt-get install -y cmake libprotobuf-dev libprotoc-dev protobuf-compiler build-essential
       - run: 
           name: Build with ThreadSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
-      - run: *run-tests
+      - run:
+          name: Run tests
+          command: cd build && ctest --output-on-failure
   amd64+ubsan-build:
     <<: *job-template-sanitizers
     steps:
