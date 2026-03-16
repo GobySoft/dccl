@@ -1,3 +1,5 @@
+// from https://github.com/tobiaslocker/base64
+
 #ifndef BASE64_HPP_
 #define BASE64_HPP_
 
