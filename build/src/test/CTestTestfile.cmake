@@ -1,0 +1,38 @@
+# CMake generated Testfile for 
+# Source directory: /home/runner/work/dccl/dccl/src/test
+# Build directory: /home/runner/work/dccl/dccl/build/src/test
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+subdirs("dccl_all_fields")
+subdirs("dccl_custom_message")
+subdirs("dccl_header")
+subdirs("dccl_repeated")
+subdirs("dccl_default_id")
+subdirs("dccl_required_optional")
+subdirs("dccl_var_bytes")
+subdirs("dccl_static_methods")
+subdirs("dccl_custom_id")
+subdirs("dccl_user_specified_id")
+subdirs("dccl_numeric_bounds")
+subdirs("dccl_codec_group")
+subdirs("dccl_message_fix")
+subdirs("dccl_oneof")
+subdirs("dccl_strict")
+subdirs("dccl_packed_enum")
+subdirs("dccl_dynamic_protobuf")
+subdirs("dccl_presence")
+subdirs("dccl_resolution")
+subdirs("dccl_min_repeat")
+subdirs("dccl_hash")
+subdirs("dccl_omit_id")
+subdirs("dccl_ccl")
+subdirs("dccl_arithmetic")
+subdirs("dccl_multithread")
+subdirs("dccl_native_protobuf")
+subdirs("dccl_v3_all_fields")
+subdirs("dccl_v2_all_fields")
+subdirs("dccl_v2_header")
+subdirs("bitset1")
+subdirs("logger1")
+subdirs("round1")
