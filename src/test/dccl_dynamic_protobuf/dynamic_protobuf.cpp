@@ -68,7 +68,8 @@ int main(int argc, char* argv[])
         {
             std::shared_ptr<google::protobuf::Message> cdyn_msg =
                 dccl::DynamicProtobufManager::new_protobuf_message("C");
-            // should throw
+            // should throw / avoid static analyzer error here
+            std::cout << cdyn_msg->GetDescriptor()->DebugString() << std::endl;
             assert(false);
         }
         catch (std::exception& e)
