@@ -22,6 +22,7 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include <iostream>
+#include <numeric>
 #include <string>
 
 #include "../../binary.h"
@@ -65,6 +66,17 @@ int main()
         assert(dccl::b64_decode("TWFu") == "Man");
         assert(dccl::b64_decode("TWE=") == "Ma");
         assert(dccl::b64_decode("TQ==") == "M");
+    }
+
+    // Long string round-trip (1000 bytes)
+    {
+        std::string long_data(1000, '\0');
+        std::iota(long_data.begin(), long_data.end(), 0); // fill with 0,1,2,...,231,232,...,255,0,1,...
+        std::string encoded = dccl::b64_encode(long_data);
+        std::string decoded = dccl::b64_decode(encoded);
+        // encoded length must be a multiple of 4
+        assert(encoded.size() % 4 == 0);
+        assert(decoded == long_data);
     }
 
     std::cout << "all tests passed" << std::endl;
