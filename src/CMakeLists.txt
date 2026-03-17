@@ -110,7 +110,7 @@ export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake
 
 # Build the dccl Python extension module (generates option_extensions_pb2.py
 # in the package tree and builds _dccl.<soabi>.so in-place).
-find_package(Python3 COMPONENTS Interpreter QUIET)
+find_package(Python3 COMPONENTS Interpreter Development QUIET)
 if(Python3_FOUND)
   set(_dccl_python_stamp ${CMAKE_CURRENT_BINARY_DIR}/dccl_python.stamp)
   add_custom_command(
