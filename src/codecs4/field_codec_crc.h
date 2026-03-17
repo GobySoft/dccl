@@ -94,6 +94,9 @@ template <int CRCBits> class CRCCodecBase : public v4::DefaultNumericFieldCodec<
   public:
     CRCCodecBase() { this->set_force_use_required(); }
 
+    double min() override { return 0; }
+    double max() override { return (CRCBits == 32) ? static_cast<double>(0xFFFFFFFFu) : static_cast<double>(0xFFFFu); }
+
   private:
     Bitset encode() override
     {
@@ -119,13 +122,9 @@ template <int CRCBits> class CRCCodecBase : public v4::DefaultNumericFieldCodec<
 
     void validate() override
     {
-        FieldCodecBase::require(this->min() == 0, "(dccl.field).min must equal 0 for CRC codec");
-        uint32 expected_max = (CRCBits == 32) ? 0xFFFFFFFF : 0xFFFF;
-        FieldCodecBase::require(
-            static_cast<uint32>(this->max()) == expected_max,
-            std::string("(dccl.field).max must equal ") +
-                (CRCBits == 32 ? "0xFFFFFFFF (4294967295)" : "0xFFFF (65535)") +
-                " for CRC codec");
+        // min() and max() are hardcoded - skip the parent's has_min/has_max checks and
+        // call validate_numeric_bounds() directly to verify type range constraints.
+        this->validate_numeric_bounds();
     }
 
     /// \brief Compute CRC over all bits accumulated so far (called during encoding).
@@ -166,7 +165,7 @@ template <int CRCBits> class CRCCodecBase : public v4::DefaultNumericFieldCodec<
 
 /// \brief DCCL CRC-16 codec (CRC-16/IBM-3740 / CCITT-FALSE).
 ///
-/// Usage: `required uint32 crc = N [(dccl.field) = { codec: "dccl.crc16", min: 0, max: 65535 }];`
+/// Usage: `required uint32 crc = N [(dccl.field) = { codec: "dccl.crc16" }];`
 /// The CRC field must be the last field in the message body.
 class CRC16Codec : public CRCCodecBase<16>
 {
@@ -174,7 +173,7 @@ class CRC16Codec : public CRCCodecBase<16>
 
 /// \brief DCCL CRC-32 codec (CRC-32/ISO-HDLC).
 ///
-/// Usage: `required uint32 crc = N [(dccl.field) = { codec: "dccl.crc32", min: 0, max: 4294967295 }];`
+/// Usage: `required uint32 crc = N [(dccl.field) = { codec: "dccl.crc32" }];`
 /// The CRC field must be the last field in the message body.
 class CRC32Codec : public CRCCodecBase<32>
 {

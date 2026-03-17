@@ -38,7 +38,7 @@ message TestCRC16
     required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];
     required uint32 crc = 100 [
-        (dccl.field) = { codec: "dccl.crc16", min: 0, max: 65535 }
+        (dccl.field) = { codec: "dccl.crc16" }
     ];
 }
 
@@ -52,19 +52,6 @@ message TestCRC32
     required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];
     required uint32 crc = 100 [
-        (dccl.field) = { codec: "dccl.crc32", min: 0, max: 4294967295 }
-    ];
-}
-
-// Test message with wrong max (validation should fail)
-message TestCRC16WrongMax
-{
-    option (dccl.msg).id = 12;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
-
-    required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
-    required uint32 crc = 100 [
-        (dccl.field) = { codec: "dccl.crc16", min: 0, max: 255 }
+        (dccl.field) = { codec: "dccl.crc32" }
     ];
 }

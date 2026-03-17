@@ -242,10 +242,10 @@ The value of this field (if set) on encoding is ignored, and overwritten with th
 
 DCCL provides two built-in CRC field codecs to allow messages to carry a runtime data integrity checksum. These are useful for detecting transmission errors over noisy communication channels.
 
-| Codec name | Algorithm | Width | `(dccl.field).max` |
-|---|---|---|---|
-| `dccl.crc16` | CRC-16/IBM-3740 (CCITT-FALSE) | 16 bits | `65535` |
-| `dccl.crc32` | CRC-32/ISO-HDLC (standard Ethernet/zlib) | 32 bits | `4294967295` |
+| Codec name | Algorithm | Width |
+|---|---|---|
+| `dccl.crc16` | CRC-16/IBM-3740 (CCITT-FALSE) | 16 bits |
+| `dccl.crc32` | CRC-32/ISO-HDLC (standard Ethernet/zlib) | 32 bits |
 
 Usage example:
 
@@ -258,11 +258,11 @@ message NavigationReport {
   required double x = 1 [(dccl.field) = { min: -10000, max: 10000, precision: 1 }];
   // ... other fields ...
 
-  // CRC-16 (16-bit checksum, requires min=0, max=65535):
-  required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc16", min: 0, max: 65535 }];
+  // CRC-16 (16-bit checksum):
+  required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc16" }];
 
-  // Or CRC-32 (32-bit checksum, requires min=0, max=4294967295):
-  // required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32", min: 0, max: 4294967295 }];
+  // Or CRC-32 (32-bit checksum):
+  // required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
 }
 ```
 
@@ -270,7 +270,7 @@ message NavigationReport {
 
 The CRC is computed over the encoded bits of all body fields that precede the CRC field. The value of this field (if set) on encoding is ignored and overwritten with the computed CRC. On decoding, the CRC is recomputed over the same bits and an exception is thrown if it does not match the received value, indicating that the message data may be corrupted.
 
-Both `(dccl.field).min` must be 0 and `(dccl.field).max` must be set to the exact value for the chosen algorithm (65535 for CRC-16, 4294967295 for CRC-32); the codec will throw a validation exception otherwise.
+The `min` and `max` bounds are hardcoded by the codec (0 and 65535 for CRC-16; 0 and 4294967295 for CRC-32) and do not need to be specified in the field options.
 
 
 ## Additional Codec libraries

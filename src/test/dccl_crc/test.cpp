@@ -142,24 +142,6 @@ int main(int /*argc*/, char* /*argv*/[])
     }
 
     //
-    // Test that invalid max value fails validation
-    //
-    {
-        std::cout << "\n=== Testing CRC-16 validation (wrong max) ===" << std::endl;
-        try
-        {
-            codec.load<TestCRC16WrongMax>();
-            std::cerr << "ERROR: Load with wrong max did not throw exception!" << std::endl;
-            assert(false);
-        }
-        catch (const std::exception& e)
-        {
-            std::cout << "Caught expected validation exception: " << e.what() << std::endl;
-        }
-        std::cout << "Validation tests passed!" << std::endl;
-    }
-
-    //
     // Test encoding twice gives same result (CRC is deterministic)
     //
     {
