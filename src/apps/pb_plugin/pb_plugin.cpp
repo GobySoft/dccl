@@ -370,6 +370,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                         ? *message_unit_system
                         : dccl_field_options.units().system();
 
+                dccl::units::validate_dimensions_for_system(dimensions, unit_system);
+
                 construct_derived_dims_typedef(dimensions, operators, field->name(), unit_system,
                                                dccl_field_options.units().relative_temperature(),
                                                dccl_field_options.units().prefix(), new_methods);

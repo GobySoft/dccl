@@ -97,6 +97,11 @@ int main()
     status.set_y_with_units(500 * si::meters);
     status.set_heading_with_units(3.1415926535 / 2 * si::radians);
 
+    // Test angular velocity: set in rad/s (SI), read back as rad/s
+    status.set_angular_velocity_with_units(1.0 * si::radians_per_second);
+    assert(std::abs(status.angular_velocity() - 1.0) < 1e-3);
+    std::cout << "Angular velocity: " << status.angular_velocity_with_units() << std::endl;
+
     using NauticalMile = metric::nautical_mile_base_unit::unit_type;
     quantity<NauticalMile> x_nm(status.x_with_units());
     quantity<NauticalMile> y_nm(status.y_with_units());

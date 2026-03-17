@@ -41,6 +41,7 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -117,6 +118,73 @@ inline void push_char(std::vector<std::string>& vc, const char& c) { vc.emplace_
 inline void push_char_vec(std::vector<std::string>& vc, const std::vector<char>& c)
 {
     vc.emplace_back(c.begin(), c.end());
+}
+
+// Returns the set of base dimension names that the given unit system supports.
+// Returns an empty set for general systems (si, cgs) that support all dimensions.
+// Specialized single-dimension systems (angle, temperature) return only their
+// supported base dimensions.
+inline std::set<std::string> get_system_supported_base_dimensions(const std::string& sysname)
+{
+    if (sysname == "angle::degree" || sysname == "degree" || sysname == "angle::gradian" ||
+        sysname == "gradian" || sysname == "angle::revolution" || sysname == "revolution")
+        return {"plane_angle", "dimensionless"};
+    else if (sysname == "temperature::celsius" || sysname == "celsius" ||
+             sysname == "temperature::fahrenheit" || sysname == "fahrenheit")
+        return {"temperature", "dimensionless"};
+    else
+        return {}; // empty = general system (si, cgs, angle::radian, etc.)
+}
+
+// Validates that all dimension names in dim_names are compatible with the given system.
+// Throws std::runtime_error if an incompatible combination is detected.
+//
+// Specialized systems (angle::degree, temperature::celsius, etc.) only support their
+// native base dimension. Compound Boost Units dimension names (e.g. "angular_velocity",
+// "pressure") require multiple base dimensions and cannot be used reliably with
+// specialized systems because the missing base dimensions are silently treated as
+// dimensionless, causing incorrect unit conversions.
+inline void validate_dimensions_for_system(const std::vector<std::string>& dim_names,
+                                           const std::string& sysname)
+{
+    const auto supported = get_system_supported_base_dimensions(sysname);
+    if (supported.empty())
+        return; // General system — all dimensions are supported
+
+    const auto bimap = make_dim_bimap();
+
+    for (const auto& dim : dim_names)
+    {
+        const bool is_base_dim = bimap.left.find(dim) != bimap.left.end();
+        if (!is_base_dim)
+        {
+            // Compound Boost Units dimension (e.g. "angular_velocity", "pressure").
+            // These require multiple base dimensions and cannot work correctly with
+            // specialized single-dimension systems.
+            throw std::runtime_error(
+                "Dimension '" + dim +
+                "' is a compound Boost Units dimension that requires multiple base "
+                "dimensions, but system '" + sysname +
+                "' only supports single-dimension units. Use 'base_dimensions' to "
+                "specify the dimension explicitly (e.g., base_dimensions: \"AT^-1\" "
+                "for angular velocity in a combined angle+time system), or use a "
+                "general system such as \"si\".");
+        }
+        else if (supported.find(dim) == supported.end())
+        {
+            // Known base dimension but not supported by this specialized system.
+            std::string supported_list;
+            for (const auto& s : supported)
+            {
+                if (!supported_list.empty())
+                    supported_list += ", ";
+                supported_list += "'" + s + "'";
+            }
+            throw std::runtime_error("Dimension '" + dim + "' is not supported by system '" +
+                                     sysname + "'. That system only supports: " + supported_list +
+                                     ".");
+        }
+    }
 }
 
 // Parser for base_dimensions input
