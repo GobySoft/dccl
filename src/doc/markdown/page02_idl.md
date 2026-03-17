@@ -361,7 +361,7 @@ message ChannelMessage
 {
     option (dccl.msg) = {
         id: 2,
-        max_bytes: 82,         // absolute upper bound for load()-time validation
+        max_bytes: 270,        // absolute upper bound for load()-time validation
         codec_version: 4,
         dynamic_conditions: {
             // Return different byte limits based on the channel field
@@ -379,7 +379,7 @@ message ChannelMessage
 }
 ```
 
-In this example, when `channel` is `ACOUSTIC`, the codec enforces a 60-byte limit at encode time; when `channel` is `IRIDIUM`, a 270-byte limit is enforced; otherwise, the static 82-byte limit from `max_bytes` applies. The static `max_bytes: 82` still controls the worst-case size validated at `load()` time.
+In this example, when `channel` is `ACOUSTIC`, the codec enforces a 60-byte limit at encode time; when `channel` is `IRIDIUM`, a 270-byte limit is enforced; otherwise, the static 270-byte limit from `max_bytes` applies. The static `max_bytes: 270` controls the worst-case size validated at `load()` time and must be at least as large as the largest runtime limit.
 
 For more details, see the `dccl_dynamic_conditions_max_bytes` unit test.
 
