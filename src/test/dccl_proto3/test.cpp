@@ -27,19 +27,19 @@
 #include <iostream>
 
 #include "../../codec.h"
-#include "test.pb.h"
+#include "test2.pb.h"
+#include "test3.pb.h"
 
 using namespace dccl::test;
 
 // Test 1: encode/decode with DCCL-required and DCCL-optional fields populated
-void test1(dccl::Codec& codec)
+void test1(dccl::Codec& codec, dccl::Codec& codec2)
 {
     Proto3Msg msg_in;
     msg_in.set_req_i32(-50);
     msg_in.set_req_ui32(512);
     msg_in.set_opt_i32(200);
     msg_in.set_opt_ui32(100);
-    msg_in.set_opt_i32_pb3(75);
 
     std::string encoded;
     codec.encode(&encoded, msg_in);
@@ -53,8 +53,22 @@ void test1(dccl::Codec& codec)
     assert(msg_in.opt_i32() == msg_out.opt_i32());
     assert(msg_out.has_opt_ui32());
     assert(msg_in.opt_ui32() == msg_out.opt_ui32());
-    // opt_i32_pb3 has no presence tracking: value round-trips correctly
-    assert(msg_in.opt_i32_pb3() == msg_out.opt_i32_pb3());
+    assert(!msg_out.has_child());    
+    
+    Proto2Msg msg2_out;
+    codec2.decode(encoded, &msg2_out);
+    
+    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
+    std::cout << "Msg2 out: " << msg2_out.ShortDebugString() << std::endl;
+
+    assert(msg_in.req_i32() == msg2_out.req_i32());
+    assert(msg_in.req_ui32() == msg2_out.req_ui32());
+    assert(msg2_out.has_opt_i32());
+    assert(msg_in.opt_i32() == msg2_out.opt_i32());
+    assert(msg2_out.has_opt_ui32());
+    assert(msg_in.opt_ui32() == msg2_out.opt_ui32());
+    assert(!msg2_out.has_child());
 }
 
 // Test 2: encode/decode with optional fields left empty
@@ -62,7 +76,7 @@ void test2(dccl::Codec& codec)
 {
     Proto3Msg msg_in;
     msg_in.set_req_i32(0);
-    msg_in.set_req_ui32(0);
+    msg_in.set_req_ui32(10);
     // leave optional fields unset
 
     std::string encoded;
@@ -75,58 +89,61 @@ void test2(dccl::Codec& codec)
     assert(msg_in.req_ui32() == msg_out.req_ui32());
     assert(!msg_out.has_opt_i32());
     assert(!msg_out.has_opt_ui32());
-    // opt_i32_pb3 has no presence tracking: default value (0) encodes and decodes correctly
-    assert(msg_out.opt_i32_pb3() == 0);
 }
 
-// Test 3: proto3 field with no presence tracking (no `optional`, no `required: true`)
-// encodes a non-zero default and a non-zero set value correctly
+// Test 3: encode/decode with required fields left empty
 void test3(dccl::Codec& codec)
 {
-    // Sub-test 3a: field is at its default value (0)
-    {
-        Proto3Msg msg_in;
-        msg_in.set_req_i32(1);
-        msg_in.set_req_ui32(1);
-        // opt_i32_pb3 not set, defaults to 0
+    Proto3Msg msg_in;
 
-        std::string encoded;
-        codec.encode(&encoded, msg_in);
+    std::string encoded;
+    codec.encode(&encoded, msg_in);
 
-        Proto3Msg msg_out;
-        codec.decode(encoded, &msg_out);
+    Proto3Msg msg_out;
+    codec.decode(encoded, &msg_out);
 
-        assert(msg_out.opt_i32_pb3() == 0);
-    }
+    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
 
-    // Sub-test 3b: field is explicitly set to a non-zero value
-    {
-        Proto3Msg msg_in;
-        msg_in.set_req_i32(1);
-        msg_in.set_req_ui32(1);
-        msg_in.set_opt_i32_pb3(-99);
+    assert(msg_in.req_i32() == msg_out.req_i32());
 
-        std::string encoded;
-        codec.encode(&encoded, msg_in);
+    // built-in default of 0 is not encodable with this range of DCCL values
+    assert(msg_out.req_ui32() == 10);
+}
 
-        Proto3Msg msg_out;
-        codec.decode(encoded, &msg_out);
+// Test 4: encode child message
+void test4(dccl::Codec& codec)
+{
+    Proto3Msg msg_in;
+    msg_in.mutable_child()->set_req_dbl(0.4);
 
-        assert(msg_out.opt_i32_pb3() == -99);
-    }
+    std::string encoded;
+    codec.encode(&encoded, msg_in);
+
+    Proto3Msg msg_out;
+    codec.decode(encoded, &msg_out);
+
+    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
+
+    assert(msg_in.req_i32() == msg_out.req_i32());
 }
 
 int main(int /*argc*/, char* /*argv*/[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
-    dccl::Codec codec;
-    codec.load<Proto3Msg>();
-    codec.info<Proto3Msg>(&dccl::dlog);
+    dccl::Codec codec3;
+    dccl::Codec codec2;
+    codec3.load<Proto3Msg>();
+    codec2.load<Proto2Msg>();
+    codec3.info<Proto3Msg>(&dccl::dlog);
+    codec2.info<Proto2Msg>(&dccl::dlog);
 
-    test1(codec);
-    test2(codec);
-    test3(codec);
+    test1(codec3, codec2);
+    test2(codec3);
+    test3(codec3);
+    test4(codec3);
 
     std::cout << "all tests passed" << std::endl;
     return 0;

@@ -76,12 +76,6 @@ message DCCLFieldOptions
     optional uint32 max_repeat = 10;
     optional uint32 min_repeat = 13 [default = 0];
 
-    // For proto3 compatibility: mark a field as DCCL-required (no presence bit used).
-    // In proto2, use the `required` field label instead.
-    // In proto3 (where `required` label does not exist), set this to true to encode
-    // the field without a presence bit (more compact, but field must always be set).
-    optional bool required = 14 [default = false];
-
     // enum
     optional bool packed_enum = 11 [default = true];
 
