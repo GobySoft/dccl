@@ -106,7 +106,9 @@ dccl::Bitset dccl::v2::DefaultStringCodec::encode(const std::string& wire_value)
                                             this->this_field(), this->this_descriptor()));
 
         dccl::dlog.is(DEBUG2) &&
-            dccl::dlog << "String " << s << " is shorter than `dccl.min_length`" << std::endl;
+            dccl::dlog << "String " << s << " is shorter than `dccl.min_length`, padding"
+                       << std::endl;
+        s.resize(dccl_field_options().min_length(), '\0');
     }
 
     Bitset value_bits;
