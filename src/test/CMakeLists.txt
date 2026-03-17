@@ -66,6 +66,7 @@ add_subdirectory(round1)
 
 if(enable_lua)
   add_subdirectory(dccl_dynamic_conditions)
+  add_subdirectory(dccl_dynamic_conditions_max_bytes)
 endif()
 
 add_subdirectory(python)
