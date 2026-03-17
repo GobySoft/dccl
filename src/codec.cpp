@@ -184,6 +184,26 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             {
                 codec->base_encode(&body_bits, msg, BODY, strict_);
             }
+
+            // check dynamic max_bytes if configured
+            const auto& msg_opt = desc->options().GetExtension(dccl::msg);
+            if (msg_opt.has_dynamic_conditions() &&
+                msg_opt.dynamic_conditions().has_max_bytes())
+            {
+                DynamicConditions dc;
+                dc.set_descriptor(desc);
+                dc.regenerate(&msg, &msg);
+                const unsigned actual_size =
+                    ceil_bits2bytes(head_bits.size()) + ceil_bits2bytes(body_bits.size());
+                const uint32_t allowed_max = dc.max_bytes();
+                if (actual_size > allowed_max)
+                    throw(Exception(
+                        "Encoded message size (" + std::to_string(actual_size) +
+                            "B) exceeds dynamic max_bytes limit (" +
+                            std::to_string(allowed_max) +
+                            "B). Adjust message contents or increase the dynamic max_bytes limit.",
+                        desc));
+            }
         }
         else
         {

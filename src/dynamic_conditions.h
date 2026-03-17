@@ -47,6 +47,8 @@ class DynamicConditions
         field_desc_ = field_desc;
     }
 
+    void set_descriptor(const google::protobuf::Descriptor* msg_desc) { msg_desc_ = msg_desc; }
+
     void set_repeated_index(int index) { index_ = index; }
 
     void regenerate(const google::protobuf::Message* this_msg,
@@ -60,6 +62,9 @@ class DynamicConditions
     bool has_min() { return conditions().has_min(); }
     bool has_max() { return conditions().has_max(); }
 
+    // message-level dynamic conditions
+    bool has_max_bytes();
+
     bool required();
     bool omit();
 
@@ -67,6 +72,9 @@ class DynamicConditions
     bool only();
     double min();
     double max();
+
+    // message-level: returns the dynamic max_bytes limit
+    uint32_t max_bytes();
 
   private:
     std::string return_prefix(const std::string& script)
@@ -78,7 +86,9 @@ class DynamicConditions
     }
 
     bool is_initialized() { return root_msg_ && this_msg_ && field_desc_; }
+    bool is_message_initialized() { return root_msg_ && this_msg_ && msg_desc_; }
     const google::protobuf::FieldDescriptor* field_desc_{nullptr};
+    const google::protobuf::Descriptor* msg_desc_{nullptr};
     const google::protobuf::Message* this_msg_{nullptr};
     const google::protobuf::Message* root_msg_{nullptr};
     int index_{0};

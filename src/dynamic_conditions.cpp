@@ -117,6 +117,13 @@ const dccl::DCCLFieldOptions::Conditions& dccl::DynamicConditions::conditions()
         throw(Exception("Null field_desc"));
 }
 
+bool dccl::DynamicConditions::has_max_bytes()
+{
+    return msg_desc_ &&
+           msg_desc_->options().GetExtension(dccl::msg).has_dynamic_conditions() &&
+           msg_desc_->options().GetExtension(dccl::msg).dynamic_conditions().has_max_bytes();
+}
+
 bool dccl::DynamicConditions::required()
 {
 #if DCCL_HAS_LUA
@@ -210,6 +217,25 @@ double dccl::DynamicConditions::max()
     else
     {
         return std::numeric_limits<double>::infinity();
+    }
+#else
+    throw(Exception("DCCL built without Lua support: cannot use dynamic_conditions"));
+#endif
+}
+
+uint32_t dccl::DynamicConditions::max_bytes()
+{
+#if DCCL_HAS_LUA
+    if (is_message_initialized())
+    {
+        auto condition_script = return_prefix(
+            msg_desc_->options().GetExtension(dccl::msg).dynamic_conditions().max_bytes());
+        double v = lua_->script(condition_script);
+        return static_cast<uint32_t>(v);
+    }
+    else
+    {
+        return std::numeric_limits<uint32_t>::max();
     }
 #else
     throw(Exception("DCCL built without Lua support: cannot use dynamic_conditions"));
