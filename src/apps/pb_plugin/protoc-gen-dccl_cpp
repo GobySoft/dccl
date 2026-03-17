@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# protoc-gen-dccl_cpp
+#
+# Bash wrapper replacing the compiled protoc-gen-dccl_cpp plugin binary.
+# Generates both C++ (.pb.h/.pb.cc) and DCCL code from .proto files in a
+# single command invocation, equivalent to running:
+#
+#   protoc --cpp_out=<outdir> --dccl_out=<outdir> \
+#          --plugin=protoc-gen-dccl=<path> [OPTIONS] PROTO_FILES
+#
+# Usage:
+#   protoc-gen-dccl_cpp --dccl_cpp_out=<outdir> [OPTIONS] PROTO_FILES
+#   protoc-gen-dccl_cpp --dccl_cpp_out=<params>:<outdir> [OPTIONS] PROTO_FILES
+#
+# Options:
+#   --dccl_cpp_out=<outdir>         Output directory for both C++ and DCCL
+#                                   generated files.  Any DCCL plugin
+#                                   parameters (e.g. dccl3_load_file=<file>)
+#                                   may be prefixed with a colon separator:
+#                                   --dccl_cpp_out=dccl3_load_file=foo.cpp:<dir>
+#   --proto_path=<path> / -I<path>  Proto search path (passed to protoc).
+#   All other options are forwarded to protoc unchanged.
+#
+# Environment variables:
+#   PROTOC            Path to the protoc binary (default: protoc found on PATH)
+#   PROTOC_GEN_DCCL   Path to protoc-gen-dccl binary (default: search PATH)
+
+set -eu
+
+PROTOC="${PROTOC:-$(command -v protoc 2>/dev/null || true)}"
+if [[ -z "$PROTOC" ]]; then
+    echo "protoc-gen-dccl_cpp: error: protoc not found on PATH" >&2
+    exit 1
+fi
+
+# Locate the protoc-gen-dccl binary
+if [[ -n "${PROTOC_GEN_DCCL:-}" ]]; then
+    dccl_plugin="$PROTOC_GEN_DCCL"
+else
+    dccl_plugin="$(command -v protoc-gen-dccl 2>/dev/null || true)"
+    if [[ -z "$dccl_plugin" ]]; then
+        echo "protoc-gen-dccl_cpp: error: protoc-gen-dccl not found on PATH" >&2
+        echo "  Install DCCL or set PROTOC_GEN_DCCL to the full path of protoc-gen-dccl" >&2
+        exit 1
+    fi
+fi
+
+# Translate --dccl_cpp_out into --cpp_out + --dccl_out + --plugin and
+# pass all other arguments through unchanged.
+new_args=()
+dccl_cpp_out_seen=false
+for arg in "$@"; do
+    case "$arg" in
+        --dccl_cpp_out=*)
+            val="${arg#--dccl_cpp_out=}"
+            # Extract directory portion: if params are present they precede the
+            # last colon (e.g. "dccl3_load_file=foo.cpp:/outdir").
+            if [[ "$val" == *:* ]]; then
+                outdir="${val##*:}"
+            else
+                outdir="$val"
+            fi
+            new_args+=(
+                "--cpp_out=${outdir}"
+                "--dccl_out=${val}"
+                "--plugin=protoc-gen-dccl=${dccl_plugin}"
+            )
+            dccl_cpp_out_seen=true
+            ;;
+        *)
+            new_args+=("$arg")
+            ;;
+    esac
+done
+
+if [[ "$dccl_cpp_out_seen" != "true" ]]; then
+    echo "protoc-gen-dccl_cpp: error: --dccl_cpp_out=<outdir> is required" >&2
+    echo "Usage: protoc-gen-dccl_cpp --dccl_cpp_out=<outdir> [OPTIONS] PROTO_FILES" >&2
+    exit 1
+fi
+
+exec "$PROTOC" "${new_args[@]}"

@@ -14,3 +14,8 @@ install(TARGETS protoc-gen-dccl DESTINATION ${CMAKE_INSTALL_BINDIR})
 #target_link_libraries(protoc-gen-dccl_cpp ${PROTOBUF_LIBRARIES} ${PROTOBUF_PROTOC_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 #install(TARGETS protoc-gen-dccl_cpp DESTINATION ${CMAKE_INSTALL_BINDIR})
 #target_compile_definitions(protoc-gen-dccl_cpp PRIVATE INCLUDE_CPP)
+
+# Install the bash script that replaces the compiled protoc-gen-dccl_cpp plugin.
+# It translates --dccl_cpp_out=<dir> into --cpp_out=<dir> --dccl_out=<dir>
+# and delegates to protoc + protoc-gen-dccl.
+install(PROGRAMS protoc-gen-dccl_cpp DESTINATION ${CMAKE_INSTALL_BINDIR})
