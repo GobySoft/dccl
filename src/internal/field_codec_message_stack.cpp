@@ -24,6 +24,27 @@
 #include "field_codec_message_stack.h"
 #include "../field_codec.h"
 
+// has_head_field
+//
+
+bool dccl::internal::has_head_field(const google::protobuf::Descriptor* desc)
+{
+    for (int i = 0, n = desc->field_count(); i < n; ++i)
+    {
+        const auto* field = desc->field(i);
+        const auto field_opts = field->options().GetExtension(dccl::field);
+        if (field_opts.in_head())
+            return true;
+        if (field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
+            !field_opts.has_in_head())
+        {
+            if (has_head_field(field->message_type()))
+                return true;
+        }
+    }
+    return false;
+}
+
 // MessageStack
 //
 

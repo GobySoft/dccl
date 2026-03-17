@@ -24,11 +24,11 @@ add_subdirectory(dccl_min_repeat)
 add_subdirectory(dccl_min_length)
 add_subdirectory(dccl_hash)
 add_subdirectory(dccl_omit_id)
+add_subdirectory(dccl_recursive_header)
 
 if(${protobuf_VERSION} VERSION_GREATER 3.14.0) 
   add_subdirectory(dccl_proto3)
 endif()
-
   
 if(enable_units)
   add_subdirectory(dccl_units)

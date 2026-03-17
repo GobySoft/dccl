@@ -1,0 +1,63 @@
+// Copyright 2024:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+// Tests that DCCL recursively checks for in_head fields inside embedded messages.
+// Bar.foo does NOT have in_head=true, but Foo.header does.
+// The codec must encode/decode Foo.header as part of the HEAD.
+
+message HeaderMsg
+{
+    required int32 field = 1 [(dccl.field).min = 0, (dccl.field).max = 127];
+}
+
+// Foo itself is not marked in_head, but its embedded Header is.
+message Foo
+{
+    required HeaderMsg header = 1 [(dccl.field).in_head = true];
+    required int32 body_field = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
+}
+
+// v3 codec version (matching the original issue)
+message BarV3
+{
+    option (dccl.msg).id = 11013;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 3;
+
+    required Foo foo = 1;
+    required int32 bar_body = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
+}
+
+// v4 codec version (also verify the fix works for v4)
+message BarV4
+{
+    option (dccl.msg).id = 11014;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required Foo foo = 1;
+    required int32 bar_body = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
+}
