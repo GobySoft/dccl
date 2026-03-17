@@ -75,6 +75,11 @@ template <int version> struct HashCodecLoader
     static_assert(sizeof(HashCodecLoader) == 0, "Must use specialization of HashCodecLoader");
 };
 
+template <int version> struct CRCCodecLoader
+{
+    static_assert(sizeof(CRCCodecLoader) == 0, "Must use specialization of CRCCodecLoader");
+};
+
 } // namespace internal
 } // namespace dccl
 #endif
@@ -214,6 +219,26 @@ template <> struct HashCodecLoader<CODEC_VERSION>
         using namespace CODEC_VERSION_NAMESPACE;
         // backport versions
         for (int v : versions) manager.add<HashCodec>("dccl.hash" + std::to_string(v));
+    }
+};
+
+template <> struct CRCCodecLoader<CODEC_VERSION>
+{
+    static void add(FieldCodecManagerLocal& manager, std::set<int> versions = {CODEC_VERSION})
+    {
+        using namespace CODEC_VERSION_NAMESPACE;
+        // Register version-suffixed names for backwards compatibility
+        for (int v : versions)
+        {
+            manager.add<CRC16Codec>("dccl.crc16" + std::to_string(v));
+            manager.add<CRC32Codec>("dccl.crc32" + std::to_string(v));
+        }
+        // Register plain names so users can write codec: "dccl.crc16" or "dccl.crc32".
+        // The FieldCodecManager auto-appends the codec version only when the name does NOT
+        // end in a digit, so "dccl.crc16" and "dccl.crc32" (which end in digits) must be
+        // registered explicitly without a version suffix.
+        manager.add<CRC16Codec>("dccl.crc16");
+        manager.add<CRC32Codec>("dccl.crc32");
     }
 };
 

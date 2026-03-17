@@ -101,6 +101,13 @@ class FieldCodecBase
 
     const google::protobuf::Descriptor* root_descriptor() const;
 
+    /// \brief Returns the root Bitset for the current encode or decode operation.
+    ///
+    /// During encoding: points to the Bitset accumulating all body bits so far (before this field).
+    /// During decoding: points to a copy of the full Bitset taken at the start of base_decode().
+    /// Returns nullptr if called outside of an encode/decode context.
+    const Bitset* root_bitset() const;
+
     internal::MessageStackData& message_data();
 
     const internal::MessageStackData& message_data() const;
