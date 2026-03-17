@@ -23,6 +23,7 @@ add_subdirectory(dccl_resolution)
 add_subdirectory(dccl_min_repeat)
 add_subdirectory(dccl_min_length)
 add_subdirectory(dccl_hash)
+add_subdirectory(dccl_crc)
 add_subdirectory(dccl_omit_id)
 add_subdirectory(dccl_recursive_header)
 

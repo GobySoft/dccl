@@ -51,6 +51,21 @@ struct CodecData
     const google::protobuf::Descriptor* root_descriptor_{nullptr};
     MessageStackData message_data_;
     DynamicConditions dynamic_conditions_;
+
+    // Pointer to the root Bitset for the current encode or decode operation.
+    //
+    // During encoding: updated by field_encode() to point to the accumulation Bitset for each
+    // field. When any_encode() is called for a field, root_bits_ holds all bits encoded by
+    // previous sibling fields in the same message.
+    //
+    // During decoding: points to decoded_bits_, which accumulates bits for fields already
+    // decoded in the current message. When post_decode() is called for a field, root_bits_
+    // holds all bits decoded by previous sibling fields.
+    //
+    // Returns nullptr outside of an encode/decode context (e.g., during validate/info).
+    Bitset* root_bits_{nullptr};
+    Bitset root_bits_copy_; // unused - kept for ABI stability
+    Bitset decoded_bits_;   // accumulates decoded bits during base_decode()
     
     template <typename FieldCodecType>
     void set_codec_specific_data(std::shared_ptr<dccl::any> data)

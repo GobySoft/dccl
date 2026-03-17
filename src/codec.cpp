@@ -47,6 +47,7 @@
 #endif // HAS_CRYPTOPP
 
 #include "codecs3/field_codec_var_bytes.h"
+#include "codecs4/field_codec_crc.h"
 #include "codecs4/field_codec_hash.h"
 #include "codecs4/field_codec_var_bytes.h"
 #include "field_codec_id.h"
@@ -124,6 +125,7 @@ void dccl::Codec::set_default_codecs()
     internal::PresenceCodecLoader<4>::add(manager_);
     internal::VarBytesCodecLoader<4>::add(manager_);
     internal::HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
+    internal::CRCCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,
