@@ -61,7 +61,7 @@ set_property(TARGET dccl APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>  # <prefix>/include
 )
 
-install(TARGETS dccl EXPORT dccl-config
+install(TARGETS dccl EXPORT dccl-targets
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}) 
 
@@ -106,7 +106,7 @@ if(build_native_protobuf)
   endif()
 endif()
 
-export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake)
+export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-targets.cmake)
 
 if(enable_testing)
   add_subdirectory(test)
