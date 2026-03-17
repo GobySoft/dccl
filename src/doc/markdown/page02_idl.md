@@ -55,7 +55,6 @@ The available DCCL options is given in the following Table 1:
 | **Field Extensions (special purpose)** *[b]*   |           |                                         |                   |        |             |
 | `(dccl.field).omit`      | bool           | Do not include field in encoded message                          | all               | -      | False        |
 | `(dccl.field).in_head`      | bool           | If true, the field is included in the DCCL header (encoded after the DCCL ID but before the rest of the fields. Not encrypted when using encryption)                          | all               | -      | False        |
-| `(dccl.field).required`  | bool           | Use `required = true` in proto3 as the equivalent of the `required` label in proto2. | all (singular, non-repeated) | - | False |
 | `(dccl.field).packed_enum`     | bool     | If false, encode use enum assigned values, not enum index values (0-N in order of definition)                                  | enum | - | True |
 | `(dccl.field).static_value`     | string     | Statically defined value for StaticCodec (codec = "dccl.static")                                 | all | - | - |
 | `(dccl.field).num_days`     | uint32     |  Number of days to include in TimeCodec  (codec = "dccl.time") encoding (+/- 12 hours of validity for each day added.)                                 | double, (u)int64 | - | 1 |
