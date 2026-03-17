@@ -29,14 +29,13 @@
 #include <cassert>
 #include <iostream>
 
-#include "../../codec.h"
 #include "../../binary.h"
+#include "../../codec.h"
 #include "test.pb.h"
 
 using namespace dccl::test;
 
-template <typename BarMsg>
-void run_test(const std::string& label)
+template <typename BarMsg> void run_test(const std::string& label)
 {
     dccl::Codec codec;
     BarMsg msg_in;
@@ -54,18 +53,18 @@ void run_test(const std::string& label)
     codec.encode(&bytes, msg_in);
     std::cout << label << " encoded (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    auto* msg_out = codec.decode<BarMsg*>(bytes);
-    std::cout << label << " message out:\n" << msg_out->DebugString() << std::endl;
+    BarMsg msg_out;
+    codec.decode(bytes, &msg_out);
+    std::cout << label << " message out:\n" << msg_out.DebugString() << std::endl;
 
     // Verify that the header field (in_head) was correctly encoded and decoded
-    assert(msg_out->foo().header().field() == msg_in.foo().header().field());
+    assert(msg_out.foo().header().field() == msg_in.foo().header().field());
     // Verify that the body fields were also correctly handled
-    assert(msg_out->foo().body_field() == msg_in.foo().body_field());
-    assert(msg_out->bar_body() == msg_in.bar_body());
+    assert(msg_out.foo().body_field() == msg_in.foo().body_field());
+    assert(msg_out.bar_body() == msg_in.bar_body());
     // Full round-trip check
-    assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
+    assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 
-    delete msg_out;
     std::cout << label << " passed.\n" << std::endl;
 }
 
