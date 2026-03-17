@@ -293,9 +293,9 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     std::stringstream ss;
     int depth = msg_handler.count();
 
-    std::string name =
-        ((this_field()) ? std::to_string(this_field()->number()) + ". " + this_field()->name()
-                        : this_descriptor()->full_name());
+    std::string name = ((this_field()) ? std::to_string(this_field()->number()) + ". " +
+                                             std::string(this_field()->name())
+                                       : std::string(this_descriptor()->full_name()));
     if (this_field() && this_field()->is_repeated())
         name += "[" +
                 (dccl_field_options().has_min_repeat()
@@ -337,7 +337,9 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     int width = this_field() ? full_width - name.size() : full_width - name.size() + spaces;
     ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str()
        << " {"
-       << (this_field() ? manager().find(this_field(), codec_version(), has_codec_group(), codec_group())->name()
+       << (this_field() ? manager()
+                              .find(this_field(), codec_version(), has_codec_group(), codec_group())
+                              ->name()
                         : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 
@@ -622,7 +624,8 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
 
     if (dlog.check(DEBUG2))
     {
-        std::string name = ((field) ? field->name() : root_descriptor()->full_name());
+        std::string name =
+            ((field) ? std::string(field->name()) : std::string(root_descriptor()->full_name()));
         if (vector_size >= 0)
             name += "[" + std::to_string(vector_size) + "]";
 

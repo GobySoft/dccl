@@ -424,7 +424,7 @@ class Codec
             if (desc2placeholder_id_.count(desc))
                 return desc2placeholder_id_.find(desc)->second;
             else
-                throw(Exception("Message " + desc->full_name() +
+                throw(Exception("Message " + std::string(desc->full_name()) +
                                 " has omit_id == true but has not been loaded, so id_internal() "
                                 "const cannot be called"));
         }
@@ -554,9 +554,9 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
 
             if (expected_id != received_id)
                 throw(Exception("Received message with id " + std::to_string(received_id) + " (" +
-                                id2desc_.at(received_id)->full_name() +
+                                std::string(id2desc_.at(received_id)->full_name()) +
                                 ") but decode was called with message of id " +
-                                std::to_string(expected_id) + " (" + desc->full_name() +
+                                std::to_string(expected_id) + " (" + std::string(desc->full_name()) +
                                 "). Ensure dccl::Codec::decode is called with the correct Protobuf "
                                 "message or use the dynamic overloads of decode."));
         }

@@ -3,7 +3,7 @@ protobuf/arithmetic_extensions.proto
 protobuf/arithmetic.proto
 )
 
-protobuf_generate_cpp(ARITHMETIC_PROTO_SRCS
+protobuf_generate_cpp_dccl(ARITHMETIC_PROTO_SRCS
   ARITHMETIC_PROTO_HDRS
   ${ARITHMETIC_PROTOS})
 

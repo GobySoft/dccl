@@ -331,10 +331,11 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
 
         if (!msg_opt.has_codec_version())
             throw(Exception(
-                "No (dccl.msg).codec_version set for DCCL Message '" + desc->full_name() +
+                "No (dccl.msg).codec_version set for DCCL Message '" +
+                    std::string(desc->full_name()) +
                     "'. For new messages, set 'option (dccl.msg).codec_version = 4' in the "
                     "message definition for " +
-                    desc->full_name() + " to use the default DCCL4 codecs.",
+                    std::string(desc->full_name()) + " to use the default DCCL4 codecs.",
                 desc));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
@@ -548,7 +549,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string message_name;
             if (!omit_id)
                 message_name += std::to_string(dccl_id) + ": ";
-            message_name += desc->full_name() + " {" + hash + "}";
+            message_name += std::string(desc->full_name()) + " {" + hash + "}";
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -718,8 +719,7 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 
         *os << codec_guard << " " << codec_str << " " << codec_guard << "\n";
         *os << id2desc_.size() << " messages loaded.\n";
-        *os << "Field sizes are in bits unless otherwise noted."
-            << "\n";
+        *os << "Field sizes are in bits unless otherwise noted." << "\n";
 
         for (auto it : id2desc_) info(it.second, os, it.first);
         os->flush();
@@ -798,8 +798,7 @@ std::string dccl::Codec::get_all_error_fields_in_message(const google::protobuf:
                         reflection->GetRepeatedMessage(message, field, index);
 
                     output_stream << std::string((depth + 1) * depth_spacing, ' ') << "[" << index
-                                  << "]: "
-                                  << "\n";
+                                  << "]: " << "\n";
 
                     output_stream << get_all_error_fields_in_message(sub_message, depth + 2);
                 }

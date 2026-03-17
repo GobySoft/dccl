@@ -1,4 +1,4 @@
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS test.proto)
+protobuf_generate_cpp_dccl(PROTO_SRCS PROTO_HDRS test.proto)
 
 add_executable(dccl_test_native_protobuf test.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_compile_definitions(dccl_test_native_protobuf PRIVATE DCCL_NATIVE_PROTOBUF_NAME="$<TARGET_SONAME_FILE_NAME:dccl_native_protobuf>")

@@ -350,9 +350,9 @@ jobs:
             - '*.tar.xz'
 
   osx-build:
-    resource_class: m2pro.medium
     macos:
-      xcode: "16.4.0"
+      xcode: "26.3.0"
+    resource_class: macos.m1.medium.gen1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -361,14 +361,13 @@ jobs:
           name: Update Homebrew
           command: brew update
       - run:
-          name: Install CMake
-          # Protobuf@23 has CMake linking problems with abseil that we don't yet support
-          command: brew install cmake protobuf@21
-      - run: &run-build
+          name: Install dependencies
+          command: brew install cmake protobuf abseil boost
+      - run:
           name: Build
           command: |
-            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH=/usr/local/opt/protobuf@21 -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
-      - run: &run-tests
+            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH="$(brew --prefix protobuf);$(brew --prefix abseil);$(brew --prefix boost)" -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+      - run:
           name: Run tests
           command: cd build && ctest --output-on-failure -j4
 
