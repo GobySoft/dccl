@@ -34,9 +34,9 @@ inline std::string exception_string(const std::string& in, const google::protobu
 {
     std::string out;
     if (desc)
-        out += std::string("Message: ") + desc->full_name() + ": ";
+        out += std::string("Message: ") + std::string(desc->full_name()) + ": ";
     if (field)
-        out += std::string("Field: ") + field->full_name() + ": ";
+        out += std::string("Field: ") + std::string(field->full_name()) + ": ";
 
     out += in;
     return out;

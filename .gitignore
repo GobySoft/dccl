@@ -3,8 +3,11 @@
 CMakeLists.txt.user
 *.swp
 /bin
+/build
 /include
 /lib
 /share
 /python/build
+__pycache__/
+*.pyc
 

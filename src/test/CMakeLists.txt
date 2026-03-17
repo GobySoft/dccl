@@ -52,6 +52,8 @@ add_subdirectory(dccl_v2_header)
 
 add_subdirectory(bitset1)
 
+add_subdirectory(base64_1)
+
 add_subdirectory(logger1)
 add_subdirectory(round1)
 
