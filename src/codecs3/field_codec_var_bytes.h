@@ -46,7 +46,11 @@ class VarBytesCodec : public dccl::TypedFieldCodec<std::string>
     void validate() override;
 
   private:
-    unsigned prefix_size() { return dccl::ceil_log2(dccl_field_options().max_length() + 1); }
+    unsigned prefix_size()
+    {
+        return dccl::ceil_log2(dccl_field_options().max_length() -
+                               dccl_field_options().min_length() + 1);
+    }
     unsigned presence_size() { return use_required() ? 0 : 1; }
 };
 } // namespace v3

@@ -1,0 +1,72 @@
+// Copyright 2024:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+// Tests for min_length with VarBytesCodec (bytes fields and v4 strings)
+message MinLengthMsg
+{
+    option (dccl.msg) = {
+        id: 20
+        max_bytes: 64
+        codec_version: 4
+    };
+
+    // required bytes with min_length=4, max_length=10
+    required bytes req_bytes = 1
+        [(dccl.field) = { min_length: 4 max_length: 10 codec: "dccl.var_bytes" }];
+    // optional bytes with min_length=2, max_length=8
+    optional bytes opt_bytes = 2
+        [(dccl.field) = { min_length: 2 max_length: 8 codec: "dccl.var_bytes" }];
+
+    // v4 string field uses VarBytesCodec — min_length savings apply
+    optional string str_field = 3
+        [(dccl.field) = { min_length: 3 max_length: 10 }];
+}
+
+// min_length == max_length (fixed-size bytes)
+message FixedLengthMsg
+{
+    option (dccl.msg) = {
+        id: 21
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    required bytes fixed_bytes = 1
+        [(dccl.field) = { min_length: 5 max_length: 5 codec: "dccl.var_bytes" }];
+}
+
+// Invalid: min_length > max_length — should fail to load
+message InvalidMinLengthMsg
+{
+    option (dccl.msg) = {
+        id: 22
+        max_bytes: 32
+        codec_version: 4
+    };
+
+    required bytes bad_bytes = 1
+        [(dccl.field) = { min_length: 10 max_length: 5 codec: "dccl.var_bytes" }];
+}

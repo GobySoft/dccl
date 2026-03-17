@@ -46,6 +46,7 @@ The available DCCL options is given in the following Table 1:
 | `(dccl.field).resolution` | double          |Defines the spacing between encoded values (generalized alternative to *precision*)  | double, float, (u)intN |  \f$dx = 10^{-p}\f$    | 1            |
 | `(dccl.field).min`       | double         | Minimum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$     | (u)intN , double, float | \f$x_m\f$ | -  |
 | `(dccl.field).max`       | double         | Maximum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$                              | (u)intN, double, float | \f$x_M\f$ | -  |
+| `(dccl.field).min_length`| uint32         | Minimum length (in bytes) that can be encoded. Reduces prefix-bit width for VarBytesCodec; pads shorter values in non-strict mode. | string, bytes     | \f$L_m\f$  | 0            |
 | `(dccl.field).max_length`| uint32         | Maximum length (in bytes) that can be encoded                                      | string, bytes     | \f$L_M\f$  | -            |
 | `(dccl.field).min_repeat`| uint32         | Minimum number of repeated values.                                                 | all _repeated_    | \f$r_m\f$  | -            |
 | `(dccl.field).max_repeat`| uint32         | Maximum number of repeated values.                                                 | all _repeated_    | \f$r_M\f$  | -            |
