@@ -274,8 +274,7 @@ class Codec
     /// \param bytes Pointer to byte string to store encoded msg
     /// \param msg Message to encode (must already have been validated)
     /// \param header_only If true, only decode the header (do not try to decrypt (if applicable) and decode the message body)
-    /// \param user_id Custom user_speicified dccl id to identify a message, if user_id is not specified or <0, then the first
-    /// dccl id with the message descriptor corresponding to that of msg will be used
+    /// \param user_id Custom user_specified dccl id to identify a message, if user_id is not specified or <0, then the first dccl id with the message descriptor corresponding to that of msg will be used
     /// \throw Exception if message cannot be encoded.
     void encode(std::string* bytes, const google::protobuf::Message& msg, bool header_only = false,
                 int user_id = -1);
@@ -366,7 +365,7 @@ class Codec
     }
 
     /// \brief Provides the encoded maximum size (in bytes) of msg.
-    unsigned max_size(const google::protobuf::Descriptor* desc) const;
+    unsigned max_size(const google::protobuf::Descriptor* desc, int user_id = -1) const;
 
     /// \brief Provides the encoded minimum size (in bytes) of msg.
     ///
@@ -378,7 +377,7 @@ class Codec
     }
 
     /// \brief Provides the encoded minimum size (in bytes) of msg.
-    unsigned min_size(const google::protobuf::Descriptor* desc) const;
+    unsigned min_size(const google::protobuf::Descriptor* desc, int user_id = -1) const;
 
     //@}
 
@@ -556,7 +555,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
                 throw(Exception("Received message with id " + std::to_string(received_id) + " (" +
                                 std::string(id2desc_.at(received_id)->full_name()) +
                                 ") but decode was called with message of id " +
-                                std::to_string(expected_id) + " (" + std::string(desc->full_name()) +
+                                std::to_string(expected_id) + " (" +
+                                std::string(desc->full_name()) +
                                 "). Ensure dccl::Codec::decode is called with the correct Protobuf "
                                 "message or use the dynamic overloads of decode."));
         }

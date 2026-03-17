@@ -83,10 +83,15 @@ int main(int /*argc*/, char* /*argv*/[])
         MinLengthMsg msg_out;
         codec.decode(encoded, &msg_out);
 
+        std::cout << "msg_in: " << msg_in.ShortDebugString() << std::endl;
+        std::cout << "msg_out: " << msg_out.ShortDebugString() << std::endl;
+
+        // expect padding to zero
+        msg_in.set_req_bytes(dccl::hex_decode("aabbcc00"));
+
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
         std::cout << "Round-trip with fields below min_length: passed" << std::endl;
     }
-    
 
     // --- Optional bytes absent ---
     {
@@ -122,9 +127,10 @@ int main(int /*argc*/, char* /*argv*/[])
 
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 
+        // DCCL ID = 8 bits
         // prefix_size = ceil_log2(5-5+1) = ceil_log2(1) = 0 bits
-        // max_size = 0 + 5*8 = 40 bits = 5 bytes
-        assert(codec.max_size<FixedLengthMsg>() == 5);
+        // max_size = 8 + 0 + 5*8 = 40 bits = 6 bytes
+        assert(codec.max_size<FixedLengthMsg>() == 6);
         std::cout << "Fixed-size bytes (min_length == max_length): passed" << std::endl;
     }
 
