@@ -49,6 +49,8 @@ file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
 string(REGEX REPLACE "^([0-9]+).*$" "\\1" DCCL_VERSION_MAJOR "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_MINOR  "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9~a-z]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
+# Purely numeric version for CMake package version comparison
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+).*$" "\\1.\\2.\\3" DCCL_VERSION_NUMERIC "${DCCL_VERSION_STRING}")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -163,12 +165,31 @@ endif()
 
 include(GNUInstallDirs)
 
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/dccl-config.cmake.in"
+  "${CMAKE_BINARY_DIR}/dccl-config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl
+)
+
+write_basic_package_version_file(
+  "${CMAKE_BINARY_DIR}/dccl-config-version.cmake"
+  VERSION ${DCCL_VERSION_NUMERIC}
+  COMPATIBILITY SameMajorVersion
+)
+
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
 
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
-install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
+install(EXPORT dccl-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
+install(FILES
+  "${CMAKE_BINARY_DIR}/dccl-config.cmake"
+  "${CMAKE_BINARY_DIR}/dccl-config-version.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl
+)
 
 message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LIBDIR}\n\tbinaries: ${CMAKE_INSTALL_FULL_BINDIR}\n\theaders: ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 
