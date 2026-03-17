@@ -96,6 +96,8 @@ int main()
     status.set_x_with_units(1000 * si::meters);
     status.set_y_with_units(500 * si::meters);
     status.set_heading_with_units(3.1415926535 / 2 * si::radians);
+    status.set_heading_rate_with_units(10 * boost::units::degree::degrees /
+                                       boost::units::si::seconds);
 
     // Test angular velocity: set in rad/s (SI), read back as rad/s
     status.set_angular_velocity_with_units(1.0 * si::radians_per_second);
@@ -110,6 +112,9 @@ int main()
     std::cout << x_nm << std::endl;
     std::cout << y_nm << std::endl;
     std::cout << status.heading_with_units() << std::endl;
+    std::cout << status.heading_rate_with_units() << std::endl;
+
+    assert(status.heading_rate() > 9.9999 && status.heading_rate() < 10.0001); 
 
     Parent p;
     p.set_mass_with_units(2 * si::kilograms);
