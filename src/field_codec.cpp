@@ -434,6 +434,7 @@ void dccl::FieldCodecBase::field_hash(std::size_t* hash_value,
         // root level message
         dccl::DCCLMessageOptions dccl_opts = this_descriptor()->options().GetExtension(dccl::msg);
         dccl_opts.clear_max_bytes(); // max bytes doesn't affect encoding
+        dccl_opts.clear_dynamic_conditions(); // dynamic conditions don't affect wire format
 
         hash_combine(*hash_value, dccl_opts.DebugString());
     }
