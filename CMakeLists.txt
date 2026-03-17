@@ -187,7 +187,7 @@ if(ABSL_INCLUDE_DIR)
   include_directories(SYSTEM ${ABSL_INCLUDE_DIR})
 endif()
 
-message("Google Protocol Buffers Version: ${Protobuf_VERSION}")
+message("Google Protocol Buffers: Version: ${protobuf_VERSION} / include: ${Protobuf_INCLUDE_DIR}")
 
 # optional
 ## cryptopp

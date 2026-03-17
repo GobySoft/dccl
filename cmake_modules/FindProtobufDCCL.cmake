@@ -104,5 +104,10 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL LOAD_FILE SRCS HDRS)
   set(${HDRS} ${${HDRS}} PARENT_SCOPE)
 endfunction()
 
-find_package(protobuf REQUIRED CONFIG)
-find_package(absl REQUIRED CONFIG)
+# prefer CMake included with Protobuf
+find_package(protobuf QUIET CONFIG)
+# if that fails, use the CMake shipped module
+if(NOT Protobuf_FOUND)
+  find_package(Protobuf REQUIRED MODULE)
+  set(protobuf_VERSION ${Protobuf_VERSION})
+endif()
