@@ -87,6 +87,11 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator
                   google::protobuf::compiler::GeneratorContext* generator_context,
                   std::string* error) const override;
 
+    uint64_t GetSupportedFeatures() const override
+    {
+        return FEATURE_PROTO3_OPTIONAL;
+    }
+
   private:
     void generate_message(
         const google::protobuf::Descriptor* desc,

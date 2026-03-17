@@ -43,10 +43,24 @@ dccl::Bitset dccl::v3::VarBytesCodec::encode(const std::string& wire_value)
         s.resize(dccl_field_options().max_length());
     }
 
+    if (s.size() < dccl_field_options().min_length())
+    {
+        if (this->strict())
+            throw(dccl::OutOfRangeException(std::string("Bytes too short for field: ") +
+                                                FieldCodecBase::this_field()->DebugString(),
+                                            this->this_field(), this->this_descriptor()));
+
+        dccl::dlog.is(DEBUG2) &&
+            dccl::dlog << "Bytes " << s << " is shorter than `dccl.min_length`, padding"
+                       << std::endl;
+        s.resize(dccl_field_options().min_length(), '\0');
+    }
+
     dccl::Bitset value_bits;
     value_bits.from_byte_string(s);
 
-    dccl::Bitset length_bits(presence_size() + prefix_size(), s.length());
+    dccl::Bitset length_bits(presence_size() + prefix_size(),
+                             s.length() - dccl_field_options().min_length());
 
     if (!use_required()) // set the presence bit
     {
@@ -84,7 +98,7 @@ std::string dccl::v3::VarBytesCodec::decode(dccl::Bitset* bits)
         }
     }
 
-    unsigned value_length = bits->to_ulong();
+    unsigned value_length = bits->to_ulong() + dccl_field_options().min_length();
     unsigned header_length = presence_size() + prefix_size();
 
     dccl::dlog.is(DEBUG2) && dccl::dlog << "Length of string is = " << value_length << std::endl;
@@ -108,9 +122,10 @@ unsigned dccl::v3::VarBytesCodec::size() { return min_size(); }
 
 unsigned dccl::v3::VarBytesCodec::size(const std::string& wire_value)
 {
-    return std::min(presence_size() + prefix_size() +
-                        static_cast<unsigned>(wire_value.length() * dccl::BITS_IN_BYTE),
-                    max_size());
+    unsigned length =
+        std::max(static_cast<unsigned>(wire_value.length()),
+                 static_cast<unsigned>(dccl_field_options().min_length()));
+    return std::min(presence_size() + prefix_size() + length * dccl::BITS_IN_BYTE, max_size());
 }
 
 unsigned dccl::v3::VarBytesCodec::max_size()
@@ -129,4 +144,6 @@ unsigned dccl::v3::VarBytesCodec::min_size()
 void dccl::v3::VarBytesCodec::validate()
 {
     require(dccl_field_options().has_max_length(), "missing (dccl.field).max_length");
+    require(dccl_field_options().max_length() >= dccl_field_options().min_length(),
+            "(dccl.field).max_length must be >= (dccl.field).min_length");
 }

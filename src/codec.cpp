@@ -468,16 +468,18 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
     return head_size_bytes + body_size_bytes;
 }
 
-unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
+unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc, int user_id) const
 {
     std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_max_size(&head_size_bits, desc, HEAD);
 
+    int32 dccl_id = id_internal_const(desc, user_id);
+
     unsigned id_bits = 0;
     if (!desc->options().GetExtension(dccl::msg).omit_id())
-        id_codec()->field_max_size(&id_bits, nullptr);
+        id_codec()->field_size(&id_bits, static_cast<uint32>(dccl_id), nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -488,16 +490,18 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
     return head_size_bytes + body_size_bytes;
 }
 
-unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
+unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc, int user_id) const
 {
     std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_min_size(&head_size_bits, desc, HEAD);
 
+    int32 dccl_id = id_internal_const(desc, user_id);
+
     unsigned id_bits = 0;
     if (!desc->options().GetExtension(dccl::msg).omit_id())
-        id_codec()->field_min_size(&id_bits, nullptr);
+        id_codec()->field_size(&id_bits, static_cast<uint32>(dccl_id), nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
