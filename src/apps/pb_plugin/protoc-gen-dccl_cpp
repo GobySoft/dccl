@@ -1,82 +1,158 @@
-#!/usr/bin/env bash
-# protoc-gen-dccl_cpp
-#
-# Bash wrapper replacing the compiled protoc-gen-dccl_cpp plugin binary.
-# Generates both C++ (.pb.h/.pb.cc) and DCCL code from .proto files in a
-# single command invocation, equivalent to running:
-#
-#   protoc --cpp_out=<outdir> --dccl_out=<outdir> \
-#          --plugin=protoc-gen-dccl=<path> [OPTIONS] PROTO_FILES
-#
-# Usage:
-#   protoc-gen-dccl_cpp --dccl_cpp_out=<outdir> [OPTIONS] PROTO_FILES
-#   protoc-gen-dccl_cpp --dccl_cpp_out=<params>:<outdir> [OPTIONS] PROTO_FILES
-#
-# Options:
-#   --dccl_cpp_out=<outdir>         Output directory for both C++ and DCCL
-#                                   generated files.  Any DCCL plugin
-#                                   parameters (e.g. dccl3_load_file=<file>)
-#                                   may be prefixed with a colon separator:
-#                                   --dccl_cpp_out=dccl3_load_file=foo.cpp:<dir>
-#   --proto_path=<path> / -I<path>  Proto search path (passed to protoc).
-#   All other options are forwarded to protoc unchanged.
-#
-# Environment variables:
-#   PROTOC            Path to the protoc binary (default: protoc found on PATH)
-#   PROTOC_GEN_DCCL   Path to protoc-gen-dccl binary (default: search PATH)
+#!/usr/bin/env python3
+"""
+protoc-gen-dccl_cpp
 
-set -eu
+A proper protoc plugin that generates both C++ (.pb.h/.pb.cc) and DCCL output
+from .proto files in a single protoc invocation:
 
-PROTOC="${PROTOC:-$(command -v protoc 2>/dev/null || true)}"
-if [[ -z "$PROTOC" ]]; then
-    echo "protoc-gen-dccl_cpp: error: protoc not found on PATH" >&2
-    exit 1
-fi
+    protoc --dccl_cpp_out=<outdir> [--proto_path=...] foo.proto
+    protoc --dccl_cpp_out=dccl3_load_file=<file>:<outdir> [OPTIONS] foo.proto
 
-# Locate the protoc-gen-dccl binary
-if [[ -n "${PROTOC_GEN_DCCL:-}" ]]; then
-    dccl_plugin="$PROTOC_GEN_DCCL"
-else
-    dccl_plugin="$(command -v protoc-gen-dccl 2>/dev/null || true)"
-    if [[ -z "$dccl_plugin" ]]; then
-        echo "protoc-gen-dccl_cpp: error: protoc-gen-dccl not found on PATH" >&2
-        echo "  Install DCCL or set PROTOC_GEN_DCCL to the full path of protoc-gen-dccl" >&2
-        exit 1
-    fi
-fi
+This is equivalent to running both --cpp_out and --dccl_out in a single call.
 
-# Translate --dccl_cpp_out into --cpp_out + --dccl_out + --plugin and
-# pass all other arguments through unchanged.
-new_args=()
-dccl_cpp_out_seen=false
-for arg in "$@"; do
-    case "$arg" in
-        --dccl_cpp_out=*)
-            val="${arg#--dccl_cpp_out=}"
-            # Extract directory portion: if params are present they precede the
-            # last colon (e.g. "dccl3_load_file=foo.cpp:/outdir").
-            if [[ "$val" == *:* ]]; then
-                outdir="${val##*:}"
-            else
-                outdir="$val"
-            fi
-            new_args+=(
-                "--cpp_out=${outdir}"
-                "--dccl_out=${val}"
-                "--plugin=protoc-gen-dccl=${dccl_plugin}"
-            )
-            dccl_cpp_out_seen=true
-            ;;
-        *)
-            new_args+=("$arg")
-            ;;
-    esac
-done
+The script implements the protoc plugin protocol: it reads a binary-encoded
+CodeGeneratorRequest from stdin and writes a binary-encoded
+CodeGeneratorResponse (containing generated C++ and DCCL files) to stdout.
+protoc automatically discovers this binary when it is installed on PATH or
+passed via --plugin=protoc-gen-dccl_cpp=<path>.
 
-if [[ "$dccl_cpp_out_seen" != "true" ]]; then
-    echo "protoc-gen-dccl_cpp: error: --dccl_cpp_out=<outdir> is required" >&2
-    echo "Usage: protoc-gen-dccl_cpp --dccl_cpp_out=<outdir> [OPTIONS] PROTO_FILES" >&2
-    exit 1
-fi
+Requirements:
+  - Python 3
+  - google-protobuf Python package  (pip install protobuf)
+  - protoc on PATH (or set the PROTOC environment variable)
+  - protoc-gen-dccl on PATH (or set the PROTOC_GEN_DCCL environment variable)
 
-exec "$PROTOC" "${new_args[@]}"
+Environment variables:
+  PROTOC            Path to the protoc binary   (default: protoc on PATH)
+  PROTOC_GEN_DCCL   Path to protoc-gen-dccl     (default: protoc-gen-dccl on PATH)
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+def _find_exe(env_var, name):
+    """Return the path to an executable, preferring the env-var override."""
+    path = os.environ.get(env_var, '')
+    if path and os.path.isfile(path) and os.access(path, os.X_OK):
+        return path
+    return shutil.which(name)
+
+
+def main():
+    # Fail early with a clear message when the protobuf Python library is absent.
+    try:
+        from google.protobuf.compiler import plugin_pb2
+        from google.protobuf import descriptor_pb2
+    except ImportError:
+        sys.stderr.write(
+            'protoc-gen-dccl_cpp: Python package "google-protobuf" is required.\n'
+            '  Install it with:  pip install protobuf\n'
+        )
+        sys.exit(1)
+
+    def make_error(msg):
+        """Serialise a CodeGeneratorResponse carrying only an error string."""
+        r = plugin_pb2.CodeGeneratorResponse()
+        r.error = msg
+        return r.SerializeToString()
+
+    # ------------------------------------------------------------------ #
+    # 1. Read the CodeGeneratorRequest that protoc sent on stdin.         #
+    # ------------------------------------------------------------------ #
+    request_data = sys.stdin.buffer.read()
+    request = plugin_pb2.CodeGeneratorRequest()
+    request.ParseFromString(request_data)
+
+    response = plugin_pb2.CodeGeneratorResponse()
+
+    # ------------------------------------------------------------------ #
+    # 2. DCCL output — forward the request to protoc-gen-dccl.           #
+    # ------------------------------------------------------------------ #
+    dccl_plugin = _find_exe('PROTOC_GEN_DCCL', 'protoc-gen-dccl')
+    if not dccl_plugin:
+        sys.stdout.buffer.write(make_error(
+            'protoc-gen-dccl not found on PATH; '
+            'install DCCL or set the PROTOC_GEN_DCCL environment variable'
+        ))
+        return
+
+    dccl_proc = subprocess.run([dccl_plugin], input=request_data, capture_output=True)
+    if dccl_proc.returncode != 0:
+        sys.stdout.buffer.write(make_error(
+            'protoc-gen-dccl failed: ' + dccl_proc.stderr.decode(errors='replace')
+        ))
+        return
+
+    if dccl_proc.stdout:
+        dccl_resp = plugin_pb2.CodeGeneratorResponse()
+        dccl_resp.ParseFromString(dccl_proc.stdout)
+        if dccl_resp.error:
+            # Forward the DCCL error directly.
+            sys.stdout.buffer.write(dccl_proc.stdout)
+            return
+        for f in dccl_resp.file:
+            out = response.file.add()
+            out.CopyFrom(f)
+
+    # ------------------------------------------------------------------ #
+    # 3. C++ output — use protoc --descriptor_set_in with the            #
+    #    FileDescriptorProtos already present in the request.             #
+    #                                                                      #
+    #    The request contains all proto_file descriptors (including        #
+    #    transitive dependencies), so we serialise them into a            #
+    #    FileDescriptorSet and hand it back to protoc with --cpp_out.     #
+    # ------------------------------------------------------------------ #
+    protoc = _find_exe('PROTOC', 'protoc')
+    if not protoc:
+        sys.stdout.buffer.write(make_error(
+            'protoc not found on PATH; set the PROTOC environment variable'
+        ))
+        return
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Build a FileDescriptorSet from the proto_file list in the request.
+        fds = descriptor_pb2.FileDescriptorSet()
+        for proto_file in request.proto_file:
+            fds.file.append(proto_file)
+
+        desc_path = os.path.join(tmpdir, 'input.pb')
+        cpp_dir   = os.path.join(tmpdir, 'out')
+        os.makedirs(cpp_dir)
+
+        with open(desc_path, 'wb') as f:
+            f.write(fds.SerializeToString())
+
+        cpp_proc = subprocess.run(
+            [protoc,
+             '--descriptor_set_in=' + desc_path,
+             '--cpp_out=' + cpp_dir]
+            + list(request.file_to_generate),
+            capture_output=True,
+        )
+        if cpp_proc.returncode != 0:
+            sys.stdout.buffer.write(make_error(
+                'C++ generation failed: '
+                + cpp_proc.stderr.decode(errors='replace')
+            ))
+            return
+
+        # Collect every generated file and add it to the combined response.
+        for root, _dirs, files in os.walk(cpp_dir):
+            for fname in sorted(files):
+                fpath = os.path.join(root, fname)
+                rel = os.path.relpath(fpath, cpp_dir).replace(os.sep, '/')
+                with open(fpath, 'rb') as fh:
+                    content = fh.read()
+                out = response.file.add()
+                out.name = rel
+                out.content = content.decode('utf-8', errors='replace')
+
+    sys.stdout.buffer.write(response.SerializeToString())
+
+
+if __name__ == '__main__':
+    main()
