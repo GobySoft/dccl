@@ -54,7 +54,8 @@ class TypeHelper
 
     std::shared_ptr<FromProtoCppTypeBase> find(const google::protobuf::Descriptor* desc) const
     {
-        return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE, desc->full_name());
+        return find(google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE,
+                    std::string(desc->full_name()));
     }
 
     std::shared_ptr<FromProtoCppTypeBase> find(google::protobuf::FieldDescriptor::CppType cpptype,
@@ -70,7 +71,7 @@ class TypeHelper
     }
     template <typename ProtobufMessage> void remove()
     {
-        custom_message_map_.erase(ProtobufMessage::descriptor()->full_name());
+        custom_message_map_.erase(std::string(ProtobufMessage::descriptor()->full_name()));
     }
     void reset()
     {

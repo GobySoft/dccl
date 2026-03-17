@@ -27,13 +27,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
-// In protobuf 3.22+ (new versioning: 22.x), the header was renamed from
-// cpp_generator.h to generator.h. Use __has_include to handle both.
-#if __has_include(<google/protobuf/compiler/cpp/generator.h>)
-#include <google/protobuf/compiler/cpp/generator.h>
-#else
-#include <google/protobuf/compiler/cpp/cpp_generator.h>
-#endif
+#include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
@@ -92,17 +86,6 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator
                   google::protobuf::compiler::GeneratorContext* generator_context,
                   std::string* error) const override;
 
-#ifdef INCLUDE_CPP
-    // When generating C++ code, forward feature support to the CppGenerator so that
-    // proto3 optional and other features are handled correctly.
-    uint64_t GetSupportedFeatures() const override
-    {
-        return cpp_generator_.GetSupportedFeatures();
-    }
-    // When not generating C++ (INCLUDE_CPP not set), only DCCL insertion-point code is
-    // emitted; the base class default of 0 is sufficient.
-#endif
-
   private:
     void generate_message(
         const google::protobuf::Descriptor* desc,
@@ -115,10 +98,6 @@ class DCCLGenerator : public google::protobuf::compiler::CodeGenerator
 
     void generate_load_file_headers() const;
     void generate_load_file_message_loader(const google::protobuf::Descriptor* desc) const;
-
-#ifdef INCLUDE_CPP
-    google::protobuf::compiler::cpp::CppGenerator cpp_generator_;
-#endif
 };
 
 bool DCCLGenerator::check_field_type(const google::protobuf::FieldDescriptor* field) const
@@ -142,11 +121,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
                              const std::string& parameter,
                              google::protobuf::compiler::GeneratorContext* generator_context,
                              std::string* error) const
-{
-#ifdef INCLUDE_CPP
-    cpp_generator_.Generate(file, parameter, generator_context, error);
-#endif
-    
+{    
     std::vector<std::pair<std::string, std::string>> options;
     google::protobuf::compiler::ParseGeneratorParameter(parameter, &options);
 

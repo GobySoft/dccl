@@ -3,7 +3,7 @@ set(PROTOS
   protobuf/option_extensions.proto
  )
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOS})
+protobuf_generate_cpp_dccl(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 set(SRC
   logger.cpp
@@ -39,7 +39,7 @@ add_library(dccl
   ${SRC}
   )
 
-target_link_libraries(dccl ${PROTOBUF_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dccl protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 if(enable_b64)
   target_link_libraries(dccl ${B64_LIBRARIES})

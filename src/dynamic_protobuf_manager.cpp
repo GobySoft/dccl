@@ -152,9 +152,14 @@ void dccl::DynamicProtobufManager::enable_disk_source_database()
 }
 
 // DLogMultiFileErrorCollector
+#if GOOGLE_PROTOBUF_VERSION >= 4022000
+void dccl::DynamicProtobufManager::DLogMultiFileErrorCollector::RecordError(
+    absl::string_view filename, int line, int column, absl::string_view message)
+{
+#else
 void dccl::DynamicProtobufManager::DLogMultiFileErrorCollector::AddError(
     const std::string& filename, int line, int column, const std::string& message)
-{
+#endif
     std::stringstream ss;
     ss << "File: " << filename << " has error (line: " << line << ", column: " << column
        << "):" << message;

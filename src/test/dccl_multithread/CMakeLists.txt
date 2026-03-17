@@ -1,4 +1,4 @@
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ../dccl_all_fields/test.proto ../dccl_arithmetic/test_arithmetic.proto)
+protobuf_generate_cpp_dccl(PROTO_SRCS PROTO_HDRS ../dccl_all_fields/test.proto ../dccl_arithmetic/test_arithmetic.proto)
 
 add_executable(dccl_test_multithread test.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_link_libraries(dccl_test_multithread dccl dccl_arithmetic)

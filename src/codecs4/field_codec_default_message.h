@@ -51,7 +51,7 @@ class DefaultMessageCodec : public FieldCodecBase
         return manager().find(field_desc, this->codec_version(), has_codec_group(), codec_group());
     }
 
-    bool is_optional() { return this_field() && this_field()->is_optional() && !use_required(); }
+    bool is_optional() { return this_field() && (!this_field()->is_required() && !this_field()->is_repeated()) && !use_required(); }
 
     void validate() override;
     std::string info() override;
@@ -153,7 +153,7 @@ class DefaultMessageCodec : public FieldCodecBase
                 auto fld_max_size = 0u;
                 codec->field_max_size(&fld_max_size, field_desc);
 
-                auto parent_oneof_name = field_desc->containing_oneof()->full_name();
+                auto parent_oneof_name = std::string(field_desc->containing_oneof()->full_name());
 
                 // Calculate the maximum between the field's size and the latest maximum size stored
                 auto new_max_size = std::max(fld_max_size, oneofs_max_size[parent_oneof_name]);
@@ -172,7 +172,7 @@ class DefaultMessageCodec : public FieldCodecBase
             // Add the bits needed to encode the case enumerator
             *return_value += oneof_size(oneof_desc);
             // Add the maximum size among the fields (0 if not initialised0
-            *return_value += oneofs_max_size[oneof_desc->full_name()];
+            *return_value += oneofs_max_size[std::string(oneof_desc->full_name())];
         }
     };
 
@@ -238,8 +238,8 @@ class DefaultMessageCodec : public FieldCodecBase
             std::stringstream ss;
             int depth = msg_handler.count();
 
-            std::string name =
-                std::to_string(oneof_desc->index()) + ". " + oneof_desc->name() + " [oneof]";
+            std::string name = std::to_string(oneof_desc->index()) + ". " +
+                               std::string(oneof_desc->name()) + " [oneof]";
 
             // Calculate indentation
             const int spaces = 8;
