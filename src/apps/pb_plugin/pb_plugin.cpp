@@ -36,6 +36,7 @@
 #include <memory>
 #include <set>
 #include <sstream>
+#include <filesystem>
 
 std::set<std::string> systems_to_include_;
 std::set<std::string> base_units_to_include_;
@@ -393,8 +394,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 
 void DCCLGenerator::generate_load_file_headers() const
 {
-    bool file_is_empty = (load_file_output_->peek() == std::ifstream::traits_type::eof());
-    load_file_output_->clear();
+    bool file_is_empty = std::filesystem::is_empty(load_file_cpp_);
 
     bool header_already_written = false;
     if (file_is_empty)
