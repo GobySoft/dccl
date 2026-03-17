@@ -3,6 +3,7 @@
 CMakeLists.txt.user
 *.swp
 /bin
+/build
 /include
 /lib
 /share

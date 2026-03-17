@@ -345,18 +345,7 @@ void encode(dccl::Codec& dccl, dccl::tool::Config& cfg)
 
                 case HEX: std::cout << dccl::hex_encode(encoded) << std::endl; break;
                 case BASE64:
-#if DCCL_HAS_B64
-                    std::stringstream instream(encoded);
-                    std::stringstream outstream;
-                    ::base64::encoder D;
-                    D.encode(instream, outstream);
-                    std::cout << outstream.str();
-#else
-                    std::cerr << "dccl was not compiled with libb64-dev, so no Base64 "
-                                 "functionality is available."
-                              << std::endl;
-                    exit(EXIT_FAILURE);
-#endif
+                    std::cout << dccl::b64_encode(encoded) << std::endl;
                     break;
             }
         }
@@ -400,19 +389,8 @@ void decode(dccl::Codec& dccl, const dccl::tool::Config& cfg)
                 }
                 case HEX: input += dccl::hex_decode(line); break;
                 case BASE64:
-#if DCCL_HAS_B64
-                    std::stringstream instream(line);
-                    std::stringstream outstream;
-                    ::base64::decoder D;
-                    D.decode(instream, outstream);
-                    input += outstream.str();
+                    input += dccl::b64_decode(line);
                     break;
-#else
-                    std::cerr << "dccl was not compiled with libb64-dev, so no Base64 "
-                                 "functionality is available."
-                              << std::endl;
-                    exit(EXIT_FAILURE);
-#endif
             }
         }
     }
