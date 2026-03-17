@@ -130,4 +130,12 @@ message DCCLMessageOptions
     optional bool omit_id = 10 [default = false];
 
     optional string unit_system = 30 [default = "si"];
+
+    // runtime contents-based conditionals
+    message Conditions
+    {
+        optional string max_bytes = 1;
+    }
+
+    optional Conditions dynamic_conditions = 40;
 }

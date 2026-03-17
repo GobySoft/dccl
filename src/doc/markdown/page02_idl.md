@@ -37,6 +37,7 @@ The available DCCL options is given in the following Table 1:
 | `(dccl.msg).id`          | int32          | Unique identifying integer for this message                                        |                   |        | -            |
 | `(dccl.msg).omit_id`          | bool          | If true, omit (dccl.msg).id from the message definition and encoded message. This requires some other means of determining the message type at the receiver (useful when wrapping DCCL messages in another protocol or when using only a single DCCL type in a particular link). |                   |        | False           |
 | `(dccl.msg).max_bytes`   | uint32         | Enforced upper bound for the encoded message length                                |                   |        | -            |
+| `(dccl.msg).dynamic_conditions` | Conditions | Runtime max_bytes limit enforced during encoding using a Lua script based on message contents |                   |        | -            |
 | `(dccl.msg).codec_version` | int32        | Default codec set to use (corresponds to DCCL major version)                       |                   |        | -            |
 | `(dccl.msg).codec`       | string         | Name of the codec to use for encoding the base message.                            |                   |        | dccl.defaultN, where N is codec_version |
 | `(dccl.msg).codec_group` | string         | Group of codecs to be used for encoding the fields.                                |                   |        | dccl.defaultN |
@@ -71,6 +72,8 @@ The DCCL ID is used to uniquely identify a given message name without having to 
 ### DCCL Maximum bytes: (dccl.msg).max_bytes
 
 This value is the maximum message size before you get an error from DCCL. This is a design tool to help ensure messages do not exceed a desired value, typically the path maximum transmission unit (MTU). Messages that do not take the actual max_bytes size are encoded only as the size they take up (i.e. they are not padded to max_bytes).
+
+A runtime version of this constraint can be set with `(dccl.msg).dynamic_conditions.max_bytes` (see [DCCL Message Dynamic Conditions](#dccl-message-dynamic-conditions-dccl4)) to allow different byte limits to be enforced based on the contents of the message (e.g., choosing a tighter limit when the channel type is acoustic).
 
 ### DCCL Codec Version: (dccl.msg).codec_version
 
@@ -221,9 +224,11 @@ See `test/dccl_units/command_message.proto`
 
 Dynamic Conditions is a new feature in DCCL4 that allows for conditional encoding of the fields based on runtime conditions (values of other parts of the message). This feature allows you to omit a field, mark a field "required", or change the values of the min/max bounds based on the value of one or more fields in the message.
 
+### Field Level Dynamic Conditions
+
 Each dynamic condition is a string that contains a script written in Lua ([https://www.lua.org/](https://www.lua.org/)) that is evaluated each time the message is encoded or decoded.
 
-The available dynamic_conditions are:
+The available field level dynamic_conditions are:
 
 - **required_if**: The Lua script must return a boolean value: true means the field is now required (overriding the optional or required value in the .proto file).
 - **omit_if**: The Lua script must return a boolean value: true means the field is omitted from the encoded message.
@@ -329,7 +334,49 @@ dynamic_conditions { omit_if: "a = 3; return a == this.field_c" }
 
 The Lua Protobuf functionality uses this wonderful Github project: [https://github.com/starwing/lua-protobuf](https://github.com/starwing/lua-protobuf). Please reference the documentation in the event you need more details about the "this" or "root" tables, which are built using this library.
 
-For more details, and an example usage, see the dccl_dynamic_conditions unit test.
+For more details, and an example usage, see the `dccl_dynamic_conditions` unit test.
+
+### Message Level Dynamic Conditions
+
+In addition to field-level dynamic conditions, a runtime byte-size limit can be applied at the **message level** using `(dccl.msg).dynamic_conditions.max_bytes`. This is useful when the same DCCL message definition must be transmitted over different channel types (e.g., WiFi, acoustic, Iridium) that have different maximum transmission unit (MTU) sizes.
+
+The static `(dccl.msg).max_bytes` continues to serve as the **absolute upper bound** validated at `codec.load()` time (before any message is encoded). The dynamic `max_bytes` condition imposes an additional, stricter runtime constraint based on the message contents, evaluated during `codec.encode()`.
+
+The available dynamic condition for messages is:
+
+- **max_bytes**: The Lua script must return a numeric value that is the maximum allowed encoded message size in bytes. If the actual encoded size exceeds this value, encoding throws an exception.
+
+### Example: channel-based max_bytes
+
+```proto
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+message ChannelMessage
+{
+    option (dccl.msg) = {
+        id: 2,
+        max_bytes: 270,        // absolute upper bound for load()-time validation
+        codec_version: 4,
+        dynamic_conditions: {
+            // Return different byte limits based on the channel field
+            max_bytes: "if this.channel == 'ACOUSTIC' then return 60 "
+                       "elseif this.channel == 'IRIDIUM' then return 270 "
+                       "else return 82 end"
+        }
+    };
+
+    enum Channel { WIFI = 1; ACOUSTIC = 2; IRIDIUM = 3; }
+
+    required Channel channel = 1;
+
+    repeated uint32 data = 2 [(dccl.field) = { min: 0 max: 4294967295 max_repeat: 20 }];
+}
+```
+
+In this example, when `channel` is `ACOUSTIC`, the codec enforces a 60-byte limit at encode time; when `channel` is `IRIDIUM`, a 270-byte limit is enforced; otherwise, the static 270-byte limit from `max_bytes` applies. The static `max_bytes: 270` controls the worst-case size validated at `load()` time and must be at least as large as the largest runtime limit.
+
+For more details, see the `dccl_dynamic_conditions_max_bytes` unit test.
 
 ## Using DCCL with Proto3
 

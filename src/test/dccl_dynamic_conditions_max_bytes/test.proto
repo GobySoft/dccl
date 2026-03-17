@@ -1,0 +1,31 @@
+syntax = "proto2";
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+// Message that uses dynamic_conditions.max_bytes to enforce per-channel limits.
+// The static max_bytes (200) is the absolute upper bound; dynamic_conditions.max_bytes
+// can further restrict encoding based on a channel field at runtime.
+message TestMaxBytes
+{
+    option (dccl.msg) = {
+        id: 10,
+        max_bytes: 200,
+        codec_version: 4,
+        dynamic_conditions: {
+            max_bytes: "if this.channel == 'ACOUSTIC' then return 10 else return 200 end"
+        }
+    };
+
+    enum Channel
+    {
+        WIFI = 1;
+        ACOUSTIC = 2;
+        IRIDIUM = 3;
+    }
+
+    required Channel channel = 1;
+
+    repeated uint32 data = 2 [(dccl.field) = { min: 0 max: 4294967295 max_repeat: 20 }];
+}
