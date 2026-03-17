@@ -224,9 +224,11 @@ See `test/dccl_units/command_message.proto`
 
 Dynamic Conditions is a new feature in DCCL4 that allows for conditional encoding of the fields based on runtime conditions (values of other parts of the message). This feature allows you to omit a field, mark a field "required", or change the values of the min/max bounds based on the value of one or more fields in the message.
 
+### Field Level Dynamic Conditions
+
 Each dynamic condition is a string that contains a script written in Lua ([https://www.lua.org/](https://www.lua.org/)) that is evaluated each time the message is encoded or decoded.
 
-The available dynamic_conditions are:
+The available field level dynamic_conditions are:
 
 - **required_if**: The Lua script must return a boolean value: true means the field is now required (overriding the optional or required value in the .proto file).
 - **omit_if**: The Lua script must return a boolean value: true means the field is omitted from the encoded message.
@@ -332,9 +334,9 @@ dynamic_conditions { omit_if: "a = 3; return a == this.field_c" }
 
 The Lua Protobuf functionality uses this wonderful Github project: [https://github.com/starwing/lua-protobuf](https://github.com/starwing/lua-protobuf). Please reference the documentation in the event you need more details about the "this" or "root" tables, which are built using this library.
 
-For more details, and an example usage, see the dccl_dynamic_conditions unit test.
+For more details, and an example usage, see the `dccl_dynamic_conditions` unit test.
 
-## DCCL Message Dynamic Conditions (DCCL4+) {#dccl-message-dynamic-conditions-dccl4}
+### Message Level Dynamic Conditions
 
 In addition to field-level dynamic conditions, a runtime byte-size limit can be applied at the **message level** using `(dccl.msg).dynamic_conditions.max_bytes`. This is useful when the same DCCL message definition must be transmitted over different channel types (e.g., WiFi, acoustic, Iridium) that have different maximum transmission unit (MTU) sizes.
 
@@ -343,13 +345,6 @@ The static `(dccl.msg).max_bytes` continues to serve as the **absolute upper bou
 The available dynamic condition for messages is:
 
 - **max_bytes**: The Lua script must return a numeric value that is the maximum allowed encoded message size in bytes. If the actual encoded size exceeds this value, encoding throws an exception.
-
-### Special variables for message dynamic conditions
-
-Within the message-level `max_bytes` Lua script the same special variables are available as in field conditions:
-
-- **this** (a Lua table) — refers to the contents of the root message being encoded.
-- **root** (a Lua table) — also refers to the root message (same as `this` at the message level).
 
 ### Example: channel-based max_bytes
 
