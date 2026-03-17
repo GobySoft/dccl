@@ -1,6 +1,9 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(Protobuf)
+
+# Seems to fail when using in downstream project
+#  -- Could NOT find Protobuf (missing: Protobuf_INCLUDE_DIR) (found version "3.21.12")
+# find_dependency(Protobuf MODULE)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dccl-targets.cmake")
