@@ -123,7 +123,9 @@ Booleans are simple. If they are required, they are encoded with false = 0, true
 
 #### DCCLv3
 
-Strings are given a maximum size in the proto file (max_length). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
+Strings are given a maximum size in the proto file (max_length) and optionally a minimum size (min_length, default 0). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
+
+If the string value is shorter than min_length, it is padded with null bytes in non-strict mode; strict mode raises an error. `min_length` is a validation constraint only for the default string codec — it does not affect the wire format or prefix-bit width (that optimisation is performed by VarBytesCodec).
 
 For example:
 ```
@@ -181,14 +183,14 @@ In addition to the default codecs, the DCCL library provides a number of built-i
 
 This codec is now the default for bytes and string fields since DCCLv4 (codec_version = 4). In DCCLv3 this codec can be enabled by setting the field option `(dccl.field).codec="dccl.var_bytes"` on a `string` or `bytes` field.
 
-This codec starts with a presence bit only if the field is optional. This is followed by a prefix integer encoding the length of the string or bytes. The size of the prefix field is exactly the number of bits needed to encode the values 0 through max_repeat. Finally the actual string (as ASCII) or bytes are appended to the Bitset to produce the complete message. 
+This codec starts with a presence bit only if the field is optional. This is followed by a prefix integer encoding the length of the string or bytes. The size of the prefix field is exactly the number of bits needed to encode the values 0 through `max_length - min_length`, i.e. \f$\lceil \hbox{log}_2(L_M - L_m + 1) \rceil\f$ bits (with \f$L_m = 0\f$ by default, this reduces to the previous formula). The prefix stores the value `actual_length - min_length`; on decode `min_length` is added back. If the actual length is less than `min_length`, the value is padded with null bytes in non-strict mode; strict mode raises an error. When `min_length == max_length` the prefix collapses to 0 bits, making fixed-size byte fields perfectly efficient. Finally the actual string (as ASCII) or bytes are appended to the Bitset to produce the complete message.
 
 | GPB Type           | Size (bits)  (q)                               | Encode                              |
 |-------------------------|-----------------------------------------------|-----------------------------------|
 | *required* fields | | |
-| string / bytes  (of length \f$L\f$)    | \f$ \lceil \hbox{log}_2(L_M + 1) \rceil + \text{min}(L, L_M) \cdot 8 \f$  | \f$x_{enc} = \text{min}(L, L_M) + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M + 1)\rceil}\f$  |
+| string / bytes  (of length \f$L\f$)    | \f$ \lceil \hbox{log}_2(L_M - L_m + 1) \rceil + \text{min}(L, L_M) \cdot 8 \f$  | \f$x_{enc} = (\text{min}(L, L_M) - L_m) + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M - L_m + 1)\rceil}\f$  |
 | *optional* fields | | |
-| string / bytes  (of length \f$L\f$)    | \f$\begin{array}{l l}  1 + \lceil \hbox{log}_2(L_M + 1) \rceil + \text{min}(L, L_M) \cdot 8  & \quad \text{if $x$ is set} \\  1 & \quad \text{if $x$ is not set}\\ \end{array} \f$ | \f$x_{enc} =  \left\{  \begin{array}{l l}  1+ \text{min}(L, L_M) \cdot 2 + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M + 1)\rceil + 1} & \quad \text{if $x$ is set }\\   0 & \quad \text{if $x$ is not set} \ \end{array} \right.\f$   |
+| string / bytes  (of length \f$L\f$)    | \f$\begin{array}{l l}  1 + \lceil \hbox{log}_2(L_M - L_m + 1) \rceil + \text{min}(L, L_M) \cdot 8  & \quad \text{if $x$ is set} \\  1 & \quad \text{if $x$ is not set}\\ \end{array} \f$ | \f$x_{enc} =  \left\{  \begin{array}{l l}  1+ (\text{min}(L, L_M) - L_m) \cdot 2 + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M - L_m + 1)\rceil + 1} & \quad \text{if $x$ is set }\\   0 & \quad \text{if $x$ is not set} \ \end{array} \right.\f$   |
 
 ### PresenceBitCodec (all types)
 

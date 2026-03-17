@@ -1,0 +1,49 @@
+// Copyright 2023:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
+syntax = "proto3";
+import "dccl/option_extensions.proto";
+package dccl.test;
+
+message Child
+{
+    double req_dbl = 1 [(dccl.field) = { min: -1, max: 1, resolution: 0.1 }];
+}
+
+message Proto3Msg
+{
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    // treated as proto2 "required" fields
+    int32 req_i32 = 1 [(dccl.field) = { min: -100, max: 500 }];
+    uint32 req_ui32 = 2 [(dccl.field) = { min: 10, max: 1022 }];
+
+    // In proto3, the `optional` keyword enables field presence tracking
+    // via a synthetic `oneof`
+    optional int32 opt_i32 = 3 [(dccl.field) = { min: -100, max: 500 }];
+    optional uint32 opt_ui32 = 4 [(dccl.field) = { min: 0, max: 1022 }];
+
+    Child child = 5;
+}

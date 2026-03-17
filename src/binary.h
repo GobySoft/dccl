@@ -32,12 +32,7 @@
 #include "common.h"
 #include "dccl/def.h"
 
-#if DCCL_HAS_B64
-#include <cstdio>
-#define BUFFERSIZE BUFSIZ
-#include "b64/decode.h"
-#include "b64/encode.h"
-#endif
+#include "thirdparty/base64/base64.hpp"
 
 namespace dccl
 {
@@ -154,25 +149,15 @@ inline std::string hex_encode(const std::string& in)
     return out;
 }
 
-#if DCCL_HAS_B64
 inline std::string b64_encode(const std::string& in)
 {
-    std::stringstream instream(in);
-    std::stringstream outstream;
-    base64::encoder D;
-    D.encode(instream, outstream);
-    return outstream.str();
+    return base64::to_base64(in);
 }
 
 inline std::string b64_decode(const std::string& in)
 {
-    std::stringstream instream(in);
-    std::stringstream outstream;
-    base64::decoder D;
-    D.decode(instream, outstream);
-    return outstream.str();
+    return base64::from_base64(in);
 }
-#endif
 
 /// \return Efficiently computes ceil(log2(v))
 inline unsigned ceil_log2(dccl::uint64 v)
