@@ -165,10 +165,8 @@ inline void validate_dimensions_for_system(const std::vector<std::string>& dim_n
                 "Dimension '" + dim +
                 "' is a compound Boost Units dimension that requires multiple base "
                 "dimensions, but system '" + sysname +
-                "' only supports single-dimension units. Use 'base_dimensions' to "
-                "specify the dimension explicitly (e.g., base_dimensions: \"AT^-1\" "
-                "for angular velocity in a combined angle+time system), or use a "
-                "general system such as \"si\".");
+                "' only supports single-dimension units. Use a "
+                "general system such as \"si\" or define a new system that includes the appropriate dimensions.");
         }
         else if (supported.find(dim) == supported.end())
         {
