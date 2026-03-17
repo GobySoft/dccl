@@ -110,8 +110,11 @@ export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-config.cmake
 
 # Build the dccl Python extension module (generates option_extensions_pb2.py
 # in the package tree and builds _dccl.<soabi>.so in-place).
+# Skip when any sanitizer is enabled: the Python interpreter itself is not
+# instrumented, so the sanitizer-compiled extension cannot be loaded, causing
+# build or test failures that are orthogonal to what sanitizer tests check.
 find_package(Python3 COMPONENTS Interpreter Development QUIET)
-if(Python3_FOUND)
+if(Python3_FOUND AND NOT SANITIZE_ADDRESS AND NOT SANITIZE_THREAD AND NOT SANITIZE_UNDEFINED)
   set(_dccl_python_stamp ${CMAKE_CURRENT_BINARY_DIR}/dccl_python.stamp)
   add_custom_command(
       OUTPUT ${_dccl_python_stamp}
