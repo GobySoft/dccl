@@ -90,6 +90,16 @@ message AUVStatus
         max: 1.57
         precision: 2
     }];
+    // Angular velocity must use a general system (e.g. "si") that supports both
+    // plane_angle and time base dimensions. Using a specialized angle system
+    // (e.g. "angle::degree") would produce a dimensionless result and is rejected
+    // by the protoc-gen-dccl plugin.
+    optional double angular_velocity = 14 [(dccl.field) = {
+        units { system: "si" derived_dimensions: "angular_velocity" }
+        min: -3.14159
+        max: 3.14159
+        precision: 4
+    }];
     optional MissionState mission_state = 12;
     enum MissionState
     {
