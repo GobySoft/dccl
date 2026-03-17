@@ -19,3 +19,6 @@ install(TARGETS protoc-gen-dccl DESTINATION ${CMAKE_INSTALL_BINDIR})
 # It translates --dccl_cpp_out=<dir> into --cpp_out=<dir> --dccl_out=<dir>
 # and delegates to protoc + protoc-gen-dccl.
 install(PROGRAMS protoc-gen-dccl_cpp DESTINATION ${CMAKE_INSTALL_BINDIR})
+add_custom_command(OUTPUT ${dccl_BIN_DIR}/protoc-gen-dccl_cpp
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/protoc-gen-dccl_cpp ${dccl_BIN_DIR}/protoc-gen-dccl_cpp)
+add_custom_target(protoc-gen-dccl_cpp_link ALL DEPENDS ${dccl_BIN_DIR}/protoc-gen-dccl_cpp)

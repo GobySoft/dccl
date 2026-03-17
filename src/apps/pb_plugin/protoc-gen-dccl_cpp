@@ -10,6 +10,20 @@ from .proto files in a single protoc invocation:
 
 This is equivalent to running both --cpp_out and --dccl_out in a single call.
 
+This is useful when using the built-in FindProtobuf.cmake module as you can generate C++
+and DCCL output by simply using:
+
+    protobuf_generate(
+      TARGET ${MY_TARGET}
+      LANGUAGE dccl_cpp
+      OUT_VAR PROTOS_CPP
+      PROTOC_OUT_DIR ${MY_OUT_DIR}
+      IMPORT_DIRS ${MY_IMPORT_DIRS}
+      PROTOS ${MY_PROTOS}
+      GENERATE_EXTENSIONS .pb.h .pb.cc
+    )
+
+
 The script implements the protoc plugin protocol: it reads a binary-encoded
 CodeGeneratorRequest from stdin and writes a binary-encoded
 CodeGeneratorResponse (containing generated C++ and DCCL files) to stdout.
@@ -70,36 +84,7 @@ def main():
     response = plugin_pb2.CodeGeneratorResponse()
 
     # ------------------------------------------------------------------ #
-    # 2. DCCL output — forward the request to protoc-gen-dccl.           #
-    # ------------------------------------------------------------------ #
-    dccl_plugin = _find_exe('PROTOC_GEN_DCCL', 'protoc-gen-dccl')
-    if not dccl_plugin:
-        sys.stdout.buffer.write(make_error(
-            'protoc-gen-dccl not found on PATH; '
-            'install DCCL or set the PROTOC_GEN_DCCL environment variable'
-        ))
-        return
-
-    dccl_proc = subprocess.run([dccl_plugin], input=request_data, capture_output=True)
-    if dccl_proc.returncode != 0:
-        sys.stdout.buffer.write(make_error(
-            'protoc-gen-dccl failed: ' + dccl_proc.stderr.decode(errors='replace')
-        ))
-        return
-
-    if dccl_proc.stdout:
-        dccl_resp = plugin_pb2.CodeGeneratorResponse()
-        dccl_resp.ParseFromString(dccl_proc.stdout)
-        if dccl_resp.error:
-            # Forward the DCCL error directly.
-            sys.stdout.buffer.write(dccl_proc.stdout)
-            return
-        for f in dccl_resp.file:
-            out = response.file.add()
-            out.CopyFrom(f)
-
-    # ------------------------------------------------------------------ #
-    # 3. C++ output — use protoc --descriptor_set_in with the            #
+    # 2. C++ output — use protoc --descriptor_set_in with the            #
     #    FileDescriptorProtos already present in the request.             #
     #                                                                      #
     #    The request contains all proto_file descriptors (including        #
@@ -150,6 +135,35 @@ def main():
                 out = response.file.add()
                 out.name = rel
                 out.content = content.decode('utf-8', errors='replace')
+
+    # ------------------------------------------------------------------ #
+    # 3. DCCL output — forward the request to protoc-gen-dccl.           #
+    # ------------------------------------------------------------------ #
+    dccl_plugin = _find_exe('PROTOC_GEN_DCCL', 'protoc-gen-dccl')
+    if not dccl_plugin:
+        sys.stdout.buffer.write(make_error(
+            'protoc-gen-dccl not found on PATH; '
+            'install DCCL or set the PROTOC_GEN_DCCL environment variable'
+        ))
+        return
+
+    dccl_proc = subprocess.run([dccl_plugin], input=request_data, capture_output=True)
+    if dccl_proc.returncode != 0:
+        sys.stdout.buffer.write(make_error(
+            'protoc-gen-dccl failed: ' + dccl_proc.stderr.decode(errors='replace')
+        ))
+        return
+
+    if dccl_proc.stdout:
+        dccl_resp = plugin_pb2.CodeGeneratorResponse()
+        dccl_resp.ParseFromString(dccl_proc.stdout)
+        if dccl_resp.error:
+            # Forward the DCCL error directly.
+            sys.stdout.buffer.write(dccl_proc.stdout)
+            return
+        for f in dccl_resp.file:
+            out = response.file.add()
+            out.CopyFrom(f)
 
     sys.stdout.buffer.write(response.SerializeToString())
 
