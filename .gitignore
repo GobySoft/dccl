@@ -7,4 +7,6 @@ CMakeLists.txt.user
 /lib
 /share
 /python/build
+__pycache__/
+*.pyc
 
