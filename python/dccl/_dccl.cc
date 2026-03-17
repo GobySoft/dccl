@@ -253,6 +253,80 @@ static PyObject *Codec_decode(Codec *self, PyObject *args) {
     return pyMsg;
 }
 
+static PyObject *Codec_decode_by_full_name(Codec *self, PyObject *args) {
+    const char *bytes;
+    Py_ssize_t size = 0;
+    const char *full_name;
+    int header_only = 0;
+
+    // Parse inputs and convert to string
+    if (!PyArg_ParseTuple(args, "s#s|i", &bytes, &size, &full_name, &header_only)) {
+        return NULL;
+    }
+    std::string bytestr(bytes, size);
+
+    // we need to map the full name to the class, via the type id
+    // this isn't predictable for omit_id types which are assigned a negative ID on loading
+    int expected_id = INT_MAX;
+    for (auto &[k, v] : self->codec->loaded()) {
+        if (v->full_name() == full_name) {
+            expected_id = k;
+        }
+    }
+
+    if (expected_id == INT_MAX) {
+        throw(dccl::Exception("Provided message full name " + std::string(full_name) +
+                                    " has not been loaded. Call load() before decoding this type."));
+    } else {
+        std::cout << "Found description.\n";
+    }
+
+    gp::Message *msg;
+    try {
+        if (!self->codec->loaded().count(expected_id)) {
+            std::cout << expected_id << " not found.\n";
+            for (auto &[k, v] : self->codec->loaded()) {
+                std::cout << k << ":\t" << v->full_name() << "\n";
+            }
+
+            throw(dccl::Exception("Provided message id " + std::to_string(expected_id) +
+                                    " has not been loaded. Call load() before decoding this type."));
+        }
+
+        const google::protobuf::Descriptor* desc = self->codec->loaded().at(expected_id);
+        std::cout << desc->DebugString() << std::endl;
+
+        if (!desc->options().GetExtension(dccl::msg).omit_id()) {
+            int received_id = self->codec->id(bytestr);
+            // this message should have the ID embedded, so check it matches
+            if (!self->codec->loaded().count(received_id)) {
+                throw(dccl::Exception("Parsed message id " + std::to_string(received_id) +
+                                        " has not been loaded. Call load() before decoding this type."));
+            }
+
+            if (expected_id != received_id)
+                throw(dccl::Exception("Received message with id " + std::to_string(received_id) + " (" +
+                                self->codec->loaded().at(received_id)->full_name() +
+                                ") but decode was called with message of id " +
+                                std::to_string(expected_id) + " (" + desc->full_name() +
+                                "). Ensure dccl::Codec::decode is called with the correct Protobuf "
+                                "message or use the dynamic overloads of decode."));
+        }
+
+        // Do DCCL Decoding, and get a gp::Message
+        msg = dccl::DynamicProtobufManager::new_protobuf_message<gp::Message*>(self->codec->loaded().find(expected_id)->second);
+        self->codec->decode(bytestr, msg, header_only);
+    } catch (dccl::Exception &e) {
+        PyErr_SetString(DcclException, e.what());
+        return NULL;
+    }
+
+    // Convert the gp::Message to a Python Protobuf Message
+    PyObject* pyMsg = cpp_pbmsg_to_py_pbmsg(msg);
+    delete msg;
+    return pyMsg;
+}
+
 static PyObject *Codec_load(Codec *self, PyObject *args) {
     // Get the type name as a string
     const char *type_name_ch = NULL;
@@ -371,6 +445,8 @@ static PyMethodDef Codec_methods[] = {
      "encode(message[, header_only])\n\nReturn a DCCL-encoded string for message."},
     {"decode", (PyCFunction)Codec_decode, METH_VARARGS,
      "decode(bytes[, header_only])\n\nReturn a protobuf message decoded from bytes."},
+    {"decode_with_full_name", (PyCFunction)Codec_decode_by_full_name, METH_VARARGS,
+     "decode_with_full_name(bytes, full_name[, header_only])\n\nReturn a protobuf message decoded from bytes using type full name."},
     {"load", (PyCFunction)Codec_load, METH_VARARGS,
      "load(type_name)\n\nEnsure that type_name is registered for use with DCCL."},
     {"load_library", (PyCFunction)Codec_load_library, METH_VARARGS,
