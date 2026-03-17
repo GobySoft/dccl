@@ -238,6 +238,40 @@ This codec uses the Default Numeric Codec to encode the hash value, where `(dccl
 
 The value of this field (if set) on encoding is ignored, and overwritten with the computed hash of the message at the encoder. The decoder computes the hash of the message and throws an exception if this does not match the hash transmitted in the message (indicating that the sender and receiver do not have compatible versions of the message).
 
+### CRC Codecs: CRC16Codec and CRC32Codec (uint32)
+
+DCCL provides two built-in CRC field codecs to allow messages to carry a runtime data integrity checksum. These are useful for detecting transmission errors over noisy communication channels.
+
+| Codec name | Algorithm | Width | `(dccl.field).max` |
+|---|---|---|---|
+| `dccl.crc16` | CRC-16/IBM-3740 (CCITT-FALSE) | 16 bits | `65535` |
+| `dccl.crc32` | CRC-32/ISO-HDLC (standard Ethernet/zlib) | 32 bits | `4294967295` |
+
+Usage example:
+
+```proto
+syntax="proto2";
+import "dccl/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg) = { codec_version: 4, id: 124, max_bytes: 32 };
+  required double x = 1 [(dccl.field) = { min: -10000, max: 10000, precision: 1 }];
+  // ... other fields ...
+
+  // CRC-16 (16-bit checksum, requires min=0, max=65535):
+  required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc16", min: 0, max: 65535 }];
+
+  // Or CRC-32 (32-bit checksum, requires min=0, max=4294967295):
+  // required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32", min: 0, max: 4294967295 }];
+}
+```
+
+**Important:** The CRC field must be the **last field** in the message body to cover all other fields.
+
+The CRC is computed over the encoded bits of all body fields that precede the CRC field. The value of this field (if set) on encoding is ignored and overwritten with the computed CRC. On decoding, the CRC is recomputed over the same bits and an exception is thrown if it does not match the received value, indicating that the message data may be corrupted.
+
+Both `(dccl.field).min` must be 0 and `(dccl.field).max` must be set to the exact value for the chosen algorithm (65535 for CRC-16, 4294967295 for CRC-32); the codec will throw a validation exception otherwise.
+
 
 ## Additional Codec libraries
 
