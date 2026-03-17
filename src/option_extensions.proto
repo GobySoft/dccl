@@ -71,6 +71,7 @@ message DCCLFieldOptions
 
     // string, bytes
     optional uint32 max_length = 9;
+    optional uint32 min_length = 14 [default = 0];
 
     // any `repeated` field
     optional uint32 max_repeat = 10;
@@ -90,6 +91,12 @@ message DCCLFieldOptions
         optional bool relative_temperature = 4 [default = false];
         optional string unit = 5;
         optional string prefix = 6;
+        message CustomUnit
+        {
+            required string unit = 1;
+            optional string header = 2;
+        }
+        optional CustomUnit custom = 7;
     }
     optional Units units = 30;
 

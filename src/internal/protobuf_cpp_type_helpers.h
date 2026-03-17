@@ -70,6 +70,11 @@ class FromProtoCppTypeBase
     dccl::any get_value(const google::protobuf::FieldDescriptor* field,
                         const google::protobuf::Message& msg)
     {
+        // For fields without presence tracking (proto3 singular scalar fields without the
+        // `optional` keyword), HasField() is not valid. Such fields always have a value
+        // (defaulting to 0/false/empty if not explicitly set), so we always return it.
+        if (!field->has_presence())
+            return _get_value(field, msg);
         const google::protobuf::Reflection* refl = msg.GetReflection();
         if (!refl->HasField(msg, field))
             return dccl::any();

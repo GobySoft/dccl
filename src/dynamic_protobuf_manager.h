@@ -300,8 +300,14 @@ class DynamicProtobufManager
 
     class DLogMultiFileErrorCollector : public google::protobuf::compiler::MultiFileErrorCollector
     {
+
+#if GOOGLE_PROTOBUF_VERSION >= 4022000        
+        void RecordError(absl::string_view filename, int line, int column,
+                      absl::string_view message) override;
+#else
         void AddError(const std::string& filename, int line, int column,
                       const std::string& message) override;
+#endif  
     };
 
     std::shared_ptr<DLogMultiFileErrorCollector> error_collector_;

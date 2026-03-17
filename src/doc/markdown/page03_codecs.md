@@ -123,7 +123,9 @@ Booleans are simple. If they are required, they are encoded with false = 0, true
 
 #### DCCLv3
 
-Strings are given a maximum size in the proto file (max_length). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
+Strings are given a maximum size in the proto file (max_length) and optionally a minimum size (min_length, default 0). A small integer (minimally sized like a required unsigned int field to encode 0 to max_length) is included first to specify the length of the following string. Then the string is encoded using the basic one-byte character values (ASCII).
+
+If the string value is shorter than min_length, it is padded with null bytes in non-strict mode; strict mode raises an error. `min_length` is a validation constraint only for the default string codec — it does not affect the wire format or prefix-bit width (that optimisation is performed by VarBytesCodec).
 
 For example:
 ```
@@ -181,14 +183,14 @@ In addition to the default codecs, the DCCL library provides a number of built-i
 
 This codec is now the default for bytes and string fields since DCCLv4 (codec_version = 4). In DCCLv3 this codec can be enabled by setting the field option `(dccl.field).codec="dccl.var_bytes"` on a `string` or `bytes` field.
 
-This codec starts with a presence bit only if the field is optional. This is followed by a prefix integer encoding the length of the string or bytes. The size of the prefix field is exactly the number of bits needed to encode the values 0 through max_repeat. Finally the actual string (as ASCII) or bytes are appended to the Bitset to produce the complete message. 
+This codec starts with a presence bit only if the field is optional. This is followed by a prefix integer encoding the length of the string or bytes. The size of the prefix field is exactly the number of bits needed to encode the values 0 through `max_length - min_length`, i.e. \f$\lceil \hbox{log}_2(L_M - L_m + 1) \rceil\f$ bits (with \f$L_m = 0\f$ by default, this reduces to the previous formula). The prefix stores the value `actual_length - min_length`; on decode `min_length` is added back. If the actual length is less than `min_length`, the value is padded with null bytes in non-strict mode; strict mode raises an error. When `min_length == max_length` the prefix collapses to 0 bits, making fixed-size byte fields perfectly efficient. Finally the actual string (as ASCII) or bytes are appended to the Bitset to produce the complete message.
 
 | GPB Type           | Size (bits)  (q)                               | Encode                              |
 |-------------------------|-----------------------------------------------|-----------------------------------|
 | *required* fields | | |
-| string / bytes  (of length \f$L\f$)    | \f$ \lceil \hbox{log}_2(L_M + 1) \rceil + \text{min}(L, L_M) \cdot 8 \f$  | \f$x_{enc} = \text{min}(L, L_M) + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M + 1)\rceil}\f$  |
+| string / bytes  (of length \f$L\f$)    | \f$ \lceil \hbox{log}_2(L_M - L_m + 1) \rceil + \text{min}(L, L_M) \cdot 8 \f$  | \f$x_{enc} = (\text{min}(L, L_M) - L_m) + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M - L_m + 1)\rceil}\f$  |
 | *optional* fields | | |
-| string / bytes  (of length \f$L\f$)    | \f$\begin{array}{l l}  1 + \lceil \hbox{log}_2(L_M + 1) \rceil + \text{min}(L, L_M) \cdot 8  & \quad \text{if $x$ is set} \\  1 & \quad \text{if $x$ is not set}\\ \end{array} \f$ | \f$x_{enc} =  \left\{  \begin{array}{l l}  1+ \text{min}(L, L_M) \cdot 2 + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M + 1)\rceil + 1} & \quad \text{if $x$ is set }\\   0 & \quad \text{if $x$ is not set} \ \end{array} \right.\f$   |
+| string / bytes  (of length \f$L\f$)    | \f$\begin{array}{l l}  1 + \lceil \hbox{log}_2(L_M - L_m + 1) \rceil + \text{min}(L, L_M) \cdot 8  & \quad \text{if $x$ is set} \\  1 & \quad \text{if $x$ is not set}\\ \end{array} \f$ | \f$x_{enc} =  \left\{  \begin{array}{l l}  1+ (\text{min}(L, L_M) - L_m) \cdot 2 + \sum_{n=0}^{\text{min}(L, L_M)} x[n] \cdot 2^{8n+\lceil \hbox{log}_2(L_M - L_m + 1)\rceil + 1} & \quad \text{if $x$ is set }\\   0 & \quad \text{if $x$ is not set} \ \end{array} \right.\f$   |
 
 ### PresenceBitCodec (all types)
 
@@ -235,6 +237,40 @@ This hash value is returned by the dccl::Codec::load() method for compile time v
 This codec uses the Default Numeric Codec to encode the hash value, where `(dccl.field).min` must be 0 and `(dccl.field).max` is a power of 2 minus 1 up to uint32 (2^32 -1 = 4294967295). This allows the user of this codec to select the desired length of hash (up to 32 bits) to tradeoff message size versus hash collision probability.
 
 The value of this field (if set) on encoding is ignored, and overwritten with the computed hash of the message at the encoder. The decoder computes the hash of the message and throws an exception if this does not match the hash transmitted in the message (indicating that the sender and receiver do not have compatible versions of the message).
+
+### CRC Codecs: CRC16Codec and CRC32Codec (uint32)
+
+DCCL provides two built-in CRC field codecs to allow messages to carry a runtime data integrity checksum. These are useful for detecting transmission errors over noisy communication channels.
+
+| Codec name | Algorithm | Width |
+|---|---|---|
+| `dccl.crc16` | CRC-16/IBM-3740 (CCITT-FALSE) | 16 bits |
+| `dccl.crc32` | CRC-32/ISO-HDLC (standard Ethernet/zlib) | 32 bits |
+
+Usage example:
+
+```proto
+syntax="proto2";
+import "dccl/option_extensions.proto";
+
+message NavigationReport {
+  option (dccl.msg) = { codec_version: 4, id: 124, max_bytes: 32 };
+  required double x = 1 [(dccl.field) = { min: -10000, max: 10000, precision: 1 }];
+  // ... other fields ...
+
+  // CRC-16 (16-bit checksum):
+  required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc16" }];
+
+  // Or CRC-32 (32-bit checksum):
+  // required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
+```
+
+**Important:** The CRC field must be the **last field** in the message body to cover all other fields.
+
+The CRC is computed over the encoded bits of all body fields that precede the CRC field. The value of this field (if set) on encoding is ignored and overwritten with the computed CRC. On decoding, the CRC is recomputed over the same bits and an exception is thrown if it does not match the received value, indicating that the message data may be corrupted.
+
+The `min` and `max` bounds are hardcoded by the codec (0 and 65535 for CRC-16; 0 and 4294967295 for CRC-32) and do not need to be specified in the field options.
 
 
 ## Additional Codec libraries

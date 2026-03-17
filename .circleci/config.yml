@@ -30,10 +30,6 @@ environment-template-bookworm: &environment-template-bookworm
   DISTRO_RELEASE_CODENAME: "bookworm"
   DISTRO_RELEASE_VERSION: "debian12"
   
-environment-template-focal: &environment-template-focal
-  DISTRO_RELEASE_CODENAME: "focal"
-  DISTRO_RELEASE_VERSION: "ubuntu20.04"
-
 environment-template-jammy: &environment-template-jammy
   DISTRO_RELEASE_CODENAME: "jammy"
   DISTRO_RELEASE_VERSION: "ubuntu22.04"
@@ -50,13 +46,6 @@ docker-base-bullseye: &docker-base-bullseye
 docker-base-bookworm: &docker-base-bookworm
   - image: gobysoft/dccl-debian-build-base:12.1
     
-docker-base-focal: &docker-base-focal
-  - image: gobysoft/dccl-ubuntu-build-base:20.04.1
-docker-arm64-focal: &docker-arm64-focal
-  - image: gobysoft/dccl-ubuntu-build-arm64:20.04.1
-docker-armhf-focal: &docker-armhf-focal
-  - image: gobysoft/dccl-ubuntu-build-armhf:20.04.1
-
 docker-base-jammy: &docker-base-jammy
   - image: gobysoft/dccl-ubuntu-build-base:22.04.1
     
@@ -220,8 +209,6 @@ workflows:
           <<: *filter-template-non-master
       - amd64-bookworm-build:
           <<: *filter-template-non-master
-      - amd64-focal-build:
-          <<: *filter-template-non-master
       - amd64-jammy-build:
           <<: *filter-template-non-master
       - amd64-noble-build:
@@ -262,19 +249,6 @@ workflows:
           requires:
             - amd64-bookworm-deb-build            
 
-      - amd64-focal-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - get-orig-source
-      - arm64-focal-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-focal-deb-build
-      - armhf-focal-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-focal-deb-build
-
       - amd64-jammy-deb-build:
           <<: *filter-template-master-only
           requires:
@@ -308,19 +282,16 @@ workflows:
           requires:
             - amd64-bullseye-deb-build
             - amd64-bookworm-deb-build
-            - amd64-focal-deb-build
             - amd64-jammy-deb-build
             - amd64-noble-deb-build
 
             - arm64-bullseye-deb-build
             - arm64-bookworm-deb-build
-            - arm64-focal-deb-build
             - arm64-jammy-deb-build
             - arm64-noble-deb-build
 
             - armhf-bullseye-deb-build
             - armhf-bookworm-deb-build
-            - armhf-focal-deb-build
             - armhf-jammy-deb-build
             - armhf-noble-deb-build
 
@@ -334,19 +305,16 @@ workflows:
           requires:
             - amd64-bullseye-deb-build
             - amd64-bookworm-deb-build
-            - amd64-focal-deb-build
             - amd64-jammy-deb-build
             - amd64-noble-deb-build
 
             - arm64-bullseye-deb-build
             - arm64-bookworm-deb-build
-            - arm64-focal-deb-build
             - arm64-jammy-deb-build
             - arm64-noble-deb-build
 
             - armhf-bullseye-deb-build
             - armhf-bookworm-deb-build
-            - armhf-focal-deb-build
             - armhf-jammy-deb-build
             - armhf-noble-deb-build
             - continuous-upload
@@ -382,9 +350,9 @@ jobs:
             - '*.tar.xz'
 
   osx-build:
-    resource_class: medium
     macos:
-      xcode: "15.0.0"
+      xcode: "26.3.0"
+    resource_class: macos.m1.medium.gen1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
@@ -393,14 +361,13 @@ jobs:
           name: Update Homebrew
           command: brew update
       - run:
-          name: Install CMake
-          # Protobuf@23 has CMake linking problems with abseil that we don't yet support
-          command: brew install cmake protobuf@21
-      - run: &run-build
+          name: Install dependencies
+          command: brew install cmake protobuf abseil boost
+      - run:
           name: Build
           command: |
-            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH=/usr/local/opt/protobuf@21 -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
-      - run: &run-tests
+            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH="$(brew --prefix protobuf);$(brew --prefix abseil);$(brew --prefix boost)" -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
+      - run:
           name: Run tests
           command: cd build && ctest --output-on-failure -j4
 
@@ -437,12 +404,6 @@ jobs:
       <<: *environment-template-common      
 
       
-  amd64-focal-build:
-    <<: *job-template-amd64
-    docker: *docker-base-focal
-    environment:
-      <<: *environment-template-common
-
   amd64-jammy-build:
     <<: *job-template-amd64
     docker: *docker-base-jammy
@@ -500,28 +461,6 @@ jobs:
       <<: *environment-template-bookworm
       <<: *environment-template-armhf
 
-
-  amd64-focal-deb-build:
-    <<: *job-template-deb-amd64
-    docker: *docker-base-focal
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-focal
-      <<: *environment-template-amd64
-  arm64-focal-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-arm64-focal
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-focal
-      <<: *environment-template-arm64
-  armhf-focal-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-armhf-focal
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-focal
-      <<: *environment-template-armhf
 
 
   amd64-jammy-deb-build:
@@ -599,14 +538,31 @@ jobs:
           name: Run tests
           command: cd build && ctest --output-on-failure
   amd64+tsan-build:
-    <<: *job-template-sanitizers
+    # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-noble
+      <<: *environment-template-amd64
+      SANITIZER_NUM_JOBS: 2
+    machine:
+      image: ubuntu-2404:current
+    resource_class: large
     steps:
       - checkout
-      - run: *run-update-apt
+      - run:
+          # Required to avoid "FATAL: ThreadSanitizer: unexpected memory mapping"
+          # on Linux kernels >= 6.x. See https://stackoverflow.com/questions/77850769
+          name: Set mmap_rnd_bits for ThreadSanitizer compatibility
+          command: sudo sysctl vm.mmap_rnd_bits=28
+      - run:
+          name: Update apt packages and install dependencies
+          command: sudo apt-get update && sudo apt-get dist-upgrade -y && sudo apt-get install -y cmake libprotobuf-dev libprotoc-dev protobuf-compiler build-essential
       - run: 
           name: Build with ThreadSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
-      - run: *run-tests
+      - run:
+          name: Run tests
+          command: cd build && ctest --output-on-failure
   amd64+ubsan-build:
     <<: *job-template-sanitizers
     steps:

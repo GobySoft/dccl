@@ -68,6 +68,12 @@ struct MessageStackData
     std::vector<MessageAndField> messages;
 };
 
+/// \brief Recursively checks if a message descriptor has any fields with in_head = true.
+///
+/// Only recurses into embedded message fields that do not have an explicit in_head setting,
+/// since an explicit in_head=false forces all children to BODY.
+bool has_head_field(const google::protobuf::Descriptor* desc);
+
 //RAII handler for the current Message recursion stack
 class MessageStack
 {

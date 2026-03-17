@@ -5,6 +5,7 @@ DCCL uses the Google Protocol Buffers (Protobuf) language to define messages. Th
 An example DCCL message is as follows:
 
 ```protobuf
+syntax = "proto2";
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
@@ -45,6 +46,7 @@ The available DCCL options is given in the following Table 1:
 | `(dccl.field).resolution` | double          |Defines the spacing between encoded values (generalized alternative to *precision*)  | double, float, (u)intN |  \f$dx = 10^{-p}\f$    | 1            |
 | `(dccl.field).min`       | double         | Minimum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$     | (u)intN , double, float | \f$x_m\f$ | -  |
 | `(dccl.field).max`       | double         | Maximum value that this field can contain (inclusive). Should be an exact multiple of \f$dx = 10^{-p}\f$                              | (u)intN, double, float | \f$x_M\f$ | -  |
+| `(dccl.field).min_length`| uint32         | Minimum length (in bytes) that can be encoded. Reduces prefix-bit width for VarBytesCodec; pads shorter values in non-strict mode. | string, bytes     | \f$L_m\f$  | 0            |
 | `(dccl.field).max_length`| uint32         | Maximum length (in bytes) that can be encoded                                      | string, bytes     | \f$L_M\f$  | -            |
 | `(dccl.field).min_repeat`| uint32         | Minimum number of repeated values.                                                 | all _repeated_    | \f$r_m\f$  | -            |
 | `(dccl.field).max_repeat`| uint32         | Maximum number of repeated values.                                                 | all _repeated_    | \f$r_M\f$  | -            |
@@ -111,6 +113,9 @@ The Units field extension has the following options:
   You can also create your own system and use it in DCCL. To do this, make the namespace the same as the include file path, where "::" is replaced by "/". For example, if you define a system "foo::barsystem", you need to provide the definition of this system to the C++ compiler in "foo/barsystem.hpp".
 - `relative_temperature` (bool, defaults to false): A special extension only used for temperature fields. Setting this to true means that the temperature is relative (i.e., a difference of absolute temperatures) instead of an absolute temperature. This matters to support correct unit conversions between different temperature systems. For example, relative degrees Kelvin are the same as relative degrees Celsius, but the absolute scales differ by 273.15 degrees.
 - `unit` (string): As an alternative to the `dimensions` and `system` specification, the field can be set to use particular (typically non-SI) units. A few examples of such units that are still often encountered in the marine domain are `unit: "metric::nautical_mile"`, `unit: "metric::bar"`, and `unit: "us::yard"`. Here you can use any of the Boost Units Base Unit types, given here: [Base Units by Category](http://www.boost.org/doc/html/boost_units/Reference.html#boost_units.Reference.base_units_by_category). The string to specify here is the Base Unit to use, minus the "boost::units::" prefix and the "_base_unit" suffix. For example, `boost::units::metric::nautical_mile_base_unit` should be specified as "metric::nautical_mile" in this field.
+- `custom`: Use custom units defined in your code.
+	+ `unit` (string): Fully qualified name for the unit (including namespaces). For example, "dccl::units::microsiemens_per_cm_unit". This is a [`boost::units::unit` type](https://www.boost.org/doc/libs/latest/doc/html/doxygen/units_reference/classboost_1_1units_1_1unit.html).
+	+ `header` (string): Relative path to header defining this custom unit. For example, "dccl/units/conductivity.h"
 
 ### DCCL Units Generated Code
 
@@ -325,3 +330,33 @@ dynamic_conditions { omit_if: "a = 3; return a == this.field_c" }
 The Lua Protobuf functionality uses this wonderful Github project: [https://github.com/starwing/lua-protobuf](https://github.com/starwing/lua-protobuf). Please reference the documentation in the event you need more details about the "this" or "root" tables, which are built using this library.
 
 For more details, and an example usage, see the dccl_dynamic_conditions unit test.
+
+## Using DCCL with Proto3
+
+DCCL supports both `syntax = "proto2"` and `syntax = "proto3"` message definitions. [Proto3](https://protobuf.dev/programming-guides/proto3/) eliminates the `required` field label (all singular fields are optional by default), which affects how DCCL determines presence and encoding. This section covers the differences.
+
+### Field Presence in Proto3
+
+In proto3, singular scalar fields declared without the `optional` keyword have **no presence tracking** — the runtime cannot distinguish between a field that was explicitly set to its default value (e.g., `0`) and one that was never set. DCCL handles these fields by always reading and encoding their current value as if they were a proto2 `required` field. 
+
+Fields declared with the proto3 `optional` keyword do have presence tracking and behave identically to proto2 `oneof` fields as [this is how they are implemented in Proto3](https://github.com/protocolbuffers/protobuf/blob/main/docs/implementing_proto3_presence.md). That is, these are encoded identically in DCCL:
+
+```
+syntax = "proto3";
+message A { 
+  optional int32 x = 1 [(dccl).field = { min: -100, max: 100 }];
+  uint32 y = 2 [(dccl).field = { min: 0, max: 300 }];
+}
+```
+
+```
+syntax = "proto2";
+message A { 
+  oneof _x 
+  {
+     int32 x = 1 [(dccl).field = { min: -100, max: 100 }];
+  }
+  required uint32 y = 2 [(dccl).field = { min: 0, max: 300 }];
+}
+```
+

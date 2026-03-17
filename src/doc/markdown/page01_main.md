@@ -1,11 +1,11 @@
 # Dynamic Compact Control Language (DCCL)
 
-![DCCL Image](dccl-50cols.png)
+![](dccl-50cols.png)
 
 The Dynamic Compact Control Language (DCCL) is a language for marshalling (or roughly analogously: source encoding or compressing) object-based messages for extremely low throughput network links. Originally designed for commanding and retrieving data from autonomous underwater vehicles over acoustic modem links, DCCL has found additional uses in the robotics community (such as for sending messages over satellite or degraded land-based links). It is suitable for use when having a very small encoded message size is of much more importance than the speed of encoding and decoding these messages.
 
 DCCL provides two main components:
-1. An [interface descriptor language (IDL)](page02_idl.md) for defining messages based as an extension to Google Protocol Buffers (GPB).
+1. An [interface descriptor language (IDL)](page02_idl.md) for defining messages as an extension to Google Protocol Buffers (GPB).
 2. A set of [built-in encoders and decoders (codecs)](page03_codecs.md) that operate on the messages defined in the DCCL IDL. 
 
 In addition to the built-in codecs, further field codecs can be defined as extensions to the DCCL library to optimally encode specific sources of data. For example, two sets of these codecs are included with the core DCCL distribution as plugin shared libraries: an arithmetic encoder and a collection of REMUS CCL compatible codecs. DCCL can be thought of as an alternative encoder to the one that is included with the GPB library. DCCL will produce more compact messages than GPB, but at the cost of additional design and CPU time.

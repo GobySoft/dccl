@@ -41,6 +41,7 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -117,6 +118,71 @@ inline void push_char(std::vector<std::string>& vc, const char& c) { vc.emplace_
 inline void push_char_vec(std::vector<std::string>& vc, const std::vector<char>& c)
 {
     vc.emplace_back(c.begin(), c.end());
+}
+
+// Returns the set of base dimension names that the given unit system supports.
+// Returns an empty set for general systems (si, cgs) that support all dimensions.
+// Specialized single-dimension systems (angle, temperature) return only their
+// supported base dimensions.
+inline std::set<std::string> get_system_supported_base_dimensions(const std::string& sysname)
+{
+    if (sysname == "angle::degree" || sysname == "degree" || sysname == "angle::gradian" ||
+        sysname == "gradian" || sysname == "angle::revolution" || sysname == "revolution")
+        return {"plane_angle", "dimensionless"};
+    else if (sysname == "temperature::celsius" || sysname == "celsius" ||
+             sysname == "temperature::fahrenheit" || sysname == "fahrenheit")
+        return {"temperature", "dimensionless"};
+    else
+        return {}; // empty = general system (si, cgs, angle::radian, etc.)
+}
+
+// Validates that all dimension names in dim_names are compatible with the given system.
+// Throws std::runtime_error if an incompatible combination is detected.
+//
+// Specialized systems (angle::degree, temperature::celsius, etc.) only support their
+// native base dimension. Compound Boost Units dimension names (e.g. "angular_velocity",
+// "pressure") require multiple base dimensions and cannot be used reliably with
+// specialized systems because the missing base dimensions are silently treated as
+// dimensionless, causing incorrect unit conversions.
+inline void validate_dimensions_for_system(const std::vector<std::string>& dim_names,
+                                           const std::string& sysname)
+{
+    const auto supported = get_system_supported_base_dimensions(sysname);
+    if (supported.empty())
+        return; // General system — all dimensions are supported
+
+    const auto bimap = make_dim_bimap();
+
+    for (const auto& dim : dim_names)
+    {
+        const bool is_base_dim = bimap.left.find(dim) != bimap.left.end();
+        if (!is_base_dim)
+        {
+            // Compound Boost Units dimension (e.g. "angular_velocity", "pressure").
+            // These require multiple base dimensions and cannot work correctly with
+            // specialized single-dimension systems.
+            throw std::runtime_error(
+                "Dimension '" + dim +
+                "' is a compound Boost Units dimension that requires multiple base "
+                "dimensions, but system '" + sysname +
+                "' only supports single-dimension units. Use a "
+                "general system such as \"si\" or define a new system that includes the appropriate dimensions.");
+        }
+        else if (supported.find(dim) == supported.end())
+        {
+            // Known base dimension but not supported by this specialized system.
+            std::string supported_list;
+            for (const auto& s : supported)
+            {
+                if (!supported_list.empty())
+                    supported_list += ", ";
+                supported_list += "'" + s + "'";
+            }
+            throw std::runtime_error("Dimension '" + dim + "' is not supported by system '" +
+                                     sysname + "'. That system only supports: " + supported_list +
+                                     ".");
+        }
+    }
 }
 
 // Parser for base_dimensions input
@@ -305,6 +371,12 @@ inline void include_base_unit_headers(const std::string& base_unit_category_and_
     os << std::endl;
     std::string cat_name_sub = boost::replace_all_copy(base_unit_category_and_name, "::", "/");
     os << "#include <boost/units/base_units/" << cat_name_sub << ".hpp>" << std::endl;
+}
+
+inline void include_custom_unit_headers(const std::string& header, std::ostream& os)
+{
+    os << std::endl;
+    os << "#include \"" << header << "\"" << std::endl;
 }
 
 inline void add_absolute(std::string& before, std::string& after)
@@ -517,6 +589,35 @@ inline void construct_units_typedef_from_base_unit(const std::string& fieldname,
     os << "typedef " << before << "boost::units::" << base_unit_category_and_name
        << "_base_unit::unit_type " << after << fieldname << "_unit;" << std::endl;
 
+    os << std::endl;
+}
+
+//===========
+// Generate a unit typedef when given custom unit
+inline void construct_units_typedef_from_custom_unit(const std::string& fieldname,
+                                                     const std::string& unit_name,
+                                                     const bool& rel_temperature,
+                                                     const std::string& prefix, std::ostream& os)
+{
+    bool temperature_unit = false;
+
+    //expect to see "temperature::celsius" or "temperature::fahrenheit" or "si::kelvin"
+    if ((unit_name.find("temperature") != std::string::npos) ||
+        (unit_name.find("kelvin") != std::string::npos))
+        temperature_unit = true;
+
+    bool absolute = temperature_unit && !rel_temperature;
+
+    std::string before;
+    std::string after;
+    if (absolute)
+        add_absolute(before, after);
+
+    if (!prefix.empty())
+        add_prefix(prefix, before, after);
+
+    // Namespace and typedef the unit
+    os << "typedef " << before << unit_name << " " << after << fieldname << "_unit;" << std::endl;
     os << std::endl;
 }
 
