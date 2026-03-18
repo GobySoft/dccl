@@ -40,19 +40,17 @@ message Foo
     required int32 body_field = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
 }
 
-// v3 codec version (matching the original issue)
-message BarV3
+message BarV4
 {
     option (dccl.msg).id = 11013;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
+    option (dccl.msg).codec_version = 4;
 
     required Foo foo = 1;
     required int32 bar_body = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
 }
 
-// v4 codec version (also verify the fix works for v4)
-message BarV4
+message BarV5
 {
     option (dccl.msg).id = 11014;
     option (dccl.msg).max_bytes = 32;
