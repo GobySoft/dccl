@@ -92,7 +92,7 @@ job-template-deb-amd64: &job-template-deb-amd64
           cd /root/debian &&
           git pull &&
           git checkout origin/${CIRCLE_BRANCH} ||
-          ( echo "No branch in debian called ${CIRCLE_BRANCH}, using 4.0" && git checkout origin/4.0 )
+          ( echo "No branch in debian called ${CIRCLE_BRANCH}, using 5.0" && git checkout origin/5.0 )
     - run: &run-nest-deb
         name: Nest debian source into project source
         command: mv /root/debian ${CIRCLE_WORKING_DIRECTORY}
@@ -190,13 +190,13 @@ filter-template-master-only: &filter-template-master-only
       only: /.*/
     branches:
       only:
-        - "4.0"
+        - "5.0"
         
 filter-template-non-master: &filter-template-non-master
   filters:
     branches:
       ignore:
-        - "4.0"
+        - "5.0"
         
 ## Begin actual config
 version: 2

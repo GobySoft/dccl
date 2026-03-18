@@ -36,7 +36,7 @@ message Proto2Msg
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required int32 req_i32 = 1 [(dccl.field) = { min: -100, max: 500 }];
     required uint32 req_ui32 = 2 [(dccl.field) = { min: 10, max: 1022 }];

@@ -67,7 +67,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     check<TestMsg>(-50, false);
     check<TestMsgGroup>(50, true);
     check<TestMsgGroup>(-50, true);
-    check<TestMsgVersion>(50, true);
+    check<TestMsgV4>(50, true);
 
     std::cout << "all tests passed" << std::endl;
 }

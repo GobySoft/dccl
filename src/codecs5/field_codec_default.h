@@ -1,10 +1,9 @@
-// Copyright 2012-2023:
+// Copyright 2009-2024:
 //   GobySoft, LLC (2013-)
 //   Massachusetts Institute of Technology (2007-2014)
 //   Community contributors (see AUTHORS file)
 // File authors:
 //   Toby Schneider <toby@gobysoft.org>
-//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -22,26 +21,32 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-syntax = "proto2";
-import "dccl/option_extensions.proto";
-package dccl.test;
+// implements FieldCodecBase for all the basic DCCL types for version 5
 
-message NormalDCCL1Byte
+#ifndef DCCLV5FIELDCODECDEFAULT20240101H
+#define DCCLV5FIELDCODECDEFAULT20240101H
+
+#include "../codecs4/field_codec_default.h"
+
+namespace dccl
 {
-    option (dccl.msg).id = 1;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
-
-    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-}
-
-message NormalDCCL2Byte
+/// DCCL version 5 default field codecs
+namespace v5
 {
-    option (dccl.msg).id = 1000;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
+// all these are the same as version 4
+template <typename WireType, typename FieldType = WireType>
+using DefaultNumericFieldCodec = v4::DefaultNumericFieldCodec<WireType, FieldType>;
 
-    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-}
+using DefaultBoolCodec = v4::DefaultBoolCodec;
+using DefaultEnumCodec = v4::DefaultEnumCodec;
+
+using DefaultBytesCodec = v4::DefaultBytesCodec;
+using DefaultStringCodec = v4::DefaultStringCodec;
+
+template <typename TimeType> using TimeCodec = v4::TimeCodec<TimeType>;
+template <typename T> using StaticCodec = v4::StaticCodec<T>;
+
+} // namespace v5
+} // namespace dccl
+
+#endif

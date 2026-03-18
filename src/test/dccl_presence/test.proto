@@ -36,7 +36,7 @@ message PresenceMsg
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 64;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
     option (dccl.msg).codec_group = "dccl.presence";
 
     // required fields are unchanged

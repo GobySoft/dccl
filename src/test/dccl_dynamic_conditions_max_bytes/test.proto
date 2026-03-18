@@ -12,7 +12,7 @@ message TestMaxBytes
     option (dccl.msg) = {
         id: 10,
         max_bytes: 200,
-        codec_version: 4,
+        codec_version: 5,
         dynamic_conditions: {
             max_bytes: "if this.channel == 'ACOUSTIC' then return 10 else return 200 end"
         }

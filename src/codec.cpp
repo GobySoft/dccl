@@ -50,11 +50,14 @@
 #include "codecs4/field_codec_crc.h"
 #include "codecs4/field_codec_hash.h"
 #include "codecs4/field_codec_var_bytes.h"
+#include "codecs5/field_codec_hash.h"
+#include "codecs5/field_codec_var_bytes.h"
 #include "field_codec_id.h"
 
 #include "codecs2/default_field_codec_impl.h"
 #include "codecs3/default_field_codec_impl.h"
 #include "codecs4/default_field_codec_impl.h"
+#include "codecs5/default_field_codec_impl.h"
 
 #include "option_extensions.pb.h"
 
@@ -126,6 +129,17 @@ void dccl::Codec::set_default_codecs()
     internal::VarBytesCodecLoader<4>::add(manager_);
     internal::HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
     internal::CRCCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
+
+    //
+    // version 5
+    //
+    internal::DefaultFieldCodecLoader<5>::add(manager_);
+    internal::TimeCodecLoader<5>::add(manager_);
+    internal::StaticCodecLoader<5>::add(manager_);
+    internal::PresenceCodecLoader<5>::add(manager_);
+    internal::VarBytesCodecLoader<5>::add(manager_);
+    internal::HashCodecLoader<5>::add(manager_);
+    internal::CRCCodecLoader<5>::add(manager_);
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,

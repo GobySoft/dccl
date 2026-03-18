@@ -1,10 +1,8 @@
-// Copyright 2012-2023:
+// Copyright 2024:
 //   GobySoft, LLC (2013-)
-//   Massachusetts Institute of Technology (2007-2014)
 //   Community contributors (see AUTHORS file)
 // File authors:
 //   Toby Schneider <toby@gobysoft.org>
-//   Chris Murphy <cmurphy@aphysci.com>
 //
 //
 // This file is part of the Dynamic Compact Control Language Library
@@ -22,26 +20,19 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-syntax = "proto2";
-import "dccl/option_extensions.proto";
-package dccl.test;
+#ifndef DCCLV5FIELDCODECCRCN
+#define DCCLV5FIELDCODECCRCN
 
-message NormalDCCL1Byte
+#include "../codecs4/field_codec_crc.h"
+
+namespace dccl
 {
-    option (dccl.msg).id = 1;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
-
-    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-}
-
-message NormalDCCL2Byte
+namespace v5
 {
-    option (dccl.msg).id = 1000;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
+template <int CRCBits> using CRCCodecBase = v4::CRCCodecBase<CRCBits>;
+using CRC16Codec = v4::CRC16Codec;
+using CRC32Codec = v4::CRC32Codec;
+} // namespace v5
+} // namespace dccl
 
-    required int32 a = 1 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-    required int32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 0xFFFF];
-}
+#endif

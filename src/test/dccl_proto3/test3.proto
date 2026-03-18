@@ -34,7 +34,7 @@ message Proto3Msg
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     // treated as proto2 "required" fields
     int32 req_i32 = 1 [(dccl.field) = { min: -100, max: 500 }];

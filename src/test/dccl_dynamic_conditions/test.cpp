@@ -30,10 +30,10 @@
 #include "../../binary.h"
 #include "../../codec.h"
 
-#if CODEC_VERSION == 3
-#include "test3.pb.h"
-#elif CODEC_VERSION == 4
+#if CODEC_VERSION == 4
 #include "test4.pb.h"
+#elif CODEC_VERSION == 5
+#include "test5.pb.h"
 #endif
 
 using namespace dccl::test;
@@ -45,9 +45,7 @@ void decode_check(const std::string& encoded);
 void test0();
 void test1();
 void test2();
-#if CODEC_VERSION == 4
 void test3();
-#endif
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
@@ -55,10 +53,8 @@ int main(int /*argc*/, char* /*argv*/ [])
     test0();
     test1();
     test2();
-#if CODEC_VERSION == 4
     // oneof
     test3();
-#endif
     std::cout << "all tests passed" << std::endl;
 }
 
@@ -237,7 +233,6 @@ void test2()
     decode_check(std::string(bytes.begin(), bytes.end()));
 }
 
-#if CODEC_VERSION == 4
 void test3()
 {
     msg_in.set_state(TestMsg::STATE_1);
@@ -276,7 +271,6 @@ void test3()
     msg_in.clear_y();
     decode_check(std::string(bytes.begin(), bytes.end()));
 }
-#endif
 
 void decode_check(const std::string& encoded)
 {

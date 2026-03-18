@@ -29,7 +29,7 @@ message TestMsg
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 64;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     // test default enc/dec
     required double d = 1 [
@@ -40,7 +40,7 @@ message TestMsg
     ];
     optional int32 i = 3 [(dccl.field).min = -20, (dccl.field).max = 3000];
     optional string s2 = 13
-        [(dccl.field).max_length = 8, (dccl.field).codec = "dccl.default2"];
+        [(dccl.field).max_length = 8, (dccl.field).codec = "dccl.default"];
     optional string s = 14 [(dccl.field).max_length = 8];
     optional bytes b = 15 [(dccl.field).max_length = 9];
     optional bytes vb = 16
