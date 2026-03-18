@@ -27,7 +27,7 @@ message NormalMsg
 {
     option (dccl.msg).id = 201;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required double d = 1 [
         (dccl.field).min = -100,
@@ -43,7 +43,7 @@ message AnotherMsg
 {
     option (dccl.msg).id = 202;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required float f = 1 [
         (dccl.field).min = -10,
@@ -56,7 +56,7 @@ message OmitIdMsg
 {
     option (dccl.msg).omit_id = true;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required double d = 1 [
         (dccl.field).min = -100,

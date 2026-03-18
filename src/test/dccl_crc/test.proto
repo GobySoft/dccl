@@ -33,7 +33,7 @@ message TestCRC16
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];
@@ -47,7 +47,7 @@ message TestCRC32
 {
     option (dccl.msg).id = 11;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];

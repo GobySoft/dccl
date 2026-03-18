@@ -47,7 +47,7 @@ message TestMsg
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     oneof test_oneof1
     {
@@ -74,7 +74,7 @@ message InvalidTestMsg
 {
     option (dccl.msg).id = 3;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     oneof test_oneof1
     {

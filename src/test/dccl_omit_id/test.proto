@@ -29,7 +29,7 @@ message TestMsgOmit1
 {
     option (dccl.msg).omit_id = true;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     // test default enc/dec
     required double d = 1 [
@@ -44,7 +44,7 @@ message TestMsgOmit2
 {
     option (dccl.msg).omit_id = true;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required uint32 u = 1 [(dccl.field).min = 10, (dccl.field).max = 20];
 }
@@ -53,7 +53,7 @@ message TestMsgNormal
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required float f = 1 [
         (dccl.field).min = -10,
@@ -67,7 +67,7 @@ message TestMsgNormalId3
 {
     option (dccl.msg).id = 3;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required float f = 1 [
         (dccl.field).min = -10,

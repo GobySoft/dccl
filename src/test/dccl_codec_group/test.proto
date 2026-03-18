@@ -28,7 +28,7 @@ package dccl.test;
 
 message EmbeddedMsg1
 {
-    option (dccl.msg).codec = "dccl.default3";
+    option (dccl.msg).codec = "dccl.default";
 
     optional double val = 1 [
         (dccl.field).min = 0,
@@ -52,13 +52,13 @@ message TestMsg
 {
     option (dccl.msg).id = 1;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double d = 1 [
         (dccl.field).min = -100,
         (dccl.field).max = 126,
         (dccl.field).precision = 1,
-        (dccl.field).codec = "dccl.default3"
+        (dccl.field).codec = "dccl.default"
     ];
 
     repeated double d_repeat = 3
@@ -71,24 +71,24 @@ message TestMsgGroup
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
     option (dccl.msg).codec_group = "test.grouptest";
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double d = 1 [
         (dccl.field).min = -100,
         (dccl.field).max = 126,
         (dccl.field).precision = 1,
-        (dccl.field).codec = "dccl.default3"
+        (dccl.field).codec = "dccl.default"
     ];
 
     repeated double d_repeat = 3 [(dccl.field).max_repeat = 5];
     optional EmbeddedMsg1 msg = 2;
 }
 
-message TestMsgVersion
+message TestMsgV4
 {
-    option (dccl.msg).id = 3;
+    option (dccl.msg).id = 4;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 2;
+    option (dccl.msg).codec_version = 5;
 
     optional double d = 1 [
         (dccl.field).min = -100,

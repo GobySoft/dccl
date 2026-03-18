@@ -39,7 +39,7 @@ message TestMsg
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     enum E
     {
@@ -83,7 +83,7 @@ message TestMsgNoHashableChanges
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 64;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     enum E
     {
@@ -126,7 +126,7 @@ message TestMsgNewID
 {
     option (dccl.msg).id = 3;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     enum E
     {
@@ -169,7 +169,7 @@ message TestMsgNewEnum
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     enum E
     {
@@ -213,7 +213,7 @@ message TestMsgNewBounds
 {
     option (dccl.msg).id = 2;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     enum E
     {
@@ -304,11 +304,29 @@ message TestMsgV4
         [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
 }
 
+message TestMsgV5
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    enum E
+    {
+        VALUE1 = 1;
+        VALUE2 = 2;
+    }
+
+    required E e = 5;
+    optional double d = 6
+        [default = 1.5, (dccl.field) = { min: 0, max: 10, precision: 1 }];
+}
+
+
 message TestMsgMultiHash
 {
     option (dccl.msg).id = 3;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     // selection of odd sized hashes
 
@@ -332,7 +350,7 @@ message TestMsgHashMaxTooLarge
 {
     option (dccl.msg).id = 3;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     // too large
     optional uint32 hash34 = 1

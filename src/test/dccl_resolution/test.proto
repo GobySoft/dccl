@@ -31,7 +31,7 @@ message NumericMsg
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double a = 1 [
         (dccl.field).max = 180,
@@ -90,7 +90,7 @@ message NegativeResolutionNumericMsg  // Invalid resolution
 {
     option (dccl.msg).id = 10;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double a = 1 [
         (dccl.field).min = -20,
@@ -109,7 +109,7 @@ message BothResolutionAndPrecisionSetNumericMsg
 {
     option (dccl.msg).id = 11;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double a = 1 [
         (dccl.field).max = 180,
@@ -123,7 +123,7 @@ message TooBigNumericMsg
 {
     option (dccl.msg).id = 11;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional double a = 1 [
         (dccl.field).max = 180,
@@ -136,7 +136,7 @@ message MinNotMultipleOfResolution
 {
     option (dccl.msg).id = 11;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required double a = 1 [
         (dccl.field).max = 3.6,
@@ -149,7 +149,7 @@ message MaxNotMultipleOfResolution
 {
     option (dccl.msg).id = 11;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     required double a = 1 [
         (dccl.field).max = 3.5,

@@ -31,7 +31,7 @@ message GobyMessage1
 {
     option (dccl.msg).id = 4;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional int32 int32_val = 1 [(dccl.field).min = 0, (dccl.field).max = 20];
 }
@@ -40,7 +40,7 @@ message GobyMessage2
 {
     option (dccl.msg).id = 5;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional bool bool_val = 1;
 }
@@ -49,7 +49,7 @@ message GobyMessage3
 {
     option (dccl.msg).id = 6;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional string string_val = 1 [(dccl.field).max_length = 10];
 }
