@@ -28,7 +28,6 @@
 #define DCCLFIELDCODECDEFAULT20110322H
 
 #include <chrono>
-#include <type_traits>
 
 #include <google/protobuf/descriptor.h>
 
@@ -37,7 +36,6 @@
 #include "../binary.h"
 #include "../field_codec.h"
 #include "../field_codec_fixed.h"
-#include "../numeric.h"
 #include "../thread_safety.h"
 #include "field_codec_default_message.h"
 
@@ -170,10 +168,12 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             dlog << "Encode " << value << " with bounds: [" << min() << "," << max() << "]"
                  << std::endl;
 
+        // round first, before checking bounds
         double res = resolution();
-        double tol = res / 2;
-        // check bounds in the input space (NaN-correct)
-        if (!(min() - tol <= value && value < max() + tol))
+        WireType wire_value = dccl::quantize(value, res);
+
+        // check bounds
+        if (wire_value < min() || wire_value > max())
         {
             // strict mode
             if (this->strict())
@@ -186,7 +186,13 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
                 return Bitset(size());
         }
 
-        dccl::uint64 uint_value = dccl::encode(value, min(), res);
+        // calculate the encoded value: remove the minimum, scale for the resolution, cast to int.
+        wire_value -= dccl::quantize(static_cast<WireType>(min()), res);
+        if (res >= 1)
+            wire_value /= res;
+        else
+            wire_value *= (1.0 / res);
+        auto uint_value = static_cast<dccl::uint64>(dccl::round(wire_value, 0));
 
         // "presence" value (0)
         if (!FieldCodecBase::use_required())
@@ -215,7 +221,18 @@ class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType
             --uint_value;
         }
 
-        return dccl::decode<WireType>(uint_value, min(), resolution());
+        auto wire_value = (WireType)uint_value;
+        double res = resolution();
+        if (res >= 1)
+            wire_value *= res;
+        else
+            wire_value /= (1.0 / res);
+
+        // round values again to properly handle cases where double precision
+        // leads to slightly off values (e.g. 2.099999999 instead of 2.1)
+        wire_value =
+            dccl::quantize(wire_value + dccl::quantize(static_cast<WireType>(min()), res), res);
+        return wire_value;
     }
 
     // bring size(const WireType&) into scope so callers can access it

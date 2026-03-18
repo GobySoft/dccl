@@ -29,7 +29,7 @@ message FloatMsg
 {
     option (dccl.msg).id = 1501;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional float f = 1 [
         (dccl.field).max = 10,
@@ -42,7 +42,7 @@ message NegativePrecisionFloatMsg
 {
     option (dccl.msg).id = 2101;
     option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional float f = 1 [
         (dccl.field).max = 20,
@@ -55,7 +55,7 @@ message PrecisionRangeFloatMsg
 {
     option (dccl.msg).id = 2201;
     option (dccl.msg).max_bytes = 256;
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
 
     optional float prec0 = 1 [
         (dccl.field).max = 10000000,
