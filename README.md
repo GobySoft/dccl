@@ -43,3 +43,4 @@ deb http://packages.gobysoft.org/[ubuntu|debian]/continuous/ {release-codename}/
 ### Security Metrics
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/GobySoft/dccl/badge)](https://scorecard.dev/viewer/?uri=github.com/GobySoft/dccl)
+[![OpenSSF Baseline](https://www.bestpractices.dev/projects/12204/baseline)](https://www.bestpractices.dev/projects/12204)
