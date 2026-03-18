@@ -15,6 +15,30 @@ import os, sys
 import time
 from shutil import rmtree
 
+# Collect include and library dirs from each CMake prefix path entry.
+# On macOS with Homebrew, CMAKE_PREFIX_PATH contains entries such as
+#   /opt/homebrew/opt/protobuf;/opt/homebrew/opt/abseil;...
+# so this picks up protobuf, abseil, and all other prefix-path dependencies
+# in one pass without having to name each package explicitly.
+_cmake_prefix_include_dirs = []
+_cmake_prefix_lib_dirs = []
+for _prefix in '@CMAKE_PREFIX_PATH@'.split(';'):
+    if not _prefix:
+        continue
+    _inc = os.path.join(_prefix, 'include')
+    if os.path.isdir(_inc):
+        _cmake_prefix_include_dirs.append(_inc)
+    _lib = os.path.join(_prefix, 'lib')
+    if os.path.isdir(_lib):
+        _cmake_prefix_lib_dirs.append(_lib)
+
+# Also add PROTOBUF_INCLUDE_DIRS for system protobuf installs whose include
+# dir is not already covered by CMAKE_PREFIX_PATH (e.g. /usr/include).
+_protobuf_extra_include_dirs = [
+    d for d in '@PROTOBUF_INCLUDE_DIRS@'.split(';')
+    if d and d not in _cmake_prefix_include_dirs
+]
+
 # enforce use of the same compiler as CMake is set to 
 os.environ["CC"]='@CMAKE_C_COMPILER@'
 os.environ["CXX"]='@CMAKE_CXX_COMPILER@'
@@ -80,8 +104,8 @@ setup(
             "dccl._dccl",
             ["dccl/_dccl.cc"],
             libraries=['dccl', 'protobuf'],
-            include_dirs=['@dccl_INC_DIR@'],
-            library_dirs=['@dccl_LIB_DIR@', f'/usr/lib/{gnu_arch_target_type}'],
+            include_dirs=['@dccl_INC_DIR@'] + _cmake_prefix_include_dirs + _protobuf_extra_include_dirs,
+            library_dirs=['@dccl_LIB_DIR@', f'/usr/lib/{gnu_arch_target_type}'] + _cmake_prefix_lib_dirs,
             extra_compile_args = ["-Wno-write-strings", "-std=c++@CMAKE_CXX_STANDARD@"], # Hide a bunch of c++ warnings.
         )
     ],

@@ -1,4 +1,4 @@
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS test.proto header.proto)
+protobuf_generate_cpp_dccl(PROTO_SRCS PROTO_HDRS test.proto header.proto)
 
 add_executable(dccl_test_header test.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_link_libraries(dccl_test_header dccl)

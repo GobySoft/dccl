@@ -3,7 +3,7 @@ protobuf/arithmetic_extensions.proto
 protobuf/arithmetic.proto
 )
 
-protobuf_generate_cpp(ARITHMETIC_PROTO_SRCS
+protobuf_generate_cpp_dccl(ARITHMETIC_PROTO_SRCS
   ARITHMETIC_PROTO_HDRS
   ${ARITHMETIC_PROTOS})
 
@@ -19,6 +19,6 @@ target_link_libraries(dccl_arithmetic dccl)
 set_target_properties(dccl_arithmetic 
   PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
 
-install(TARGETS dccl_arithmetic EXPORT dccl-config
+install(TARGETS dccl_arithmetic EXPORT dccl-targets
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}) 

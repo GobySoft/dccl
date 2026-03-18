@@ -101,6 +101,13 @@ class FieldCodecBase
 
     const google::protobuf::Descriptor* root_descriptor() const;
 
+    /// \brief Returns the root Bitset for the current encode or decode operation.
+    ///
+    /// During encoding: points to the Bitset accumulating all body bits so far (before this field).
+    /// During decoding: points to a copy of the full Bitset taken at the start of base_decode().
+    /// Returns nullptr if called outside of an encode/decode context.
+    const Bitset* root_bitset() const;
+
     internal::MessageStackData& message_data();
 
     const internal::MessageStackData& message_data() const;
@@ -350,11 +357,11 @@ class FieldCodecBase
         if (!b)
         {
             if (this_field())
-                throw(Exception("Field " + this_field()->name() +
+                throw(Exception("Field " + std::string(this_field()->name()) +
                                     " failed validation: " + description,
                                 this->this_descriptor()));
             else
-                throw(Exception("Message " + this_descriptor()->name() +
+                throw(Exception("Message " + std::string(this_descriptor()->name()) +
                                     " failed validation: " + description,
                                 this->this_descriptor()));
         }
@@ -395,9 +402,10 @@ class FieldCodecBase
 
         if (!field)
             return true;
-        else if (codec_version() > 3) // use required for repeated, required and oneof fields
-            return field->is_required() || field->is_repeated() || is_part_of_oneof(field) ||
-                   (dc.has_required_if() && dc.required());
+
+        if (codec_version() > 3) // use required for repeated, required and oneof fields, and proto3 "standard" fields with no optional tag
+            return field->is_required() || field->is_repeated() ||
+                is_part_of_oneof(field) || !field->has_presence() || (dc.has_required_if() && dc.required());
         else if (codec_version() > 2) // use required for both repeated and required fields
             return field->is_required() || field->is_repeated() ||
                    (dc.has_required_if() && dc.required());

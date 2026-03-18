@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directories: "/.circleci/config/*" 
+    schedule:
+      interval: "weekly"

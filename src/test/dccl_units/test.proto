@@ -29,8 +29,17 @@ message CTDTestMessage
 {
     option (dccl.msg).unit_system = "si";
 
-    optional double conductivity = 2
-        [(dccl.field).units.derived_dimensions = "conductance/length"];
+    required int32 conductivity = 1 [(dccl.field) = {
+        min: 40000
+        max: 60000
+        units {
+            custom {
+                unit: "dccl::units::microsiemens_per_cm_unit"
+                header: "dccl/units/conductivity.h"
+            }
+        }
+    }];
+
     required double temperature = 3 [(dccl.field) = {
         units {
             derived_dimensions: "temperature"

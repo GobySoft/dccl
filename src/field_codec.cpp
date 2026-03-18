@@ -37,6 +37,7 @@ void dccl::FieldCodecBase::base_encode(Bitset* bits, const google::protobuf::Mes
                                        MessagePart part, bool strict)
 {
     BaseRAII scoped_globals(this, part, &field_value, strict);
+    manager().codec_data().root_bits_ = bits;
 
     // we pass this through the FromProtoCppTypeBase to do dynamic_cast (RTTI) for
     // custom message codecs so that these codecs can be written in the derived class (not google::protobuf::Message)
@@ -54,11 +55,20 @@ void dccl::FieldCodecBase::field_encode(Bitset* bits, const dccl::any& field_val
         dlog.is(DEBUG2, ENCODE) && dlog << "Starting encode for field: " << field->DebugString()
                                         << std::flush;
 
+    // Update root_bits_ to point to the current accumulation BEFORE field_pre_encode and
+    // any_encode so that codecs like CRCCodec can access all bits encoded before this field
+    // via root_bitset(). Save and restore to handle nested message encoding correctly.
+    Bitset* prev_root_bits = manager().codec_data().root_bits_;
+    manager().codec_data().root_bits_ = bits;
+
     dccl::any wire_value;
     field_pre_encode(&wire_value, field_value);
 
     Bitset new_bits;
     any_encode(&new_bits, wire_value);
+
+    manager().codec_data().root_bits_ = prev_root_bits;
+
     disp_size(field, new_bits, msg_handler.field_size());
     bits->append(new_bits);
 
@@ -119,6 +129,11 @@ void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* 
                                        MessagePart part)
 {
     BaseRAII scoped_globals(this, part, field_value);
+    // Reset the accumulated decoded bits and point root_bits_ to it so that codecs like
+    // CRCCodec can access all bits decoded before their own field via root_bitset().
+    // decoded_bits_ is populated incrementally by field_decode() for each field.
+    manager().codec_data().decoded_bits_.clear();
+    manager().codec_data().root_bits_ = &manager().codec_data().decoded_bits_;
     dccl::any value(field_value);
     field_decode(bits, &value, nullptr);
 }
@@ -152,9 +167,28 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, dccl::any* field_value,
 
     dccl::any wire_value = *field_value;
 
-    any_decode(&these_bits, &wire_value);
+    if (field)
+    {
+        // For field-level decodes: root_bits_ must point to decoded_bits_ (all bits decoded by
+        // previous sibling fields) so that codecs like CRCCodec can verify their value.
+        // Save and restore root_bits_ to handle nested message decoding correctly.
+        Bitset* prev_root_bits = manager().codec_data().root_bits_;
+        manager().codec_data().root_bits_ = &manager().codec_data().decoded_bits_;
 
-    field_post_decode(wire_value, field_value);
+        any_decode(&these_bits, &wire_value);
+        field_post_decode(wire_value, field_value);
+
+        // Append this field's bits to decoded_bits_ so the next sibling field sees them.
+        manager().codec_data().decoded_bits_.append(these_bits);
+
+        manager().codec_data().root_bits_ = prev_root_bits;
+    }
+    else
+    {
+        // Message-level decode: don't add to decoded_bits_ (sub-field calls will do that).
+        any_decode(&these_bits, &wire_value);
+        field_post_decode(wire_value, field_value);
+    }
 }
 
 void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits, std::vector<dccl::any>* field_values,
@@ -293,9 +327,9 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     std::stringstream ss;
     int depth = msg_handler.count();
 
-    std::string name =
-        ((this_field()) ? std::to_string(this_field()->number()) + ". " + this_field()->name()
-                        : this_descriptor()->full_name());
+    std::string name = ((this_field()) ? std::to_string(this_field()->number()) + ". " +
+                                             std::string(this_field()->name())
+                                       : std::string(this_descriptor()->full_name()));
     if (this_field() && this_field()->is_repeated())
         name += "[" +
                 (dccl_field_options().has_min_repeat()
@@ -337,7 +371,9 @@ void dccl::FieldCodecBase::field_info(std::ostream* os,
     int width = this_field() ? full_width - name.size() : full_width - name.size() + spaces;
     ss << indent << name << std::setfill('.') << std::setw(std::max(1, width)) << range.str()
        << " {"
-       << (this_field() ? manager().find(this_field(), codec_version(), has_codec_group(), codec_group())->name()
+       << (this_field() ? manager()
+                              .find(this_field(), codec_version(), has_codec_group(), codec_group())
+                              ->name()
                         : manager().find(manager().codec_data().root_descriptor_)->name())
        << "}";
 
@@ -398,6 +434,7 @@ void dccl::FieldCodecBase::field_hash(std::size_t* hash_value,
         // root level message
         dccl::DCCLMessageOptions dccl_opts = this_descriptor()->options().GetExtension(dccl::msg);
         dccl_opts.clear_max_bytes(); // max bytes doesn't affect encoding
+        dccl_opts.clear_dynamic_conditions(); // dynamic conditions don't affect wire format
 
         hash_combine(*hash_value, dccl_opts.DebugString());
     }
@@ -622,7 +659,8 @@ void dccl::FieldCodecBase::disp_size(const google::protobuf::FieldDescriptor* fi
 
     if (dlog.check(DEBUG2))
     {
-        std::string name = ((field) ? field->name() : root_descriptor()->full_name());
+        std::string name =
+            ((field) ? std::string(field->name()) : std::string(root_descriptor()->full_name()));
         if (vector_size >= 0)
             name += "[" + std::to_string(vector_size) + "]";
 
@@ -672,6 +710,11 @@ const google::protobuf::Message* dccl::FieldCodecBase::root_message()
 const google::protobuf::Descriptor* dccl::FieldCodecBase::root_descriptor() const
 {
     return manager().codec_data().root_descriptor_;
+}
+
+const dccl::Bitset* dccl::FieldCodecBase::root_bitset() const
+{
+    return manager().codec_data().root_bits_;
 }
 
 dccl::internal::MessageStackData& dccl::FieldCodecBase::message_data()
@@ -740,4 +783,6 @@ dccl::FieldCodecBase::BaseRAII::~BaseRAII()
     field_codec_->manager().codec_data().strict_ = false;
     field_codec_->manager().codec_data().root_message_ = nullptr;
     field_codec_->manager().codec_data().root_descriptor_ = nullptr;
+    field_codec_->manager().codec_data().root_bits_ = nullptr;
+    field_codec_->manager().codec_data().decoded_bits_.clear();
 }

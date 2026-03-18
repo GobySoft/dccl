@@ -6,7 +6,8 @@
 # this project is intended to be built out of source by using 
 # > ./build.sh
 
-cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+
 
 # FILE GLOB_RECURSE calls should not follow symlinks by default.
 cmake_policy(SET CMP0009 NEW)
@@ -15,7 +16,7 @@ cmake_policy(SET CMP0042 NEW)
 
 project(dccl)
 
-# boost for units and any (pre C++17)
+# boost for units (optional)
 find_package(Boost 1.62.0 QUIET)
 if(Boost_FOUND)
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
@@ -24,16 +25,10 @@ endif()
 message("Build host architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 message("Build target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
-if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11")))
-  if(Boost_FOUND)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    message ("Setting CMAKE_CXX_STANDARD to 14 as required by DCCL (when Boost is available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
-  else()
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    message ("Setting CMAKE_CXX_STANDARD to 17 as required by DCCL (when Boost is not available). If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly. If you wish to use C++14, install Boost (libboost-dev)")
-  endif()
+if(((NOT DEFINED CMAKE_CXX_STANDARD) OR ("${CMAKE_CXX_STANDARD}" STREQUAL "03") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "11") OR ("${CMAKE_CXX_STANDARD}" STREQUAL "14")))
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  message ("Setting CMAKE_CXX_STANDARD to 17 as required by DCCL. If you wish to use a newer standard, set CMAKE_CXX_STANDARD directly")
 endif()
 
 ## allows us to write custom modules or modifying existing ones
@@ -55,6 +50,8 @@ file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
 string(REGEX REPLACE "^([0-9]+).*$" "\\1" DCCL_VERSION_MAJOR "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$" "\\1" DCCL_VERSION_MINOR  "${DCCL_VERSION_STRING}")
 string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9~a-z]+).*$" "\\1" DCCL_VERSION_PATCH "${DCCL_VERSION_STRING}")
+# Purely numeric version for CMake package version comparison
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+).*$" "\\1.\\2.\\3" DCCL_VERSION_NUMERIC "${DCCL_VERSION_STRING}")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    message("Compiling in Git source tree.")
@@ -84,7 +81,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
    
 else()
    message("Compiling from release tarball.")
-   set(DCCL_VERSION_DATE "2024.05.21")
+   set(DCCL_VERSION_DATE "2026.03.04")
 endif()
 
 
@@ -169,12 +166,31 @@ endif()
 
 include(GNUInstallDirs)
 
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/dccl-config.cmake.in"
+  "${CMAKE_BINARY_DIR}/dccl-config.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl
+)
+
+write_basic_package_version_file(
+  "${CMAKE_BINARY_DIR}/dccl-config-version.cmake"
+  VERSION ${DCCL_VERSION_NUMERIC}
+  COMPATIBILITY SameMajorVersion
+)
+
 install(DIRECTORY ${dccl_SHARE_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/share/dccl)
 
 install(DIRECTORY ${dccl_INC_DIR}/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN  "*.h" PATTERN "*.hpp" PATTERN "*.proto" PATTERN "test*" EXCLUDE)
 
-install(EXPORT dccl-config DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
+install(EXPORT dccl-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl)
+install(FILES
+  "${CMAKE_BINARY_DIR}/dccl-config.cmake"
+  "${CMAKE_BINARY_DIR}/dccl-config-version.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dccl
+)
 
 message("Installation directories set to: \n\tlibraries: ${CMAKE_INSTALL_FULL_LIBDIR}\n\tbinaries: ${CMAKE_INSTALL_FULL_BINDIR}\n\theaders: ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 
@@ -187,8 +203,13 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
 
 find_package(ProtobufDCCL REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
+# Abseil is a separate dependency of modern protobuf (22+); add it for C++ compilation
+# but not for protoc invocations (which use PROTOBUF_INCLUDE_DIRS as -I proto search paths).
+if(ABSL_INCLUDE_DIR)
+  include_directories(SYSTEM ${ABSL_INCLUDE_DIR})
+endif()
 
-message("Google Protocol Buffers Version: ${PROTOC_VERSION}")
+message("Google Protocol Buffers: Version: ${protobuf_VERSION} / include: ${Protobuf_INCLUDE_DIR}")
 
 # optional
 ## cryptopp
@@ -209,23 +230,8 @@ else()
   set(DCCL_HAS_CRYPTOPP "0")
 endif()
 
-## b64 for base64 functions
-find_package(B64 QUIET)
-set(B64_DOC_STRING "Enable base64 functionality (requires libb64-dev: http://libb64.sourceforge.net/")
-if(B64_FOUND)
-  option(enable_b64 ${B64_DOC_STRING} ON)
-else()
-  option(enable_b64 ${B64_DOC_STRING} OFF)
-  message(">> setting enable_b64 to OFF ... if you need this functionality: 1) install libb64-dev; 2) run cmake -Denable_b64=ON")
-endif()
-
-if(enable_b64)
-  find_package(B64 REQUIRED)
-  set(DCCL_HAS_B64 "1")
-  include_directories(SYSTEM ${B64_INCLUDE_DIRS})
-else()
-  set(DCCL_HAS_B64 "0")
-endif()
+## base64 - bundled header-only library (tobiaslocker/base64)
+set(DCCL_HAS_B64 "1")
 
 
 ## LUA for dynamic conditionals

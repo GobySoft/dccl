@@ -47,6 +47,7 @@
 #endif // HAS_CRYPTOPP
 
 #include "codecs3/field_codec_var_bytes.h"
+#include "codecs4/field_codec_crc.h"
 #include "codecs4/field_codec_hash.h"
 #include "codecs4/field_codec_var_bytes.h"
 #include "field_codec_id.h"
@@ -124,6 +125,7 @@ void dccl::Codec::set_default_codecs()
     internal::PresenceCodecLoader<4>::add(manager_);
     internal::VarBytesCodecLoader<4>::add(manager_);
     internal::HashCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
+    internal::CRCCodecLoader<4>::add(manager_, {2, 3, 4}); // backport for older versions 2 and 3
 }
 
 void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool header_only,
@@ -181,6 +183,26 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
             else
             {
                 codec->base_encode(&body_bits, msg, BODY, strict_);
+            }
+
+            // check dynamic max_bytes if configured
+            const auto& msg_opt = desc->options().GetExtension(dccl::msg);
+            if (msg_opt.has_dynamic_conditions() &&
+                msg_opt.dynamic_conditions().has_max_bytes())
+            {
+                DynamicConditions dc;
+                dc.set_descriptor(desc);
+                dc.regenerate(&msg, &msg);
+                const unsigned actual_size =
+                    ceil_bits2bytes(head_bits.size()) + ceil_bits2bytes(body_bits.size());
+                const uint32_t allowed_max = dc.max_bytes();
+                if (actual_size > allowed_max)
+                    throw(Exception(
+                        "Encoded message size (" + std::to_string(actual_size) +
+                            "B) exceeds dynamic max_bytes limit (" +
+                            std::to_string(allowed_max) +
+                            "B). Adjust message contents or increase the dynamic max_bytes limit.",
+                        desc));
             }
         }
         else
@@ -331,10 +353,11 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
 
         if (!msg_opt.has_codec_version())
             throw(Exception(
-                "No (dccl.msg).codec_version set for DCCL Message '" + desc->full_name() +
+                "No (dccl.msg).codec_version set for DCCL Message '" +
+                    std::string(desc->full_name()) +
                     "'. For new messages, set 'option (dccl.msg).codec_version = 4' in the "
                     "message definition for " +
-                    desc->full_name() + " to use the default DCCL4 codecs.",
+                    std::string(desc->full_name()) + " to use the default DCCL4 codecs.",
                 desc));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
@@ -467,16 +490,18 @@ unsigned dccl::Codec::size(const google::protobuf::Message& msg, int user_id /* 
     return head_size_bytes + body_size_bytes;
 }
 
-unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
+unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc, int user_id) const
 {
     std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_max_size(&head_size_bits, desc, HEAD);
 
+    int32 dccl_id = id_internal_const(desc, user_id);
+
     unsigned id_bits = 0;
     if (!desc->options().GetExtension(dccl::msg).omit_id())
-        id_codec()->field_max_size(&id_bits, nullptr);
+        id_codec()->field_size(&id_bits, static_cast<uint32>(dccl_id), nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -487,16 +512,18 @@ unsigned dccl::Codec::max_size(const google::protobuf::Descriptor* desc) const
     return head_size_bytes + body_size_bytes;
 }
 
-unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc) const
+unsigned dccl::Codec::min_size(const google::protobuf::Descriptor* desc, int user_id) const
 {
     std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
 
     unsigned head_size_bits;
     codec->base_min_size(&head_size_bits, desc, HEAD);
 
+    int32 dccl_id = id_internal_const(desc, user_id);
+
     unsigned id_bits = 0;
     if (!desc->options().GetExtension(dccl::msg).omit_id())
-        id_codec()->field_min_size(&id_bits, nullptr);
+        id_codec()->field_size(&id_bits, static_cast<uint32>(dccl_id), nullptr);
     head_size_bits += id_bits;
 
     unsigned body_size_bits;
@@ -548,7 +575,7 @@ void dccl::Codec::info(const google::protobuf::Descriptor* desc, std::ostream* p
             std::string message_name;
             if (!omit_id)
                 message_name += std::to_string(dccl_id) + ": ";
-            message_name += desc->full_name() + " {" + hash + "}";
+            message_name += std::string(desc->full_name()) + " {" + hash + "}";
             std::string guard = build_guard_for_console_output(message_name, '=');
             std::string bits_dccl_head_str = "dccl.id head";
             std::string bits_user_head_str = "user head";
@@ -718,8 +745,7 @@ void dccl::Codec::info_all(std::ostream* param_os /*= 0 */) const
 
         *os << codec_guard << " " << codec_str << " " << codec_guard << "\n";
         *os << id2desc_.size() << " messages loaded.\n";
-        *os << "Field sizes are in bits unless otherwise noted."
-            << "\n";
+        *os << "Field sizes are in bits unless otherwise noted." << "\n";
 
         for (auto it : id2desc_) info(it.second, os, it.first);
         os->flush();
@@ -798,8 +824,7 @@ std::string dccl::Codec::get_all_error_fields_in_message(const google::protobuf:
                         reflection->GetRepeatedMessage(message, field, index);
 
                     output_stream << std::string((depth + 1) * depth_spacing, ' ') << "[" << index
-                                  << "]: "
-                                  << "\n";
+                                  << "]: " << "\n";
 
                     output_stream << get_all_error_fields_in_message(sub_message, depth + 2);
                 }

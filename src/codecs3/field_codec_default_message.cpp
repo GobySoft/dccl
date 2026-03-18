@@ -235,7 +235,16 @@ bool dccl::v3::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
         {
             if ((part() == HEAD && !dccl_field_options.in_head()) ||
                 (part() == BODY && dccl_field_options.in_head()))
+            {
+                // For HEAD encoding of a message field without an explicit in_head setting,
+                // recursively check whether any nested field has in_head = true.  If so,
+                // include this field so that the nested head fields can be encoded.
+                if (part() == HEAD && !dccl_field_options.has_in_head() &&
+                    field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
+                    dccl::internal::has_head_field(field->message_type()))
+                    return true;
                 return false;
+            }
             else
                 return true;
         }
