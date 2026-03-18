@@ -36,7 +36,7 @@ message NativeProtobufTest
     option (dccl.msg).id = 1;
     option (dccl.msg).max_bytes = 1024;
 
-    option (dccl.msg).codec_version = 4;
+    option (dccl.msg).codec_version = 5;
     option (dccl.msg).codec_group = "dccl.native_protobuf";
 
     optional double double_default_optional = 1;

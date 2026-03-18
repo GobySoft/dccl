@@ -71,6 +71,7 @@ int main(int /*argc*/, char* /*argv*/[])
     expect_different<TestMsg, TestMsgNewBounds>();
     expect_different<TestMsgV2, TestMsgV3>();
     expect_different<TestMsgV3, TestMsgV4>();
+    expect_different<TestMsgV4, TestMsgV5>();
 
     {
         std::cout << "TestMsg desc: " << TestMsg::descriptor() << std::endl;

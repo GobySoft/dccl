@@ -73,7 +73,7 @@ int main(int /*argc*/, char* /*argv*/[])
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
     run_test<BarV3>("BarV3 (codec_version=3)");
-    run_test<BarV4>("BarV4 (codec_version=4)");
+    run_test<BarV4>("BarV4 (codec_version=5)");
 
     std::cout << "all tests passed" << std::endl;
     return 0;
