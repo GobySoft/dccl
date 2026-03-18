@@ -89,7 +89,7 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
 static PyObject* cpp_pbmsg_to_py_pbmsg(gp::Message *cppMsg) {
     // Create a Protobuf Message by looking up the Python prototype, and calling it to get a message
     PyObject *cls = PyObject_CallMethod(GPBSymbolDB, "GetSymbol", "s",
-                                        cppMsg->GetTypeName().c_str());
+                                        std::string(cppMsg->GetTypeName()).c_str());
     if (!cls) return NULL;
     PyObject *msg = PyObject_CallObject(cls, NULL);
     Py_DECREF(cls);
@@ -297,9 +297,9 @@ static PyObject *Codec_decode_with_full_name(Codec *self, PyObject *args) {
             if (expected_id != received_id) {
                 throw dccl::Exception(
                     "Received message with id " + std::to_string(received_id) + " (" +
-                    self->codec->loaded().at(received_id)->full_name() +
+                    std::string(self->codec->loaded().at(received_id)->full_name()) +
                     ") but decode was called with message of id " +
-                    std::to_string(expected_id) + " (" + desc->full_name() +
+                    std::to_string(expected_id) + " (" + std::string(desc->full_name()) +
                     "). Ensure dccl::Codec::decode is called with the correct Protobuf "
                     "message or use the dynamic overloads of decode.");
             }
