@@ -89,7 +89,7 @@ static int py_pbmsg_to_cpp_pbmsg(PyObject *pyMsg, gp::Message **cppMsg) {
 static PyObject* cpp_pbmsg_to_py_pbmsg(gp::Message *cppMsg) {
     // Create a Protobuf Message by looking up the Python prototype, and calling it to get a message
     PyObject *cls = PyObject_CallMethod(GPBSymbolDB, "GetSymbol", "s",
-                                        cppMsg->GetTypeName().c_str());
+                                        std::string(cppMsg->GetTypeName()).c_str());
     if (!cls) return NULL;
     PyObject *msg = PyObject_CallObject(cls, NULL);
     Py_DECREF(cls);
@@ -253,7 +253,7 @@ static PyObject *Codec_decode(Codec *self, PyObject *args) {
     return pyMsg;
 }
 
-static PyObject *Codec_decode_by_full_name(Codec *self, PyObject *args) {
+static PyObject *Codec_decode_with_full_name(Codec *self, PyObject *args) {
     const char *bytes;
     Py_ssize_t size = 0;
     const char *full_name;
@@ -264,60 +264,57 @@ static PyObject *Codec_decode_by_full_name(Codec *self, PyObject *args) {
         return NULL;
     }
     std::string bytestr(bytes, size);
+    std::string full_name_str(full_name);
 
-    // we need to map the full name to the class, via the type id
-    // this isn't predictable for omit_id types which are assigned a negative ID on loading
-    int expected_id = INT_MAX;
-    for (auto &[k, v] : self->codec->loaded()) {
-        if (v->full_name() == full_name) {
-            expected_id = k;
-        }
-    }
-
-    if (expected_id == INT_MAX) {
-        throw(dccl::Exception("Provided message full name " + std::string(full_name) +
-                                    " has not been loaded. Call load() before decoding this type."));
-    } else {
-        std::cout << "Found description.\n";
-    }
-
-    gp::Message *msg;
+    gp::Message *msg = NULL;
     try {
-        if (!self->codec->loaded().count(expected_id)) {
-            std::cout << expected_id << " not found.\n";
-            for (auto &[k, v] : self->codec->loaded()) {
-                std::cout << k << ":\t" << v->full_name() << "\n";
+        // Find the expected ID by matching the full name in loaded messages
+        bool found = false;
+        dccl::int32 expected_id = 0;
+        for (const auto& kv : self->codec->loaded()) {
+            if (kv.second->full_name() == full_name_str) {
+                expected_id = kv.first;
+                found = true;
+                break;
             }
+        }
 
-            throw(dccl::Exception("Provided message id " + std::to_string(expected_id) +
-                                    " has not been loaded. Call load() before decoding this type."));
+        if (!found) {
+            throw dccl::Exception("Provided message full name " + full_name_str +
+                                  " has not been loaded. Call load() before decoding this type.");
         }
 
         const google::protobuf::Descriptor* desc = self->codec->loaded().at(expected_id);
-        std::cout << desc->DebugString() << std::endl;
 
         if (!desc->options().GetExtension(dccl::msg).omit_id()) {
-            int received_id = self->codec->id(bytestr);
-            // this message should have the ID embedded, so check it matches
+            // This message should have the ID embedded, so check it matches
+            dccl::int32 received_id = self->codec->id(bytestr);
             if (!self->codec->loaded().count(received_id)) {
-                throw(dccl::Exception("Parsed message id " + std::to_string(received_id) +
-                                        " has not been loaded. Call load() before decoding this type."));
+                throw dccl::Exception("Parsed message id " + std::to_string(received_id) +
+                                      " has not been loaded. Call load() before decoding this type.");
             }
 
-            if (expected_id != received_id)
-                throw(dccl::Exception("Received message with id " + std::to_string(received_id) + " (" +
-                                self->codec->loaded().at(received_id)->full_name() +
-                                ") but decode was called with message of id " +
-                                std::to_string(expected_id) + " (" + desc->full_name() +
-                                "). Ensure dccl::Codec::decode is called with the correct Protobuf "
-                                "message or use the dynamic overloads of decode."));
+            if (expected_id != received_id) {
+                throw dccl::Exception(
+                    "Received message with id " + std::to_string(received_id) + " (" +
+                    std::string(self->codec->loaded().at(received_id)->full_name()) +
+                    ") but decode was called with message of id " +
+                    std::to_string(expected_id) + " (" + std::string(desc->full_name()) +
+                    "). Ensure dccl::Codec::decode is called with the correct Protobuf "
+                    "message or use the dynamic overloads of decode.");
+            }
         }
 
         // Do DCCL Decoding, and get a gp::Message
-        msg = dccl::DynamicProtobufManager::new_protobuf_message<gp::Message*>(self->codec->loaded().find(expected_id)->second);
-        self->codec->decode(bytestr, msg, header_only);
+        msg = dccl::DynamicProtobufManager::new_protobuf_message<gp::Message*>(desc);
+        self->codec->decode(bytestr, msg, header_only != 0);
     } catch (dccl::Exception &e) {
+        delete msg;
         PyErr_SetString(DcclException, e.what());
+        return NULL;
+    } catch (...) {
+        delete msg;
+        PyErr_SetString(DcclException, "unexpected exception");
         return NULL;
     }
 
@@ -445,8 +442,8 @@ static PyMethodDef Codec_methods[] = {
      "encode(message[, header_only])\n\nReturn a DCCL-encoded string for message."},
     {"decode", (PyCFunction)Codec_decode, METH_VARARGS,
      "decode(bytes[, header_only])\n\nReturn a protobuf message decoded from bytes."},
-    {"decode_with_full_name", (PyCFunction)Codec_decode_by_full_name, METH_VARARGS,
-     "decode_with_full_name(bytes, full_name[, header_only])\n\nReturn a protobuf message decoded from bytes using type full name."},
+    {"decode_with_full_name", (PyCFunction)Codec_decode_with_full_name, METH_VARARGS,
+     "decode_with_full_name(bytes, full_name[, header_only])\n\nReturn a protobuf message decoded from bytes using the type's full name.\nUseful for decoding messages that have omit_id set, where the ID is not embedded in the bytes."},
     {"load", (PyCFunction)Codec_load, METH_VARARGS,
      "load(type_name)\n\nEnsure that type_name is registered for use with DCCL."},
     {"load_library", (PyCFunction)Codec_load_library, METH_VARARGS,

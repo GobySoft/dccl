@@ -108,6 +108,33 @@ endif()
 
 export(TARGETS ${DCCL_EXPORT_TARGETS} FILE ${CMAKE_BINARY_DIR}/dccl-targets.cmake)
 
+# Build the dccl Python extension module (generates option_extensions_pb2.py
+# in the package tree and builds _dccl.<soabi>.so in-place).
+# Skip when any sanitizer is enabled: the Python interpreter itself is not
+# instrumented, so the sanitizer-compiled extension cannot be loaded, causing
+# build or test failures that are orthogonal to what sanitizer tests check.
+find_package(Python3 COMPONENTS Interpreter Development QUIET)
+if(Python3_FOUND AND NOT SANITIZE_ADDRESS AND NOT SANITIZE_THREAD AND NOT SANITIZE_UNDEFINED)
+  set(_dccl_python_stamp ${CMAKE_CURRENT_BINARY_DIR}/dccl_python.stamp)
+  add_custom_command(
+      OUTPUT ${_dccl_python_stamp}
+      # Generate option_extensions_pb2.py into the python package directory
+      # using the CMake-discovered protoc (full path) to avoid relying on PATH.
+      COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+              --python_out=${dccl_PYTHON_DIR}
+              --proto_path=${dccl_INC_DIR}
+              ${dccl_INC_DIR}/dccl/option_extensions.proto
+      # Build the C extension in-place so that running Python from the source
+      # tree works without an install step.
+      COMMAND ${Python3_EXECUTABLE} ${dccl_PYTHON_DIR}/setup.py build_ext --inplace
+      COMMAND ${CMAKE_COMMAND} -E touch ${_dccl_python_stamp}
+      DEPENDS dccl ${dccl_PYTHON_DIR}/dccl/_dccl.cc ${dccl_PYTHON_DIR}/setup.py
+      WORKING_DIRECTORY ${dccl_PYTHON_DIR}
+      COMMENT "Building dccl Python extension module"
+  )
+  add_custom_target(dccl_python ALL DEPENDS ${_dccl_python_stamp})
+endif()
+
 if(enable_testing)
   add_subdirectory(test)
 endif()

@@ -60,7 +60,7 @@ job-template-amd64: &job-template-amd64
     - checkout
     - run: &run-update-apt
         name: Update apt packages
-        command: apt-get update && apt-get dist-upgrade -y
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y liblua5.3-dev python3-dev python3-setuptools python3-protobuf
     - run: &run-build
         name: Build
         command: mkdir -p build && cd build && cmake -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
@@ -75,7 +75,7 @@ job-template-deb-amd64: &job-template-deb-amd64
         name: Update apt packages
         # remove Lua when we rebuild Docker containers
         # remove apt install python packages once we rebuild the Dockers
-        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y dh-python python3-all-dev:amd64 libpython3-all-dev:${TARGET_ARCH} python3-setuptools liblua5.3-dev:${TARGET_ARCH}
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y dh-python python3-all-dev:amd64 libpython3-all-dev:${TARGET_ARCH} python3-setuptools liblua5.3-dev:${TARGET_ARCH} python3-protobuf
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
@@ -362,7 +362,7 @@ jobs:
           command: brew update
       - run:
           name: Install dependencies
-          command: brew install cmake protobuf abseil boost
+          command: brew install cmake protobuf abseil boost && pip3 install --break-system-packages setuptools protobuf
       - run:
           name: Build
           command: |
@@ -556,7 +556,7 @@ jobs:
           command: sudo sysctl vm.mmap_rnd_bits=28
       - run:
           name: Update apt packages and install dependencies
-          command: sudo apt-get update && sudo apt-get dist-upgrade -y && sudo apt-get install -y cmake libprotobuf-dev libprotoc-dev protobuf-compiler build-essential
+          command: sudo apt-get update && sudo apt-get dist-upgrade -y && sudo apt-get install -y cmake libprotobuf-dev libprotoc-dev protobuf-compiler build-essential python3-dev python3-setuptools
       - run: 
           name: Build with ThreadSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_THREAD=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
