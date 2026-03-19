@@ -29,8 +29,65 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 
 using namespace dccl::test;
+
+// Issue #149: min/max limits of floating point fields are not always inclusive
+// https://github.com/GobySoft/dccl/issues/149
+//
+// v4 codec fails (OutOfRangeException in strict mode) encoding a float equal to max boundary.
+// v5 codec (PR #152 fix) succeeds for the same value.
+static void test_issue149()
+{
+    dccl::Codec codec;
+
+    // ---- v4 codec: encoding value == max should fail (demonstrates the bug) ----
+    codec.load<Issue149V4Msg>();
+    codec.set_strict(true);
+
+    bool v4_threw = false;
+    {
+        Issue149V4Msg msg_in;
+        msg_in.set_a(0.05f);
+        try
+        {
+            std::string encoded;
+            codec.encode(&encoded, msg_in);
+        }
+        catch (dccl::OutOfRangeException&)
+        {
+            v4_threw = true;
+        }
+    }
+    assert(v4_threw && "issue #149: v4 codec must throw OutOfRangeException for value == max");
+    std::cout << "issue #149: v4 encoding of max boundary value threw OutOfRangeException as expected" << std::endl;
+
+    codec.set_strict(false);
+
+    // ---- v5 codec: encoding value == max must succeed (verifies the fix) ----
+    codec.load<Issue149V5Msg>();
+    codec.set_strict(true);
+
+    {
+        const float test_val = 0.05f;
+        const float resolution = 0.01f; // precision=2 -> resolution=10^-2
+
+        Issue149V5Msg msg_in;
+        msg_in.set_a(test_val);
+
+        std::string encoded;
+        codec.encode(&encoded, msg_in);
+
+        Issue149V5Msg msg_out;
+        codec.decode(encoded, &msg_out);
+
+        std::cout << "issue #149: v5 encoding of max boundary value succeeded, decoded = "
+                  << msg_out.a() << std::endl;
+        assert(std::abs(msg_out.a() - test_val) <= resolution / 2 &&
+               "issue #149: v5 decoded value too far from input for max boundary");
+    }
+}
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
@@ -194,4 +251,6 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
 
     std::cout << "all tests passed" << std::endl;
+
+    test_issue149();
 }

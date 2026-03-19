@@ -93,3 +93,34 @@ message PrecisionRangeFloatMsg
         (dccl.field).precision = 6
     ];
 }
+
+// Messages for issue #149: min/max limits of floating point fields are not always inclusive
+// https://github.com/GobySoft/dccl/issues/149
+
+// v4 codec: encoding a = max = 0.05 fails due to floating-point quantization (issue #149)
+message Issue149V4Msg
+{
+    option (dccl.msg).id = 149;
+    option (dccl.msg).max_bytes = 4;
+    option (dccl.msg).codec_version = 4;
+
+    optional float a = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 0.05,
+        (dccl.field).precision = 2
+    ];
+}
+
+// v5 codec: encoding a = max = 0.05 succeeds (fixed by PR #152 integer-domain arithmetic)
+message Issue149V5Msg
+{
+    option (dccl.msg).id = 150;
+    option (dccl.msg).max_bytes = 4;
+    option (dccl.msg).codec_version = 5;
+
+    optional float a = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 0.05,
+        (dccl.field).precision = 2
+    ];
+}
