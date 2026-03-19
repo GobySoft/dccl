@@ -250,7 +250,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
     }
 
-    std::cout << "all tests passed" << std::endl;
-
     test_issue149();
+    
+    std::cout << "all tests passed" << std::endl;
 }
