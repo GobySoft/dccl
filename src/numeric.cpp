@@ -22,9 +22,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef DCCLNumeric20260127H
-#define DCCLNumeric20260127H
-
 #include <bitset>
 #include <cmath>
 #include <iostream>
@@ -50,8 +47,9 @@ namespace dccl
 /// If val is -Inf, exponent is unspecified, and most negative integer is returned
 /// If val is NaN, exponent is unspecified, and second most negative integer is returned
 int32_t decompose_float_format(float val, int16_t& exponent) {
-    uint32_t &val_bits = reinterpret_cast<uint32_t&>(val);
-
+    uint32_t val_bits;
+    std::memcpy(&val_bits, &val, sizeof(val_bits));
+     
     constexpr auto num_exp_bits = 8;
     constexpr auto num_frac_bits = 23;
     constexpr auto exponent_bias = 127;
@@ -96,7 +94,10 @@ int32_t decompose_float_format(float val, int16_t& exponent) {
 
     // val is a normal number
     constexpr auto implicit_bit_mask = static_cast<uint32_t>(1u) << num_frac_bits;
-    exponent = static_cast<uint32_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+
+    int32_t exponent_tmp = static_cast<int32_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+    exponent = static_cast<int16_t>(exponent_tmp);
+    
     if (signed_bit > 0) {
         return -static_cast<int32_t>(frac_bits | implicit_bit_mask);
     } else {
@@ -105,7 +106,8 @@ int32_t decompose_float_format(float val, int16_t& exponent) {
 }
 
 int64_t decompose_float_format(double val, int16_t& exponent) {
-    uint64_t &val_bits = reinterpret_cast<uint64_t&>(val);
+    uint64_t val_bits;
+    std::memcpy(&val_bits, &val, sizeof(val_bits));
 
     constexpr auto num_exp_bits = 11;
     constexpr auto num_frac_bits = 52;
@@ -175,11 +177,11 @@ float compose_float_format(int32_t significand, int16_t exponent) {
 
 double compose_float_format(int64_t significand, int16_t exponent) {
     if (significand == std::numeric_limits<int64_t>::lowest()) {
-        return -std::numeric_limits<float>::infinity();
+        return -std::numeric_limits<double>::infinity();
     } else if (significand == std::numeric_limits<int64_t>::max()) {
-        return std::numeric_limits<float>::infinity();
+        return std::numeric_limits<double>::infinity();
     } else if (significand == std::numeric_limits<int64_t>::lowest() + 1) {
-        return std::numeric_limits<float>::quiet_NaN();
+        return std::numeric_limits<double>::quiet_NaN();
     } else if (significand == 0) {
         return 0.0;
     }
@@ -188,4 +190,3 @@ double compose_float_format(int64_t significand, int16_t exponent) {
 }
 
 } // namespace dccl
-#endif

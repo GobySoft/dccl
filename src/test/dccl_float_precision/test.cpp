@@ -28,6 +28,7 @@
 #include "test.pb.h"
 
 #include <array>
+#include <cassert>
 
 using namespace dccl::test;
 
