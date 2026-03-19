@@ -25,6 +25,7 @@ add_subdirectory(dccl_min_length)
 add_subdirectory(dccl_hash)
 add_subdirectory(dccl_crc)
 add_subdirectory(dccl_omit_id)
+add_subdirectory(dccl_issue149)
 add_subdirectory(dccl_recursive_header)
 
 if(${protobuf_VERSION} VERSION_GREATER 3.14.0) 
