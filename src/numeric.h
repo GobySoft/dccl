@@ -30,6 +30,7 @@
 #include <iostream>
 #include <limits>
 #include <type_traits>
+#include <cassert>
 
 #include "common.h"
 
