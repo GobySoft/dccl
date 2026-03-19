@@ -26,6 +26,7 @@
 #ifndef DCCLConstants20091211H
 #define DCCLConstants20091211H
 
+#include <bitset>
 #include <cmath>
 #include <functional>
 #include <iostream>

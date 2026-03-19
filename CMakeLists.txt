@@ -8,6 +8,7 @@
 
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
+
 # FILE GLOB_RECURSE calls should not follow symlinks by default.
 cmake_policy(SET CMP0009 NEW)
 # MACOSX_RPATH is enabled by default.
