@@ -22,67 +22,71 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include "numeric.h"
+#include <bitset>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <type_traits>
+
+#include "common.h"
 
 namespace dccl
 {
 
-int32_t decompose_float_format(float val, int16_t& exponent)
-{
-    uint32_t& val_bits = reinterpret_cast<uint32_t&>(val);
-
+/// decomposes float/double to a two-integer representation: a significant (aka mantissa)
+/// and exponent. The functionality is similar to std::frexp except the significant is
+/// represented as a integer type instead of a floating point representation.
+/// Conceptually: val = <return value> * 2 ^ exponent
+/// 
+/// \param val value to decompose
+/// \param exponent that allows the significant to be expressed without a decimal point
+/// \return the significand as an integer
+/// 
+/// If val is 0, exponent is 0, and 0 is returned
+/// If val is +Inf, exponent is unspecified, and most positive integer is returned
+/// If val is -Inf, exponent is unspecified, and most negative integer is returned
+/// If val is NaN, exponent is unspecified, and second most negative integer is returned
+int32_t decompose_float_format(float val, int16_t& exponent) {
+    uint32_t val_bits;
+    std::memcpy(&val_bits, &val, sizeof(val_bits));
+     
     constexpr auto num_exp_bits = 8;
     constexpr auto num_frac_bits = 23;
     constexpr auto exponent_bias = 127;
 
     constexpr auto sign_bit_mask = static_cast<uint32_t>(0b1) << (num_exp_bits + num_frac_bits);
-    constexpr auto exp_bits = (static_cast<uint32_t>(1u) << num_exp_bits) - 1;
+    constexpr auto exp_bits = (static_cast<uint32_t>(1u)<<num_exp_bits) - 1;
     constexpr auto exp_bit_mask = exp_bits << num_frac_bits;
     constexpr auto frac_bit_mask = (static_cast<uint32_t>(1u) << num_frac_bits) - 1;
 
     uint32_t signed_bit = val_bits & sign_bit_mask;
     uint16_t val_exp_bits = static_cast<uint16_t>((val_bits & exp_bit_mask) >> num_frac_bits);
     uint32_t frac_bits = val_bits & frac_bit_mask;
-    if (val_exp_bits == exp_bits)
-    {
-        if (frac_bits == 0)
-        {
+    if (val_exp_bits == exp_bits) {
+        if (frac_bits == 0) {
             // val is an infinity
-            if (signed_bit > 0)
-            {
+            if (signed_bit > 0) {
                 return std::numeric_limits<int32_t>::lowest();
-            }
-            else
-            {
+            } else {
                 return std::numeric_limits<int32_t>::max();
             }
-        }
-        else
-        {
+        } else {
             // val is a NaN
             return std::numeric_limits<int32_t>::lowest() + 1;
         }
     }
 
-    if (val_exp_bits == 0)
-    {
-        if (frac_bits == 0)
-        {
+    if (val_exp_bits == 0) {
+        if (frac_bits == 0) {
             exponent = 0;
             // val is zero
             return 0;
-        }
-        else
-        {
+        } else {
             // val is a subnormal number
-            exponent = -exponent_bias + 1 -
-                       num_frac_bits; // shift so that the fraction can be interpreted as full integer
-            if (signed_bit > 0)
-            {
+            exponent = -exponent_bias + 1 - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+            if (signed_bit > 0) {
                 return -static_cast<int32_t>(frac_bits);
-            }
-            else
-            {
+            } else {
                 return static_cast<int32_t>(frac_bits);
             }
         }
@@ -90,74 +94,58 @@ int32_t decompose_float_format(float val, int16_t& exponent)
 
     // val is a normal number
     constexpr auto implicit_bit_mask = static_cast<uint32_t>(1u) << num_frac_bits;
-    exponent = static_cast<uint32_t>(val_exp_bits) - exponent_bias -
-               num_frac_bits; // shift so that the fraction can be interpreted as full integer
-    if (signed_bit > 0)
-    {
+
+    int32_t exponent_tmp = static_cast<int32_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+    exponent = static_cast<int16_t>(exponent_tmp);
+    
+    if (signed_bit > 0) {
         return -static_cast<int32_t>(frac_bits | implicit_bit_mask);
-    }
-    else
-    {
+    } else {
         return static_cast<int32_t>(frac_bits | implicit_bit_mask);
     }
 }
 
-int64_t decompose_float_format(double val, int16_t& exponent)
-{
-    uint64_t& val_bits = reinterpret_cast<uint64_t&>(val);
+int64_t decompose_float_format(double val, int16_t& exponent) {
+    uint64_t val_bits;
+    std::memcpy(&val_bits, &val, sizeof(val_bits));
 
     constexpr auto num_exp_bits = 11;
     constexpr auto num_frac_bits = 52;
     constexpr auto exponent_bias = 1023;
 
     constexpr auto sign_bit_mask = static_cast<uint64_t>(0b1) << (num_exp_bits + num_frac_bits);
-    constexpr auto exp_bits = (static_cast<uint64_t>(1u) << num_exp_bits) - 1;
+    constexpr auto exp_bits = (static_cast<uint64_t>(1u)<<num_exp_bits) - 1;
     constexpr auto exp_bit_mask = exp_bits << num_frac_bits;
     constexpr auto frac_bit_mask = (static_cast<uint64_t>(1u) << num_frac_bits) - 1;
 
     uint64_t signed_bit = val_bits & sign_bit_mask;
     uint16_t val_exp_bits = static_cast<uint16_t>((val_bits & exp_bit_mask) >> num_frac_bits);
     uint64_t frac_bits = val_bits & frac_bit_mask;
-    if (val_exp_bits == exp_bits)
-    {
-        if (frac_bits == 0)
-        {
+    if (val_exp_bits == exp_bits) {
+        if (frac_bits == 0) {
             // val is an infinity
-            if (signed_bit > 0)
-            {
+            if (signed_bit > 0) {
                 return std::numeric_limits<int64_t>::lowest();
-            }
-            else
-            {
+            } else {
                 return std::numeric_limits<int64_t>::max();
             }
-        }
-        else
-        {
+        } else {
             // val is a NaN
             return std::numeric_limits<int64_t>::lowest() + 1;
         }
     }
 
-    if (val_exp_bits == 0)
-    {
-        if (frac_bits == 0)
-        {
+    if (val_exp_bits == 0) {
+        if (frac_bits == 0) {
             exponent = 0;
             // val is zero
             return 0;
-        }
-        else
-        {
+        } else {
             // val is a subnormal number
-            exponent = -exponent_bias + 1 -
-                       num_frac_bits; // shift so that the fraction can be interpreted as full integer
-            if (signed_bit > 0)
-            {
+            exponent = -exponent_bias + 1 - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+            if (signed_bit > 0) {
                 return -static_cast<int64_t>(frac_bits);
-            }
-            else
-            {
+            } else {
                 return static_cast<int64_t>(frac_bits);
             }
         }
@@ -165,56 +153,36 @@ int64_t decompose_float_format(double val, int16_t& exponent)
 
     // val is a normal number
     constexpr auto implicit_bit_mask = static_cast<uint64_t>(1u) << num_frac_bits;
-    exponent = static_cast<uint64_t>(val_exp_bits) - exponent_bias -
-               num_frac_bits; // shift so that the fraction can be interpreted as full integer
-    if (signed_bit > 0)
-    {
+    exponent = static_cast<uint64_t>(val_exp_bits) - exponent_bias - num_frac_bits; // shift so that the fraction can be interpreted as full integer
+    if (signed_bit > 0) {
         return -static_cast<int64_t>(frac_bits | implicit_bit_mask);
-    }
-    else
-    {
+    } else {
         return static_cast<int64_t>(frac_bits | implicit_bit_mask);
     }
 }
 
-float compose_float_format(int32_t significand, int16_t exponent)
-{
-    if (significand == std::numeric_limits<int32_t>::lowest())
-    {
+float compose_float_format(int32_t significand, int16_t exponent) {
+    if (significand == std::numeric_limits<int32_t>::lowest()) {
         return -std::numeric_limits<float>::infinity();
-    }
-    else if (significand == std::numeric_limits<int32_t>::max())
-    {
+    } else if (significand == std::numeric_limits<int32_t>::max()) {
         return std::numeric_limits<float>::infinity();
-    }
-    else if (significand == std::numeric_limits<int32_t>::lowest() + 1)
-    {
+    } else if (significand == std::numeric_limits<int32_t>::lowest() + 1) {
         return std::numeric_limits<float>::quiet_NaN();
-    }
-    else if (significand == 0)
-    {
+    } else if (significand == 0) {
         return 0.0f;
     }
 
     return ldexp(static_cast<float>(significand), exponent);
 }
 
-double compose_float_format(int64_t significand, int16_t exponent)
-{
-    if (significand == std::numeric_limits<int64_t>::lowest())
-    {
+double compose_float_format(int64_t significand, int16_t exponent) {
+    if (significand == std::numeric_limits<int64_t>::lowest()) {
         return -std::numeric_limits<double>::infinity();
-    }
-    else if (significand == std::numeric_limits<int64_t>::max())
-    {
+    } else if (significand == std::numeric_limits<int64_t>::max()) {
         return std::numeric_limits<double>::infinity();
-    }
-    else if (significand == std::numeric_limits<int64_t>::lowest() + 1)
-    {
+    } else if (significand == std::numeric_limits<int64_t>::lowest() + 1) {
         return std::numeric_limits<double>::quiet_NaN();
-    }
-    else if (significand == 0)
-    {
+    } else if (significand == 0) {
         return 0.0;
     }
 

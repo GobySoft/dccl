@@ -37,14 +37,11 @@ namespace dccl
 namespace v5
 {
 
-// v5 DefaultNumericFieldCodec is the same fundamental algorithm as v2-v4 but with fixed numeric
-// precision at edge cases: https://github.com/GobySoft/dccl/pull/152
+// v5 DefaultNumericFieldCodec is the same fundamental algorithm as v2-v4 but with fixed numeric precision at edge cases: https://github.com/GobySoft/dccl/pull/152
 
-/// \brief Provides a basic bounded arbitrary length numeric (double, float, uint32, uint64,
-/// int32, int64) encoder.
+/// \brief Provides a basic bounded arbitrary length numeric (double, float, uint32, uint64, int32, int64) encoder.
 ///
-/// Takes ceil(log2((max-min)*10^precision)+1) bits for required fields,
-/// ceil(log2((max-min)*10^precision)+2) for optional fields.
+/// Takes ceil(log2((max-min)*10^precision)+1) bits for required fields, ceil(log2((max-min)*10^precision)+2) for optional fields.
 template <typename WireType, typename FieldType = WireType>
 class DefaultNumericFieldCodec : public TypedFixedFieldCodec<WireType, FieldType>
 {

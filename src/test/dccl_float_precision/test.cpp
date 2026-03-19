@@ -1,0 +1,197 @@
+// Copyright 2011-2026:
+//   GobySoft, LLC (2013-)
+//   Massachusetts Institute of Technology (2007-2014)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Cadmus To <cadmus.to+dev@gmail.com>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+
+// Tests encoding and decoding of different float precisions on DefaultNumericFieldCodec
+
+#include "../../codec.h"
+#include "test.pb.h"
+
+#include <array>
+#include <cassert>
+
+using namespace dccl::test;
+
+int main(int /*argc*/, char* /*argv*/ [])
+{
+    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+
+    dccl::Codec codec;
+
+    // Simple testing
+    codec.load<FloatMsg>();
+    codec.info<FloatMsg>(&dccl::dlog);
+
+    {
+        const auto *field_ptr = FloatMsg::GetDescriptor()->FindFieldByName("f");
+        assert(field_ptr);
+        const auto &field = *field_ptr;
+
+        const auto &opts = field.options();
+        const auto &dccl_ext = opts.GetExtension(dccl::field);
+
+        auto res = std::numeric_limits<double>::quiet_NaN();
+        if (dccl_ext.has_precision()) {
+            res = std::pow(10.0, -dccl_ext.precision());
+        } else {
+            res = dccl_ext.resolution();
+        }
+
+        const auto tol = res/2;
+        std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
+
+        const auto test_cases = std::array<float, 3>{{0.000001f, 0.010001f, 1.000001f}};
+        for (const auto test_case : test_cases) {
+            auto msg_in = FloatMsg{};
+            msg_in.set_f(test_case);
+
+            auto encoded = std::string{};
+            codec.encode(&encoded, msg_in);
+
+            auto msg_out = FloatMsg{};
+            codec.decode(encoded, &msg_out);
+
+            std::cout << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
+            assert(std::abs(test_case - msg_out.f()) < tol);
+        }
+    }
+
+    // Testing with negative precision
+    codec.load<NegativePrecisionFloatMsg>();
+    codec.info<NegativePrecisionFloatMsg>(&dccl::dlog);
+
+    {
+        const auto *field_ptr = NegativePrecisionFloatMsg::GetDescriptor()->FindFieldByName("f");
+        assert(field_ptr);
+        const auto &field = *field_ptr;
+
+        const auto &opts = field.options();
+        const auto &dccl_ext = opts.GetExtension(dccl::field);
+
+        auto res = std::numeric_limits<double>::quiet_NaN();
+        if (dccl_ext.has_precision()) {
+            res = std::pow(10.0, -dccl_ext.precision());
+        } else {
+            res = dccl_ext.resolution();
+        }
+
+        const auto tol = res/2;
+        std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
+
+        const auto test_cases = std::array<float, 3>{{10.f, -10.f, 1.f}};
+        for (const auto test_case : test_cases) {
+            auto msg_in = NegativePrecisionFloatMsg{};
+            msg_in.set_f(test_case);
+
+            auto encoded = std::string{};
+            codec.encode(&encoded, msg_in);
+
+            auto msg_out = NegativePrecisionFloatMsg{};
+            codec.decode(encoded, &msg_out);
+
+            std::cout << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
+            assert(std::abs(test_case - msg_out.f()) < tol);
+        }
+    }
+
+    // Test conversion of values at different precisions
+    codec.load<PrecisionRangeFloatMsg>();
+    codec.info<PrecisionRangeFloatMsg>(&dccl::dlog);
+
+    {
+        auto resolutions = std::vector<double>{};
+        resolutions.resize(7);
+        for (auto field_idx = 0ul; field_idx < 7; ++field_idx) {
+            const auto field_name = "prec" + std::to_string(field_idx);
+            const auto *field_ptr = PrecisionRangeFloatMsg::GetDescriptor()->FindFieldByName(field_name);
+            assert(field_ptr);
+            const auto &field = *field_ptr;
+
+            const auto &opts = field.options();
+            const auto &dccl_ext = opts.GetExtension(dccl::field);
+
+            if (dccl_ext.has_precision()) {
+                resolutions[field_idx] = std::pow(10.0, -dccl_ext.precision());
+            } else {
+                resolutions[field_idx] = dccl_ext.resolution();
+            }
+
+            std::cout << "Tolerance for DCCL float number " << field_idx << " is " << resolutions[field_idx] << " / 2 = " << resolutions[field_idx]/2 << std::endl;
+        }
+
+        for (auto i = -100; i < 101; ++i) {
+            // Sweeping between the 6 and 7 decimal places of support for float.
+            // Float may not be able to express some of these values, but that's not
+            // in our scope. We're just making sure whatever float can express is
+            // preserved on the other end.
+
+            const auto test_val = 1000000+i;
+            std::cout << "Testing encoding of " << test_val << " on a range of precisions..." << std::endl;
+            auto msg_in = PrecisionRangeFloatMsg{};
+            msg_in.set_prec0(test_val * resolutions[0]);
+            msg_in.set_prec1(test_val * resolutions[1]);
+            msg_in.set_prec2(test_val * resolutions[2]);
+            msg_in.set_prec3(test_val * resolutions[3]);
+            msg_in.set_prec4(test_val * resolutions[4]);
+            msg_in.set_prec5(test_val * resolutions[5]);
+            msg_in.set_prec6(test_val * resolutions[6]);
+
+            auto encoded = std::string{};
+            codec.encode(&encoded, msg_in);
+
+            auto msg_out = PrecisionRangeFloatMsg{};
+            codec.decode(encoded, &msg_out);
+
+            const auto diff0 = std::abs(msg_out.prec0() - msg_in.prec0());
+            const auto diff1 = std::abs(msg_out.prec1() - msg_in.prec1());
+            const auto diff2 = std::abs(msg_out.prec2() - msg_in.prec2());
+            const auto diff3 = std::abs(msg_out.prec3() - msg_in.prec3());
+            const auto diff4 = std::abs(msg_out.prec4() - msg_in.prec4());
+            const auto diff5 = std::abs(msg_out.prec5() - msg_in.prec5());
+            const auto diff6 = std::abs(msg_out.prec6() - msg_in.prec6());
+            std::cout << "Checking if " << msg_out.prec0() << " is close enough to " << msg_in.prec0() << "...";
+            std::cout << " i.e. Difference " << diff0 << "<=" << resolutions[0]/2 << std::endl;
+            assert(diff0 <= resolutions[0]/2);
+            std::cout << "Checking if " << msg_out.prec1() << " is close enough to " << msg_in.prec1() << "...";
+            std::cout << " i.e. Difference " << diff1 << "<=" << resolutions[1]/2 << std::endl;
+            assert(diff1 <= resolutions[1]/2);
+            std::cout << "Checking if " << msg_out.prec2() << " is close enough to " << msg_in.prec2() << "...";
+            std::cout << " i.e. Difference " << diff2 << "<=" << resolutions[2]/2 << std::endl;
+            assert(diff2 <= resolutions[2]/2);
+            std::cout << "Checking if " << msg_out.prec3() << " is close enough to " << msg_in.prec3() << "...";
+            std::cout << " i.e. Difference " << diff3 << "<=" << resolutions[3]/2 << std::endl;
+            assert(diff3 <= resolutions[3]/2);
+            std::cout << "Checking if " << msg_out.prec4() << " is close enough to " << msg_in.prec4() << "...";
+            std::cout << " i.e. Difference " << diff4 << "<=" << resolutions[4]/2 << std::endl;
+            assert(diff4 <= resolutions[4]/2);
+            std::cout << "Checking if " << msg_out.prec5() << " is close enough to " << msg_in.prec5() << "...";
+            std::cout << " i.e. Difference " << diff5 << "<=" << resolutions[5]/2 << std::endl;
+            assert(diff5 <= resolutions[5]/2);
+            std::cout << "Checking if " << msg_out.prec6() << " is close enough to " << msg_in.prec6() << "...";
+            std::cout << " i.e. Difference " << diff6 << "<=" << resolutions[6]/2 << std::endl;
+            assert(diff6 <= resolutions[6]/2);
+        }
+    }
+
+    std::cout << "all tests passed" << std::endl;
+}
