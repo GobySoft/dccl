@@ -218,7 +218,7 @@ void DCCLGenerator::generate_message(
             if (desc->options().HasExtension(dccl::msg))
             {
                 if (desc->options().GetExtension(dccl::msg).id() != 0)
-                {
+                {                    
                     std::stringstream id_enum;
                     id_enum << "enum DCCLParameters { DCCL_ID = "
                             << desc->options().GetExtension(dccl::msg).id() << ", "

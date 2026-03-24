@@ -32,6 +32,15 @@
 #include "../../binary.h"
 using namespace dccl::test;
 
+
+static_assert(TestMessage1::DCCL_ID == 4);
+static_assert(TestMessage1::DCCL_MAX_BYTES == 64);
+
+static_assert(TestMessage2::DCCL_ID == 5);
+static_assert(TestMessage2::DCCL_MAX_BYTES == 64);
+
+
+
 template <typename Message> void run_test(dccl::Codec& codec, Message& msg_in)
 {
     std::cout << "Try encode..." << std::endl;
