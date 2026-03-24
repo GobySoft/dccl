@@ -37,7 +37,10 @@ void decode_check(const std::string& encoded);
 dccl::Codec codec;
 TestMsg msg_in;
 
-int main(int /*argc*/, char* /*argv*/ [])
+static_assert(TestMsg::DCCL_ID == 2);
+static_assert(TestMsg::DCCL_MAX_BYTES == 512);
+
+int main(int /*argc*/, char* /*argv*/[])
 {
     dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
 
