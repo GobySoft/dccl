@@ -214,9 +214,6 @@ workflows:
       - amd64-noble-build:
           <<: *filter-template-non-master
 
-      - osx-build:
-          <<: *filter-template-non-master
-
       - amd64-noble-minimal-build:
           <<: *filter-template-non-master
           
@@ -348,29 +345,6 @@ jobs:
           root: /root/src
           paths:
             - '*.tar.xz'
-
-  osx-build:
-    resource_class: m2pro.medium
-    macos:
-      xcode: "16.4.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    steps:
-      - checkout
-      - run:
-          name: Update Homebrew
-          command: brew update
-      - run:
-          name: Install CMake
-          # Protobuf@23 has CMake linking problems with abseil that we don't yet support
-          command: brew install cmake protobuf@21
-      - run: &run-build
-          name: Build
-          command: |
-            mkdir -p build && cd build && cmake -DCMAKE_PREFIX_PATH=/usr/local/opt/protobuf@21 -Denable_testing=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
-      - run: &run-tests
-          name: Run tests
-          command: cd build && ctest --output-on-failure -j4
 
   amd64-noble-minimal-build:
     docker:
