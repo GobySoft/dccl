@@ -22,12 +22,6 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include <bitset>
-#include <cmath>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-
 #include "common.h"
 
 namespace dccl

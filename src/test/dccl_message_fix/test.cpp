@@ -25,7 +25,6 @@
 
 #include <fstream>
 
-#include <google/protobuf/descriptor.pb.h>
 
 #include "../../codec.h"
 #include "../../codecs2/field_codec_default.h"

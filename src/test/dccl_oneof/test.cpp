@@ -27,7 +27,6 @@
 #include <fstream>
 
 #include "../../native_protobuf/dccl_native_protobuf.h"
-#include <google/protobuf/descriptor.pb.h>
 
 #include "../../binary.h"
 #include "../../codec.h"

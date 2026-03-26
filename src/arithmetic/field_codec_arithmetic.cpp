@@ -23,7 +23,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_arithmetic.h"
 #include "../codec.h"
-#include "../field_codec_manager.h"
 
 using dccl::dlog;
 using namespace dccl::logger;

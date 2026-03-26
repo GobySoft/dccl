@@ -25,10 +25,10 @@
 
 #include <fstream>
 
-#include <google/protobuf/descriptor.pb.h>
 
 #include "../../codec.h"
 #include "../../codecs3/field_codec_default.h"
+#include "../../codecs3/field_codec_default_message.h"
 
 #include "../../binary.h"
 #include "test.pb.h"
