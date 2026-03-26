@@ -25,7 +25,6 @@
 
 #include <fstream>
 
-#include <google/protobuf/descriptor.pb.h>
 
 #include "../../binary.h"
 #include "../../codec.h"

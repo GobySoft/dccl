@@ -59,8 +59,6 @@
 #include "codecs4/default_field_codec_impl.h"
 #include "codecs5/default_field_codec_impl.h"
 
-#include "option_extensions.pb.h"
-
 using dccl::hex_encode;
 
 using namespace dccl;

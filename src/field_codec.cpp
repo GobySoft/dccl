@@ -23,7 +23,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec.h"
 #include "codec.h"
-#include "exception.h"
 
 using dccl::dlog;
 using namespace dccl::logger;

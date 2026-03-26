@@ -21,10 +21,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
-#include <cstdio>
 #include <ctime> // P.Brodsky
-#include <iomanip>
-#include <iostream>
 
 #include "WhoiUtil.h"
 
@@ -253,7 +250,7 @@ long Decode_time_date(TIME_DATE input, short* mon, short* day, short* hour, shor
     *sec = (short)(((comp.as_long) & 0x000F) * 4);
 
     /* It is possible to force this routine to return the 
-   * seconds since 1970. Left as an exercise for the reader… 
+   * seconds since 1970. Left as an exercise for the readerï¿½ 
    */
     return (0);
 }

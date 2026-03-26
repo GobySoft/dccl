@@ -31,7 +31,6 @@
 #include <sstream>
 
 #include <google/protobuf/descriptor.h>
-#include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/text_format.h>
 
 #include "../../binary.h"

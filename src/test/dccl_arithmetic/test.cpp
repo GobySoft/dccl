@@ -24,7 +24,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests arithmetic encoder
 
-#include <google/protobuf/descriptor.pb.h>
 
 #include "../../arithmetic/field_codec_arithmetic.h"
 #include "../../codec.h"

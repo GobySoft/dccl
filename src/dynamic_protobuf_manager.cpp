@@ -25,7 +25,6 @@
 
 #include "dynamic_protobuf_manager.h"
 #include "exception.h"
-#include "logger.h"
 
 std::shared_ptr<dccl::DynamicProtobufManager> dccl::DynamicProtobufManager::inst_;
 
