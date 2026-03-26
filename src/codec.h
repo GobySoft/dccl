@@ -46,8 +46,6 @@
 #include "field_codec_fixed.h"
 #include "logger.h"
 
-#include "codecs2/field_codec_default_message.h"
-#include "codecs3/field_codec_default_message.h"
 #include "dccl/def.h"
 #include "dccl/version.h"
 #include "field_codec_manager.h"

@@ -26,8 +26,6 @@
 
 #include <dlfcn.h>
 
-#include <iostream>
-#include <set>
 #include <stdexcept>
 
 #include <google/protobuf/compiler/importer.h>

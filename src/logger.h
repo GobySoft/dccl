@@ -25,7 +25,6 @@
 #ifndef DCCLLOGGER20121009H
 #define DCCLLOGGER20121009H
 
-#include <cstdio>
 #include <deque>
 #include <functional>
 #include <iomanip>

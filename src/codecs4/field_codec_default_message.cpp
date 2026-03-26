@@ -23,7 +23,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_default_message.h"
 #include "../codec.h"
-#include "../oneof.h"
 
 std::unordered_map<std::string, unsigned> dccl::v4::DefaultMessageCodec::MaxSize::oneofs_max_size;
 

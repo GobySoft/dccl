@@ -24,8 +24,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "type_helper.h"
 
-#include <memory>
-
 template <google::protobuf::FieldDescriptor::Type t>
 void insertType(dccl::internal::TypeHelper::TypeMap* type_map)
 {

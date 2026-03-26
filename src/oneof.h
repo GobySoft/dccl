@@ -26,7 +26,6 @@
 
 #include "binary.h"
 #include <google/protobuf/descriptor.h>
-#include <google/protobuf/descriptor.pb.h>
 
 namespace dccl
 {
