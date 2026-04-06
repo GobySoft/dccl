@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
             }
             else
             {
-                cfg.hash.insert({*it, hash});
+                cfg.hash.emplace(*it, hash);
                 ++it;
             }
         }
