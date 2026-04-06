@@ -82,7 +82,7 @@ void dccl::DynamicConditions::regenerate(const google::protobuf::Message* this_m
         build_file_desc_set(root_msg_->GetDescriptor()->file(), file_desc_set);
 
         auto [desc_load_success, desc_load_value] =
-            desc_load(file_desc_set.SerializeAsString());
+            std::tuple<bool, int>(desc_load(file_desc_set.SerializeAsString()));
         assert(desc_load_success);
         const auto& decode_script = R"(
          local this_encoded_msg, this_type, root_encoded_msg, root_type, cpp_index = ...;
