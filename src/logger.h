@@ -228,8 +228,8 @@ class Logger : public std::ostream
                                        logger::Group grp))
     {
         DCCL_LOCK_DLOG_MUTEX
-        connect(verbosity_mask, std::bind(mem_func, obj, std::placeholders::_1,
-                                          std::placeholders::_2, std::placeholders::_3));
+        connect(verbosity_mask, [obj, mem_func](const std::string& msg, logger::Verbosity vrb,
+                                               logger::Group grp) { (obj->*mem_func)(msg, vrb, grp); });
     }
 
     /// \brief Connect the output of one or more given verbosities to a std::ostream
@@ -240,9 +240,10 @@ class Logger : public std::ostream
     void connect(int verbosity_mask, std::ostream* os, bool add_timestamp = true)
     {
         DCCL_LOCK_DLOG_MUTEX
-        buf_.connect(verbosity_mask,
-                     std::bind(to_ostream, std::placeholders::_1, std::placeholders::_2,
-                               std::placeholders::_3, os, add_timestamp));
+        buf_.connect(verbosity_mask, [os, add_timestamp](const std::string& msg,
+                                                          logger::Verbosity vrb, logger::Group grp) {
+            to_ostream(msg, vrb, grp, os, add_timestamp);
+        });
     }
 
     /// \brief Disconnect all slots for one or more given verbosities

@@ -131,10 +131,8 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
     std::vector<std::pair<std::string, std::string>> options;
     google::protobuf::compiler::ParseGeneratorParameter(parameter, &options);
 
-    for (const auto& option : options)
+    for (const auto& [key, value] : options)
     {
-        const auto& key = option.first;
-        const auto& value = option.second;
         if (key == "dccl3_load_file")
         {
             load_file_cpp_ = value;
