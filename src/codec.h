@@ -409,7 +409,7 @@ class Codec
     {
         // if we have omit_id, check for or assign an autogenerate negative internal placeholder ID
         if (desc->options().GetExtension(dccl::msg).omit_id() && !desc2placeholder_id_.count(desc))
-            desc2placeholder_id_.insert(std::make_pair(desc, omit_id_placeholder_id_--));
+            desc2placeholder_id_.emplace(desc, omit_id_placeholder_id_--);
 
         return id_internal_const(desc, user_id);
     }

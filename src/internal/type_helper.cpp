@@ -27,15 +27,15 @@
 template <google::protobuf::FieldDescriptor::Type t>
 void insertType(dccl::internal::TypeHelper::TypeMap* type_map)
 {
-    type_map->insert(std::make_pair(t, std::shared_ptr<dccl::internal::FromProtoTypeBase>(
-                                           new dccl::internal::FromProtoType<t>)));
+    type_map->emplace(t, std::shared_ptr<dccl::internal::FromProtoTypeBase>(
+                             new dccl::internal::FromProtoType<t>));
 }
 
 template <google::protobuf::FieldDescriptor::CppType t>
 void insert(dccl::internal::TypeHelper::CppTypeMap* cpptype_map)
 {
-    cpptype_map->insert(std::make_pair(t, std::shared_ptr<dccl::internal::FromProtoCppTypeBase>(
-                                              new dccl::internal::FromProtoCppType<t>)));
+    cpptype_map->emplace(t, std::shared_ptr<dccl::internal::FromProtoCppTypeBase>(
+                                new dccl::internal::FromProtoCppType<t>));
 }
 
 //
@@ -44,11 +44,9 @@ void insert(dccl::internal::TypeHelper::CppTypeMap* cpptype_map)
 void dccl::internal::TypeHelper::initialize()
 {
     using namespace google::protobuf;
-    using std::make_pair;
     using std::shared_ptr;
 
-    type_map_.insert(
-        make_pair(static_cast<FieldDescriptor::Type>(0), std::make_shared<FromProtoTypeBase>()));
+    type_map_.emplace(static_cast<FieldDescriptor::Type>(0), std::make_shared<FromProtoTypeBase>());
     insertType<FieldDescriptor::TYPE_DOUBLE>(&type_map_);
     insertType<FieldDescriptor::TYPE_FLOAT>(&type_map_);
     insertType<FieldDescriptor::TYPE_UINT64>(&type_map_);
@@ -68,8 +66,8 @@ void dccl::internal::TypeHelper::initialize()
     insertType<FieldDescriptor::TYPE_GROUP>(&type_map_);
     insertType<FieldDescriptor::TYPE_ENUM>(&type_map_);
 
-    cpptype_map_.insert(make_pair(static_cast<FieldDescriptor::CppType>(0),
-                                  std::make_shared<FromProtoCppTypeBase>()));
+    cpptype_map_.emplace(static_cast<FieldDescriptor::CppType>(0),
+                         std::make_shared<FromProtoCppTypeBase>());
 
     insert<FieldDescriptor::CPPTYPE_DOUBLE>(&cpptype_map_);
     insert<FieldDescriptor::CPPTYPE_FLOAT>(&cpptype_map_);

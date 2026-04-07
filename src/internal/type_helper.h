@@ -65,9 +65,9 @@ class TypeHelper
     friend class ::dccl::FieldCodecManagerLocal;
     template <typename ProtobufMessage> void add()
     {
-        custom_message_map_.insert(std::make_pair(
+        custom_message_map_.emplace(
             ProtobufMessage::descriptor()->full_name(),
-            std::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>)));
+            std::shared_ptr<FromProtoCppTypeBase>(new FromProtoCustomMessage<ProtobufMessage>));
     }
     template <typename ProtobufMessage> void remove()
     {

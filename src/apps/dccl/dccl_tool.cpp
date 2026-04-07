@@ -183,16 +183,14 @@ int main(int argc, char* argv[])
             const google::protobuf::Descriptor* desc =
                 dccl::DynamicProtobufManager::find_descriptor(*it);
             // if we can't load the message, erase it from our set of messages
-            bool success;
-            std::size_t hash;
-            std::tie(success, hash) = load_desc(&dccl, desc, *it);
+            auto [success, hash] = load_desc(&dccl, desc, *it);
             if (!success)
             {
                 it = cfg.message.erase(it);
             }
             else
             {
-                cfg.hash.insert(std::make_pair(*it, hash));
+                cfg.hash.emplace(*it, hash);
                 ++it;
             }
         }

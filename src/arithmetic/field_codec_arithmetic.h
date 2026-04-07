@@ -146,7 +146,7 @@ class ModelManager
         _create_and_validate_model(&new_model);
         if (arithmetic_models_.count(model.name()))
             arithmetic_models_.erase(model.name());
-        arithmetic_models_.insert(std::make_pair(model.name(), new_model));
+        arithmetic_models_.emplace(model.name(), new_model);
     }
 
     void _create_and_validate_model(Model* model)
@@ -175,7 +175,7 @@ class ModelManager
                                 "All frequencies must be nonzero."));
             }
             cumulative_freq += freq;
-            model->encoder_cumulative_freqs_.insert(std::make_pair(symbol, cumulative_freq));
+            model->encoder_cumulative_freqs_.emplace(symbol, cumulative_freq);
         }
 
         // must have separate models for adaptive encoding.
@@ -279,15 +279,14 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
             uint64 range = (high - low) + 1;
 
-            std::pair<Model::freq_type, Model::freq_type> c_freq_range =
-                model.symbol_to_cumulative_freq(symbol, Model::ENCODER);
+            auto [c_freq_low, c_freq_high] = model.symbol_to_cumulative_freq(symbol, Model::ENCODER);
 
             dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) input symbol (" << symbol
-                                    << ") cumulative freq: [" << c_freq_range.first << ","
-                                    << c_freq_range.second << ")" << std::endl;
+                                    << ") cumulative freq: [" << c_freq_low << ","
+                                    << c_freq_high << ")" << std::endl;
 
-            high = low + (range * c_freq_range.second) / model.total_freq(Model::ENCODER) - 1;
-            low += (range * c_freq_range.first) / model.total_freq(Model::ENCODER);
+            high = low + (range * c_freq_high) / model.total_freq(Model::ENCODER) - 1;
+            low += (range * c_freq_low) / model.total_freq(Model::ENCODER);
 
             dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) input symbol (" << symbol
                                     << ") interval: [" << (double)low / TOP_VALUE << ","
@@ -447,15 +446,14 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
             dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) symbol is: " << symbol << std::endl;
 
-            std::pair<Model::freq_type, Model::freq_type> c_freq_range =
-                model.symbol_to_cumulative_freq(symbol, Model::DECODER);
+            auto [c_freq_low, c_freq_high] = model.symbol_to_cumulative_freq(symbol, Model::DECODER);
 
             dlog.is(DEBUG3) && dlog << "(ArithmeticFieldCodec) input symbol (" << symbol
-                                    << ") cumulative freq: [" << c_freq_range.first << ","
-                                    << c_freq_range.second << ")" << std::endl;
+                                    << ") cumulative freq: [" << c_freq_low << ","
+                                    << c_freq_high << ")" << std::endl;
 
-            high = low + (range * c_freq_range.second) / model.total_freq(Model::DECODER) - 1;
-            low += (range * c_freq_range.first) / model.total_freq(Model::DECODER);
+            high = low + (range * c_freq_high) / model.total_freq(Model::DECODER) - 1;
+            low += (range * c_freq_low) / model.total_freq(Model::DECODER);
 
             model.update_model(symbol, Model::DECODER);
 
@@ -646,16 +644,16 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
                 dccl::dlog << "(ArithmeticFieldCodec): c_freq: " << cumulative_freq
                            << ", c_freq_high: " << cumulative_freq_high << std::endl;
 
-            std::pair<Model::symbol_type, Model::symbol_type> symbol_pair =
-                model.cumulative_freq_to_symbol(
-                    std::make_pair(cumulative_freq, cumulative_freq_high), Model::DECODER);
+            auto [symbol_low, symbol_high] =
+                model.cumulative_freq_to_symbol({cumulative_freq, cumulative_freq_high},
+                                                Model::DECODER);
 
             dccl::dlog.is(dccl::logger::DEBUG3) &&
-                dccl::dlog << "(ArithmeticFieldCodec): symbol: " << symbol_pair.first << ", "
-                           << symbol_pair.second << std::endl;
+                dccl::dlog << "(ArithmeticFieldCodec): symbol: " << symbol_low << ", "
+                           << symbol_high << std::endl;
 
-            if (symbol_pair.first == symbol_pair.second)
-                return symbol_pair.first;
+            if (symbol_low == symbol_high)
+                return symbol_low;
 
             // add another bit to disambiguate
             bits->get_more_bits(1);
@@ -668,7 +666,7 @@ class ArithmeticFieldCodecBase : public RepeatedTypedFieldCodec<Model::value_typ
 
             dccl::dlog.is(dccl::logger::DEBUG3) &&
                 dccl::dlog << "(ArithmeticFieldCodec): ambiguous (symbol could be "
-                           << symbol_pair.first << " or " << symbol_pair.second << ")" << std::endl;
+                           << symbol_low << " or " << symbol_high << ")" << std::endl;
         }
 
         return 0;

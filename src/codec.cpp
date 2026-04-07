@@ -412,7 +412,7 @@ std::size_t dccl::Codec::load(const google::protobuf::Descriptor* desc, int user
         }
         else
         {
-            id2desc_.insert(std::make_pair(dccl_id, desc));
+            id2desc_.emplace(dccl_id, desc);
         }
 
         dlog.is(DEBUG1) && dlog << "Successfully validated message of type: " << desc->full_name()
