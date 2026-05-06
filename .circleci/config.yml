@@ -22,13 +22,13 @@ environment-template-armhf: &environment-template-armhf
   TARGET_ARCH: "armhf"
   DEB_BUILD_OPTIONS: "parallel=4 nocheck"
   
-environment-template-bullseye: &environment-template-bullseye
-  DISTRO_RELEASE_CODENAME: "bullseye"
-  DISTRO_RELEASE_VERSION: "debian11"
-
 environment-template-bookworm: &environment-template-bookworm
   DISTRO_RELEASE_CODENAME: "bookworm"
   DISTRO_RELEASE_VERSION: "debian12"
+
+environment-template-trixie: &environment-template-trixie
+  DISTRO_RELEASE_CODENAME: "trixie"
+  DISTRO_RELEASE_VERSION: "debian13"
   
 environment-template-jammy: &environment-template-jammy
   DISTRO_RELEASE_CODENAME: "jammy"
@@ -38,19 +38,25 @@ environment-template-noble: &environment-template-noble
   DISTRO_RELEASE_CODENAME: "noble"
   DISTRO_RELEASE_VERSION: "ubuntu24.04"
 
+environment-template-resolute: &environment-template-resolute
+  DISTRO_RELEASE_CODENAME: "resolute"
+  DISTRO_RELEASE_VERSION: "ubuntu26.04"
   
 ## Pre-declare Docker containers
-docker-base-bullseye: &docker-base-bullseye
-  - image: gobysoft/dccl-debian-build-base:11.1
-
 docker-base-bookworm: &docker-base-bookworm
   - image: gobysoft/dccl-debian-build-base:12.1
+
+docker-base-trixie: &docker-base-trixie
+  - image: gobysoft/dccl-debian-build-base:13.1
     
 docker-base-jammy: &docker-base-jammy
   - image: gobysoft/dccl-ubuntu-build-base:22.04.1
     
 docker-base-noble: &docker-base-noble
   - image: gobysoft/dccl-ubuntu-build-base:24.04.1
+
+docker-base-resolute: &docker-base-resolute
+  - image: gobysoft/dccl-ubuntu-build-base:26.04.1
     
 ## Pre-declare job templates
 job-template-amd64: &job-template-amd64
@@ -168,19 +174,19 @@ job-template-deb-cross: &job-template-deb-cross
     - run: *remove-orig-source
     - persist_to_workspace: *persist-debs        
 
-# base sanitizer and upload off Noble build
+# base sanitizer and upload off Resolute build
 job-template-sanitizers: &job-template-sanitizers
   <<: *job-template-deb-amd64
   environment:
     <<: *environment-template-common
-    <<: *environment-template-noble
+    <<: *environment-template-resolute
     <<: *environment-template-amd64
     SANITIZER_NUM_JOBS: 2
-  docker: *docker-base-noble
+  docker: *docker-base-resolute
 
 job-template-upload: &job-template-upload
   <<: *job-template-deb-amd64
-  docker: *docker-base-noble
+  docker: *docker-base-resolute
   resource_class: small
 
 # which branches to run the Debian upload on
@@ -205,34 +211,23 @@ workflows:
   commit:
     jobs:
       
-      - amd64-bullseye-build:
-          <<: *filter-template-non-master
       - amd64-bookworm-build:
+          <<: *filter-template-non-master
+      - amd64-trixie-build:
           <<: *filter-template-non-master
       - amd64-jammy-build:
           <<: *filter-template-non-master
       - amd64-noble-build:
           <<: *filter-template-non-master
+      - amd64-resolute-build:
+          <<: *filter-template-non-master
 
-      - amd64-noble-minimal-build:
+      - amd64-resolute-minimal-build:
           <<: *filter-template-non-master
           
       - get-orig-source:
           <<: *filter-template-master-only
 
-      - amd64-bullseye-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - get-orig-source
-      - arm64-bullseye-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-bullseye-deb-build
-      - armhf-bullseye-deb-build:
-          <<: *filter-template-master-only
-          requires:
-            - amd64-bullseye-deb-build
-            
       - amd64-bookworm-deb-build:
           <<: *filter-template-master-only
           requires:
@@ -244,8 +239,21 @@ workflows:
       - armhf-bookworm-deb-build:
           <<: *filter-template-master-only
           requires:
-            - amd64-bookworm-deb-build            
+            - amd64-bookworm-deb-build
 
+      - amd64-trixie-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-trixie-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-trixie-deb-build
+      - armhf-trixie-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-trixie-deb-build
+            
       - amd64-jammy-deb-build:
           <<: *filter-template-master-only
           requires:
@@ -272,25 +280,41 @@ workflows:
           requires:
             - amd64-noble-deb-build
 
+      - amd64-resolute-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - get-orig-source
+      - arm64-resolute-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-resolute-deb-build
+      - armhf-resolute-deb-build:
+          <<: *filter-template-master-only
+          requires:
+            - amd64-resolute-deb-build
+
             
             
       # always do the continuous upload if we did the deb builds
       - continuous-upload:
           requires:
-            - amd64-bullseye-deb-build
             - amd64-bookworm-deb-build
+            - amd64-trixie-deb-build
             - amd64-jammy-deb-build
             - amd64-noble-deb-build
+            - amd64-resolute-deb-build
 
-            - arm64-bullseye-deb-build
             - arm64-bookworm-deb-build
+            - arm64-trixie-deb-build
             - arm64-jammy-deb-build
             - arm64-noble-deb-build
+            - arm64-resolute-deb-build
 
-            - armhf-bullseye-deb-build
             - armhf-bookworm-deb-build
+            - armhf-trixie-deb-build
             - armhf-jammy-deb-build
             - armhf-noble-deb-build
+            - armhf-resolute-deb-build
 
       # only do the release upload on tagged builds
       - release-upload:
@@ -300,20 +324,24 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - amd64-bullseye-deb-build
             - amd64-bookworm-deb-build
+            - amd64-trixie-deb-build
             - amd64-jammy-deb-build
             - amd64-noble-deb-build
+            - amd64-resolute-deb-build
 
-            - arm64-bullseye-deb-build
             - arm64-bookworm-deb-build
+            - arm64-trixie-deb-build
             - arm64-jammy-deb-build
             - arm64-noble-deb-build
+            - arm64-resolute-deb-build
 
-            - armhf-bullseye-deb-build
             - armhf-bookworm-deb-build
+            - armhf-trixie-deb-build
             - armhf-jammy-deb-build
             - armhf-noble-deb-build
+            - armhf-resolute-deb-build
+
             - continuous-upload
             
       - amd64+scan-build
@@ -325,10 +353,10 @@ jobs:
 
   get-orig-source:
     <<: *job-template-deb-amd64
-    docker: *docker-base-noble
+    docker: *docker-base-resolute
     environment:
       <<: *environment-template-common
-      <<: *environment-template-noble
+      <<: *environment-template-resolute
       <<: *environment-template-amd64
     steps:
       - checkout
@@ -346,9 +374,9 @@ jobs:
           paths:
             - '*.tar.xz'
 
-  amd64-noble-minimal-build:
+  amd64-resolute-minimal-build:
     docker:
-      - image: ubuntu:noble
+      - image: ubuntu:resolute
     working_directory: /root/goby3
     environment:
       DEBIAN_FRONTEND: "noninteractive"
@@ -366,18 +394,19 @@ jobs:
       - run: *run-tests
 
 
-  amd64-bullseye-build:
-    <<: *job-template-amd64
-    docker: *docker-base-bullseye
-    environment:
-      <<: *environment-template-common
-      
   amd64-bookworm-build:
     <<: *job-template-amd64
     docker: *docker-base-bookworm
     environment:
+      <<: *environment-template-common
+      
+  amd64-trixie-build:
+    <<: *job-template-amd64
+    docker: *docker-base-trixie
+    environment:
       <<: *environment-template-common      
 
+      
       
   amd64-jammy-build:
     <<: *job-template-amd64
@@ -389,30 +418,12 @@ jobs:
     <<: *job-template-amd64
     docker: *docker-base-noble
     environment:
-      <<: *environment-template-common      
-      
-      
-  amd64-bullseye-deb-build:
-    <<: *job-template-deb-amd64
-    docker: *docker-base-bullseye
+      <<: *environment-template-common            
+  amd64-resolute-build:
+    <<: *job-template-amd64
+    docker: *docker-base-resolute
     environment:
-      <<: *environment-template-common
-      <<: *environment-template-bullseye
-      <<: *environment-template-amd64
-  arm64-bullseye-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-base-bullseye
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-bullseye
-      <<: *environment-template-arm64
-  armhf-bullseye-deb-build: 
-    <<: *job-template-deb-cross
-    docker: *docker-base-bullseye
-    environment:
-      <<: *environment-template-common
-      <<: *environment-template-bullseye
-      <<: *environment-template-armhf
+      <<: *environment-template-common            
       
   amd64-bookworm-deb-build:
     <<: *job-template-deb-amd64
@@ -436,7 +447,27 @@ jobs:
       <<: *environment-template-bookworm
       <<: *environment-template-armhf
 
-
+  amd64-trixie-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-trixie
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-trixie
+      <<: *environment-template-amd64
+  arm64-trixie-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-trixie
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-trixie
+      <<: *environment-template-arm64
+  armhf-trixie-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-trixie
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-trixie
+      <<: *environment-template-armhf
 
   amd64-jammy-deb-build:
     <<: *job-template-deb-amd64
@@ -482,6 +513,27 @@ jobs:
       <<: *environment-template-noble
       <<: *environment-template-armhf
 
+  amd64-resolute-deb-build:
+    <<: *job-template-deb-amd64
+    docker: *docker-base-resolute
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-resolute
+      <<: *environment-template-amd64
+  arm64-resolute-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-resolute
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-resolute
+      <<: *environment-template-arm64
+  armhf-resolute-deb-build: 
+    <<: *job-template-deb-cross
+    docker: *docker-base-resolute
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-resolute
+      <<: *environment-template-armhf
       
   amd64+scan-build:
     <<: *job-template-sanitizers
@@ -516,7 +568,7 @@ jobs:
     # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
     environment:
       <<: *environment-template-common
-      <<: *environment-template-noble
+      <<: *environment-template-resolute
       <<: *environment-template-amd64
       SANITIZER_NUM_JOBS: 2
     machine:
@@ -551,7 +603,7 @@ jobs:
     <<: *job-template-upload
     environment:
       <<: *environment-template-common
-      <<: *environment-template-noble
+      <<: *environment-template-resolute
       <<: *environment-template-amd64
       UPLOAD_DESTINATION: "gobysoft-continuous"
     steps: &steps-upload
@@ -579,7 +631,7 @@ jobs:
     <<: *job-template-upload
     environment:
       <<: *environment-template-common
-      <<: *environment-template-noble
+      <<: *environment-template-resolute
       <<: *environment-template-amd64
       UPLOAD_DESTINATION: "gobysoft-release"
     steps: *steps-upload
