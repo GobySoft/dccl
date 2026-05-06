@@ -56,7 +56,7 @@ docker-base-noble: &docker-base-noble
   - image: gobysoft/dccl-ubuntu-build-base:24.04.1
 
 docker-base-resolute: &docker-base-resolute
-  - image: gobysoft/dccl-ubuntu-build-base:24.04.1
+  - image: gobysoft/dccl-ubuntu-build-base:26.04.1
     
 ## Pre-declare job templates
 job-template-amd64: &job-template-amd64
