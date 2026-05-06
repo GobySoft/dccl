@@ -197,14 +197,12 @@ filter-template-master-only: &filter-template-master-only
     branches:
       only:
         - "4.0"
-        - "4.0-add-new-ubuntu-debian"
         
 filter-template-non-master: &filter-template-non-master
   filters:
     branches:
       ignore:
         - "4.0"
-        - "4.0-add-new-ubuntu-debian"
         
 ## Begin actual config
 version: 2
