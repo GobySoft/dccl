@@ -195,7 +195,6 @@ filter-template-master-only: &filter-template-master-only
     branches:
       only:
         - "4.0"
-        - "4.0-cleanup-circleci"
         
 filter-template-non-master: &filter-template-non-master
   filters:
