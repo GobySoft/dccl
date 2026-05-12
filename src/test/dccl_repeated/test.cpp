@@ -31,9 +31,16 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
 
@@ -61,7 +68,10 @@ int main(int /*argc*/, char* /*argv*/ [])
 
     for (auto desc : descs)
     {
-        codec.info(desc, &std::cout);
+        if (dccl::dlog.is(dccl::logger::INFO))
+        {
+            codec.info(desc, &dccl::dlog);
+        }
         codec.load(desc);
     }
 
@@ -69,14 +79,14 @@ int main(int /*argc*/, char* /*argv*/ [])
     for (auto msg : msgs)
     {
         static int i = 0;
-        std::cout << "Message " << ++i << " in:\n" << msg->DebugString() << std::endl;
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message " << ++i << " in:\n" << msg->DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         codec.encode(&bytes1, *msg);
     }
     bytes1 += std::string(4, '\0');
 
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     // non-destructive
     {
@@ -98,7 +108,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
         catch (dccl::Exception& e)
         {
-            std::cout << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << e.what() << std::endl;
         }
 
         std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
@@ -108,7 +118,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         for (const auto& it : msgs_out)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
             assert((*in_it)->SerializeAsString() == it->SerializeAsString());
             ++in_it;
         }
@@ -125,7 +135,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
         catch (dccl::Exception& e)
         {
-            std::cout << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << e.what() << std::endl;
         }
 
         std::list<const google::protobuf::Message*>::const_iterator in_it = msgs.begin();
@@ -135,11 +145,11 @@ int main(int /*argc*/, char* /*argv*/ [])
         for (const auto& it : msgs_out)
         {
             static int i = 0;
-            std::cout << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message " << ++i << " out:\n" << it->DebugString() << std::endl;
             assert((*in_it)->SerializeAsString() == it->SerializeAsString());
             ++in_it;
         }
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

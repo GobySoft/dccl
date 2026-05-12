@@ -44,7 +44,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     using dccl::dlog;
     using namespace dccl::logger;
 
-    std::cout << "attaching info() to DEBUG3+" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to DEBUG3+" << std::endl;
     dlog.connect(DEBUG3_PLUS, &info);
     dlog.is(DEBUG3) && dlog << "debug3 ok" << std::endl;
     dlog.is(DEBUG2) && dlog << "debug2 ok" << std::endl;
@@ -53,14 +53,14 @@ int main(int /*argc*/, char* /*argv*/ [])
     dlog.is(WARN) && dlog << "warn ok" << std::endl;
     dlog.disconnect(ALL);
 
-    std::cout << "attaching info() to nothing" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to nothing" << std::endl;
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG1) && dlog << stream_assert << std::endl;
     dlog.is(INFO) && dlog << stream_assert << std::endl;
     dlog.is(WARN) && dlog << stream_assert << std::endl;
 
-    std::cout << "attaching info() to WARN+" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to WARN+" << std::endl;
     dlog.connect(WARN_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
@@ -69,7 +69,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     dlog.is(WARN) && dlog << "warn ok" << std::endl;
     dlog.disconnect(ALL);
 
-    std::cout << "attaching info() to INFO+" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to INFO+" << std::endl;
     dlog.connect(INFO_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
@@ -78,7 +78,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     dlog.is(WARN) && dlog << "warn ok" << std::endl;
     dlog.disconnect(ALL);
 
-    std::cout << "attaching info() to DEBUG1+" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to DEBUG1+" << std::endl;
     dlog.connect(DEBUG1_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << stream_assert << std::endl;
@@ -87,7 +87,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     dlog.is(WARN) && dlog << "warn ok" << std::endl;
     dlog.disconnect(ALL);
 
-    std::cout << "attaching info() to DEBUG2+" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "attaching info() to DEBUG2+" << std::endl;
     dlog.connect(DEBUG2_PLUS, &info);
     dlog.is(DEBUG3) && dlog << stream_assert << std::endl;
     dlog.is(DEBUG2) && dlog << "debug2 ok" << std::endl;
@@ -96,5 +96,5 @@ int main(int /*argc*/, char* /*argv*/ [])
     dlog.is(WARN) && dlog << "warn ok" << std::endl;
     dlog.disconnect(ALL);
 
-    std::cout << "All tests passed." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "All tests passed." << std::endl;
 }

@@ -32,37 +32,44 @@
 #include "../../binary.h"
 using namespace dccl::test;
 
-
 static_assert(TestMessage1::DCCL_ID == 4);
 static_assert(TestMessage1::DCCL_MAX_BYTES == 64);
 
 static_assert(TestMessage2::DCCL_ID == 5);
 static_assert(TestMessage2::DCCL_MAX_BYTES == 64);
 
-
-
 template <typename Message> void run_test(dccl::Codec& codec, Message& msg_in)
 {
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) &&
+        dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     auto msg_out = codec.decode<std::unique_ptr<google::protobuf::Message>>(bytes);
-    std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n"
+                                                    << msg_out->DebugString() << std::endl;
     assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
 }
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.load_library("libtest_autoload" SHARED_LIBRARY_SUFFIX);
 
-    codec.info_all(&std::cout);
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info_all(&dccl::dlog);
 
     TestMessage1 msg_in1;
     msg_in1.set_a(10);
@@ -80,5 +87,5 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in4.set_d(12);
     run_test(codec, msg_in4);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

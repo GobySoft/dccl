@@ -209,21 +209,28 @@ void fill_message_min(NativeProtobufTest& msg_in)
 void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
 {
     NativeProtobufTest msg_out;
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
     codec.decode(bytes, &msg_out);
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 }
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);
@@ -253,5 +260,5 @@ int main(int /*argc*/, char* /*argv*/ [])
         run_test(codec, msg_in);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

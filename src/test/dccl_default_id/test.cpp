@@ -27,9 +27,16 @@
 #include "test.pb.h"
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
 
@@ -65,7 +72,7 @@ int main(int /*argc*/, char* /*argv*/[])
         catch (const dccl::Exception& e)
         {
             // expected
-            std::cout << "Expected exception: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Expected exception: " << e.what() << std::endl;
         }
         try
         {
@@ -75,7 +82,7 @@ int main(int /*argc*/, char* /*argv*/[])
         catch (const dccl::Exception& e)
         {
             // expected
-            std::cout << "Expected exception: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Expected exception: " << e.what() << std::endl;
         }
     }
 
@@ -127,5 +134,5 @@ int main(int /*argc*/, char* /*argv*/[])
         codec.decode(encoded, &short_id_msg_with_data);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

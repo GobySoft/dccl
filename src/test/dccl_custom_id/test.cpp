@@ -78,9 +78,16 @@ dccl::Bitset dccl::test::MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uin
     return dccl::Bitset(MINI_ID_SIZE, wire_value - MINI_ID_OFFSET);
 }
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     {
         dccl::Codec codec("mini_id_codec", dccl::test::MicroModemMiniPacketDCCLIDCodec());
@@ -106,7 +113,7 @@ int main(int /*argc*/, char* /*argv*/ [])
 
         encoded.clear();
         codec.encode(&encoded, mini_owtt_in);
-        std::cout << "OWTT as hex: " << dccl::hex_encode(encoded) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "OWTT as hex: " << dccl::hex_encode(encoded) << std::endl;
 
         codec.decode(encoded, &mini_owtt_out);
         assert(mini_owtt_out.SerializeAsString() == mini_owtt_in.SerializeAsString());
@@ -122,5 +129,5 @@ int main(int /*argc*/, char* /*argv*/ [])
         assert(mini_abort_out.SerializeAsString() == mini_abort_in.SerializeAsString());
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

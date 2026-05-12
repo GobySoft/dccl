@@ -38,9 +38,16 @@ dccl::Codec codec;
 
 void decode(const std::string& bytes);
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     codec.load<GobyMessage1>();
     codec.load<GobyMessage2>();
@@ -54,23 +61,23 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in2.set_bool_val(false);
     msg_in3.set_string_val("string1");
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes1, bytes2, bytes3;
     codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes for GobyMessage1 (hex): " << dccl::hex_encode(bytes1) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes for GobyMessage1 (hex): " << dccl::hex_encode(bytes1) << std::endl;
     codec.encode(&bytes2, msg_in2);
-    std::cout << "... got bytes for GobyMessage2 (hex): " << dccl::hex_encode(bytes2) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes for GobyMessage2 (hex): " << dccl::hex_encode(bytes2) << std::endl;
     codec.encode(&bytes3, msg_in3);
-    std::cout << "... got bytes for GobyMessage3 (hex): " << dccl::hex_encode(bytes3) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes for GobyMessage3 (hex): " << dccl::hex_encode(bytes3) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     // mix up the order
     decode(bytes2);
     decode(bytes1);
     decode(bytes3);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 void decode(const std::string& bytes)
@@ -82,7 +89,7 @@ void decode(const std::string& bytes)
         GobyMessage1 msg_out1;
         codec.decode(bytes, &msg_out1);
 
-        std::cout << "Got..." << msg_out1 << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Got..." << msg_out1 << std::endl;
         assert(msg_out1.SerializeAsString() == msg_in1.SerializeAsString());
     }
     else if (dccl_id == codec.id<GobyMessage2>())
@@ -90,7 +97,7 @@ void decode(const std::string& bytes)
         GobyMessage2 msg_out2;
         codec.decode(bytes, &msg_out2);
 
-        std::cout << "Got..." << msg_out2 << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Got..." << msg_out2 << std::endl;
         assert(msg_out2.SerializeAsString() == msg_in2.SerializeAsString());
     }
     else if (dccl_id == codec.id<GobyMessage3>())
@@ -98,7 +105,7 @@ void decode(const std::string& bytes)
         GobyMessage3 msg_out3;
         codec.decode(bytes, &msg_out3);
 
-        std::cout << "Got..." << msg_out3 << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Got..." << msg_out3 << std::endl;
         assert(msg_out3.SerializeAsString() == msg_in3.SerializeAsString());
     }
 }

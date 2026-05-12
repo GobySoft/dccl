@@ -28,9 +28,16 @@
 
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.load<MinLengthMsg>();
@@ -53,7 +60,7 @@ int main(int /*argc*/, char* /*argv*/[])
         codec.decode(encoded, &msg_out);
 
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-        std::cout << "Round-trip with fields at/above min_length: passed" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Round-trip with fields at/above min_length: passed" << std::endl;
     }
 
     // --- Verify bit savings: a field with min_length reduces prefix size ---
@@ -68,7 +75,7 @@ int main(int /*argc*/, char* /*argv*/[])
         // max_size for str_field (optional, presence=1, prefix_size=ceil_log2(10-3+1)=3): 1+3+10*8=84 bits
         // total max_size = 8 + 83 + 68 + 84 = 235 bits = 31 bytes (rounded up)
         assert(codec.max_size<MinLengthMsg>() == 31);
-        std::cout << "max_size check: passed (31 bytes)" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "max_size check: passed (31 bytes)" << std::endl;
     }
 
     // --- Length less than min_length ---
@@ -83,14 +90,14 @@ int main(int /*argc*/, char* /*argv*/[])
         MinLengthMsg msg_out;
         codec.decode(encoded, &msg_out);
 
-        std::cout << "msg_in: " << msg_in.ShortDebugString() << std::endl;
-        std::cout << "msg_out: " << msg_out.ShortDebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "msg_in: " << msg_in.ShortDebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "msg_out: " << msg_out.ShortDebugString() << std::endl;
 
         // expect padding to zero
         msg_in.set_req_bytes(dccl::hex_decode("aabbcc00"));
 
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-        std::cout << "Round-trip with fields below min_length: passed" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Round-trip with fields below min_length: passed" << std::endl;
     }
 
     // --- Optional bytes absent ---
@@ -108,7 +115,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
         assert(!msg_out.has_opt_bytes());
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
-        std::cout << "Optional bytes absent: passed" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Optional bytes absent: passed" << std::endl;
     }
 
     // --- Fixed-size bytes (min_length == max_length) ---
@@ -131,7 +138,7 @@ int main(int /*argc*/, char* /*argv*/[])
         // prefix_size = ceil_log2(5-5+1) = ceil_log2(1) = 0 bits
         // max_size = 8 + 0 + 5*8 = 40 bits = 6 bytes
         assert(codec.max_size<FixedLengthMsg>() == 6);
-        std::cout << "Fixed-size bytes (min_length == max_length): passed" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Fixed-size bytes (min_length == max_length): passed" << std::endl;
     }
 
     // --- Invalid: min_length > max_length should throw on load ---
@@ -143,11 +150,11 @@ int main(int /*argc*/, char* /*argv*/[])
         }
         catch (const dccl::Exception& e)
         {
-            std::cout << "Invalid min_length > max_length correctly rejected: " << e.what()
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Invalid min_length > max_length correctly rejected: " << e.what()
                       << std::endl;
         }
     }
 
-    std::cout << "All tests passed." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "All tests passed." << std::endl;
     return 0;
 }

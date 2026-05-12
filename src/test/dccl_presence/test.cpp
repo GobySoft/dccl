@@ -30,9 +30,16 @@ using namespace dccl::test;
 void test1(dccl::Codec&);
 void test2(dccl::Codec&);
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.load<PresenceMsg>();
@@ -40,7 +47,7 @@ int main(int /*argc*/, char* /*argv*/[])
     test1(codec);
     test2(codec);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 // optional fields all left empty
@@ -83,7 +90,7 @@ void test1(dccl::Codec& codec)
     assert(msg_out.repeat_i32_size() == 0);
     assert(msg_out.repeat_enum_size() == 0);
 
-    std::cout << "test1 passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test1 passed" << std::endl;
 }
 
 // all fields populated
@@ -154,5 +161,5 @@ void test2(dccl::Codec& codec)
     assert(std::equal(msg_in.repeat_enum().begin(), msg_in.repeat_enum().end(),
                       msg_out.repeat_enum().begin()));
 
-    std::cout << "test2 passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test2 passed" << std::endl;
 }

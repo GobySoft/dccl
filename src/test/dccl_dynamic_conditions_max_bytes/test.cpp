@@ -47,17 +47,17 @@ void test_wifi_ok()
     for (int i = 0; i < 5; ++i)
         msg.add_data(i * 1000);
 
-    std::cout << "test_wifi_ok: encoding..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_wifi_ok: encoding..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg);
-    std::cout << "  encoded size: " << bytes.size() << " bytes" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "  encoded size: " << bytes.size() << " bytes" << std::endl;
     assert(bytes.size() <= 200);
 
     TestMaxBytes msg_out;
     codec.decode(bytes, &msg_out);
 
     assert(msg.SerializeAsString() == msg_out.SerializeAsString());
-    std::cout << "test_wifi_ok: passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_wifi_ok: passed" << std::endl;
 }
 
 // Test that a message with channel=ACOUSTIC (limit 10 bytes) encodes OK
@@ -70,17 +70,17 @@ void test_acoustic_ok()
     msg.set_channel(TestMaxBytes::ACOUSTIC);
     // No extra data - just the channel field - should be tiny
 
-    std::cout << "test_acoustic_ok: encoding..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_acoustic_ok: encoding..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg);
-    std::cout << "  encoded size: " << bytes.size() << " bytes" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "  encoded size: " << bytes.size() << " bytes" << std::endl;
     assert(bytes.size() <= 10);
 
     TestMaxBytes msg_out;
     codec.decode(bytes, &msg_out);
 
     assert(msg.SerializeAsString() == msg_out.SerializeAsString());
-    std::cout << "test_acoustic_ok: passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_acoustic_ok: passed" << std::endl;
 }
 
 // Test that a message with channel=ACOUSTIC (limit 10 bytes) throws when
@@ -95,7 +95,7 @@ void test_acoustic_too_large()
     for (int i = 0; i < 15; ++i)
         msg.add_data(i * 1000);
 
-    std::cout << "test_acoustic_too_large: encoding (should throw)..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_acoustic_too_large: encoding (should throw)..." << std::endl;
     std::string bytes;
     bool threw = false;
     try
@@ -105,20 +105,27 @@ void test_acoustic_too_large()
     catch (const dccl::Exception& e)
     {
         threw = true;
-        std::cout << "  caught expected exception: " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "  caught expected exception: " << e.what() << std::endl;
     }
     assert(threw && "Expected exception when encoding message exceeding dynamic max_bytes");
-    std::cout << "test_acoustic_too_large: passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_acoustic_too_large: passed" << std::endl;
 }
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     test_wifi_ok();
     test_acoustic_ok();
     test_acoustic_too_large();
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
     return 0;
 }

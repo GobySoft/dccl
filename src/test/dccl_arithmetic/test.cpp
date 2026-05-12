@@ -24,7 +24,6 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests arithmetic encoder
 
-
 #include "../../arithmetic/field_codec_arithmetic.h"
 #include "../../codec.h"
 
@@ -32,7 +31,6 @@
 
 #include "../../binary.h"
 using namespace dccl::test::arith;
-
 
 void run_test(dccl::arith::protobuf::ArithmeticModel& model,
               const google::protobuf::Message& msg_in, bool set_model = true)
@@ -58,35 +56,51 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
         dccl::arith::ModelManager::set_model(codec, model);
     }
 
-    codec.info(msg_in.GetDescriptor(), &std::cout);
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info(msg_in.GetDescriptor(), &dccl::dlog);
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n"
+                                                    << msg_in.DebugString() << std::endl;
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) &&
+        dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     std::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
     codec.decode(bytes, msg_out.get());
 
-    std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n"
+                                                    << msg_out->DebugString() << std::endl;
 
     assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
     ++i;
 }
 
-// usage: dccl_test10 [boolean: verbose]
+// usage: dccl_test10 [-v | 1]
 int main(int argc, char* argv[])
 {
-    if (argc > 1 && std::string(argv[1]) == "1")
+    bool verbose = false;
+    bool legacy_verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+        else if (argv[i] && std::string(argv[i]) == "1")
+            legacy_verbose = true;
+    }
+
+    if (verbose)
+        dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    else if (legacy_verbose)
         dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
-        dccl::dlog.connect(dccl::logger::DEBUG2_PLUS, &std::cerr);
+        dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
 
@@ -323,18 +337,20 @@ int main(int argc, char* argv[])
         dccl::int32 low = -(rand() % std::numeric_limits<dccl::int32>::max());
         dccl::int32 high = rand() % std::numeric_limits<dccl::int32>::max();
 
-        std::cout << "low: " << low << ", high: " << high << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "low: " << low << ", high: " << high
+                                                        << std::endl;
 
         // number of symbols
         dccl::int32 symbols = rand() % 1000 + 10;
 
-        std::cout << "symbols: " << symbols << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "symbols: " << symbols << std::endl;
 
         // maximum freq
         dccl::arith::Model::freq_type each_max_freq =
             dccl::arith::Model::MAX_FREQUENCY / (symbols + 2);
 
-        std::cout << "each_max_freq: " << each_max_freq << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "each_max_freq: " << each_max_freq
+                                                        << std::endl;
 
         model.set_eof_frequency(rand() % each_max_freq + 1);
         model.set_out_of_range_frequency(rand() % each_max_freq + 1);
@@ -343,7 +359,7 @@ int main(int argc, char* argv[])
         model.add_frequency(rand() % each_max_freq + 1);
         for (int j = 1; j < symbols; ++j)
         {
-            //            std::cout << "j: " << j << std::endl;
+            //            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "j: " << j << std::endl;
 
             dccl::int32 remaining_range = high - model.value_bound(j - 1);
             model.add_value_bound(model.value_bound(j - 1) +
@@ -359,8 +375,8 @@ int main(int argc, char* argv[])
 
         run_test(model, msg_in);
 
-        std::cout << "end random test #" << i << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "end random test #" << i << std::endl;
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

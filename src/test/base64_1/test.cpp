@@ -27,16 +27,27 @@
 
 #include "../../binary.h"
 
-int main()
+#include "dccl/logger.h"
+
+int main(int argc, char* argv[])
 {
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
     // Basic encode/decode round-trip
     {
         std::string original = "Hello, World!";
         std::string encoded = dccl::b64_encode(original);
         std::string decoded = dccl::b64_decode(encoded);
-        std::cout << "original: " << original << std::endl;
-        std::cout << "encoded:  " << encoded << std::endl;
-        std::cout << "decoded:  " << decoded << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "original: " << original << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "encoded:  " << encoded << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "decoded:  " << decoded << std::endl;
         assert(encoded == "SGVsbG8sIFdvcmxkIQ==");
         assert(decoded == original);
     }
@@ -79,7 +90,7 @@ int main()
         assert(decoded == long_data);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 
     return 0;
 }

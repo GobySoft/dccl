@@ -53,16 +53,23 @@ template <typename N> void check_normal_dccl(dccl::Codec& codec)
 
     std::string encoded;
     codec.encode(&encoded, normal_msg);
-    std::cout << dccl::hex_encode(encoded) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << dccl::hex_encode(encoded) << std::endl;
     assert(dccl::hex_encode(encoded).substr(0, 2) == "20");
     codec.decode(encoded, &normal_msg_out);
 
     assert(normal_msg.SerializeAsString() == normal_msg_out.SerializeAsString());
 }
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec("dccl.ccl.id", DCCL_CCL_COMPAT_NAME);
 
@@ -127,18 +134,18 @@ int main(int /*argc*/, char* /*argv*/ [])
     dccl::legacyccl::protobuf::CCLMDATState state_out_2;
     codec.decode(state_encoded, &state_out_2);
 
-    std::cout << "in:" << state_in << std::endl;
-    std::cout << test_state_encoded << std::endl;
-    std::cout << dccl::hex_encode(state_encoded) << std::endl;
-    std::cout << std::setprecision(16) << state_out.lon_goal() << std::endl;
-    std::cout << "out:" << state_out << std::endl;
-    std::cout << "out2: " << state_out_2 << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "in:" << state_in << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << test_state_encoded << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << dccl::hex_encode(state_encoded) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << std::setprecision(16) << state_out.lon_goal() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "out:" << state_out << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "out2: " << state_out_2 << std::endl;
 
     assert(state_out.SerializeAsString() == state_out_2.SerializeAsString());
     assert(test_state_encoded == dccl::hex_encode(state_encoded));
 
-    std::cout << dccl::hex_encode(state_out.faults()) << std::endl;
-    std::cout << dccl::hex_encode(state_out.faults_2()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << dccl::hex_encode(state_out.faults()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << dccl::hex_encode(state_out.faults_2()) << std::endl;
 
     codec.info<dccl::legacyccl::protobuf::CCLMDATRedirect>(&dccl::dlog);
 
@@ -181,11 +188,11 @@ int main(int /*argc*/, char* /*argv*/ [])
     dccl::legacyccl::protobuf::CCLMDATRedirect redirect_out_2;
     codec.decode(redirect_encoded, &redirect_out_2);
 
-    std::cout << "in:" << redirect_in << std::endl;
-    std::cout << test_redirect_encoded << std::endl;
-    std::cout << dccl::hex_encode(redirect_encoded) << std::endl;
-    std::cout << "out:" << redirect_out << std::endl;
-    std::cout << "out2: " << redirect_out_2 << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "in:" << redirect_in << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << test_redirect_encoded << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << dccl::hex_encode(redirect_encoded) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "out:" << redirect_out << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "out2: " << redirect_out_2 << std::endl;
 
     assert(redirect_out.SerializeAsString() == redirect_out_2.SerializeAsString());
     assert(test_redirect_encoded == dccl::hex_encode(redirect_encoded));
@@ -196,5 +203,5 @@ int main(int /*argc*/, char* /*argv*/ [])
     codec.info<dccl::legacyccl::protobuf::CCLMDATError>(&dccl::dlog);
     codec.info<dccl::legacyccl::protobuf::CCLMDATCommand>(&dccl::dlog);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

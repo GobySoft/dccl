@@ -26,18 +26,35 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/text_format.h>
 #include <iostream>
+#include "dccl/logger.h"
 
 #include "test_a.pb.h"
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
+    bool verbose = false;
+    const char* lib_path = nullptr;
+    for (int i = 1; i < argc; ++i)
     {
-        std::cerr << "Usage: " << argv[0] << " /path/to/libtest_dyn_protobuf" << std::endl;
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+        {
+            verbose = true;
+        }
+        else if (!lib_path)
+        {
+            lib_path = argv[i];
+        }
+    }
+
+    if (!lib_path)
+    {
+        std::cerr << "Usage: " << argv[0] << " [-v] /path/to/libtest_dyn_protobuf" << std::endl;
         exit(1);
     }
 
-    void* dl_handle = dlopen(argv[1], RTLD_LAZY);
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
+    void* dl_handle = dlopen(lib_path, RTLD_LAZY);
 
     if (!dl_handle)
     {
@@ -55,13 +72,13 @@ int main(int argc, char* argv[])
         std::shared_ptr<google::protobuf::Message> adyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("A");
 
-        std::cout << adyn_msg->GetDescriptor()->DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << adyn_msg->GetDescriptor()->DebugString() << std::endl;
 
         // testing dlopen'd
         std::shared_ptr<google::protobuf::Message> bdyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("B");
 
-        std::cout << bdyn_msg->GetDescriptor()->DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << bdyn_msg->GetDescriptor()->DebugString() << std::endl;
 
         // test non-existent
         try
@@ -69,7 +86,7 @@ int main(int argc, char* argv[])
             std::shared_ptr<google::protobuf::Message> cdyn_msg =
                 dccl::DynamicProtobufManager::new_protobuf_message("C");
             // should throw / avoid static analyzer error here
-            std::cout << cdyn_msg->GetDescriptor()->DebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << cdyn_msg->GetDescriptor()->DebugString() << std::endl;
             assert(false);
         }
         catch (std::exception& e)
@@ -89,7 +106,7 @@ int main(int argc, char* argv[])
         std::shared_ptr<google::protobuf::Message> ddyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("D");
 
-        std::cout << ddyn_msg->GetDescriptor()->DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << ddyn_msg->GetDescriptor()->DebugString() << std::endl;
 
         // test dynamically via separate database
         google::protobuf::FileDescriptorProto e_proto;
@@ -103,9 +120,9 @@ int main(int argc, char* argv[])
 
         std::shared_ptr<google::protobuf::Message> edyn_msg =
             dccl::DynamicProtobufManager::new_protobuf_message("E");
-        std::cout << edyn_msg->GetDescriptor()->DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << edyn_msg->GetDescriptor()->DebugString() << std::endl;
 
-        std::cout << "all tests passed" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
     }
 
     dccl::DynamicProtobufManager::protobuf_shutdown();

@@ -97,9 +97,16 @@ struct UserCustomIdRAII
 bool dccl::test::UserCustomIdCodec::user_id_set = false;
 dccl::uint32 dccl::test::UserCustomIdCodec::user_id = 0;
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     {
         dccl::Codec codec("user_id_codec", dccl::test::UserCustomIdCodec());
@@ -151,39 +158,39 @@ int main(int /*argc*/, char* /*argv*/ [])
             dccl::test::UserCustomIdRAII scoped_user_id(1);
             std::string bytes;
 
-            std::cout << "A1: " << a1.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A1: " << a1.ShortDebugString() << std::endl;
             assert(codec.size(a1) == byte_size_user_specified);
             codec.encode(&bytes, a1);
             assert(bytes.size() == byte_size_user_specified);
             TestMessageA a1_out;
             codec.decode(bytes, &a1_out);
-            std::cout << "A1 decoded: " << a1_out.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A1 decoded: " << a1_out.ShortDebugString() << std::endl;
             assert(a1_out.SerializeAsString() == a1.SerializeAsString());
         }
 
         {
             dccl::test::UserCustomIdRAII scoped_user_id(2);
             std::string bytes;
-            std::cout << "A2: " << a2.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A2: " << a2.ShortDebugString() << std::endl;
             assert(codec.size(a2) == byte_size_user_specified);
             codec.encode(&bytes, a2);
             assert(bytes.size() == byte_size_user_specified);
             TestMessageA a2_out;
             codec.decode(bytes, &a2_out);
-            std::cout << "A2 decoded: " << a2_out.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A2 decoded: " << a2_out.ShortDebugString() << std::endl;
             assert(a2_out.SerializeAsString() == a2.SerializeAsString());
         }
 
         {
             dccl::test::UserCustomIdRAII scoped_user_id(3);
             std::string bytes;
-            std::cout << "B: " << b.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "B: " << b.ShortDebugString() << std::endl;
             assert(codec.size(b) == byte_size_user_specified);
             codec.encode(&bytes, b);
             assert(bytes.size() == byte_size_user_specified);
             TestMessageA b_out;
             codec.decode(bytes, &b_out);
-            std::cout << "B decoded: " << b_out.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "B decoded: " << b_out.ShortDebugString() << std::endl;
             assert(b_out.SerializeAsString() == b.SerializeAsString());
         }
 
@@ -191,16 +198,16 @@ int main(int /*argc*/, char* /*argv*/ [])
         {
             std::string bytes;
 
-            std::cout << "A Default: " << a_default.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A Default: " << a_default.ShortDebugString() << std::endl;
             assert(codec.size(a_default) == byte_size_default);
             codec.encode(&bytes, a_default);
             assert(bytes.size() == byte_size_default);
             TestMessageA a_default_out;
             codec.decode(bytes, &a_default_out);
-            std::cout << "A Default decoded: " << a_default_out.ShortDebugString() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "A Default decoded: " << a_default_out.ShortDebugString() << std::endl;
             assert(a_default_out.SerializeAsString() == a_default.SerializeAsString());
         }
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

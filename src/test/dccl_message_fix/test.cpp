@@ -34,32 +34,42 @@
 
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
     // check the empty messages
     dccl::Codec codec;
 
-    codec.info<TestMsg>(&std::cout);
+    if (dccl::dlog.is(dccl::logger::INFO))
+    {
+        codec.info<TestMsg>(&dccl::dlog);
+    }
     codec.load<TestMsg>();
 
     {
         TestMsg msg_in, msg_out;
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
         codec.load(msg_in.GetDescriptor());
 
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
         codec.decode(bytes, &msg_out);
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
         assert(!msg_out.has_msg1());
         assert(!msg_out.msg1_repeat_size());
@@ -81,18 +91,18 @@ int main(int /*argc*/, char* /*argv*/ [])
         msg_in.add_msg2_repeat()->set_val(0.22);
         msg_in.add_msg2_repeat()->set_val(0.23);
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
         codec.decode(bytes, &msg_out);
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
         assert(msg_out.has_msg1());
         assert(msg_out.msg1_repeat_size() == 3);
@@ -107,23 +117,23 @@ int main(int /*argc*/, char* /*argv*/ [])
 
         msg_in.mutable_msg1();
         msg_in.mutable_msg2()->set_val(1);
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
         codec.decode(bytes, &msg_out);
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
         assert(msg_out.has_msg1());
         assert(msg_out.has_msg2());
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

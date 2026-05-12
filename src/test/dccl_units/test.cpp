@@ -24,6 +24,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "dccl/logger.h"
+
 #include "auv_status.pb.h"
 #include "test.pb.h"
 #include <boost/units/base_units/metric/bar.hpp>
@@ -40,8 +42,17 @@
 
 #include "dccl/units/conductivity.h"
 
-int main()
+int main(int argc, char* argv[])
 {
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
     CTDTestMessage test_msg;
 
     using namespace boost::units;
@@ -58,10 +69,10 @@ int main()
     using Kelvin =
         boost::units::unit<boost::units::temperature_dimension, boost::units::si::system>;
     quantity<absolute<Kelvin>> temp(15 * absolute<celsius::temperature>());
-    std::cout << temp << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << temp << std::endl;
 
     double temp_d = (temp - quantity<absolute<Kelvin>>(0 * absolute<Kelvin>())) / Kelvin();
-    std::cout << temp_d << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << temp_d << std::endl;
 
     test_msg.set_temperature_with_units(15 * absolute<fahrenheit::temperature>());
     test_msg.set_micro_temp_with_units(15 * Kelvin());
@@ -73,22 +84,22 @@ int main()
     test_msg.set_depth_with_units(100 * si::meters);
     quantity<si::velocity> auv_spd(2.5 * si::meters_per_second);
     test_msg.set_auv_speed_with_units(auv_spd);
-    std::cout << "auv_spd: " << auv_spd << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "auv_spd: " << auv_spd << std::endl;
 
     test_msg.set_conductivity_with_units(45.0 * dccl::units::siemens_per_m);
 
     test_msg.set_salinity_with_units(38.9 * si::dimensionless());
 
-    std::cout << test_msg.DebugString() << std::endl; //outputs protobuf debug string
-    std::cout << "Temperature: " << test_msg.temperature_with_units() << std::endl;
-    std::cout << "Micro temperature: " << test_msg.micro_temp_with_units() << std::endl;
-    std::cout << std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units()
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << test_msg.DebugString() << std::endl; //outputs protobuf debug string
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Temperature: " << test_msg.temperature_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Micro temperature: " << test_msg.micro_temp_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << std::setprecision(10) << "Pressure: " << test_msg.pressure_with_units()
               << std::endl;
-    std::cout << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units())
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Pressure (as bars): " << quantity<Bar>(test_msg.pressure_with_units())
               << std::endl;
-    std::cout << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
-    std::cout << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
-    std::cout << "Salinity: " << test_msg.salinity_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Sound speed: " << test_msg.sound_speed_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "AUV speed: " << test_msg.auv_speed_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Salinity: " << test_msg.salinity_with_units() << std::endl;
 
     assert(test_msg.conductivity() == 450000); // uS/cm
 
@@ -102,17 +113,17 @@ int main()
     // Test angular velocity: set in rad/s (SI), read back as rad/s
     status.set_angular_velocity_with_units(1.0 * si::radians_per_second);
     assert(std::abs(status.angular_velocity() - 1.0) < 1e-3);
-    std::cout << "Angular velocity: " << status.angular_velocity_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Angular velocity: " << status.angular_velocity_with_units() << std::endl;
 
     using NauticalMile = metric::nautical_mile_base_unit::unit_type;
     quantity<NauticalMile> x_nm(status.x_with_units());
     quantity<NauticalMile> y_nm(status.y_with_units());
 
-    std::cout << status.DebugString() << std::endl;
-    std::cout << x_nm << std::endl;
-    std::cout << y_nm << std::endl;
-    std::cout << status.heading_with_units() << std::endl;
-    std::cout << status.heading_rate_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << status.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << x_nm << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << y_nm << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << status.heading_with_units() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << status.heading_rate_with_units() << std::endl;
 
     assert(status.heading_rate() > 9.9999 && status.heading_rate() < 10.0001); 
 
@@ -125,5 +136,5 @@ int main()
     assert(p.si_mass() == 10);         // kilograms
     assert(p.child().length() == 500); // centimeters
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

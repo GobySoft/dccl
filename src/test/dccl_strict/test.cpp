@@ -33,9 +33,16 @@ using namespace dccl::test;
 void decode_check(const TestMsg& msg_in);
 dccl::Codec codec;
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     codec.info<TestMsg>();
     codec.load<TestMsg>();
@@ -72,7 +79,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("d"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // int out of range
@@ -91,7 +98,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("i"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // string (version 2) out of range
@@ -110,7 +117,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("s2"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // string (version 3) out of range
@@ -129,7 +136,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("s"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // bytes out of range
@@ -148,7 +155,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("b"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // var bytes out of range
@@ -167,7 +174,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("vb"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // repeat size out of range
@@ -188,7 +195,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     catch (dccl::OutOfRangeException& e)
     {
         assert(e.field() == TestMsg::descriptor()->FindFieldByName("ri"));
-        std::cout << "Caught (as expected) " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught (as expected) " << e.what() << std::endl;
     }
 
     // disable strict mode
@@ -288,22 +295,22 @@ int main(int /*argc*/, char* /*argv*/ [])
         decode_check(msg_in);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 void decode_check(const TestMsg& msg_in)
 {
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
-    std::cout << "Try encode (in bounds)..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode (in bounds)..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     TestMsg msg_out;
     codec.decode(bytes, &msg_out);
 
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 }
