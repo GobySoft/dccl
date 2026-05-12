@@ -82,7 +82,7 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
     ++i;
 }
 
-// usage: dccl_test10 [-v] [boolean: verbose]
+// usage: dccl_test10 [-v | 1]
 int main(int argc, char* argv[])
 {
     bool verbose = false;
