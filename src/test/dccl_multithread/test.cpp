@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
             verbose = true;
     }
 
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
     {
         std::thread t1([]() { run(1, 100); });
         std::thread t2([]() { run(2, 100); });
@@ -94,7 +96,6 @@ int main(int argc, char* argv[])
         t10.join();
     }
 
-    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
     {
         std::thread t1([]() { run(1, 10); });
         std::thread t2([]() { run(2, 10); });
