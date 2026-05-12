@@ -43,19 +43,19 @@ void arithmetic_run_test(dccl::Codec& codec, dccl::arith::protobuf::ArithmeticMo
     codec.load(msg_in.GetDescriptor());
     codec.info(msg_in.GetDescriptor());
 
-    //    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    //    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
-    //    std::cout << "Try encode..." << std::endl;
+    //    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    //    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    //    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    //    std::cout << "Try decode..." << std::endl;
+    //    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     std::shared_ptr<google::protobuf::Message> msg_out(msg_in.New());
     codec.decode(bytes, msg_out.get());
 
-    //    std::cout << "... got Message out:\n" << msg_out->DebugString() << std::endl;
+    //    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out->DebugString() << std::endl;
 
     assert(msg_in.SerializeAsString() == msg_out->SerializeAsString());
 }
@@ -111,7 +111,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         t10.join();
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 void run(int thread, int num_iterations)
@@ -121,7 +121,7 @@ void run(int thread, int num_iterations)
     codec.load<TestMsg>();
     for (int m = 0; m < num_iterations; ++m)
     {
-        std::cout << "Thread " << thread << ", it: " << m << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Thread " << thread << ", it: " << m << std::endl;
         codec.info<TestMsg>();
         TestMsg msg_in;
         int i = 0;
@@ -240,7 +240,7 @@ void decode_check(dccl::Codec& codec, const std::string& encoded, TestMsg msg_in
     TestMsg msg_out;
     codec.decode(encoded, &msg_out);
 
-    // std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    // dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     // truncate to "max_length" as codec should do
     msg_in.set_string_default_repeat(0, "abc1");

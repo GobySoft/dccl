@@ -44,7 +44,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "** Note: this error is expected during proper execution of this unit test "
                      "**: Field a failed validation: "
                      "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a "
                      "double-precision floating point value. Please increase min, decrease max, or "
@@ -87,12 +87,12 @@ int main(int /*argc*/, char* /*argv*/ [])
         codec.encode(&enc, msg_in_neg);
         codec.decode(enc, &msg_out_neg);
 
-        std::cout << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
-        std::cout << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "msg_in: " << msg_in_neg.ShortDebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "msg_out: " << msg_out_neg.ShortDebugString() << std::endl;
 
         assert(msg_out_neg.a() == test_value[1]);
         assert(msg_out_neg.b() == test_value[3]);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

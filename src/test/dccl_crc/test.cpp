@@ -42,7 +42,7 @@ int main(int /*argc*/, char* /*argv*/[])
     // Test CRC-16
     //
     {
-        std::cout << "=== Testing CRC-16 ===" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "=== Testing CRC-16 ===" << std::endl;
         codec.load<TestCRC16>();
         codec.info<TestCRC16>(&std::cout);
 
@@ -51,13 +51,13 @@ int main(int /*argc*/, char* /*argv*/[])
         msg_in.set_y(-5678);
         msg_in.set_crc(0); // dummy value - overwritten by dccl.crc16 codec
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-        std::cout << "Encoding..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Encoding..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "Encoded (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Encoded (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Decoding..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Decoding..." << std::endl;
         try
         {
             codec.decode(bytes, &msg_out);
@@ -67,7 +67,7 @@ int main(int /*argc*/, char* /*argv*/[])
             std::cerr << "UNEXPECTED exception during decode: " << e.what() << std::endl;
             assert(false);
         }
-        std::cout << "Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message out:\n" << msg_out.DebugString() << std::endl;
 
         assert(msg_out.x() == msg_in.x());
         assert(msg_out.y() == msg_in.y());
@@ -88,18 +88,18 @@ int main(int /*argc*/, char* /*argv*/[])
         }
         catch (const std::exception& e)
         {
-            std::cout << "Caught expected exception for corrupt CRC-16: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception for corrupt CRC-16: " << e.what() << std::endl;
         }
 
         codec.unload<TestCRC16>();
-        std::cout << "CRC-16 tests passed!" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "CRC-16 tests passed!" << std::endl;
     }
 
     //
     // Test CRC-32
     //
     {
-        std::cout << "\n=== Testing CRC-32 ===" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "\n=== Testing CRC-32 ===" << std::endl;
         codec.load<TestCRC32>();
         codec.info<TestCRC32>(&std::cout);
 
@@ -108,15 +108,15 @@ int main(int /*argc*/, char* /*argv*/[])
         msg_in.set_y(-9999);
         msg_in.set_crc(0); // dummy value - overwritten by dccl.crc32 codec
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-        std::cout << "Encoding..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Encoding..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "Encoded (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Encoded (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Decoding..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Decoding..." << std::endl;
         codec.decode(bytes, &msg_out);
-        std::cout << "Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message out:\n" << msg_out.DebugString() << std::endl;
 
         assert(msg_out.x() == msg_in.x());
         assert(msg_out.y() == msg_in.y());
@@ -134,18 +134,18 @@ int main(int /*argc*/, char* /*argv*/[])
         }
         catch (const std::exception& e)
         {
-            std::cout << "Caught expected exception for corrupt CRC-32: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception for corrupt CRC-32: " << e.what() << std::endl;
         }
 
         codec.unload<TestCRC32>();
-        std::cout << "CRC-32 tests passed!" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "CRC-32 tests passed!" << std::endl;
     }
 
     //
     // Test encoding twice gives same result (CRC is deterministic)
     //
     {
-        std::cout << "\n=== Testing CRC-16 determinism ===" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "\n=== Testing CRC-16 determinism ===" << std::endl;
         codec.load<TestCRC16>();
 
         TestCRC16 msg;
@@ -157,7 +157,7 @@ int main(int /*argc*/, char* /*argv*/[])
         codec.encode(&bytes1, msg);
         codec.encode(&bytes2, msg);
         assert(bytes1 == bytes2);
-        std::cout << "CRC is deterministic." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "CRC is deterministic." << std::endl;
 
         // Test different field values give different CRC
         TestCRC16 msg2;
@@ -167,12 +167,12 @@ int main(int /*argc*/, char* /*argv*/[])
         std::string bytes3;
         codec.encode(&bytes3, msg2);
         assert(bytes3 != bytes1);
-        std::cout << "CRC differs for different data." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "CRC differs for different data." << std::endl;
 
         codec.unload<TestCRC16>();
-        std::cout << "Determinism tests passed!" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Determinism tests passed!" << std::endl;
     }
 
-    std::cout << "\nAll CRC tests passed!" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "\nAll CRC tests passed!" << std::endl;
     return 0;
 }

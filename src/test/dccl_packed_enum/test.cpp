@@ -51,16 +51,16 @@ int main(int /*argc*/, char* /*argv*/ [])
     codec.load(msg_pack.GetDescriptor());
     codec.load(msg_unpack.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes_pack;
     codec.encode(&bytes_pack, msg_pack);
-    std::cout << "... got packed bytes (hex): " << dccl::hex_encode(bytes_pack) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got packed bytes (hex): " << dccl::hex_encode(bytes_pack) << std::endl;
 
     std::string bytes_unpack;
     codec.encode(&bytes_unpack, msg_unpack);
-    std::cout << "... got unpacked bytes (hex): " << dccl::hex_encode(bytes_unpack) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got unpacked bytes (hex): " << dccl::hex_encode(bytes_unpack) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
     TestMsgPack msg_pack_out;
     TestMsgUnpack msg_unpack_out;
 
@@ -68,5 +68,5 @@ int main(int /*argc*/, char* /*argv*/ [])
     codec.decode(bytes_unpack, &msg_unpack_out);
     assert(msg_pack_out.SerializeAsString() == msg_pack.SerializeAsString());
     assert(msg_unpack_out.SerializeAsString() == msg_unpack.SerializeAsString());
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

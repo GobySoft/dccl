@@ -36,17 +36,17 @@ int main()
     unsigned long value = 23;
     Bitset bits(8, value);
     std::string s = bits.to_string();
-    std::cout << bits << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << bits << std::endl;
     assert(s == std::string("00010111"));
 
     // bitshift
     bits <<= 2;
-    std::cout << bits << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << bits << std::endl;
     s = bits.to_string();
     assert(s == std::string("01011100"));
 
     bits >>= 1;
-    std::cout << bits << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << bits << std::endl;
     s = bits.to_string();
     assert(s == std::string("00101110"));
 
@@ -81,23 +81,23 @@ int main()
 
     assert(dccl::hex_encode(bits2.to_byte_string()) == "a702");
     bits2.from_byte_string(dccl::hex_decode("12a502"));
-    std::cout << bits2.size() << ": " << bits2 << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << bits2.size() << ": " << bits2 << std::endl;
     assert(bits2.to_ulong() == 0x02a512);
 
     // get_more_bits;
     {
-        std::cout << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << std::endl;
         Bitset parent(8, 0xD1);
         Bitset child(4, 0, &parent);
 
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
 
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
         assert(child.size() == 8);
         assert(parent.size() == 4);
@@ -107,21 +107,21 @@ int main()
     }
 
     {
-        std::cout << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << std::endl;
         Bitset grandparent(8, 0xD1);
         Bitset parent(8, 0x02, &grandparent);
         Bitset child(4, 0, &parent);
 
-        std::cout << "grandparent: " << grandparent << std::endl;
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "grandparent: " << grandparent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
 
-        std::cout << "grandparent: " << grandparent << std::endl;
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "grandparent: " << grandparent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
         assert(child.size() == 8);
         assert(parent.size() == 4);
@@ -133,21 +133,21 @@ int main()
     }
 
     {
-        std::cout << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << std::endl;
         Bitset grandparent(8, 0xD1);
         Bitset parent(&grandparent);
         Bitset child(4, 0, &parent);
 
-        std::cout << "grandparent: " << grandparent << std::endl;
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "grandparent: " << grandparent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
-        std::cout << "get more bits: 4" << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "get more bits: 4" << std::endl;
         child.get_more_bits(4);
 
-        std::cout << "grandparent: " << grandparent << std::endl;
-        std::cout << "parent: " << parent << std::endl;
-        std::cout << "child: " << child << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "grandparent: " << grandparent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "parent: " << parent << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "child: " << child << std::endl;
 
         assert(child.size() == 8);
         assert(parent.size() == 0);
@@ -158,7 +158,7 @@ int main()
         assert(grandparent.to_ulong() == 0xD);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 
     return 0;
 }

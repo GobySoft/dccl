@@ -65,7 +65,7 @@ int main(int /*argc*/, char* /*argv*/[])
         catch (const dccl::Exception& e)
         {
             // expected
-            std::cout << "Expected exception: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Expected exception: " << e.what() << std::endl;
         }
         try
         {
@@ -75,7 +75,7 @@ int main(int /*argc*/, char* /*argv*/[])
         catch (const dccl::Exception& e)
         {
             // expected
-            std::cout << "Expected exception: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Expected exception: " << e.what() << std::endl;
         }
     }
 
@@ -127,5 +127,5 @@ int main(int /*argc*/, char* /*argv*/[])
         codec.decode(encoded, &short_id_msg_with_data);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

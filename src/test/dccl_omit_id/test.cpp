@@ -34,19 +34,19 @@ dccl::Codec codec;
 
 template <typename TestMsg> void decode_check(const TestMsg& msg_in)
 {
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
-    std::cout << "Try encode (in bounds)..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode (in bounds)..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     TestMsg msg_out;
     codec.decode(bytes, &msg_out);
 
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 }
 
 int main(int /*argc*/, char* /*argv*/[])
@@ -101,9 +101,9 @@ int main(int /*argc*/, char* /*argv*/[])
         }
         catch (const dccl::Exception& e)
         {
-            std::cout << "Caught expected exception: " << e.what() << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception: " << e.what() << std::endl;
         }
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

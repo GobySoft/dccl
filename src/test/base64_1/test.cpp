@@ -34,9 +34,9 @@ int main()
         std::string original = "Hello, World!";
         std::string encoded = dccl::b64_encode(original);
         std::string decoded = dccl::b64_decode(encoded);
-        std::cout << "original: " << original << std::endl;
-        std::cout << "encoded:  " << encoded << std::endl;
-        std::cout << "decoded:  " << decoded << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "original: " << original << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "encoded:  " << encoded << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "decoded:  " << decoded << std::endl;
         assert(encoded == "SGVsbG8sIFdvcmxkIQ==");
         assert(decoded == original);
     }
@@ -79,7 +79,7 @@ int main()
         assert(decoded == long_data);
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 
     return 0;
 }

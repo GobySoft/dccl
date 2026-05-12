@@ -54,7 +54,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     test2();
     // oneof
     test3();
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 void test0()
@@ -111,16 +111,16 @@ void test0()
 
     codec.info(msg_in.GetDescriptor());
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     // b is omitted
     msg_in.clear_b();
@@ -172,16 +172,16 @@ void test1()
 
     codec.info(msg_in.GetDescriptor());
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     msg_in.mutable_d()->erase(msg_in.mutable_d()->begin() + 3);
 
@@ -210,24 +210,24 @@ void test2()
 
     codec.info(msg_in.GetDescriptor());
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
-    std::cout << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
-    std::cout << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
     std::vector<char> bytes(codec.size(msg_in), 0);
 
     int s = codec.size(msg_in);
-    std::cout << "Size: " << s << std::endl;
-    std::cout << "Bytes Size: " << bytes.size() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Size: " << s << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Bytes Size: " << bytes.size() << std::endl;
 
     codec.encode(bytes.data(), bytes.size(), msg_in);
-    std::cout << "... got bytes (hex): "
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): "
               << dccl::hex_encode(std::string(bytes.begin(), bytes.end())) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     decode_check(std::string(bytes.begin(), bytes.end()));
 }
@@ -247,24 +247,24 @@ void test3()
 
     codec.info(msg_in.GetDescriptor());
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
-    std::cout << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
-    std::cout << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Min Size: " << codec.min_size(msg_in.GetDescriptor()) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Max Size: " << codec.max_size(msg_in.GetDescriptor()) << std::endl;
     std::vector<char> bytes(codec.size(msg_in), 0);
 
     int s = codec.size(msg_in);
-    std::cout << "Size: " << s << std::endl;
-    std::cout << "Bytes Size: " << bytes.size() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Size: " << s << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Bytes Size: " << bytes.size() << std::endl;
 
     codec.encode(bytes.data(), bytes.size(), msg_in);
-    std::cout << "... got bytes (hex): "
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): "
               << dccl::hex_encode(std::string(bytes.begin(), bytes.end())) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     // y is omitted
     msg_in.clear_y();
@@ -276,7 +276,7 @@ void decode_check(const std::string& encoded)
     TestMsg msg_out;
     codec.decode(encoded, &msg_out);
 
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 

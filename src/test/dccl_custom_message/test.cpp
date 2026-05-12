@@ -56,8 +56,8 @@ class CustomCodec : public dccl::TypedFixedFieldCodec<CustomMsg>
             Bitset a(A_SIZE, static_cast<unsigned long>(msg.a()));
             Bitset b(B_SIZE, static_cast<unsigned long>(msg.b()));
 
-            std::cout << "a: " << a << std::endl;
-            std::cout << "b: " << b << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "a: " << a << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "b: " << b << std::endl;
 
             a.append(b);
             return a;
@@ -119,7 +119,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
         int repeat_size =
             static_cast<int>(wire_values.size()) > max_repeat() ? max_repeat() : wire_values.size();
 
-        std::cout << "repeat size is " << repeat_size << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "repeat size is " << repeat_size << std::endl;
 
         for (int i = 0, n = repeat_size; i < n; ++i)
         {
@@ -128,8 +128,8 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
             value_bits.append(Bitset(singular_size(), static_cast<unsigned long>(wire_value)));
         }
 
-        std::cout << value_bits << std::endl;
-        std::cout << Bitset(REPEAT_STORAGE_BITS, repeat_size) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << value_bits << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << Bitset(REPEAT_STORAGE_BITS, repeat_size) << std::endl;
         Bitset out(REPEAT_STORAGE_BITS, repeat_size);
         out.append(value_bits);
         return out;
@@ -138,7 +138,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
     std::vector<dccl::int32> decode_repeated(Bitset* bits) override
     {
         int repeat_size = bits->to_ulong();
-        std::cout << "repeat size is " << repeat_size << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "repeat size is " << repeat_size << std::endl;
         // grabs more bits to add to the MSBs of `bits`
         bits->get_more_bits(repeat_size * singular_size());
 
@@ -202,16 +202,16 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in1.set_b(true);
 
     codec.info(msg_in1.GetDescriptor(), &std::cout);
-    std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in1.DebugString() << std::endl;
     codec.load(msg_in1.GetDescriptor());
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes1;
     codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
     std::shared_ptr<google::protobuf::Message> msg_out1 =
         codec.decode<std::shared_ptr<google::protobuf::Message>>(bytes1);
-    std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
 
     CustomMsg2 msg_in2, msg_out2;
@@ -221,16 +221,16 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in2.add_c(2);
 
     codec.info(msg_in2.GetDescriptor(), &std::cout);
-    std::cout << "Message in:\n" << msg_in2.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in2.DebugString() << std::endl;
     codec.load(msg_in2.GetDescriptor());
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes2;
     codec.encode(&bytes2, msg_in2);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes2) << std::endl;
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes2) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
     codec.decode(bytes2, &msg_out2);
-    std::cout << "... got Message out:\n" << msg_out2.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out2.DebugString() << std::endl;
     assert(msg_in2.SerializeAsString() == msg_out2.SerializeAsString());
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

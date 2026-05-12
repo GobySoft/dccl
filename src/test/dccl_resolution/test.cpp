@@ -45,7 +45,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog
             << "** Note: this error is expected during proper execution of this unit test **: "
                "Field a failed validation: (dccl.field).resolution must be greater than 0."
             << std::endl;
@@ -59,7 +59,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "** Note: this error is expected during proper execution of this unit test "
                      "**: Field a failed validation: at most one of either (dccl.field).precision "
                      "or (dccl.field).resolution can be set."
                   << std::endl;
@@ -73,7 +73,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "** Note: this error is expected during proper execution of this unit test "
                      "**: Field a failed validation: "
                      "[(dccl.field).max-(dccl.field).min]/(dccl.field).resolution must fit in a "
                      "double-precision floating point value. Please increase min, decrease max, or "
@@ -89,7 +89,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "** Note: this error is expected during proper execution of this unit test "
                      "**: Field a failed validation: (dccl.field).min must be an exact multiple of "
                      "(dccl.field).resolution."
                   << std::endl;
@@ -103,7 +103,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     }
     catch (dccl::Exception& e)
     {
-        std::cout << "** Note: this error is expected during proper execution of this unit test "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "** Note: this error is expected during proper execution of this unit test "
                      "**: Field a failed validation: (dccl.field).max must be an exact multiple of "
                      "(dccl.field).resolution."
                   << std::endl;
@@ -132,5 +132,5 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in.set_u5(1.92);
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

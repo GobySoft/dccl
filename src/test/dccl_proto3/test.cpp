@@ -58,9 +58,9 @@ void test1(dccl::Codec& codec, dccl::Codec& codec2)
     Proto2Msg msg2_out;
     codec2.decode(encoded, &msg2_out);
     
-    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
-    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
-    std::cout << "Msg2 out: " << msg2_out.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg out: " << msg_out.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg2 out: " << msg2_out.ShortDebugString() << std::endl;
 
     assert(msg_in.req_i32() == msg2_out.req_i32());
     assert(msg_in.req_ui32() == msg2_out.req_ui32());
@@ -102,8 +102,8 @@ void test3(dccl::Codec& codec)
     Proto3Msg msg_out;
     codec.decode(encoded, &msg_out);
 
-    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
-    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg out: " << msg_out.ShortDebugString() << std::endl;
 
     assert(msg_in.req_i32() == msg_out.req_i32());
 
@@ -123,8 +123,8 @@ void test4(dccl::Codec& codec)
     Proto3Msg msg_out;
     codec.decode(encoded, &msg_out);
 
-    std::cout << "Msg in: " << msg_in.ShortDebugString() << std::endl;
-    std::cout << "Msg out: " << msg_out.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg in: " << msg_in.ShortDebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Msg out: " << msg_out.ShortDebugString() << std::endl;
 
     assert(msg_in.req_i32() == msg_out.req_i32());
 }
@@ -145,6 +145,6 @@ int main(int /*argc*/, char* /*argv*/[])
     test3(codec3);
     test4(codec3);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
     return 0;
 }

@@ -53,5 +53,5 @@ int main(int /*argc*/, char* /*argv*/ [])
 
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

@@ -61,7 +61,7 @@ static void test_issue149()
         }
     }
     assert(v4_threw && "issue #149: v4 codec must throw OutOfRangeException for value == max");
-    std::cout << "issue #149: v4 encoding of max boundary value threw OutOfRangeException as expected" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "issue #149: v4 encoding of max boundary value threw OutOfRangeException as expected" << std::endl;
 
     codec.set_strict(false);
 
@@ -82,7 +82,7 @@ static void test_issue149()
         Issue149V5Msg msg_out;
         codec.decode(encoded, &msg_out);
 
-        std::cout << "issue #149: v5 encoding of max boundary value succeeded, decoded = "
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "issue #149: v5 encoding of max boundary value succeeded, decoded = "
                   << msg_out.a() << std::endl;
         assert(std::abs(msg_out.a() - test_val) <= resolution / 2 &&
                "issue #149: v5 decoded value too far from input for max boundary");
@@ -115,7 +115,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
 
         const auto tol = res/2;
-        std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
 
         const auto test_cases = std::array<float, 3>{{0.000001f, 0.010001f, 1.000001f}};
         for (const auto test_case : test_cases) {
@@ -128,7 +128,7 @@ int main(int /*argc*/, char* /*argv*/ [])
             auto msg_out = FloatMsg{};
             codec.decode(encoded, &msg_out);
 
-            std::cout << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
             assert(std::abs(test_case - msg_out.f()) < tol);
         }
     }
@@ -153,7 +153,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         }
 
         const auto tol = res/2;
-        std::cout << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Tolerance for DCCL float = " << res << " / 2 = " << tol << std::endl;
 
         const auto test_cases = std::array<float, 3>{{10.f, -10.f, 1.f}};
         for (const auto test_case : test_cases) {
@@ -166,7 +166,7 @@ int main(int /*argc*/, char* /*argv*/ [])
             auto msg_out = NegativePrecisionFloatMsg{};
             codec.decode(encoded, &msg_out);
 
-            std::cout << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if encoded value " << msg_out.f() << " is close enough to " << test_case << "..." << std::endl;
             assert(std::abs(test_case - msg_out.f()) < tol);
         }
     }
@@ -193,7 +193,7 @@ int main(int /*argc*/, char* /*argv*/ [])
                 resolutions[field_idx] = dccl_ext.resolution();
             }
 
-            std::cout << "Tolerance for DCCL float number " << field_idx << " is " << resolutions[field_idx] << " / 2 = " << resolutions[field_idx]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Tolerance for DCCL float number " << field_idx << " is " << resolutions[field_idx] << " / 2 = " << resolutions[field_idx]/2 << std::endl;
         }
 
         for (auto i = -100; i < 101; ++i) {
@@ -203,7 +203,7 @@ int main(int /*argc*/, char* /*argv*/ [])
             // preserved on the other end.
 
             const auto test_val = 1000000+i;
-            std::cout << "Testing encoding of " << test_val << " on a range of precisions..." << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Testing encoding of " << test_val << " on a range of precisions..." << std::endl;
             auto msg_in = PrecisionRangeFloatMsg{};
             msg_in.set_prec0(test_val * resolutions[0]);
             msg_in.set_prec1(test_val * resolutions[1]);
@@ -226,31 +226,31 @@ int main(int /*argc*/, char* /*argv*/ [])
             const auto diff4 = std::abs(msg_out.prec4() - msg_in.prec4());
             const auto diff5 = std::abs(msg_out.prec5() - msg_in.prec5());
             const auto diff6 = std::abs(msg_out.prec6() - msg_in.prec6());
-            std::cout << "Checking if " << msg_out.prec0() << " is close enough to " << msg_in.prec0() << "...";
-            std::cout << " i.e. Difference " << diff0 << "<=" << resolutions[0]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec0() << " is close enough to " << msg_in.prec0() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff0 << "<=" << resolutions[0]/2 << std::endl;
             assert(diff0 <= resolutions[0]/2);
-            std::cout << "Checking if " << msg_out.prec1() << " is close enough to " << msg_in.prec1() << "...";
-            std::cout << " i.e. Difference " << diff1 << "<=" << resolutions[1]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec1() << " is close enough to " << msg_in.prec1() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff1 << "<=" << resolutions[1]/2 << std::endl;
             assert(diff1 <= resolutions[1]/2);
-            std::cout << "Checking if " << msg_out.prec2() << " is close enough to " << msg_in.prec2() << "...";
-            std::cout << " i.e. Difference " << diff2 << "<=" << resolutions[2]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec2() << " is close enough to " << msg_in.prec2() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff2 << "<=" << resolutions[2]/2 << std::endl;
             assert(diff2 <= resolutions[2]/2);
-            std::cout << "Checking if " << msg_out.prec3() << " is close enough to " << msg_in.prec3() << "...";
-            std::cout << " i.e. Difference " << diff3 << "<=" << resolutions[3]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec3() << " is close enough to " << msg_in.prec3() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff3 << "<=" << resolutions[3]/2 << std::endl;
             assert(diff3 <= resolutions[3]/2);
-            std::cout << "Checking if " << msg_out.prec4() << " is close enough to " << msg_in.prec4() << "...";
-            std::cout << " i.e. Difference " << diff4 << "<=" << resolutions[4]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec4() << " is close enough to " << msg_in.prec4() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff4 << "<=" << resolutions[4]/2 << std::endl;
             assert(diff4 <= resolutions[4]/2);
-            std::cout << "Checking if " << msg_out.prec5() << " is close enough to " << msg_in.prec5() << "...";
-            std::cout << " i.e. Difference " << diff5 << "<=" << resolutions[5]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec5() << " is close enough to " << msg_in.prec5() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff5 << "<=" << resolutions[5]/2 << std::endl;
             assert(diff5 <= resolutions[5]/2);
-            std::cout << "Checking if " << msg_out.prec6() << " is close enough to " << msg_in.prec6() << "...";
-            std::cout << " i.e. Difference " << diff6 << "<=" << resolutions[6]/2 << std::endl;
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking if " << msg_out.prec6() << " is close enough to " << msg_in.prec6() << "...";
+            dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << " i.e. Difference " << diff6 << "<=" << resolutions[6]/2 << std::endl;
             assert(diff6 <= resolutions[6]/2);
         }
     }
 
     test_issue149();
     
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

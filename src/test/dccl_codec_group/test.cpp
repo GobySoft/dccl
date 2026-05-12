@@ -69,7 +69,7 @@ int main(int /*argc*/, char* /*argv*/ [])
     check<TestMsgGroup>(-50, true);
     check<TestMsgV4>(50, true);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 template <typename Msg> void check(double val, bool should_pass)
@@ -85,21 +85,21 @@ template <typename Msg> void check(double val, bool should_pass)
     msg_in.mutable_msg()->mutable_msg()->set_val(val);
     codec.info(msg_in.GetDescriptor(), &std::cout);
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     Msg msg_out;
     codec.decode(bytes, &msg_out);
 
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     if (should_pass)
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());

@@ -124,16 +124,16 @@ int main(int /*argc*/, char* /*argv*/[])
     std::ofstream fout("/tmp/testmessage.pb");
     msg_in.SerializeToOstream(&fout);
 
-    std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());
 
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes;
     codec.encode(&bytes, msg_in);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
     decode_check(bytes);
 
     // make sure DCCL defaults stay wire compatible
@@ -150,7 +150,7 @@ int main(int /*argc*/, char* /*argv*/[])
     for (unsigned i = 0; i < 10; ++i)
     {
         random[(rand() % (bytes.size() - 1) + 1)] = rand() % 256;
-        std::cout << "Using junk bytes: " << dccl::hex_encode(random) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Using junk bytes: " << dccl::hex_encode(random) << std::endl;
 
         try
         {
@@ -172,10 +172,10 @@ int main(int /*argc*/, char* /*argv*/[])
     catch (const dccl::Exception& e)
     {
         // expected long error
-        std::cout << "Expected verbose error encoding empty message: " << e.what() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Expected verbose error encoding empty message: " << e.what() << std::endl;
     }
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 void decode_check(const std::string& encoded)
@@ -183,7 +183,7 @@ void decode_check(const std::string& encoded)
     TestMsg msg_out;
     codec.decode(encoded, &msg_out);
 
-    std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
 
     // truncate to "max_length" as codec should do
     msg_in.set_string_default_repeat(0, "abc1");

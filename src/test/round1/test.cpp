@@ -37,7 +37,7 @@ template <typename Int> bool same(Int a, Int b) { return a == b; }
 
 template <typename T> void check(T in, int prec, T out)
 {
-    std::cout << "Checking that " << in << " rounded to precision: " << prec << " is equal to "
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Checking that " << in << " rounded to precision: " << prec << " is equal to "
               << out << std::endl;
     assert(same(dccl::round(in, prec), out));
 }
@@ -71,7 +71,7 @@ int main()
 
     check<dccl::int64>(1409165969804999ull, -3, 1409165969805000ull);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 
     return 0;
 }

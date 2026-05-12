@@ -53,19 +53,19 @@ int main(int /*argc*/, char* /*argv*/ [])
         msg_in.add_c(21);
         msg_in.add_c(22);
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
-        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << codec.max_size(msg_in.GetDescriptor()) << std::endl;
 
         TestMsg msg_out;
         codec.decode(bytes, &msg_out);
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
@@ -85,21 +85,21 @@ int main(int /*argc*/, char* /*argv*/ [])
         msg_in.add_c(21);
         msg_in.add_c(22);
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
-        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << codec.max_size(msg_in.GetDescriptor()) << std::endl;
 
         TestMsg msg_out;
         codec.decode(bytes, &msg_out);
 
         msg_in.mutable_a()->RemoveLast();
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
@@ -115,14 +115,14 @@ int main(int /*argc*/, char* /*argv*/ [])
         msg_in.add_c(21);
         msg_in.add_c(22);
 
-        std::cout << "Message in:\n" << msg_in.DebugString() << std::endl;
-        std::cout << "Try encode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
         std::string bytes;
         codec.encode(&bytes, msg_in);
-        std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes) << std::endl;
 
-        std::cout << "Try decode..." << std::endl;
-        std::cout << codec.max_size(msg_in.GetDescriptor()) << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << codec.max_size(msg_in.GetDescriptor()) << std::endl;
 
         TestMsg msg_out;
         codec.decode(bytes, &msg_out);
@@ -135,7 +135,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         msg_in.add_b(bmin);
         msg_in.add_b(bmin);
 
-        std::cout << "... got Message out:\n" << msg_out.DebugString() << std::endl;
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out.DebugString() << std::endl;
         assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
     }
 
@@ -172,5 +172,5 @@ int main(int /*argc*/, char* /*argv*/ [])
         // expected
     }
 
-    std::cout << "All tests passed." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "All tests passed." << std::endl;
 }

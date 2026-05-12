@@ -40,7 +40,7 @@ int main(int /*argc*/, char* /*argv*/[])
     test1(codec);
     test2(codec);
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
 
 // optional fields all left empty
@@ -83,7 +83,7 @@ void test1(dccl::Codec& codec)
     assert(msg_out.repeat_i32_size() == 0);
     assert(msg_out.repeat_enum_size() == 0);
 
-    std::cout << "test1 passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test1 passed" << std::endl;
 }
 
 // all fields populated
@@ -154,5 +154,5 @@ void test2(dccl::Codec& codec)
     assert(std::equal(msg_in.repeat_enum().begin(), msg_in.repeat_enum().end(),
                       msg_out.repeat_enum().begin()));
 
-    std::cout << "test2 passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test2 passed" << std::endl;
 }

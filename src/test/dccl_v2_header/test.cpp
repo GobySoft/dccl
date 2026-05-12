@@ -65,22 +65,22 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in1.set_const_int(3);
 
     codec.info(msg_in1.GetDescriptor(), &std::cout);
-    std::cout << "Message in:\n" << msg_in1.DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in1.DebugString() << std::endl;
     codec.load(msg_in1.GetDescriptor());
-    std::cout << "Try encode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
     std::string bytes1;
     codec.encode(&bytes1, msg_in1);
-    std::cout << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got bytes (hex): " << dccl::hex_encode(bytes1) << std::endl;
 
     // test that adding garbage to the end does not affect decoding
     bytes1 += std::string(10, '\0');
 
-    std::cout << "Try decode..." << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try decode..." << std::endl;
 
     auto* msg_out1 = codec.decode<GobyMessage*>(bytes1);
-    std::cout << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
     delete msg_out1;
 
-    std::cout << "all tests passed" << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
