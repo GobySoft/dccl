@@ -129,9 +129,16 @@ void test4(dccl::Codec& codec)
     assert(msg_in.req_i32() == msg_out.req_i32());
 }
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec3;
     dccl::Codec codec2;

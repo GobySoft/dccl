@@ -42,8 +42,17 @@
 
 #include "dccl/units/conductivity.h"
 
-int main()
+int main(int argc, char* argv[])
 {
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
     CTDTestMessage test_msg;
 
     using namespace boost::units;

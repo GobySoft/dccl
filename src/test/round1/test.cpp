@@ -44,8 +44,17 @@ template <typename T> void check(T in, int prec, T out)
     assert(same(dccl::round(in, prec), out));
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
     check(1.234, 2, 1.23);
     check(1.25, 1, 1.3);
     check(1.35, 1, 1.4);

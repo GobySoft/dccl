@@ -82,10 +82,19 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
     ++i;
 }
 
-// usage: dccl_test10 [boolean: verbose]
+// usage: dccl_test10 [-v] [boolean: verbose]
 int main(int argc, char* argv[])
 {
-    if (argc > 1 && std::string(argv[1]) == "1")
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    if (verbose)
+        dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    else if (argc > 1 && std::string(argv[1]) == "1")
         dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
         dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);

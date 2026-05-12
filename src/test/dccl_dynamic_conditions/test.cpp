@@ -46,9 +46,16 @@ void test1();
 void test2();
 void test3();
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
     test0();
     test1();
     test2();

@@ -45,8 +45,8 @@ template <typename BarMsg> void run_test(const std::string& label)
     msg_in.set_bar_body(77);
 
     codec.load(msg_in.GetDescriptor());
-    codec.info(msg_in.GetDescriptor(), &std::cout);
-
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info(msg_in.GetDescriptor(), &dccl::dlog);
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << label << " message in:\n" << msg_in.DebugString() << std::endl;
 
     std::string bytes;
@@ -68,9 +68,16 @@ template <typename BarMsg> void run_test(const std::string& label)
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << label << " passed.\n" << std::endl;
 }
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     run_test<BarV4>("BarV4 (codec_version=4)");
     run_test<BarV5>("BarV5 (codec_version=5)");

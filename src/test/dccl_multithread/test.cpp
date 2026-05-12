@@ -62,8 +62,15 @@ void arithmetic_run_test(dccl::Codec& codec, dccl::arith::protobuf::ArithmeticMo
 
 void decode_check(dccl::Codec& codec, const std::string& encoded, TestMsg msg_in);
 void run(int thread, int num_iterations);
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
     {
         std::thread t1([]() { run(1, 100); });
         std::thread t2([]() { run(2, 100); });
@@ -87,7 +94,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         t10.join();
     }
 
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
     {
         std::thread t1([]() { run(1, 10); });
         std::thread t2([]() { run(2, 10); });

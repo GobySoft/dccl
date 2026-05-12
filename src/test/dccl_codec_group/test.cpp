@@ -54,9 +54,16 @@ class TestCodec : public dccl::v3::DefaultNumericFieldCodec<double>
 } // namespace test
 } // namespace dccl
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    //    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     codec.manager().add<dccl::test::TestCodec>("test.grouptest");
     codec.manager()
@@ -83,8 +90,8 @@ template <typename Msg> void check(double val, bool should_pass)
 
     msg_in.mutable_msg()->set_val(val);
     msg_in.mutable_msg()->mutable_msg()->set_val(val);
-    codec.info(msg_in.GetDescriptor(), &std::cout);
-
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info(msg_in.GetDescriptor(), &dccl::dlog);
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());

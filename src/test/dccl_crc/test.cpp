@@ -32,9 +32,16 @@
 
 using namespace dccl::test;
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
 
@@ -44,7 +51,8 @@ int main(int /*argc*/, char* /*argv*/[])
     {
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "=== Testing CRC-16 ===" << std::endl;
         codec.load<TestCRC16>();
-        codec.info<TestCRC16>(&std::cout);
+        if (dccl::dlog.is(dccl::logger::INFO))
+            codec.info<TestCRC16>(&dccl::dlog);
 
         TestCRC16 msg_in, msg_out;
         msg_in.set_x(1234);
@@ -101,7 +109,8 @@ int main(int /*argc*/, char* /*argv*/[])
     {
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "\n=== Testing CRC-32 ===" << std::endl;
         codec.load<TestCRC32>();
-        codec.info<TestCRC32>(&std::cout);
+        if (dccl::dlog.is(dccl::logger::INFO))
+            codec.info<TestCRC32>(&dccl::dlog);
 
         TestCRC32 msg_in, msg_out;
         msg_in.set_x(9999);

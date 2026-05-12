@@ -32,13 +32,34 @@
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
+    bool verbose = false;
+    const char* lib_path = nullptr;
+    for (int i = 1; i < argc; ++i)
     {
-        std::cerr << "Usage: " << argv[0] << " /path/to/libtest_dyn_protobuf" << std::endl;
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+        {
+            verbose = true;
+        }
+        else if (!lib_path)
+        {
+            lib_path = argv[i];
+        }
+        else
+        {
+            lib_path = nullptr;
+            break;
+        }
+    }
+
+    if (!lib_path)
+    {
+        std::cerr << "Usage: " << argv[0] << " [-v] /path/to/libtest_dyn_protobuf" << std::endl;
         exit(1);
     }
 
-    void* dl_handle = dlopen(argv[1], RTLD_LAZY);
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
+
+    void* dl_handle = dlopen(lib_path, RTLD_LAZY);
 
     if (!dl_handle)
     {

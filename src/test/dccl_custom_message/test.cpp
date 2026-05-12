@@ -186,9 +186,16 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
 } // namespace test
 } // namespace dccl
 
-int main(int /*argc*/, char* /*argv*/ [])
+int main(int argc, char* argv[])
 {
-    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
+    bool verbose = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
+            verbose = true;
+    }
+
+    dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.manager().add<dccl::test::CustomCodec>("custom_codec");
@@ -223,7 +230,8 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in2.add_c(30);
     msg_in2.add_c(2);
 
-    codec.info(msg_in2.GetDescriptor(), &std::cout);
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info(msg_in2.GetDescriptor(), &dccl::dlog);
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in2.DebugString() << std::endl;
     codec.load(msg_in2.GetDescriptor());
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
