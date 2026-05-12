@@ -44,11 +44,6 @@ int main(int argc, char* argv[])
         {
             lib_path = argv[i];
         }
-        else
-        {
-            lib_path = nullptr;
-            break;
-        }
     }
 
     if (!lib_path)

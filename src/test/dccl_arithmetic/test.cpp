@@ -86,15 +86,18 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
 int main(int argc, char* argv[])
 {
     bool verbose = false;
+    bool legacy_verbose = false;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i] && argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == '\0')
             verbose = true;
+        else if (argv[i] && std::string(argv[i]) == "1")
+            legacy_verbose = true;
     }
 
     if (verbose)
         dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
-    else if (argc > 1 && std::string(argv[1]) == "1")
+    else if (legacy_verbose)
         dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
         dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
