@@ -91,7 +91,9 @@ template <typename Msg> void check(double val, bool should_pass)
     msg_in.mutable_msg()->set_val(val);
     msg_in.mutable_msg()->mutable_msg()->set_val(val);
     if (dccl::dlog.is(dccl::logger::INFO))
+    {
         codec.info(msg_in.GetDescriptor(), &dccl::dlog);
+    }
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in.DebugString() << std::endl;
 
     codec.load(msg_in.GetDescriptor());

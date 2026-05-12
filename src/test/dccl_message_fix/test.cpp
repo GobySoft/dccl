@@ -48,7 +48,9 @@ int main(int argc, char* argv[])
     dccl::Codec codec;
 
     if (dccl::dlog.is(dccl::logger::INFO))
+    {
         codec.info<TestMsg>(&dccl::dlog);
+    }
     codec.load<TestMsg>();
 
     {

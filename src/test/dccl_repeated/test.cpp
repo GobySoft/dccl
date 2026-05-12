@@ -69,7 +69,9 @@ int main(int argc, char* argv[])
     for (auto desc : descs)
     {
         if (dccl::dlog.is(dccl::logger::INFO))
+        {
             codec.info(desc, &dccl::dlog);
+        }
         codec.load(desc);
     }
 

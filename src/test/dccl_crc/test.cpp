@@ -52,7 +52,9 @@ int main(int argc, char* argv[])
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "=== Testing CRC-16 ===" << std::endl;
         codec.load<TestCRC16>();
         if (dccl::dlog.is(dccl::logger::INFO))
+        {
             codec.info<TestCRC16>(&dccl::dlog);
+        }
 
         TestCRC16 msg_in, msg_out;
         msg_in.set_x(1234);
@@ -110,7 +112,9 @@ int main(int argc, char* argv[])
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "\n=== Testing CRC-32 ===" << std::endl;
         codec.load<TestCRC32>();
         if (dccl::dlog.is(dccl::logger::INFO))
+        {
             codec.info<TestCRC32>(&dccl::dlog);
+        }
 
         TestCRC32 msg_in, msg_out;
         msg_in.set_x(9999);

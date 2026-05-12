@@ -46,7 +46,9 @@ template <typename BarMsg> void run_test(const std::string& label)
 
     codec.load(msg_in.GetDescriptor());
     if (dccl::dlog.is(dccl::logger::INFO))
+    {
         codec.info(msg_in.GetDescriptor(), &dccl::dlog);
+    }
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << label << " message in:\n" << msg_in.DebugString() << std::endl;
 
     std::string bytes;

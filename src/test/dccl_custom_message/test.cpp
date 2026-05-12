@@ -231,7 +231,9 @@ int main(int argc, char* argv[])
     msg_in2.add_c(2);
 
     if (dccl::dlog.is(dccl::logger::INFO))
+    {
         codec.info(msg_in2.GetDescriptor(), &dccl::dlog);
+    }
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in2.DebugString() << std::endl;
     codec.load(msg_in2.GetDescriptor());
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;
