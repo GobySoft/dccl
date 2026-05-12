@@ -1,5 +1,8 @@
 file(GLOB doxy_body/* DOXY_SRC)
 
+file(MAKE_DIRECTORY ${dccl_SHARE_DIR}/doc)
+
+
 add_custom_command(OUTPUT ${dccl_SHARE_DIR}/doc/dccl-dev.pdf
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/doxy2pdf.sh
   ARGS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${dccl_SHARE_DIR}/doc/dccl-dev.pdf
