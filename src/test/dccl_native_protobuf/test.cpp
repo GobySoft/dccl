@@ -223,7 +223,7 @@ void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);

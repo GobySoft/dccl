@@ -62,7 +62,7 @@ template <typename N> void check_normal_dccl(dccl::Codec& codec)
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec("dccl.ccl.id", DCCL_CCL_COMPAT_NAME);
 

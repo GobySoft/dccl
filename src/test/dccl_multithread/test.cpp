@@ -87,7 +87,7 @@ int main(int /*argc*/, char* /*argv*/ [])
         t10.join();
     }
 
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
     {
         std::thread t1([]() { run(1, 10); });
         std::thread t2([]() { run(2, 10); });

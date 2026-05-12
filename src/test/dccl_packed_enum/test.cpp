@@ -39,7 +39,7 @@ TestMsgUnpack msg_unpack;
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     msg_pack.set_five_bit_padding(0);
     msg_pack.set_value(ENUM2_H);

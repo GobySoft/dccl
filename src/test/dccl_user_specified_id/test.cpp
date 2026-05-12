@@ -99,7 +99,7 @@ dccl::uint32 dccl::test::UserCustomIdCodec::user_id = 0;
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     {
         dccl::Codec codec("user_id_codec", dccl::test::UserCustomIdCodec());

@@ -70,7 +70,7 @@ template <typename BarMsg> void run_test(const std::string& label)
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     run_test<BarV4>("BarV4 (codec_version=4)");
     run_test<BarV5>("BarV5 (codec_version=5)");

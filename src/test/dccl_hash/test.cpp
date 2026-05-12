@@ -62,7 +62,7 @@ template <typename Msg1, typename Msg2> void expect_different()
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     expect_same<TestMsg, TestMsgNoHashableChanges>();
     expect_different<TestMsg, TestMsgNewID>();

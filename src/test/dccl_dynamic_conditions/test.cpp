@@ -48,7 +48,7 @@ void test3();
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
     test0();
     test1();
     test2();

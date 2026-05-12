@@ -131,7 +131,7 @@ void test4(dccl::Codec& codec)
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec3;
     dccl::Codec codec2;

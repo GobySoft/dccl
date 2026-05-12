@@ -188,7 +188,7 @@ class Int32RepeatedCodec : public dccl::RepeatedTypedFieldCodec<dccl::int32>
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
     codec.manager().add<dccl::test::CustomCodec>("custom_codec");

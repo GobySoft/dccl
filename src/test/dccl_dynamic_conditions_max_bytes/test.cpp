@@ -113,7 +113,7 @@ void test_acoustic_too_large()
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     test_wifi_ok();
     test_acoustic_ok();

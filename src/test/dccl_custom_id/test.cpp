@@ -80,7 +80,7 @@ dccl::Bitset dccl::test::MicroModemMiniPacketDCCLIDCodec::encode(const dccl::uin
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     {
         dccl::Codec codec("mini_id_codec", dccl::test::MicroModemMiniPacketDCCLIDCodec());

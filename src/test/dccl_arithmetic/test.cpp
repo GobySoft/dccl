@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     if (argc > 1 && std::string(argv[1]) == "1")
         dccl::dlog.connect(dccl::logger::DEBUG3_PLUS, &std::cerr);
     else
-        dccl::dlog.connect(dccl::logger::DEBUG2_PLUS, &std::cerr);
+        dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     dccl::Codec codec;
 

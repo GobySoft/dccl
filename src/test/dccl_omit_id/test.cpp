@@ -51,7 +51,7 @@ template <typename TestMsg> void decode_check(const TestMsg& msg_in)
 
 int main(int /*argc*/, char* /*argv*/[])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     codec.load<TestMsgOmit1>();
     codec.info<TestMsgOmit1>();

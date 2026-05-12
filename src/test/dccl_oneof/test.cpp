@@ -40,7 +40,7 @@ dccl::native_protobuf::EnumFieldCodec dummy;
 
 int main(int /*argc*/, char* /*argv*/ [])
 {
-    dccl::dlog.connect(dccl::logger::ALL, &std::cerr);
+    dccl::dlog.connect(dccl::logger::WARN_PLUS, &std::cerr);
 
     codec.load_library(DCCL_NATIVE_PROTOBUF_NAME);
 
