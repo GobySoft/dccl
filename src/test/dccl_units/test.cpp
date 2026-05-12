@@ -24,6 +24,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "dccl/logger.h"
+
 #include "auv_status.pb.h"
 #include "test.pb.h"
 #include <boost/units/base_units/metric/bar.hpp>

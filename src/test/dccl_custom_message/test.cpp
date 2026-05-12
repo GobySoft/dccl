@@ -201,7 +201,10 @@ int main(int /*argc*/, char* /*argv*/ [])
     msg_in1.set_a(10);
     msg_in1.set_b(true);
 
-    codec.info(msg_in1.GetDescriptor(), &std::cout);
+    if (dccl::dlog.is(dccl::logger::INFO))
+        codec.info(msg_in1.GetDescriptor(), &dccl::dlog);
+
+    
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Message in:\n" << msg_in1.DebugString() << std::endl;
     codec.load(msg_in1.GetDescriptor());
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Try encode..." << std::endl;

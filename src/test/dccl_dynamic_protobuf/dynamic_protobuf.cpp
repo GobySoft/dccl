@@ -26,6 +26,7 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/text_format.h>
 #include <iostream>
+#include "dccl/logger.h"
 
 #include "test_a.pb.h"
 

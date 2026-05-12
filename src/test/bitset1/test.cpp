@@ -28,6 +28,8 @@
 #include "../../binary.h"
 #include "../../bitset.h"
 
+#include "dccl/logger.h"
+
 using dccl::Bitset;
 
 int main()

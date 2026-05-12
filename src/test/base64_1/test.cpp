@@ -27,6 +27,8 @@
 
 #include "../../binary.h"
 
+#include "dccl/logger.h"
+
 int main()
 {
     // Basic encode/decode round-trip
