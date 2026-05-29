@@ -14,8 +14,11 @@ In addition to the built-in codecs, further field codecs can be defined as exten
 
 1. Grab dependencies:
    ```shell
-   echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-   sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
+   export COMPONENT=release
+   export GOBYSOFT_SIGNING_KEY=19478082E2F8D3FE
+   install -d -m 0755 /etc/apt/keyrings
+   gpg --keyserver keyserver.ubuntu.com --recv-keys ${GOBYSOFT_SIGNING_KEY} && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
+   echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
    sudo apt update
    sudo apt install libdccl4-dev
    ```
