@@ -197,14 +197,12 @@ filter-template-master-only: &filter-template-master-only
     branches:
       only:
         - "5.0"
-        - "5.0-remove-unused-install-files"
         
 filter-template-non-master: &filter-template-non-master
   filters:
     branches:
       ignore:
         - "5.0"
-        - "5.0-remove-unused-install-files"
         
 ## Begin actual config
 version: 2
