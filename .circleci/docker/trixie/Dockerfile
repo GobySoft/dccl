@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-c"]
 
 # Clone the Debian packaging project and install the dependencies it declares
 RUN git clone \
-    https://github.com/GobySoft/dccl-debian -b 3.0 debian    
+    https://github.com/GobySoft/dccl-debian -b 5.0 debian    
 
 RUN ARCHS=(${CROSS_COMPILE_ARCHS}) && \
     apt-get update && \

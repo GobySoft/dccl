@@ -11,19 +11,17 @@ The Dynamic Compact Control Language (DCCL) is a marshalling and protocol langua
 
 The only officially supported distributions are Debian (stable and oldstable) and Ubuntu (currently supported LTS releases). Packages for these releases are built for the amd64, arm64, and armhf architectures and uploaded to http://packages.gobysoft.org:
 
-To install release packages on Ubuntu, run:
+To install release packages on Ubuntu or Debian, install the appropriate apt sources.list and GobySoft PGP signing key:
 ```
-echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
+export COMPONENT=release
+export GOBYSOFT_SIGNING_KEY=19478082E2F8D3FE
+install -d -m 0755 /etc/apt/keyrings
+gpg --keyserver keyserver.ubuntu.com --recv-keys ${GOBYSOFT_SIGNING_KEY} && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
+echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
 ```
 
-or for Debian:
+Then run:
 ```
-echo "deb http://packages.gobysoft.org/debian/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-```
-
-In both cases, then run:
-```
-sudo apt-key adv --recv-key --keyserver keyserver.ubuntu.com 19478082E2F8D3FE
 sudo apt update
 # minimal
 sudo apt install libdccl4-dev
@@ -31,9 +29,10 @@ sudo apt install libdccl4-dev
 sudo apt install libdccl4-dev dccl4-compiler dccl4-apps
 ```
 
-Instead of the release repository, you can use the continuous repository (every commit to the main branch build) by adding to your apt sources:
+Instead of the release repository, you can use the continuous repository (every commit to the main branch build):
 ```
-deb http://packages.gobysoft.org/[ubuntu|debian]/continuous/ {release-codename}/
+export COMPONENT=continuous
+echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
 ```
 
 ## Continuous Integration
