@@ -78,8 +78,8 @@ job-template-deb-amd64: &job-template-deb-amd64
   <<: *job-template-amd64
   steps:
     - run: &run-update-apt
-        name: Update apt packages
-        command: apt-get update && apt-get dist-upgrade -y
+        name: Update apt packages (and install python3-protobuf for unit test)
+        command: apt-get update && apt-get dist-upgrade -y && apt-get install -y python3-protobuf
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
