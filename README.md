@@ -24,9 +24,9 @@ Then run:
 ```
 sudo apt update
 # minimal
-sudo apt install libdccl4-dev
+sudo apt install libdccl5-dev
 # full
-sudo apt install libdccl4-dev dccl4-compiler dccl4-apps
+sudo apt install libdccl5-dev dccl5-compiler dccl5-apps
 ```
 
 Instead of the release repository, you can use the continuous repository (every commit to the main branch build):
