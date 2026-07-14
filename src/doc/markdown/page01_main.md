@@ -42,7 +42,7 @@ In addition to the built-in codecs, further field codecs can be defined as exten
    import "dccl/option_extensions.proto";
    
    message NavigationReport {
-     option (dccl.msg) = { codec_version: 4
+     option (dccl.msg) = { codec_version: 5
                            id: 124
                            max_bytes: 32 };
      required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
@@ -57,10 +57,7 @@ In addition to the built-in codecs, further field codecs can be defined as exten
 4. (Optional, requires dccl5-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
    ```shell
    $ dccl --analyze -f navreport.proto
-   ||||||| Dynamic Compact Control Language (DCCL) Codec |||||||
-   1 messages loaded.
-   Field sizes are in bits unless otherwise noted.
-   =================== 124: NavigationReport ===================
+   ========= 124: NavigationReport {0xd76def0b24ad33b7} =========
    Actual maximum size of message: 8 bytes / 64 bits
            dccl.id head...........................8
            user head..............................0
@@ -70,12 +67,12 @@ In addition to the built-in codecs, further field codecs can be defined as exten
    --------------------------- Header ---------------------------
    dccl.id head...................................8 {dccl.default.id}
    ---------------------------- Body ----------------------------
-   NavigationReport..............................53 {dccl.default4}
-           1. x..................................18 {dccl.default4}
-           2. y..................................18 {dccl.default4}
-           3. z..................................13 {dccl.default4}
-           4. veh_class...........................2 {dccl.default4}
-           5. battery_ok..........................2 {dccl.default4}
+   NavigationReport..............................53 {dccl.default5}
+           1. x..................................18 {dccl.default5}
+           2. y..................................18 {dccl.default5}
+           3. z..................................13 {dccl.default5}
+           4. veh_class...........................2 {dccl.default5}
+           5. battery_ok..........................2 {dccl.default5}
    ```
 
 At this point you can decide to use C++, Python, or the command line tool `dccl`.

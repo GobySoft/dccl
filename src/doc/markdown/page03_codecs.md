@@ -4,7 +4,7 @@ DCCL messages are encoded and decoded using a set of "field codecs" that are res
 
 ## Encoding algorithm
 
-The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v4::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
+The following pseudo-code gives the process of encoding a DCCL message (using the dccl::v5::DefaultMessageCodec). Note this is not precisely how the actual C++ code works, but is rather given to explain the encoded message structure. DCCL messages are always encoded and decoded from the least significant bit to the most significant bit.
 
 ```pseudo
 function Encode(DCCL Message)
@@ -137,7 +137,7 @@ Say we want to encode "HELLO":
 - Following, we add the ASCII values: 01001111 01001100 01001100 01000101 01001000
 - The full encoded value is thus 0100 11110100 11000100 11000100 01010100 10000101
 
-#### DCCLv4 
+#### DCCLv4+
 
 See the VarBytesCodec below.
 
@@ -148,7 +148,7 @@ See the VarBytesCodec below.
 
 Like the string codec, but not variable length. It always takes max_length bytes in the message, and if it is optional, a presence bit is added at the front. If the presence bit is false, the bytes are omitted.
 
-#### DCCLv4 
+#### DCCLv4+
 
 See the VarBytesCodec below.
 
@@ -174,6 +174,10 @@ See Table 1 in the [IDL](page02_idl.md) for symbol definitions. The formulas bel
 The DCCLv4 Default Field Codecs are identical to those from DCCLv3 (see Table 2 above), *except* for the `string` and `bytes` types, which use the `VarBytesCodec` described below for both types.
 
 The *resolution* option for encoding numeric types is not captured in Table 2 but is analogous to the power of 10 case (*precision*). For further details see dccl/codecs2/field_codec_default.h
+
+#### DCCLv5
+
+The DCCLv5 Default Field Codecs are the same as those in DCCLv4, but some edge case bugs at the min/max boundaries of the numeric codecs have been fixed.
 
 ## Additional Built-in Codecs
 
@@ -254,7 +258,7 @@ syntax="proto2";
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
-  option (dccl.msg) = { codec_version: 4, id: 124, max_bytes: 32 };
+  option (dccl.msg) = { codec_version: 5, id: 124, max_bytes: 32 };
   required double x = 1 [(dccl.field) = { min: -10000, max: 10000, precision: 1 }];
   // ... other fields ...
 

@@ -9,7 +9,7 @@ syntax = "proto2";
 import "dccl/option_extensions.proto";
 
 message NavigationReport {
-  option (dccl.msg) = { codec_version: 4
+  option (dccl.msg) = { codec_version: 5
                         id: 124
                         max_bytes: 32 };
   required double x = 1 [(dccl.field) = { min: -10000 max: 10000 precision: 1 }];
@@ -21,7 +21,7 @@ message NavigationReport {
 }
 ```
 
-In the above message, the snippet `option (dccl.msg) = { codec_version: 4 id: 124 max_bytes: 32 };` represents the **message** options extensions since they affect the design of the entire DCCL message (in this case "NavigationReport"). The **field** options affect a given field, e.g. `[(dccl.field) = { min: -10000 max: 10000 precision: 1 }];`
+In the above message, the snippet `option (dccl.msg) = { codec_version: 5 id: 124 max_bytes: 32 };` represents the **message** options extensions since they affect the design of the entire DCCL message (in this case "NavigationReport"). The **field** options affect a given field, e.g. `[(dccl.field) = { min: -10000 max: 10000 precision: 1 }];`
 
 The full Protobuf definition of the DCCL extensions is given in option_extensions.proto (as messages DCCLFieldOptions and DCCLMessageOptions).
 
@@ -254,7 +254,7 @@ message TestMsg
     option (dccl.msg) = {
         id: 2,
         max_bytes: 512,
-        codec_version: 4
+        codec_version: 5
     };
 
     enum State
@@ -289,7 +289,7 @@ message TestMsg
     option (dccl.msg) = {
         id: 2,
         max_bytes: 512,
-        codec_version: 4
+        codec_version: 5
     };
 
     message Child
@@ -357,7 +357,7 @@ message ChannelMessage
     option (dccl.msg) = {
         id: 2,
         max_bytes: 270,        // absolute upper bound for load()-time validation
-        codec_version: 4,
+        codec_version: 5,
         dynamic_conditions: {
             // Return different byte limits based on the channel field
             max_bytes: "if this.channel == 'ACOUSTIC' then return 60 "
