@@ -20,7 +20,7 @@ In addition to the built-in codecs, further field codecs can be defined as exten
    gpg --keyserver keyserver.ubuntu.com --recv-keys ${GOBYSOFT_SIGNING_KEY} && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
    echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
    sudo apt update
-   sudo apt install libdccl4-dev
+   sudo apt install libdccl5-dev
    ```
 
 2. Find or create a plain GPB message (navreport.proto):
@@ -54,7 +54,7 @@ In addition to the built-in codecs, further field codecs can be defined as exten
    }
    ```
 
-4. (Optional, requires dccl4-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
+4. (Optional, requires dccl5-apps) Learn about the sizes of your messages fields using the 'dccl' tool:
    ```shell
    $ dccl --analyze -f navreport.proto
    ||||||| Dynamic Compact Control Language (DCCL) Codec |||||||
@@ -137,7 +137,7 @@ At this point you can decide to use C++, Python, or the command line tool `dccl`
 
 1. Install the Python DCCL apt package:
    ```shell
-  $ sudo apt install python3-dccl4
+  $ sudo apt install python3-dccl5
    ```
 
 2. Compile the Python output of your DCCL message
@@ -180,7 +180,7 @@ At this point you can decide to use C++, Python, or the command line tool `dccl`
 
 1. Install the `dccl` tool
    ```shell
-   sudo apt install dccl4-apps
+   sudo apt install dccl5-apps
    ```
  
 2.  Encode using the command line tool `dccl`
@@ -212,19 +212,19 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
   echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
   sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
   sudo apt update
-  sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
+  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-apps dccl5-compiler
   # optionally
-  sudo apt install python3-dccl4
+  sudo apt install python3-dccl5
   ```
 
-- Compiled continuous (latest HEAD of the 4.0 branch) binary packages for Ubuntu / Debian: [https://packages.gobysoft.org/ubuntu/continuous/](https://packages.gobysoft.org/ubuntu/continuous/)
+- Compiled continuous (latest HEAD of the 5.0 branch) binary packages for Ubuntu / Debian: [https://packages.gobysoft.org/ubuntu/continuous/](https://packages.gobysoft.org/ubuntu/continuous/)
   ```bash
   echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
   sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
   sudo apt update
-  sudo apt install libdccl4-dev dccl4-apps dccl4-doc dccl4-apps dccl4-compiler
+  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-apps dccl5-compiler
   # optionally
-  sudo apt install python3-dccl4
+  sudo apt install python3-dccl5
   ```
 
 - Debian packaging files (for Debian or derivatives): 

@@ -93,7 +93,7 @@ Since the DCCL field bounds (min, max, and precision) are often based off the ph
 
 The fields defined with units generate additional C++ methods using the DCCL plugin (_protoc-gen-dccl_) to the GPB compiler (_protoc_). The Debian package for the plugin is 
 ```bash
-sudo apt-get install dccl4-compiler
+sudo apt-get install dccl5-compiler
 ```
 
 These additional methods provide accessors and mutators for the dimensioned Boost Units quantities, with full static "unit safety", and correct conversions between different units of the same dimensions (e.g., feet to meters). Unit safety is defined as static (compiler-checked) dimensional analysis. The term is a blending of the (computer science) notion of type safety with (physical) dimensional analysis. For example, in a unit-safe system, the compiler will not allow the user to set a field with dimensions of length to a quantity of hours.
