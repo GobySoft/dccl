@@ -40,15 +40,13 @@ CryptoMsg make_msg()
     msg.set_source(5);
     msg.set_x(1234);
     msg.set_y(-5678);
-    msg.set_message("hello");
-    msg.set_hash(0); // dummy value - overwritten by the dccl.hash codec
+    msg.set_crc(0); // dummy value - overwritten by the dccl.crc32 codec
     return msg;
 }
 
 bool same_contents(const CryptoMsg& a, const CryptoMsg& b)
 {
-    return a.source() == b.source() && a.x() == b.x() && a.y() == b.y() &&
-           a.message() == b.message();
+    return a.source() == b.source() && a.x() == b.x() && a.y() == b.y();
 }
 
 std::string encode(dccl::Codec& codec, const google::protobuf::Message& msg)
@@ -137,7 +135,7 @@ int main(int argc, char* argv[])
     }
 
     //
-    // the dccl.hash field also catches corruption of an otherwise valid message
+    // the dccl.crc32 field also catches corruption of an otherwise valid message
     //
     {
         dccl::Codec codec;
@@ -175,8 +173,7 @@ int main(int argc, char* argv[])
         plain_in.set_source(5);
         plain_in.set_x(1234);
         plain_in.set_y(-5678);
-        plain_in.set_message("hello");
-        plain_in.set_hash(0);
+        plain_in.set_crc(0);
 
         plain_codec.load<PlaintextMsg>();
         assert(encode(codec, plain_in) == encode(plain_codec, plain_in));
