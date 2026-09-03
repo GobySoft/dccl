@@ -42,6 +42,12 @@ message CryptoMsg
     required int32 x = 2 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 3 [(dccl.field) = { min: -10000, max: 10000 }];
     optional string message = 4 [(dccl.field).max_length = 10];
+
+    // last field, so it is the last thing decoded: rejects a body that was
+    // decrypted with the wrong passphrase (or otherwise corrupted)
+    required uint32 hash = 100 [
+        (dccl.field) = { codec: "dccl.hash", min: 0, max: 4294967295 }
+    ];
 }
 
 // identical layout to CryptoMsg, used to test the do_not_encrypt_ids exclusion
@@ -58,4 +64,8 @@ message PlaintextMsg
     required int32 x = 2 [(dccl.field) = { min: -10000, max: 10000 }];
     required int32 y = 3 [(dccl.field) = { min: -10000, max: 10000 }];
     optional string message = 4 [(dccl.field).max_length = 10];
+
+    required uint32 hash = 100 [
+        (dccl.field) = { codec: "dccl.hash", min: 0, max: 4294967295 }
+    ];
 }

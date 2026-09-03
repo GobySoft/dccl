@@ -41,6 +41,7 @@ CryptoMsg make_msg()
     msg.set_x(1234);
     msg.set_y(-5678);
     msg.set_message("hello");
+    msg.set_hash(0); // dummy value - overwritten by the dccl.hash codec
     return msg;
 }
 
@@ -109,7 +110,7 @@ int main(int argc, char* argv[])
     }
 
     //
-    // a different passphrase must not recover the message
+    // a different passphrase must be rejected, not silently decoded as garbage
     //
     {
         dccl::Codec enc_codec, dec_codec;
@@ -120,20 +121,45 @@ int main(int argc, char* argv[])
 
         const std::string bytes = encode(enc_codec, msg_in);
 
-        bool recovered = false;
+        bool rejected = false;
         try
         {
             CryptoMsg msg_out;
             dec_codec.decode(bytes, &msg_out);
-            recovered = same_contents(msg_in, msg_out);
         }
         catch (const std::exception& e)
         {
-            // decoding noise usually fails outright, which is equally acceptable
+            rejected = true;
             dccl::dlog.is(dccl::logger::INFO) &&
                 dccl::dlog << "expected decode failure: " << e.what() << std::endl;
         }
-        assert(!recovered);
+        assert(rejected);
+    }
+
+    //
+    // the dccl.hash field also catches corruption of an otherwise valid message
+    //
+    {
+        dccl::Codec codec;
+        codec.set_crypto_passphrase("my_passphrase");
+        codec.load<CryptoMsg>();
+
+        std::string bytes = encode(codec, msg_in);
+        bytes[bytes.size() - 1] ^= 0x01; // one bit of ciphertext, so one bit of body
+
+        bool rejected = false;
+        try
+        {
+            CryptoMsg msg_out;
+            codec.decode(bytes, &msg_out);
+        }
+        catch (const std::exception& e)
+        {
+            rejected = true;
+            dccl::dlog.is(dccl::logger::INFO) &&
+                dccl::dlog << "expected decode failure: " << e.what() << std::endl;
+        }
+        assert(rejected);
     }
 
     //
@@ -150,6 +176,7 @@ int main(int argc, char* argv[])
         plain_in.set_x(1234);
         plain_in.set_y(-5678);
         plain_in.set_message("hello");
+        plain_in.set_hash(0);
 
         plain_codec.load<PlaintextMsg>();
         assert(encode(codec, plain_in) == encode(plain_codec, plain_in));
