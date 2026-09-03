@@ -60,6 +60,9 @@ class Bitset : public std::deque<bool>
 
     ~Bitset() = default;
 
+    /// \brief The parent Bitset that get_more_bits() draws from, or nullptr if there is none
+    const Bitset* parent() const { return parent_; }
+
     /// \brief Retrieve more bits from the parent Bitset
     ///
     /// Get (and remove) bits from the little end of the parent bitset and add them to the big end of our bitset,
