@@ -64,10 +64,10 @@ struct CodecData
     //
     // Returns nullptr outside of an encode/decode context (e.g., during validate/info).
     Bitset* root_bits_{nullptr};
-    // Snapshot of the part (head or body) taken before any of it is decoded. Codecs are free
+    // The part (head or body) as received, copied before any of it is decoded. Codecs are free
     // to modify the Bitset they decode from, so the bits a field consumed are recovered from
     // here rather than read back out of that Bitset.
-    Bitset stream_bits_;
+    Bitset part_bits_;
     Bitset decoded_bits_; // accumulates decoded bits during base_decode()
 
     template <typename FieldCodecType> void set_codec_specific_data(std::shared_ptr<dccl::any> data)

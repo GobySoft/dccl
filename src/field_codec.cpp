@@ -128,12 +128,12 @@ namespace
 {
 // Number of bits of the part that have been decoded already, that is, everything up to the field
 // about to be decoded: the part as a whole less whatever is still buffered in the Bitsets it feeds.
-std::ptrdiff_t decoded_offset(const dccl::Bitset& bits, const dccl::Bitset& stream)
+std::ptrdiff_t decoded_offset(const dccl::Bitset& bits, const dccl::Bitset& part_bits)
 {
     std::ptrdiff_t buffered = 0;
     for (const dccl::Bitset* b = &bits; b; b = b->parent()) buffered += b->size();
 
-    return static_cast<std::ptrdiff_t>(stream.size()) - buffered;
+    return static_cast<std::ptrdiff_t>(part_bits.size()) - buffered;
 }
 
 // Brings decoded_bits_ up to the field about to be decoded, so that a codec like CRCCodec sees
@@ -142,16 +142,16 @@ std::ptrdiff_t decoded_offset(const dccl::Bitset& bits, const dccl::Bitset& stre
 // codecs are free to shift or otherwise modify those while decoding.
 void update_decoded_bits(dccl::internal::CodecData& codec_data, const dccl::Bitset& bits)
 {
-    const dccl::Bitset& stream = codec_data.stream_bits_;
+    const dccl::Bitset& part_bits = codec_data.part_bits_;
     dccl::Bitset& decoded = codec_data.decoded_bits_;
 
-    auto offset = decoded_offset(bits, stream);
+    auto offset = decoded_offset(bits, part_bits);
     if (offset < static_cast<std::ptrdiff_t>(decoded.size()) ||
-        offset > static_cast<std::ptrdiff_t>(stream.size()))
+        offset > static_cast<std::ptrdiff_t>(part_bits.size()))
         return;
 
     for (auto i = decoded.size(); i < static_cast<dccl::Bitset::size_type>(offset); ++i)
-        decoded.push_back(stream[i]);
+        decoded.push_back(part_bits[i]);
 }
 
 } // namespace
@@ -163,10 +163,10 @@ void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* 
     // Reset the accumulated decoded bits and point root_bits_ to it so that codecs like
     // CRCCodec can access all bits decoded before their own field via root_bitset().
     // decoded_bits_ is populated incrementally by field_decode() for each field, using
-    // stream_bits_ as the reference copy of the part being decoded.
+    // part_bits_ as the reference copy of the part being decoded.
     manager().codec_data().decoded_bits_.clear();
     manager().codec_data().root_bits_ = &manager().codec_data().decoded_bits_;
-    manager().codec_data().stream_bits_ = *bits;
+    manager().codec_data().part_bits_ = *bits;
     dccl::any value(field_value);
     field_decode(bits, &value, nullptr);
 }
@@ -828,5 +828,5 @@ dccl::FieldCodecBase::BaseRAII::~BaseRAII()
     field_codec_->manager().codec_data().root_descriptor_ = nullptr;
     field_codec_->manager().codec_data().root_bits_ = nullptr;
     field_codec_->manager().codec_data().decoded_bits_.clear();
-    field_codec_->manager().codec_data().stream_bits_.clear();
+    field_codec_->manager().codec_data().part_bits_.clear();
 }
