@@ -125,6 +125,12 @@ template <int CRCBits> class CRCCodecBase : public v4::DefaultNumericFieldCodec<
         // min() and max() are hardcoded - skip the parent's has_min/has_max checks and
         // call validate_numeric_bounds() directly to verify type range constraints.
         this->validate_numeric_bounds();
+
+        // the CRC is computed over the bits of the message it belongs to, and only the root
+        // message's bits are recovered while decoding
+        FieldCodecBase::require(this->this_descriptor() == this->root_descriptor(),
+                                "CRC codecs are only supported in the root message, not in an "
+                                "embedded message");
     }
 
     /// \brief Compute CRC over all bits accumulated so far (called during encoding).
