@@ -199,7 +199,7 @@ void dccl::v3::DefaultMessageCodec::validate()
     const google::protobuf::Descriptor* desc = FieldCodecBase::this_descriptor();
 
     if (desc->oneof_decl_count() != 0)
-        throw(Exception("DCCL Codec Version 3 does not support 'oneof' declarations"), desc);
+        throw(Exception("DCCL Codec Version 3 does not support 'oneof' declarations", desc));
 
     traverse_descriptor<Validate>(&b);
 }

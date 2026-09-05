@@ -1,0 +1,4 @@
+add_executable(dccl_test_ccl_whoi_util test.cpp)
+target_link_libraries(dccl_test_ccl_whoi_util dccl dccl_ccl_compat)
+
+add_test(dccl_test_ccl_whoi_util ${dccl_BIN_DIR}/dccl_test_ccl_whoi_util)

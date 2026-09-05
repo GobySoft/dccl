@@ -1,0 +1,162 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message SimpleMsg
+{
+    option (dccl.msg).id = 220;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    required int32 a = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 1000
+    ];
+    optional int32 b = 2 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 1000
+    ];
+}
+
+message OtherMsg
+{
+    option (dccl.msg).id = 221;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    optional int32 c = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 100
+    ];
+}
+
+// Same DCCL id as SimpleMsg: loading both must be rejected.
+message DuplicateIdMsg
+{
+    option (dccl.msg).id = 220;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    optional int32 d = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 100
+    ];
+}
+
+// (dccl.msg).max_bytes is missing.
+message NoMaxBytesMsg
+{
+    option (dccl.msg).id = 222;
+    option (dccl.msg).codec_version = 5;
+
+    optional int32 e = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 100
+    ];
+}
+
+// (dccl.msg).codec_version is missing.
+message NoCodecVersionMsg
+{
+    option (dccl.msg).id = 223;
+    option (dccl.msg).max_bytes = 32;
+
+    optional int32 f = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 100
+    ];
+}
+
+// Needs far more than the single byte allowed.
+message TooBigMsg
+{
+    option (dccl.msg).id = 224;
+    option (dccl.msg).max_bytes = 1;
+    option (dccl.msg).codec_version = 5;
+
+    optional int32 g = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 1000000
+    ];
+    optional int32 h = 2 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 1000000
+    ];
+}
+
+// Nested required fields, to exercise the recursive report of which fields
+// are missing when encoding an uninitialized message.
+message InnerMsg
+{
+    required int32 inner_required = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 100
+    ];
+}
+
+message NestedMsg
+{
+    option (dccl.msg).id = 225;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 5;
+
+    required InnerMsg single = 1;
+    repeated InnerMsg several = 2 [(dccl.field).max_repeat = 2];
+}
+
+// Codec versions 2 and 3 predate 'oneof' support and must reject it at load
+// time (with a dccl::Exception, not a raw descriptor pointer).
+message OneofV2Msg
+{
+    option (dccl.msg).id = 226;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 2;
+
+    oneof choice
+    {
+        int32 i = 1 [
+            (dccl.field).min = 0,
+            (dccl.field).max = 100
+        ];
+        bool t = 2;
+    }
+}
+
+message OneofV3Msg
+{
+    option (dccl.msg).id = 227;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 3;
+
+    oneof choice
+    {
+        int32 i = 1 [
+            (dccl.field).min = 0,
+            (dccl.field).max = 100
+        ];
+        bool t = 2;
+    }
+}

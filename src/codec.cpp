@@ -166,8 +166,8 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
 
         if (!id2desc_.count(dccl_id))
             throw(Exception("Message id " + std::to_string(dccl_id) +
-                            " has not been loaded. Call load() before encoding this type."),
-                  desc);
+                                " has not been loaded. Call load() before encoding this type.",
+                            desc));
 
         std::shared_ptr<FieldCodecBase> codec = manager_.find(desc);
         std::shared_ptr<internal::FromProtoCppTypeBase> helper = manager_.type_helper().find(desc);
@@ -220,8 +220,8 @@ void dccl::Codec::encode_internal(const google::protobuf::Message& msg, bool hea
         else
         {
             throw(Exception("Failed to find (dccl.msg).codec `" +
-                            desc->options().GetExtension(dccl::msg).codec() + "`"),
-                  desc);
+                                desc->options().GetExtension(dccl::msg).codec() + "`",
+                            desc));
         }
     }
     catch (dccl::OutOfRangeException& e)

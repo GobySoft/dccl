@@ -2,6 +2,7 @@
 set(CMAKE_SKIP_RPATH OFF)
 
 add_subdirectory(dccl_all_fields)
+add_subdirectory(dccl_codec_api)
 add_subdirectory(dccl_custom_message)
 add_subdirectory(dccl_header)
 add_subdirectory(dccl_repeated)
@@ -46,6 +47,7 @@ endif()
 
 if(build_ccl)
   add_subdirectory(dccl_ccl)
+  add_subdirectory(ccl_whoi_util)
 endif()
 
 if(build_arithmetic)

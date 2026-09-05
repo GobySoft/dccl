@@ -69,9 +69,9 @@ template <typename Float> void check_round_trip(Float val)
     auto significand = dccl::decompose_float_format(val, exponent);
     Float out = dccl::compose_float_format(significand, exponent);
 
-    dccl::dlog.is(dccl::logger::INFO) &&
-        dccl::dlog << "round trip " << val << " -> " << significand << " * 2^" << exponent << " -> "
-                   << out << std::endl;
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "round trip " << val << " -> " << significand
+                                                    << " * 2^" << exponent << " -> " << out
+                                                    << std::endl;
 
     assert(out == val);
 }
@@ -90,9 +90,9 @@ template <typename Float> void check_finite_values()
 
     check_round_trip(FloatLimits::max());
     check_round_trip(FloatLimits::lowest());
-    check_round_trip(FloatLimits::min());          // smallest normal
+    check_round_trip(FloatLimits::min()); // smallest normal
     check_round_trip(-FloatLimits::min());
-    check_round_trip(FloatLimits::denorm_min());   // smallest subnormal
+    check_round_trip(FloatLimits::denorm_min()); // smallest subnormal
     check_round_trip(-FloatLimits::denorm_min());
     check_round_trip(FloatLimits::epsilon());
 
