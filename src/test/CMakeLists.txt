@@ -24,6 +24,11 @@ add_subdirectory(dccl_min_repeat)
 add_subdirectory(dccl_min_length)
 add_subdirectory(dccl_hash)
 add_subdirectory(dccl_crc)
+
+if(enable_cryptography)
+  add_subdirectory(dccl_crypto)
+endif()
+
 add_subdirectory(dccl_omit_id)
 add_subdirectory(dccl_float_precision)
 add_subdirectory(dccl_recursive_header)
