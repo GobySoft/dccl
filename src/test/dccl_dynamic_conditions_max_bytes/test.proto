@@ -29,3 +29,55 @@ message TestMaxBytes
 
     repeated uint32 data = 2 [(dccl.field) = { min: 0 max: 4294967295 max_repeat: 20 }];
 }
+
+// The example from the "fitting one message to several channels" section of the
+// user manual (src/doc/markdown/page02_idl.md): field-level omit_if is what
+// shrinks the message to fit each channel's dynamic max_bytes.
+message ChannelMessage
+{
+    option (dccl.msg) = {
+        id: 11,
+        // worst case (WIFI, full length status) is 31 bytes: this is the bound
+        // checked at load() time
+        max_bytes: 32,
+        codec_version: 5,
+        dynamic_conditions: {
+            // per-channel MTU, checked at encode() time
+            max_bytes: "if this.channel == 'ACOUSTIC' then return 8 "
+                       "elseif this.channel == 'IRIDIUM' then return 16 "
+                       "else return 32 end"
+        }
+    };
+
+    enum Channel
+    {
+        WIFI = 1;
+        ACOUSTIC = 2;
+        IRIDIUM = 3;
+    }
+
+    // must be declared before any field whose condition reads it
+    required Channel channel = 1;
+
+    // sent on every channel
+    required int32 x = 2 [(dccl.field) = { min: -10000 max: 10000 }];
+    required int32 y = 3 [(dccl.field) = { min: -10000 max: 10000 }];
+    required int32 z = 4 [(dccl.field) = { min: -1000 max: 0 }];
+    optional uint32 heading = 5 [(dccl.field) = { min: 0 max: 359 }];
+
+    // attitude: dropped on the acoustic channel
+    optional int32 pitch = 6 [(dccl.field) = {
+        min: -90 max: 90
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC'" }
+    }];
+    optional int32 roll = 7 [(dccl.field) = {
+        min: -180 max: 180
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC'" }
+    }];
+
+    // human-readable status: only worth the bytes on WiFi
+    optional string status = 8 [(dccl.field) = {
+        max_length: 20
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC' or this.channel == 'IRIDIUM'" }
+    }];
+}

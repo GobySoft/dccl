@@ -346,7 +346,9 @@ The available dynamic condition for messages is:
 
 - **max_bytes**: The Lua script must return a numeric value that is the maximum allowed encoded message size in bytes. If the actual encoded size exceeds this value, encoding throws an exception.
 
-### Example: channel-based max_bytes
+### Example: fitting one message to several channels
+
+The message-level `max_bytes` condition only *checks* the encoded size; it is the field-level conditions that actually make a message fit. Used together, a single message definition can be sent over channels with very different MTUs:
 
 ```proto
 syntax = "proto2";
@@ -356,25 +358,67 @@ message ChannelMessage
 {
     option (dccl.msg) = {
         id: 2,
-        max_bytes: 270,        // absolute upper bound for load()-time validation
+        // worst case (WIFI, full length status) is 31 bytes: this is the bound
+        // checked at load() time
+        max_bytes: 32,
         codec_version: 5,
         dynamic_conditions: {
-            // Return different byte limits based on the channel field
-            max_bytes: "if this.channel == 'ACOUSTIC' then return 60 "
-                       "elseif this.channel == 'IRIDIUM' then return 270 "
-                       "else return 82 end"
+            // per-channel MTU, checked at encode() time
+            max_bytes: "if this.channel == 'ACOUSTIC' then return 8 "
+                       "elseif this.channel == 'IRIDIUM' then return 16 "
+                       "else return 32 end"
         }
     };
 
     enum Channel { WIFI = 1; ACOUSTIC = 2; IRIDIUM = 3; }
 
+    // must be declared before any field whose condition reads it
     required Channel channel = 1;
 
-    repeated uint32 data = 2 [(dccl.field) = { min: 0 max: 4294967295 max_repeat: 20 }];
+    // sent on every channel
+    required int32 x = 2 [(dccl.field) = { min: -10000 max: 10000 }];
+    required int32 y = 3 [(dccl.field) = { min: -10000 max: 10000 }];
+    required int32 z = 4 [(dccl.field) = { min: -1000 max: 0 }];
+    optional uint32 heading = 5 [(dccl.field) = { min: 0 max: 359 }];
+
+    // attitude: dropped on the acoustic channel
+    optional int32 pitch = 6 [(dccl.field) = {
+        min: -90 max: 90
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC'" }
+    }];
+    optional int32 roll = 7 [(dccl.field) = {
+        min: -180 max: 180
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC'" }
+    }];
+
+    // human-readable status: only worth the bytes on WiFi
+    optional string status = 8 [(dccl.field) = {
+        max_length: 20
+        dynamic_conditions { omit_if: "this.channel == 'ACOUSTIC' or this.channel == 'IRIDIUM'" }
+    }];
 }
 ```
 
-In this example, when `channel` is `ACOUSTIC`, the codec enforces a 60-byte limit at encode time; when `channel` is `IRIDIUM`, a 270-byte limit is enforced; otherwise, the static 270-byte limit from `max_bytes` applies. The static `max_bytes: 270` controls the worst-case size validated at `load()` time and must be at least as large as the largest runtime limit.
+Encoding the same fully populated message (with a 19 character `status`) on each channel gives:
+
+| `channel`  | fields encoded                      | encoded size | dynamic limit |
+| ---------- | ----------------------------------- | ------------ | ------------- |
+| `WIFI`     | all                                 | 30 bytes     | 32 bytes      |
+| `ACOUSTIC` | `channel`, `x`, `y`, `z`, `heading` | 8 bytes      | 8 bytes       |
+| `IRIDIUM`  | all but `status`                    | 10 bytes     | 16 bytes      |
+
+A field omitted by `omit_if` costs zero bits, not even the presence bit that an `optional` field normally uses, so dropping `pitch` and `roll` is what takes the acoustic message from 10 bytes down to 8. On the receiving end `has_pitch()` and `has_roll()` return false. Nothing is transmitted to say which fields were dropped: the decoder re-evaluates the same conditions against the message it has decoded so far.
+
+That last point implies an ordering rule: **a field read by a condition must be declared before the fields whose conditions read it** (declaration order in the .proto file, not field number). If `channel` were moved to the bottom of `ChannelMessage`, `this.channel` would be nil when the decoder reaches `pitch`, and decoding would fail or silently produce garbage.
+
+`status` could equally be written as `only_if: "this.channel == 'WIFI'"`, but note the difference: `only_if` also makes the field *required* when the condition is true, so a WiFi message with no `status` set would encode an empty string (11 bytes here) rather than just a cleared presence bit (10 bytes).
+
+Two size errors are worth distinguishing:
+
+- The static `max_bytes` is checked against the worst case size *with every conditional field present* (the conditions are not evaluated at `load()` time). If it is too small, `codec.load()` throws, e.g. with `max_bytes: 30` above: `Actual maximum size of message (31B) exceeds allowed maximum (30B)`. This is a definition error, caught once at startup.
+- The dynamic `max_bytes` is checked against the actual encoded size of one message. If that message is too big for its channel, `codec.encode()` throws, e.g. if the acoustic limit above were 7: `Encoded message size (8B) exceeds dynamic max_bytes limit (7B)`.
+
+So the static `max_bytes` must cover the largest possible message, while the dynamic limits are free to be much smaller.
 
 For more details, see the `dccl_dynamic_conditions_max_bytes` unit test.
 
