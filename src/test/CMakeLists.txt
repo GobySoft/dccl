@@ -70,6 +70,12 @@ add_subdirectory(base64_1)
 
 add_subdirectory(logger1)
 add_subdirectory(round1)
+add_subdirectory(numeric1)
+
+# exercises the 'dccl' command line tool itself
+if(build_apps AND UNIX)
+  add_subdirectory(dccl_tool)
+endif()
 
 if(enable_lua)
   add_subdirectory(dccl_dynamic_conditions)

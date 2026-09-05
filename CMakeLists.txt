@@ -44,6 +44,18 @@ if(enable_testing)
   include(CTest)
 endif()
 
+# enable code coverage instrumentation (gcov/llvm-cov)
+option(enable_coverage "Build with code coverage instrumentation (use with enable_testing; run scripts/coverage.sh to generate a report)" OFF)
+if(enable_coverage)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(FATAL_ERROR "enable_coverage requires GCC or Clang")
+  endif()
+  # -O0 keeps the line mapping faithful; without it inlining misattributes hits
+  add_compile_options(--coverage -O0 -g -fno-inline)
+  add_link_options(--coverage)
+  message(STATUS "Code coverage instrumentation enabled")
+endif()
+
 option(build_apps "Build supporting tools and other binary applications" ON)
 
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/version.txt DCCL_VERSION_STRING)
