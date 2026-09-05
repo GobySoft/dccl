@@ -348,7 +348,7 @@ The available dynamic condition for messages is:
 
 ### Example: fitting one message to several channels
 
-The message-level `max_bytes` condition only *checks* the encoded size; it is the field-level conditions that actually make a message fit. Used together, a single message definition can be sent over channels with very different MTUs, dropping the less important fields on the narrower ones:
+The message-level `max_bytes` condition only *checks* the encoded size; it is the field-level conditions that actually make a message fit. Used together, a single message definition can be sent over channels with very different MTUs:
 
 ```proto
 syntax = "proto2";
