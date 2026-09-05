@@ -270,7 +270,7 @@ message NavigationReport {
 }
 ```
 
-**Important:** The CRC field must be the **last field** in the message body to cover all other fields.
+**Important:** The CRC field must be the **last field** in the message body to cover all other fields, and it must be a field of the message being encoded, not of an embedded message (messages with a CRC field in an embedded message fail validation).
 
 The CRC is computed over the encoded bits of all body fields that precede the CRC field. The value of this field (if set) on encoding is ignored and overwritten with the computed CRC. On decoding, the CRC is recomputed over the same bits and an exception is thrown if it does not match the received value, indicating that the message data may be corrupted.
 

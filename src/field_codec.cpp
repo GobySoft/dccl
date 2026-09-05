@@ -124,15 +124,49 @@ void dccl::FieldCodecBase::field_size_repeated(unsigned* bit_size,
     *bit_size += any_size_repeated(wire_values);
 }
 
+namespace
+{
+// Number of bits of the part that have been decoded already, that is, everything up to the field
+// about to be decoded: the part as a whole less whatever is still buffered in the Bitsets it feeds.
+std::ptrdiff_t decoded_offset(const dccl::Bitset& bits, const dccl::Bitset& part_bits)
+{
+    std::ptrdiff_t buffered = 0;
+    for (const dccl::Bitset* b = &bits; b; b = b->parent()) buffered += b->size();
+
+    return static_cast<std::ptrdiff_t>(part_bits.size()) - buffered;
+}
+
+// Brings decoded_bits_ up to the field about to be decoded, so that a codec like CRCCodec sees
+// exactly the bits its preceding fields were encoded from. They are copied out of the snapshot
+// taken in base_decode() rather than read back out of the Bitsets the fields decoded from, because
+// codecs are free to shift or otherwise modify those while decoding.
+void update_decoded_bits(dccl::internal::CodecData& codec_data, const dccl::Bitset& bits)
+{
+    const dccl::Bitset& part_bits = codec_data.part_bits_;
+    dccl::Bitset& decoded = codec_data.decoded_bits_;
+
+    auto offset = decoded_offset(bits, part_bits);
+    if (offset < static_cast<std::ptrdiff_t>(decoded.size()) ||
+        offset > static_cast<std::ptrdiff_t>(part_bits.size()))
+        return;
+
+    for (auto i = decoded.size(); i < static_cast<dccl::Bitset::size_type>(offset); ++i)
+        decoded.push_back(part_bits[i]);
+}
+
+} // namespace
+
 void dccl::FieldCodecBase::base_decode(Bitset* bits, google::protobuf::Message* field_value,
                                        MessagePart part)
 {
     BaseRAII scoped_globals(this, part, field_value);
     // Reset the accumulated decoded bits and point root_bits_ to it so that codecs like
     // CRCCodec can access all bits decoded before their own field via root_bitset().
-    // decoded_bits_ is populated incrementally by field_decode() for each field.
+    // decoded_bits_ is populated incrementally by field_decode() for each field, using
+    // part_bits_ as the reference copy of the part being decoded.
     manager().codec_data().decoded_bits_.clear();
     manager().codec_data().root_bits_ = &manager().codec_data().decoded_bits_;
+    manager().codec_data().part_bits_ = *bits;
     dccl::any value(field_value);
     field_decode(bits, &value, nullptr);
 }
@@ -155,6 +189,11 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, dccl::any* field_value,
         dlog.is(DEBUG3, DECODE) && dlog << "Message thus far is: " << root_message()->DebugString()
                                         << std::flush;
 
+    // Fields of the root message only: the bits of a field of an embedded message are accounted
+    // for by the embedded message field as a whole.
+    if (field && msg_handler.field_size() == 1)
+        update_decoded_bits(manager().codec_data(), *bits);
+
     Bitset these_bits(bits);
 
     unsigned bits_to_transfer = 0;
@@ -176,9 +215,6 @@ void dccl::FieldCodecBase::field_decode(Bitset* bits, dccl::any* field_value,
 
         any_decode(&these_bits, &wire_value);
         field_post_decode(wire_value, field_value);
-
-        // Append this field's bits to decoded_bits_ so the next sibling field sees them.
-        manager().codec_data().decoded_bits_.append(these_bits);
 
         manager().codec_data().root_bits_ = prev_root_bits;
     }
@@ -204,6 +240,9 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits, std::vector<dccl:
         dlog.is(DEBUG2, DECODE) &&
             dlog << "Starting repeated decode for field: " << field->DebugString() << std::endl;
 
+    if (field && msg_handler.field_size() == 1)
+        update_decoded_bits(manager().codec_data(), *bits);
+
     Bitset these_bits(bits);
 
     unsigned bits_to_transfer = 0;
@@ -213,11 +252,16 @@ void dccl::FieldCodecBase::field_decode_repeated(Bitset* bits, std::vector<dccl:
     dlog.is(DEBUG2, DECODE) && dlog << "using these " << these_bits.size()
                                     << " bits: " << these_bits << std::endl;
 
+    Bitset* prev_root_bits = manager().codec_data().root_bits_;
+    manager().codec_data().root_bits_ = &manager().codec_data().decoded_bits_;
+
     std::vector<dccl::any> wire_values = *field_values;
     any_decode_repeated(&these_bits, &wire_values);
 
     field_values->clear();
     field_post_decode_repeated(wire_values, field_values);
+
+    manager().codec_data().root_bits_ = prev_root_bits;
 }
 
 void dccl::FieldCodecBase::base_max_size(unsigned* bit_size,
@@ -432,7 +476,7 @@ void dccl::FieldCodecBase::field_hash(std::size_t* hash_value,
     {
         // root level message
         dccl::DCCLMessageOptions dccl_opts = this_descriptor()->options().GetExtension(dccl::msg);
-        dccl_opts.clear_max_bytes(); // max bytes doesn't affect encoding
+        dccl_opts.clear_max_bytes();          // max bytes doesn't affect encoding
         dccl_opts.clear_dynamic_conditions(); // dynamic conditions don't affect wire format
 
         hash_combine(*hash_value, dccl_opts.DebugString());
@@ -784,4 +828,5 @@ dccl::FieldCodecBase::BaseRAII::~BaseRAII()
     field_codec_->manager().codec_data().root_descriptor_ = nullptr;
     field_codec_->manager().codec_data().root_bits_ = nullptr;
     field_codec_->manager().codec_data().decoded_bits_.clear();
+    field_codec_->manager().codec_data().part_bits_.clear();
 }
