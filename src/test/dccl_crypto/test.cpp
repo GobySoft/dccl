@@ -70,10 +70,6 @@ int main(int argc, char* argv[])
 
     dccl::dlog.connect(verbose ? dccl::logger::ALL : dccl::logger::WARN_PLUS, &std::cerr);
 
-#if !DCCL_HAS_CRYPTOPP
-    std::cerr << "DCCL compiled without Crypto++: skipping encryption test." << std::endl;
-    return 0;
-#else
     const CryptoMsg msg_in = make_msg();
 
     dccl::Codec plain_codec;
@@ -182,5 +178,4 @@ int main(int argc, char* argv[])
 
     std::cout << "all tests passed" << std::endl;
     return 0;
-#endif
 }
