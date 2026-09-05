@@ -111,6 +111,53 @@ void test_acoustic_too_large()
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_acoustic_too_large: passed" << std::endl;
 }
 
+// Test the manual's channel example: omit_if drops fields so that each channel's
+// dynamic max_bytes is met. The sizes here are the ones quoted in the manual.
+void test_channel_omit()
+{
+    codec.load<ChannelMessage>();
+
+    ChannelMessage msg;
+    msg.set_x(1234);
+    msg.set_y(-4321);
+    msg.set_z(-50);
+    msg.set_heading(180);
+    msg.set_pitch(3);
+    msg.set_roll(-10);
+    msg.set_status("all systems nominal"); // 19 characters
+
+    std::string bytes;
+    ChannelMessage msg_out;
+
+    msg.set_channel(ChannelMessage::WIFI);
+    bytes.clear(); // dccl::Codec::encode appends
+    codec.encode(&bytes, msg);
+    assert(bytes.size() == 30);
+    codec.decode(bytes, &msg_out);
+    assert(msg.SerializeAsString() == msg_out.SerializeAsString());
+
+    msg.set_channel(ChannelMessage::ACOUSTIC);
+    bytes.clear();
+    codec.encode(&bytes, msg);
+    assert(bytes.size() == 8);
+    msg_out.Clear();
+    codec.decode(bytes, &msg_out);
+    assert(!msg_out.has_pitch() && !msg_out.has_roll() && !msg_out.has_status());
+    assert(msg_out.x() == msg.x() && msg_out.y() == msg.y() && msg_out.z() == msg.z());
+    assert(msg_out.heading() == msg.heading());
+
+    msg.set_channel(ChannelMessage::IRIDIUM);
+    bytes.clear();
+    codec.encode(&bytes, msg);
+    assert(bytes.size() == 10);
+    msg_out.Clear();
+    codec.decode(bytes, &msg_out);
+    assert(msg_out.has_pitch() && msg_out.has_roll() && !msg_out.has_status());
+    assert(msg_out.pitch() == msg.pitch() && msg_out.roll() == msg.roll());
+
+    dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test_channel_omit: passed" << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
     bool verbose = false;
@@ -125,6 +172,7 @@ int main(int argc, char* argv[])
     test_wifi_ok();
     test_acoustic_ok();
     test_acoustic_too_large();
+    test_channel_omit();
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
     return 0;
