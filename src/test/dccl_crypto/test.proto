@@ -1,0 +1,64 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+// tests encryption/decryption via Codec::set_crypto_passphrase
+
+syntax = "proto2";
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+message CryptoMsg
+{
+    option (dccl.msg).id = 20;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    // in the head, so unencrypted and used as the nonce for the body
+    required uint32 source = 1 [
+        (dccl.field) = { min: 0, max: 1023, in_head: true }
+    ];
+
+    required int32 x = 2 [(dccl.field) = { min: -10000, max: 10000 }];
+    required int32 y = 3 [(dccl.field) = { min: -10000, max: 10000 }];
+
+    // last field, so it is the last thing decoded: rejects a body that was
+    // decrypted with the wrong passphrase (or otherwise corrupted)
+    required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
+
+// identical layout to CryptoMsg, used to test the do_not_encrypt_ids exclusion
+message PlaintextMsg
+{
+    option (dccl.msg).id = 21;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    required uint32 source = 1 [
+        (dccl.field) = { min: 0, max: 1023, in_head: true }
+    ];
+
+    required int32 x = 2 [(dccl.field) = { min: -10000, max: 10000 }];
+    required int32 y = 3 [(dccl.field) = { min: -10000, max: 10000 }];
+    required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
