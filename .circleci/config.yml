@@ -83,7 +83,7 @@ job-template-deb-amd64: &job-template-deb-amd64
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
-    - attach-workspace: &attach-src-workspace
+    - attach_workspace: &attach-src-workspace
         at: /root/src
     - run: &run-extract-src
         name: Extract the original source tarball
@@ -152,14 +152,14 @@ job-template-deb-amd64: &job-template-deb-amd64
 job-template-deb-cross: &job-template-deb-cross
   <<: *job-template-deb-amd64
   steps: &steps-cross-compile
-    - attach-workspace: &attach-deb-workspace
+    - attach_workspace: &attach-deb-workspace
         at: /root/deb
     - run: &install-amd64-dccl-compiler
         name: Install amd64 dccl5-compiler so that we can execute it in this cross-build container
         command: dpkg -i /root/deb/dccl5-compiler_*amd64.deb
     - run: *run-update-apt
     - run: *run-import-gpg
-    - attach-workspace: *attach-src-workspace
+    - attach_workspace: *attach-src-workspace
     - run: *run-extract-src
     - run: *run-update-deb
     - run: *run-nest-deb
@@ -203,9 +203,8 @@ filter-template-non-master: &filter-template-non-master
         - "5.0"
         
 ## Begin actual config
-version: 2
+version: 2.1
 workflows:
-  version: 2
   commit:
     jobs:
       
@@ -342,11 +341,19 @@ workflows:
 
             - continuous-upload
             
-      - amd64+scan-build
-      - amd64+asan-build        
-      - amd64+tsan-build
-      - amd64+ubsan-build
-      - amd64+coverage-build
+      # Config 2.1 forbids '+' in a job definition's name, but the workflow
+      # level name is unrestricted and is what the GitHub status context is
+      # built from, so the published check names are unchanged.
+      - amd64-scan-build:
+          name: amd64+scan-build
+      - amd64-asan-build:
+          name: amd64+asan-build
+      - amd64-tsan-build:
+          name: amd64+tsan-build
+      - amd64-ubsan-build:
+          name: amd64+ubsan-build
+      - amd64-coverage-build:
+          name: amd64+coverage-build
             
 jobs:
 
@@ -556,7 +563,7 @@ jobs:
       <<: *environment-template-resolute
       <<: *environment-template-armhf
       
-  amd64+scan-build:
+  amd64-scan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -574,7 +581,7 @@ jobs:
       - store_artifacts:
           path: /tmp/scan-build.tar.gz
           when: on_fail
-  amd64+asan-build:
+  amd64-asan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -585,7 +592,7 @@ jobs:
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure
-  amd64+tsan-build:
+  amd64-tsan-build:
     # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
     environment:
       <<: *environment-template-common
@@ -611,7 +618,7 @@ jobs:
       - run:
           name: Run tests
           command: cd build && ctest --output-on-failure
-  amd64+ubsan-build:
+  amd64-ubsan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -621,7 +628,7 @@ jobs:
           command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
 
-  amd64+coverage-build:
+  amd64-coverage-build:
     <<: *job-template-sanitizers
     environment:
       <<: *environment-template-common
@@ -677,8 +684,8 @@ jobs:
           fingerprints:
             - "cd:15:c9:43:48:20:c9:56:58:9e:91:01:74:0d:fe:d2"
       - run: *run-import-gpg
-      - attach-workspace: *attach-deb-workspace
-      - attach-workspace: *attach-src-workspace
+      - attach_workspace: *attach-deb-workspace
+      - attach_workspace: *attach-src-workspace
       - run:
           name: Move original source into output directory
           command: mv /root/src/* /root/deb
