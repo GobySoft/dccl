@@ -3,12 +3,14 @@
 # Configures, builds, and tests DCCL with coverage instrumentation, then writes
 # an HTML report (build-coverage/coverage/index.html) plus a terminal summary.
 #
-# Usage: ./scripts/coverage.sh [--xml] [--no-build] [-- <extra cmake flags>]
+# Usage: ./scripts/coverage.sh [--xml] [--no-build] [--all-tests] [-- <extra cmake flags>]
 #
-#   --xml       also emit Cobertura XML (coverage.xml) for CI upload
-#   --no-build  reuse the existing build-coverage tree, just re-run and re-report
+#   --xml        also emit Cobertura XML (coverage.xml) for CI upload
+#   --no-build   reuse the existing build-coverage tree, just re-run and re-report
+#   --all-tests  also run the tests excluded by default (see SLOW_TESTS below)
 #
-# Requires gcovr (apt install gcovr).
+# Requires gcovr and python3-lxml (gcovr's Cobertura writer imports lxml, and
+# the gcovr package does not depend on it).
 
 set -e -u
 
@@ -16,14 +18,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$(dirname "${SCRIPT_DIR}")"
 BUILD_DIR="${SRC_DIR}/build-coverage"
 
+# Instrumented counters are shared mutable state, so a heavily threaded test
+# spends its time contending on them: dccl_test_multithread takes ~5s in a
+# normal build and ~390s under --coverage, which dominates the whole job.
+# Skipping it here costs about 0.3% of line coverage; it still runs in every
+# other CI job, including the thread sanitizer one that exists to police it.
+SLOW_TESTS='dccl_test_multithread'
+
+# A hung test should fail the job quickly rather than sit until the CI limit.
+CTEST_TIMEOUT=600
+
 WANT_XML=false
 DO_BUILD=true
+RUN_ALL_TESTS=false
 EXTRA_CMAKE_FLAGS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --xml) WANT_XML=true; shift ;;
         --no-build) DO_BUILD=false; shift ;;
+        --all-tests) RUN_ALL_TESTS=true; shift ;;
         --) shift; EXTRA_CMAKE_FLAGS=("$@"); break ;;
         *) echo "unknown option: $1" >&2; exit 1 ;;
     esac
@@ -51,8 +65,15 @@ cd "${BUILD_DIR}"
 # Stale counters from a previous run would inflate the totals.
 find . -name '*.gcda' -delete
 
+CTEST_ARGS=(--output-on-failure -j"$(nproc)" --timeout "${CTEST_TIMEOUT}")
+if [ "${RUN_ALL_TESTS}" = false ]; then
+    CTEST_ARGS+=(--exclude-regex "${SLOW_TESTS}")
+    echo "NOTE: excluding tests matching '${SLOW_TESTS}' (very slow under coverage);"
+    echo "      pass --all-tests to include them."
+fi
+
 # A failing test still leaves usable counters, so report either way.
-ctest --output-on-failure -j"$(nproc)" || echo "WARNING: some tests failed; coverage reported anyway" >&2
+ctest "${CTEST_ARGS[@]}" || echo "WARNING: some tests failed; coverage reported anyway" >&2
 
 mkdir -p coverage
 

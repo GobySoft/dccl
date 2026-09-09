@@ -51,6 +51,8 @@ sudo apt install gcovr python3-lxml
 
 This builds with instrumentation into `build-coverage/`, runs the test suite, and writes an HTML report to `build-coverage/coverage/index.html`. Pass `--xml` to also emit a Cobertura `coverage.xml`, or `--no-build` to re-report without rebuilding.
 
+`dccl_test_multithread` is skipped by default: instrumented counters are shared mutable state, so that test runs ~80x slower under coverage while adding about 0.3% of line coverage. It still runs in every other CI job. Pass `--all-tests` to include it.
+
 ### Security Metrics
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/GobySoft/dccl/badge)](https://scorecard.dev/viewer/?uri=github.com/GobySoft/dccl)
