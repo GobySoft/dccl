@@ -634,7 +634,9 @@ jobs:
       <<: *environment-template-common
       <<: *environment-template-resolute
       <<: *environment-template-amd64
-      # Codecov's published PGP key, used to verify the uploader's checksum
+      # Codecov's published PGP key, used to verify the uploader's checksum.
+      # Full fingerprint: 27034E7FDB850E0BBC2C62FF806BB28AED779869
+      # ("Codecov Uploader Verification Key" <security@codecov.io>)
       CODECOV_PGP_KEY: "806BB28AED779869"
     steps:
       - checkout
@@ -657,7 +659,8 @@ jobs:
               echo "CODECOV_TOKEN is not set (expected on forked PRs); skipping upload."
               exit 0
             fi
-            COVERAGE_XML="$(pwd)/build-coverage/coverage.xml"
+            REPO_DIR="$(pwd)"
+            COVERAGE_XML="${REPO_DIR}/build-coverage/coverage.xml"
             mkdir -p /tmp/codecov && cd /tmp/codecov
             # Verify the uploader before running it: the binary, its checksum,
             # and Codecov's signature over that checksum. A wrong key fails
@@ -669,7 +672,11 @@ jobs:
             gpg --verify codecov.SHA256SUM.sig codecov.SHA256SUM
             sha256sum -c codecov.SHA256SUM
             chmod +x codecov
-            ./codecov upload-process --fail-on-error --disable-search --file "${COVERAGE_XML}"
+            # Run from the repo so the uploader picks up codecov.yml and resolves
+            # the report's paths against the working tree.
+            cd "${REPO_DIR}"
+            /tmp/codecov/codecov upload-process --fail-on-error --disable-search \
+              --git-service github --file "${COVERAGE_XML}"
 
   continuous-upload:
     <<: *job-template-upload
