@@ -128,6 +128,52 @@ else
 fi
 
 ##
+## every SI prefix, so add_prefix()'s whole lookup chain runs
+##
+checks=$((checks + 1))
+OUT="$(generate prefixes "" units_prefixes.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units_prefixes.proto succeeds"
+else
+    fail "generating units_prefixes.proto succeeds (${OUT})"
+fi
+
+PRE_HDR="${WORK_DIR}/prefixes/units_prefixes.pb.h"
+for p in yotta zetta exa peta tera giga mega kilo hecto deka \
+         deci centi milli micro nano pico femto atto zepto yocto; do
+    contains "the ${p} prefix generates a unit" "${PRE_HDR}" "${p}_unit"
+done
+# a prefix is applied by scaling the unit, not by renaming it
+contains "prefixed units are scaled" "${PRE_HDR}" "make_scaled_unit"
+contains "a positive power is emitted" "${PRE_HDR}" "boost::units::static_rational<24>"
+contains "a negative power is emitted" "${PRE_HDR}" "boost::units::static_rational<-24>"
+
+##
+## every spelling of a unit system name
+##
+checks=$((checks + 1))
+OUT="$(generate systems "" units_systems.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units_systems.proto succeeds"
+else
+    fail "generating units_systems.proto succeeds (${OUT})"
+fi
+
+SYS_HDR="${WORK_DIR}/systems/units_systems.pb.h"
+contains "the si system is namespaced" "${SYS_HDR}" "boost::units::si::system"
+contains "the cgs system is namespaced" "${SYS_HDR}" "boost::units::cgs::system"
+contains "celsius is namespaced" "${SYS_HDR}" "boost::units::celsius::system"
+contains "fahrenheit is namespaced" "${SYS_HDR}" "boost::units::fahrenheit::system"
+contains "degree is namespaced" "${SYS_HDR}" "boost::units::degree::system"
+contains "gradian is namespaced" "${SYS_HDR}" "boost::units::gradian::system"
+contains "revolution is namespaced" "${SYS_HDR}" "boost::units::revolution::system"
+# angle::radian is an alias for the si system rather than a system of its own
+contains "an unrecognised system is used verbatim" "${SYS_HDR}" "my::own::system"
+# an absolute (non-relative) temperature is wrapped
+contains "an absolute temperature is wrapped" "${SYS_HDR}" "boost::units::absolute"
+contains "dimensionless is special-cased" "${SYS_HDR}" "dimensionless_type"
+
+##
 ## the loader file
 ##
 LOAD_CPP="${WORK_DIR}/dccl_load.cpp"
@@ -170,6 +216,42 @@ contains "the string field gets units accessors it cannot support" \
          "${BAD_HDR}" "set_name_with_units"
 contains "and they pass a double to a string setter" \
          "${BAD_HDR}" "boost::units::quantity<name_unit,double >"
+
+# Each of these is rejected by the generator, and each exercises a different
+# error path. generate() returns protoc's status, so a zero exit means the
+# bad input was accepted.
+check_rejected()
+{
+    local desc="$1" subdir="$2" proto="$3" expect="$4"
+    checks=$((checks + 1))
+    local out
+    out="$(generate "${subdir}" "" "${proto}")"
+    if [ $? -ne 0 ]; then
+        pass "${desc} is rejected"
+    else
+        fail "${desc} is rejected (generation succeeded)"
+        return
+    fi
+    checks=$((checks + 1))
+    case "${out}" in
+        *"${expect}"*) pass "${desc} explains itself" ;;
+        *) fail "${desc} explains itself (wanted '${expect}', got: ${out})" ;;
+    esac
+}
+
+check_rejected "an unknown SI prefix" badprefix bad_prefix.proto "Invalid SI prefix"
+check_rejected "a prefix on an absolute temperature" badabs bad_absolute_prefix.proto \
+               "not supported with an absolute temperature"
+check_rejected "a compound dimension on a single-dimension system" badcompound \
+               bad_compound_dim.proto "compound Boost Units dimension"
+check_rejected "a dimension the system does not support" badunsupported \
+               bad_unsupported_dim.proto "is not supported by system"
+check_rejected "base_dimensions and derived_dimensions together" badconflict \
+               bad_conflicting_units.proto "but not more than one"
+check_rejected "an unparseable base_dimensions string" badparse \
+               bad_unparseable_dims.proto "Failed to parse base_dimensions"
+check_rejected "base_dimensions with no system anywhere" badnosystem \
+               bad_missing_system.proto "must have 'system' defined"
 
 checks=$((checks + 1))
 OUT="$(generate badparam "not_a_real_parameter=1:" units.proto)"

@@ -378,5 +378,54 @@ int main(int argc, char* argv[])
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "end random test #" << i << std::endl;
     }
 
+    // Loading and then unloading the shared library, which reaches
+    // dccl_arithmetic_unload(); nothing else calls it. A message needing the
+    // arithmetic codec must encode while it is loaded and fail once it is not.
+    {
+        void* dl_handle = dlopen(DCCL_ARITHMETIC_NAME, RTLD_LAZY);
+        assert(dl_handle);
+
+        dccl::Codec unload_codec;
+        unload_codec.load_library(dl_handle);
+
+        dccl::arith::protobuf::ArithmeticModel model;
+        model.set_name("model");
+        model.set_eof_frequency(10);
+        model.set_out_of_range_frequency(0);
+        model.add_value_bound(1);
+        model.add_frequency(2);
+        model.add_value_bound(2);
+        model.add_frequency(3);
+        model.add_value_bound(3);
+        model.add_frequency(85);
+        model.add_value_bound(4);
+        dccl::arith::ModelManager::set_model(unload_codec, model);
+
+        ArithmeticEnumTestMsg msg;
+        msg.add_value(ENUM_A);
+        unload_codec.load(msg.GetDescriptor());
+
+        std::string bytes;
+        unload_codec.encode(&bytes, msg);
+        assert(!bytes.empty());
+
+        unload_codec.unload_library(dl_handle);
+
+        // with the codec gone, the same message can no longer be loaded
+        dccl::Codec after_unload;
+        bool threw = false;
+        try
+        {
+            after_unload.load(msg.GetDescriptor());
+        }
+        catch (const dccl::Exception&)
+        {
+            threw = true;
+        }
+        assert(threw);
+
+        dlclose(dl_handle);
+    }
+
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
