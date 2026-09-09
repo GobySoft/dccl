@@ -55,3 +55,61 @@ message TestCRC32
         (dccl.field) = { codec: "dccl.crc32" }
     ];
 }
+
+message CRCEmbeddedMsg
+{
+    required int32 a = 1 [(dccl.field) = { min: -100, max: 100 }];
+    optional string b = 2 [(dccl.field).max_length = 8];
+}
+
+// Exercises field types whose codecs modify the Bitset they decode from (optional and
+// variable length fields), plus repeated and embedded fields, all of which must be covered
+// by the CRC just as they are on encoding
+message TestCRCAllFields
+{
+    option (dccl.msg).id = 12;
+    option (dccl.msg).max_bytes = 128;
+    option (dccl.msg).codec_version = 5;
+
+    required int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
+    optional int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];
+    optional string s = 3 [(dccl.field).max_length = 10];
+    repeated int32 r = 4 [(dccl.field) = { min: 0, max: 100, max_repeat: 4 }];
+    required CRCEmbeddedMsg em = 5;
+    optional CRCEmbeddedMsg em_opt = 6;
+    optional int32 h = 7 [(dccl.field) = { min: 0, max: 100, in_head: true }];
+
+    required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
+
+// The bits identifying which field of a oneof is set are part of the body, and so must be
+// covered by the CRC as well
+message TestCRCOneof
+{
+    option (dccl.msg).id = 13;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    oneof choice
+    {
+        int32 x = 1 [(dccl.field) = { min: -10000, max: 10000 }];
+        int32 y = 2 [(dccl.field) = { min: -10000, max: 10000 }];
+    }
+
+    required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
+
+message CRCBadEmbeddedMsg
+{
+    required int32 a = 1 [(dccl.field) = { min: -100, max: 100 }];
+    required uint32 crc = 100 [(dccl.field) = { codec: "dccl.crc32" }];
+}
+
+message TestCRCBadNested
+{
+    option (dccl.msg).id = 14;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    required CRCBadEmbeddedMsg em = 1;
+}
