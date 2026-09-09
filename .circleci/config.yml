@@ -203,8 +203,9 @@ filter-template-non-master: &filter-template-non-master
         - "5.0"
         
 ## Begin actual config
-version: 2.1
+version: 2
 workflows:
+  version: 2
   commit:
     jobs:
       
