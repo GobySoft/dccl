@@ -1,0 +1,92 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test.plugin;
+
+
+// One field per SI prefix, so add_prefix()'s whole lookup chain is exercised.
+message PrefixMsg
+{
+    optional double yotta = 1 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "yotta" }
+    }];
+    optional double zetta = 2 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "zetta" }
+    }];
+    optional double exa = 3 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "exa" }
+    }];
+    optional double peta = 4 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "peta" }
+    }];
+    optional double tera = 5 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "tera" }
+    }];
+    optional double giga = 6 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "giga" }
+    }];
+    optional double mega = 7 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "mega" }
+    }];
+    optional double kilo = 8 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "kilo" }
+    }];
+    optional double hecto = 9 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "hecto" }
+    }];
+    optional double deka = 10 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "deka" }
+    }];
+    optional double deci = 11 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "deci" }
+    }];
+    optional double centi = 12 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "centi" }
+    }];
+    optional double milli = 13 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "milli" }
+    }];
+    optional double micro = 14 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "micro" }
+    }];
+    optional double nano = 15 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "nano" }
+    }];
+    optional double pico = 16 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "pico" }
+    }];
+    optional double femto = 17 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "femto" }
+    }];
+    optional double atto = 18 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "atto" }
+    }];
+    optional double zepto = 19 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "zepto" }
+    }];
+    optional double yocto = 20 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" prefix: "yocto" }
+    }];
+}

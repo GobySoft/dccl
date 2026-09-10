@@ -195,7 +195,9 @@ unsigned short Encode_gfi_pitch_oil(float gfi, float pitch, float oil)
         pitch += 0.5;
     else if (pitch < 0)
         pitch -= 0.5;
-    temp = ((short)pitch << 10);
+    // shift as unsigned: left-shifting a negative value is undefined, and
+    // pitch is negative for any downward angle
+    temp = (unsigned short)((unsigned int)(unsigned short)(short)pitch << 10);
     result |= temp & 0xFC00;
     return (result);
 }

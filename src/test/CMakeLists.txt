@@ -2,6 +2,7 @@
 set(CMAKE_SKIP_RPATH OFF)
 
 add_subdirectory(dccl_all_fields)
+add_subdirectory(dccl_codec_api)
 add_subdirectory(dccl_custom_message)
 add_subdirectory(dccl_header)
 add_subdirectory(dccl_repeated)
@@ -42,10 +43,15 @@ if(enable_units)
 
   # requires DCCL protoc plugin, which requires units
   add_subdirectory(dccl_load_file)
+
+  if(UNIX)
+    add_subdirectory(pb_plugin)
+  endif()
 endif()
 
 if(build_ccl)
   add_subdirectory(dccl_ccl)
+  add_subdirectory(ccl_whoi_util)
 endif()
 
 if(build_arithmetic)
@@ -70,6 +76,13 @@ add_subdirectory(base64_1)
 
 add_subdirectory(logger1)
 add_subdirectory(round1)
+add_subdirectory(numeric1)
+
+# exercise the command line applications themselves
+if(build_apps AND UNIX)
+  add_subdirectory(dccl_tool)
+  add_subdirectory(analyze_dccl)
+endif()
 
 if(enable_lua)
   add_subdirectory(dccl_dynamic_conditions)

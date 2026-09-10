@@ -38,6 +38,20 @@ echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.or
 ## Continuous Integration
 
 [![CircleCI](https://circleci.com/gh/GobySoft/dccl.svg?style=svg)](https://circleci.com/gh/GobySoft/dccl)
+[![codecov](https://codecov.io/gh/GobySoft/dccl/branch/5.0/graph/badge.svg)](https://codecov.io/gh/GobySoft/dccl)
+
+### Code Coverage
+
+Coverage is measured by the `amd64+coverage-build` CircleCI job and uploaded to [Codecov](https://codecov.io/gh/GobySoft/dccl). To generate a report locally:
+
+```
+sudo apt install gcovr python3-lxml
+./scripts/coverage.sh
+```
+
+This builds with instrumentation into `build-coverage/`, runs the test suite, and writes an HTML report to `build-coverage/coverage/index.html`. Pass `--xml` to also emit a Cobertura `coverage.xml`, or `--no-build` to re-report without rebuilding.
+
+`dccl_test_multithread` is skipped by default: instrumented counters are shared mutable state, so that test runs ~80x slower under coverage while adding about 0.3% of line coverage. It still runs in every other CI job. Pass `--all-tests` to include it.
 
 ### Security Metrics
 

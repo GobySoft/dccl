@@ -655,8 +655,8 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
         else
         {
             throw(Exception("Failed to find (dccl.msg).codec `" +
-                            desc->options().GetExtension(dccl::msg).codec() + "`"),
-                  desc);
+                                desc->options().GetExtension(dccl::msg).codec() + "`",
+                            desc));
         }
 
         dlog.is(logger::DEBUG1, logger::DECODE) &&

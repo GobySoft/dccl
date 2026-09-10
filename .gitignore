@@ -12,3 +12,6 @@ __pycache__/
 *.pyc
 
 build/
+/build-coverage
+# CTest scratch output when ctest is run from the source tree
+/Testing

@@ -83,7 +83,7 @@ job-template-deb-amd64: &job-template-deb-amd64
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
-    - attach-workspace: &attach-src-workspace
+    - attach_workspace: &attach-src-workspace
         at: /root/src
     - run: &run-extract-src
         name: Extract the original source tarball
@@ -152,14 +152,14 @@ job-template-deb-amd64: &job-template-deb-amd64
 job-template-deb-cross: &job-template-deb-cross
   <<: *job-template-deb-amd64
   steps: &steps-cross-compile
-    - attach-workspace: &attach-deb-workspace
+    - attach_workspace: &attach-deb-workspace
         at: /root/deb
     - run: &install-amd64-dccl-compiler
         name: Install amd64 dccl5-compiler so that we can execute it in this cross-build container
         command: dpkg -i /root/deb/dccl5-compiler_*amd64.deb
     - run: *run-update-apt
     - run: *run-import-gpg
-    - attach-workspace: *attach-src-workspace
+    - attach_workspace: *attach-src-workspace
     - run: *run-extract-src
     - run: *run-update-deb
     - run: *run-nest-deb
@@ -203,9 +203,8 @@ filter-template-non-master: &filter-template-non-master
         - "5.0"
         
 ## Begin actual config
-version: 2
+version: 2.1
 workflows:
-  version: 2
   commit:
     jobs:
       
@@ -342,10 +341,19 @@ workflows:
 
             - continuous-upload
             
-      - amd64+scan-build
-      - amd64+asan-build        
-      - amd64+tsan-build
-      - amd64+ubsan-build
+      # Config 2.1 forbids '+' in a job definition's name, but the workflow
+      # level name is unrestricted and is what the GitHub status context is
+      # built from, so the published check names are unchanged.
+      - amd64-scan-build:
+          name: amd64+scan-build
+      - amd64-asan-build:
+          name: amd64+asan-build
+      - amd64-tsan-build:
+          name: amd64+tsan-build
+      - amd64-ubsan-build:
+          name: amd64+ubsan-build
+      - amd64-coverage-build:
+          name: amd64+coverage-build
             
 jobs:
 
@@ -555,7 +563,7 @@ jobs:
       <<: *environment-template-resolute
       <<: *environment-template-armhf
       
-  amd64+scan-build:
+  amd64-scan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -573,7 +581,7 @@ jobs:
       - store_artifacts:
           path: /tmp/scan-build.tar.gz
           when: on_fail
-  amd64+asan-build:
+  amd64-asan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -584,7 +592,7 @@ jobs:
       - run: &run-tests
           name: Run tests
           command: cd build && ctest --output-on-failure
-  amd64+tsan-build:
+  amd64-tsan-build:
     # TODO: Switch back to job-template-sanitizers based Docker build if / when "ThreadSanitizer: unexpected memory mapping" is resolved
     environment:
       <<: *environment-template-common
@@ -610,7 +618,7 @@ jobs:
       - run:
           name: Run tests
           command: cd build && ctest --output-on-failure
-  amd64+ubsan-build:
+  amd64-ubsan-build:
     <<: *job-template-sanitizers
     steps:
       - checkout
@@ -619,6 +627,57 @@ jobs:
           name: Build with UndefinedBehaviorSanitizer
           command: mkdir -p build && cd build && cmake -DSANITIZE_UNDEFINED=ON -Denable_testing=ON .. && cmake --build . -- -j${SANITIZER_NUM_JOBS}
       - run: *run-tests
+
+  amd64-coverage-build:
+    <<: *job-template-sanitizers
+    environment:
+      <<: *environment-template-common
+      <<: *environment-template-resolute
+      <<: *environment-template-amd64
+      # Codecov's published PGP key, used to verify the uploader's checksum.
+      # Full fingerprint: 27034E7FDB850E0BBC2C62FF806BB28AED779869
+      # ("Codecov Uploader Verification Key" <security@codecov.io>)
+      CODECOV_PGP_KEY: "806BB28AED779869"
+    steps:
+      - checkout
+      - run:
+          name: Update apt packages and install coverage dependencies
+          command: apt-get update && apt-get dist-upgrade -y && apt-get install -y liblua5.3-dev python3-dev python3-setuptools python3-protobuf gcovr python3-lxml curl gnupg
+      - run:
+          name: Build and test with coverage instrumentation
+          command: ./scripts/coverage.sh --xml
+      - store_artifacts:
+          path: build-coverage/coverage
+          destination: coverage-html
+      - store_artifacts:
+          path: build-coverage/coverage.xml
+          destination: coverage.xml
+      - run:
+          name: Upload coverage to Codecov
+          command: |
+            if [ -z "${CODECOV_TOKEN:-}" ]; then
+              echo "CODECOV_TOKEN is not set (expected on forked PRs); skipping upload."
+              exit 0
+            fi
+            REPO_DIR="$(pwd)"
+            COVERAGE_XML="${REPO_DIR}/build-coverage/coverage.xml"
+            mkdir -p /tmp/codecov && cd /tmp/codecov
+            # Verify the uploader before running it: the binary, its checksum,
+            # and Codecov's signature over that checksum. A wrong key fails
+            # here rather than silently trusting an unverified binary.
+            curl -fsSO https://cli.codecov.io/latest/linux/codecov
+            curl -fsSO https://cli.codecov.io/latest/linux/codecov.SHA256SUM
+            curl -fsSO https://cli.codecov.io/latest/linux/codecov.SHA256SUM.sig
+            gpg --keyserver keyserver.ubuntu.com --recv-keys ${CODECOV_PGP_KEY}
+            gpg --verify codecov.SHA256SUM.sig codecov.SHA256SUM
+            sha256sum -c codecov.SHA256SUM
+            chmod +x codecov
+            # Run from the repo so the uploader picks up codecov.yml and resolves
+            # the report's paths against the working tree.
+            cd "${REPO_DIR}"
+            /tmp/codecov/codecov upload-process --fail-on-error --disable-search \
+              --git-service github --file "${COVERAGE_XML}"
+
   continuous-upload:
     <<: *job-template-upload
     environment:
@@ -632,8 +691,8 @@ jobs:
           fingerprints:
             - "cd:15:c9:43:48:20:c9:56:58:9e:91:01:74:0d:fe:d2"
       - run: *run-import-gpg
-      - attach-workspace: *attach-deb-workspace
-      - attach-workspace: *attach-src-workspace
+      - attach_workspace: *attach-deb-workspace
+      - attach_workspace: *attach-src-workspace
       - run:
           name: Move original source into output directory
           command: mv /root/src/* /root/deb

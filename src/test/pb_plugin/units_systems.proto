@@ -1,0 +1,94 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test.plugin;
+
+
+// One field per spelling of a unit system name, so the namespacing chain in
+// construct_units_typedef_from_dimension() is exercised. Each system is
+// paired with a dimension it actually supports.
+message SystemMsg
+{
+    optional double si = 1 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "si" relative_temperature: true }
+    }];
+    optional double cgs = 2 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "cgs" relative_temperature: true }
+    }];
+    optional double boost_units_si = 3 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "boost::units::si" relative_temperature: true }
+    }];
+    optional double boost_units_cgs = 4 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "boost::units::cgs" relative_temperature: true }
+    }];
+    optional double celsius = 5 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "celsius" relative_temperature: true }
+    }];
+    optional double fahrenheit = 6 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "fahrenheit" relative_temperature: true }
+    }];
+    optional double temperature_celsius = 7 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "temperature::celsius" relative_temperature: true }
+    }];
+    optional double temperature_fahrenheit = 8 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "temperature::fahrenheit" relative_temperature: true }
+    }];
+    optional double degree = 9 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "degree" relative_temperature: true }
+    }];
+    optional double gradian = 10 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "gradian" relative_temperature: true }
+    }];
+    optional double revolution = 11 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "revolution" relative_temperature: true }
+    }];
+    optional double angle_degree = 12 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "angle::degree" relative_temperature: true }
+    }];
+    optional double angle_gradian = 13 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "angle::gradian" relative_temperature: true }
+    }];
+    optional double angle_revolution = 14 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "angle::revolution" relative_temperature: true }
+    }];
+    optional double angle_radian = 15 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "angle::radian" relative_temperature: true }
+    }];
+
+    // an unrecognised system name falls through to being used verbatim
+    optional double custom_system = 90 [(dccl.field) = {
+        units { derived_dimensions: "length" system: "my::own::system" }
+    }];
+
+    // absolute (not relative) temperature wraps the unit in boost::units::absolute
+    optional double absolute_temp = 91 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "si" }
+    }];
+
+    // dimensionless is special-cased away from the *_dimension typedef
+    optional double dimensionless = 92 [(dccl.field) = {
+        units { base_dimensions: "-" system: "si" }
+    }];
+}

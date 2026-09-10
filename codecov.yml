@@ -1,0 +1,29 @@
+# Codecov configuration for DCCL.
+# Coverage is produced by the amd64+coverage-build CircleCI job, which runs
+# scripts/coverage.sh --xml.
+
+coverage:
+  status:
+    # Report coverage changes without blocking merges. Flip informational to
+    # false once the project settles on a target it wants enforced.
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        informational: true
+
+# Mirrors the exclusions in scripts/coverage.sh: generated protobuf sources,
+# vendored third-party code, and the tests themselves.
+ignore:
+  - "src/test/**"
+  - "src/thirdparty/**"
+  - "**/*.pb.cc"
+  - "**/*.pb.h"
+
+comment:
+  layout: "reach, diff, files"
+  behavior: default
+  require_changes: true
