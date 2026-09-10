@@ -30,6 +30,8 @@ using namespace dccl::test;
 void test1(dccl::Codec&);
 void test2(dccl::Codec&);
 
+void test3(dccl::Codec& codec);
+
 int main(int argc, char* argv[])
 {
     bool verbose = false;
@@ -46,6 +48,10 @@ int main(int argc, char* argv[])
     codec.info<PresenceMsg>(&dccl::dlog);
     test1(codec);
     test2(codec);
+
+    codec.load<PresenceMsgV3>();
+    codec.info<PresenceMsgV3>(&dccl::dlog);
+    test3(codec);
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }
@@ -162,4 +168,71 @@ void test2(dccl::Codec& codec)
                       msg_out.repeat_enum().begin()));
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "test2 passed" << std::endl;
+}
+
+// Codec version 3 round trip. The v3 presence codec wraps the v2 field codecs,
+// a combination the version 5 cases above never instantiate. Sizes differ
+// between codec versions, so this checks the values survive rather than
+// pinning an encoded length.
+void test3(dccl::Codec& codec)
+{
+    PresenceMsgV3 msg_in;
+
+    msg_in.set_req_i32(-100);
+    msg_in.set_req_i64(65535);
+    msg_in.set_req_ui32(1022);
+    msg_in.set_req_ui64(101);
+    msg_in.set_req_float(900.12345);
+    msg_in.set_req_double(900.12345678);
+    msg_in.set_req_enum(ENUM2_C);
+
+    // once with every optional field absent, once with them all present
+    for (int pass = 0; pass < 2; ++pass)
+    {
+        if (pass == 1)
+        {
+            msg_in.set_opt_i32(-50);
+            msg_in.set_opt_i64(1000);
+            msg_in.set_opt_ui32(500);
+            msg_in.set_opt_ui64(500);
+            msg_in.set_opt_float(-12.5);
+            msg_in.set_opt_double(-12.5);
+            msg_in.set_opt_enum(ENUM2_A);
+            msg_in.set_opt_bool(true);
+            msg_in.set_opt_str("abc");
+            msg_in.set_opt_bytes("\x01\x02");
+            msg_in.add_repeat_i32(1);
+            msg_in.add_repeat_i32(2);
+            msg_in.add_repeat_enum(ENUM2_B);
+        }
+
+        std::string encoded;
+        codec.encode(&encoded, msg_in);
+
+        PresenceMsgV3 msg_out;
+        codec.decode(encoded, &msg_out);
+
+        assert(msg_in.req_i32() == msg_out.req_i32());
+        assert(msg_in.req_i64() == msg_out.req_i64());
+        assert(msg_in.req_ui32() == msg_out.req_ui32());
+        assert(msg_in.req_ui64() == msg_out.req_ui64());
+        assert(fabsf(msg_in.req_float() - msg_out.req_float()) < 1e-4);
+        assert(fabs(msg_in.req_double() - msg_out.req_double()) < 1e-7);
+        assert(msg_in.req_enum() == msg_out.req_enum());
+
+        // absent optionals must stay absent, present ones must survive
+        assert(msg_in.has_opt_i32() == msg_out.has_opt_i32());
+        assert(msg_in.opt_i32() == msg_out.opt_i32());
+        assert(msg_in.opt_i64() == msg_out.opt_i64());
+        assert(msg_in.opt_ui32() == msg_out.opt_ui32());
+        assert(msg_in.opt_ui64() == msg_out.opt_ui64());
+        assert(fabsf(msg_in.opt_float() - msg_out.opt_float()) < 1e-4);
+        assert(fabs(msg_in.opt_double() - msg_out.opt_double()) < 1e-7);
+        assert(msg_in.opt_enum() == msg_out.opt_enum());
+        assert(msg_in.opt_bool() == msg_out.opt_bool());
+        assert(msg_in.opt_str() == msg_out.opt_str());
+        assert(msg_in.opt_bytes() == msg_out.opt_bytes());
+        assert(msg_in.repeat_i32_size() == msg_out.repeat_i32_size());
+        assert(msg_in.repeat_enum_size() == msg_out.repeat_enum_size());
+    }
 }

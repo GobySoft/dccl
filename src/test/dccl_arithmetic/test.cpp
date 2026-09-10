@@ -82,6 +82,17 @@ void run_test(dccl::arith::protobuf::ArithmeticModel& model,
     ++i;
 }
 
+// Runs one repeated field of the given message type through the arithmetic
+// codec. Values are kept to 0 and 1 so the same model and body work for every
+// field type, bool included.
+template <typename Msg> void run_scalar_type_test(dccl::arith::protobuf::ArithmeticModel& model)
+{
+    Msg msg_in;
+    msg_in.add_value(0);
+    msg_in.add_value(1);
+    run_test(model, msg_in);
+}
+
 // usage: dccl_test10 [-v | 1]
 int main(int argc, char* argv[])
 {
@@ -376,6 +387,27 @@ int main(int argc, char* argv[])
         run_test(model, msg_in);
 
         dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "end random test #" << i << std::endl;
+    }
+
+    // Every remaining field type the arithmetic codec is registered for. Only
+    // int32, double and enums were exercised before, so the repeated paths for
+    // these types were never run.
+    {
+        dccl::arith::protobuf::ArithmeticModel model;
+        model.set_name("model");
+        model.set_eof_frequency(10);
+        model.set_out_of_range_frequency(0);
+        model.add_value_bound(0);
+        model.add_frequency(10);
+        model.add_value_bound(1);
+        model.add_frequency(10);
+        model.add_value_bound(2);
+
+        run_scalar_type_test<ArithmeticInt64TestMsg>(model);
+        run_scalar_type_test<ArithmeticUInt32TestMsg>(model);
+        run_scalar_type_test<ArithmeticUInt64TestMsg>(model);
+        run_scalar_type_test<ArithmeticFloatTestMsg>(model);
+        run_scalar_type_test<ArithmeticBoolTestMsg>(model);
     }
 
     // Loading and then unloading the shared library, which reaches
