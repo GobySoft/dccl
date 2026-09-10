@@ -136,3 +136,77 @@ message ArithmeticDouble3TestMsg
 // repeated bool bool_arithmetic_repeat = 113 [(dccl.field).(arithmetic).model =
 // "bool_model",
 //                                             (dccl.field).max_repeat=4];
+
+// The arithmetic codec is registered for every field type, but only int32,
+// double and enums were exercised. These cover the rest, so its repeated
+// encode/decode paths are instantiated and run for each type.
+
+message ArithmeticInt64TestMsg
+{
+    option (dccl.msg).id = 7;
+    option (dccl.msg).max_bytes = 512;
+    option (dccl.msg).codec_version = 5;
+
+    repeated int64 value = 101 [
+        (dccl.field).codec = "dccl.arithmetic",
+        (dccl.field).(arithmetic).model = "model",
+        (dccl.field).(arithmetic).debug_assert = true,
+        (dccl.field).max_repeat = 4
+    ];
+}
+
+message ArithmeticUInt32TestMsg
+{
+    option (dccl.msg).id = 8;
+    option (dccl.msg).max_bytes = 512;
+    option (dccl.msg).codec_version = 5;
+
+    repeated uint32 value = 101 [
+        (dccl.field).codec = "dccl.arithmetic",
+        (dccl.field).(arithmetic).model = "model",
+        (dccl.field).(arithmetic).debug_assert = true,
+        (dccl.field).max_repeat = 4
+    ];
+}
+
+message ArithmeticUInt64TestMsg
+{
+    option (dccl.msg).id = 9;
+    option (dccl.msg).max_bytes = 512;
+    option (dccl.msg).codec_version = 5;
+
+    repeated uint64 value = 101 [
+        (dccl.field).codec = "dccl.arithmetic",
+        (dccl.field).(arithmetic).model = "model",
+        (dccl.field).(arithmetic).debug_assert = true,
+        (dccl.field).max_repeat = 4
+    ];
+}
+
+message ArithmeticFloatTestMsg
+{
+    option (dccl.msg).id = 10;
+    option (dccl.msg).max_bytes = 512;
+    option (dccl.msg).codec_version = 5;
+
+    repeated float value = 101 [
+        (dccl.field).codec = "dccl.arithmetic",
+        (dccl.field).(arithmetic).model = "model",
+        (dccl.field).(arithmetic).debug_assert = true,
+        (dccl.field).max_repeat = 4
+    ];
+}
+
+message ArithmeticBoolTestMsg
+{
+    option (dccl.msg).id = 11;
+    option (dccl.msg).max_bytes = 512;
+    option (dccl.msg).codec_version = 5;
+
+    repeated bool value = 101 [
+        (dccl.field).codec = "dccl.arithmetic",
+        (dccl.field).(arithmetic).model = "model",
+        (dccl.field).(arithmetic).debug_assert = true,
+        (dccl.field).max_repeat = 4
+    ];
+}
