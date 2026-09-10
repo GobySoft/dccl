@@ -25,18 +25,11 @@ import "dccl/option_extensions.proto";
 
 package dccl.test.plugin;
 
-// Units on a string field. The generator emits boost::units quantities over
-// the field's own type, so a non-numeric field must be rejected rather than
-// producing a header that cannot compile.
-message BadUnitsMsg
+// The same system/dimension mismatch as bad_unsupported_dim.proto, written as
+// base_dimensions. This path used not to be validated at all.
+message BadUnsupportedBaseDimMsg
 {
-    option (dccl.msg).id = 232;
-    option (dccl.msg).max_bytes = 32;
-    option (dccl.msg).codec_version = 5;
-    option (dccl.msg).unit_system = "si";
-
-    required string name = 1 [
-        (dccl.field).units.base_dimensions = "L",
-        (dccl.field).max_length = 8
-    ];
+    optional double l = 1 [(dccl.field) = {
+        units { base_dimensions: "L" system: "degree" }
+    }];
 }

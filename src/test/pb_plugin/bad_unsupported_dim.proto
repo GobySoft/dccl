@@ -25,10 +25,9 @@ import "dccl/option_extensions.proto";
 
 package dccl.test.plugin;
 
-// A dimension the specialised system does not support. Note this uses
-// derived_dimensions: pb_plugin only calls validate_dimensions_for_system()
-// on that path, so the same mismatch expressed as base_dimensions is not
-// checked at all and silently generates the wrong unit.
+// A dimension the specialised system does not support, via derived_dimensions.
+// See bad_unsupported_base_dim.proto for the same mismatch via base_dimensions;
+// both paths are validated.
 message BadUnsupportedDimMsg
 {
     optional double l = 1 [(dccl.field) = {

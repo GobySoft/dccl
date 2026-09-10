@@ -43,8 +43,18 @@ int main(int argc, char* argv[])
 
     for (int i = 2; i < argc; ++i) dccl::DynamicProtobufManager::add_include_path(argv[i]);
 
-    const google::protobuf::FileDescriptor* file_desc =
-        dccl::DynamicProtobufManager::load_from_proto_file(argv[1]);
+    // load_from_proto_file throws rather than returning null for a file it
+    // cannot read, so without this the tool terminates on a bad path
+    const google::protobuf::FileDescriptor* file_desc = nullptr;
+    try
+    {
+        file_desc = dccl::DynamicProtobufManager::load_from_proto_file(argv[1]);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "failed to read in: " << argv[1] << "\n\t" << e.what() << std::endl;
+        return 1;
+    }
 
     dccl::Codec dccl;
     if (file_desc)
@@ -78,5 +88,8 @@ int main(int argc, char* argv[])
     else
     {
         std::cerr << "failed to read in: " << argv[1] << std::endl;
+        return 1;
     }
+
+    return 0;
 }

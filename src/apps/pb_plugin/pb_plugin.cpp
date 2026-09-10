@@ -118,7 +118,7 @@ bool DCCLGenerator::check_field_type(const google::protobuf::FieldDescriptor* fi
 
     if (!is_float && !is_integer)
     {
-        throw std::runtime_error("Can only use (dccl.field).base_dimensions on numeric fields");
+        throw std::runtime_error("Can only use (dccl.field).units on numeric fields");
     }
     return is_integer;
 }
@@ -269,6 +269,10 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
             return;
         }
 
+        // units are generated as boost::units quantities over the field's own
+        // type, so the field has to be numeric
+        check_field_type(field);
+
         if ((dccl_field_options.units().has_base_dimensions() &&
              dccl_field_options.units().has_derived_dimensions()) ||
             (dccl_field_options.units().has_base_dimensions() &&
@@ -333,6 +337,8 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                     (!dccl_field_options.units().has_system() && message_unit_system)
                         ? *message_unit_system
                         : std::string(dccl_field_options.units().system());
+
+                dccl::units::validate_dimensions_for_system(dimensions, unit_system);
 
                 construct_base_dims_typedef(dimensions, powers, std::string(field->name()), unit_system,
                                             dccl_field_options.units().relative_temperature(),

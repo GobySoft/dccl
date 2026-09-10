@@ -73,21 +73,27 @@ fi
 contains "the usage message is printed" "${ERR}" "usage: analyze_dccl"
 contains "the deprecation notice is printed" "${ERR}" "deprecated"
 
-# A proto that cannot be read. Pinning current behavior: the app checks
-# load_from_proto_file() for a null return and prints "failed to read in",
-# but the loader throws dccl::Exception for a missing file and nothing
-# catches it, so that branch is unreachable and the app aborts instead.
+# A proto that cannot be read. The loader throws for a missing file, so this
+# only reports cleanly because the tool catches it; uncaught, the process
+# terminates instead.
 checks=$((checks + 1))
 OUT="$("${BIN}" /nonexistent/nope.proto "${INC_DIR}" 2>"${STDERR_FILE}")"
 STATUS=$?
 ERR="$(cat "${STDERR_FILE}")"
-if [ ${STATUS} -ne 0 ]; then
-    pass "an unreadable proto exits non-zero"
+if [ ${STATUS} -eq 1 ]; then
+    pass "an unreadable proto exits 1"
 else
-    fail "an unreadable proto exits non-zero (exit 0)"
+    fail "an unreadable proto exits 1 (got ${STATUS})"
 fi
+contains "the read failure is reported" "${ERR}" "failed to read in"
 contains "the failure names the file" "${ERR}" "/nonexistent/nope.proto"
-contains "the failure says the file was not found" "${ERR}" "File not found"
+contains "the failure gives the reason" "${ERR}" "File not found"
+# terminate() would print this instead of the message above
+checks=$((checks + 1))
+case "${ERR}" in
+    *"terminate called"*) fail "the tool reports rather than aborting" ;;
+    *) pass "the tool reports rather than aborting" ;;
+esac
 
 # the normal path
 checks=$((checks + 1))

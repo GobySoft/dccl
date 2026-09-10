@@ -196,26 +196,6 @@ contains "the loader registers UnitsMsg" "${LOAD_CPP}" "UnitsMsg"
 ##
 ## error handling
 ##
-# Pinning current behavior, not desired behavior: DCCLGenerator has a
-# check_field_type() that raises "Can only use (dccl.field).base_dimensions on
-# numeric fields", but nothing calls it, and get_field_type_name() falls back
-# to "double" for any other type. So units on a string field generate a
-# set_<field>_with_units() that calls set_<field>(double) and the resulting
-# header does not compile. If check_field_type() is ever wired up, this test
-# should flip to expecting a clean rejection.
-checks=$((checks + 1))
-OUT="$(generate bad "" bad_units.proto)"
-if [ $? -eq 0 ]; then
-    pass "units on a non-numeric field are currently accepted (see comment)"
-else
-    fail "units on a non-numeric field are currently accepted (generation failed: ${OUT})"
-fi
-
-BAD_HDR="${WORK_DIR}/bad/bad_units.pb.h"
-contains "the string field gets units accessors it cannot support" \
-         "${BAD_HDR}" "set_name_with_units"
-contains "and they pass a double to a string setter" \
-         "${BAD_HDR}" "boost::units::quantity<name_unit,double >"
 
 # Each of these is rejected by the generator, and each exercises a different
 # error path. generate() returns protoc's status, so a zero exit means the
@@ -239,6 +219,8 @@ check_rejected()
     esac
 }
 
+check_rejected "units on a non-numeric field" badunits bad_units.proto \
+               "on numeric fields"
 check_rejected "an unknown SI prefix" badprefix bad_prefix.proto "Invalid SI prefix"
 check_rejected "a prefix on an absolute temperature" badabs bad_absolute_prefix.proto \
                "not supported with an absolute temperature"
@@ -246,6 +228,8 @@ check_rejected "a compound dimension on a single-dimension system" badcompound \
                bad_compound_dim.proto "compound Boost Units dimension"
 check_rejected "a dimension the system does not support" badunsupported \
                bad_unsupported_dim.proto "is not supported by system"
+check_rejected "the same mismatch written as base_dimensions" badunsupportedbase \
+               bad_unsupported_base_dim.proto "is not supported by system"
 check_rejected "base_dimensions and derived_dimensions together" badconflict \
                bad_conflicting_units.proto "but not more than one"
 check_rejected "an unparseable base_dimensions string" badparse \
