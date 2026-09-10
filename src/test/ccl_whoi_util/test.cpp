@@ -22,8 +22,12 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
 // Tests the CCL (Compact Control Language) scalar conversions in WhoiUtil.
-// These define the legacy wire representation, so the encodings are pinned
-// here rather than only round-tripped.
+//
+// CCL is an externally defined, effectively deprecated format that DCCL only
+// has to interoperate with. Its encodings are the specification, so this file
+// pins exact values rather than only round-tripping, and the oddities noted
+// below are recorded because they are the format, not because they are
+// waiting to be fixed. Changing any of them would break interoperability.
 
 #include <cassert>
 #include <cmath>
@@ -74,7 +78,8 @@ void check_est_velocity()
         assert(close(Decode_est_velocity(Encode_est_velocity(v)), v, 0.03));
 
     // the +0.5 in the encoder only rounds positives, so negatives truncate
-    // toward zero and lose up to a full step
+    // toward zero and lose up to a full step; this asymmetry is part of the
+    // format
     for (float v : {-1.0f, -2.5f, -5.0f})
         assert(close(Decode_est_velocity(Encode_est_velocity(v)), v, 0.05));
     assert(Encode_est_velocity(-1.0f) == -24);
@@ -170,10 +175,10 @@ void check_gfi_pitch_oil()
     Decode_gfi_pitch_oil(Encode_gfi_pitch_oil(0.0f, -89.0f, 0.0f), &gfi, &pitch, &oil);
     assert(close(pitch, -89.0, 3.0));
 
-    // Pinning a known defect in this legacy wire format rather than a desired
-    // result: the pitch field holds 6 signed bits (-32..31), but the clamp
-    // endpoints scale to +/-32, so both +90 and -90 encode to 0x8000 and come
-    // back as -91.4. Fixing it would change the CCL wire format.
+    // The pitch field holds 6 signed bits (-32..31), but the clamp endpoints
+    // scale to +/-32, so both +90 and -90 encode to 0x8000 and come back as
+    // -91.4. Recorded as the format's behaviour, not as a bug to fix: any
+    // change here would put DCCL out of step with every other CCL implementation.
     assert(Encode_gfi_pitch_oil(0.0f, 90.0f, 0.0f) == Encode_gfi_pitch_oil(0.0f, -90.0f, 0.0f));
     Decode_gfi_pitch_oil(Encode_gfi_pitch_oil(0.0f, 90.0f, 0.0f), &gfi, &pitch, &oil);
     assert(close(pitch, -91.4286, 1e-3));
