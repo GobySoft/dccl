@@ -40,19 +40,24 @@ add_library(dccl
   ${SRC}
   )
 
-target_link_libraries(dccl protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+# Keyword signature throughout: the plain form puts every dependency in the link interface as
+# well, which writes find_library()'s absolute results into the installed dccl-targets.cmake and
+# so pins consumers to this machine's library paths.
+target_link_libraries(dccl PUBLIC protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 
 if(enable_units)
   add_dependencies(dccl protoc-gen-dccl)
 endif()
 
+# Cryptopp and Lua are implementation details: no installed header needs either, and the shared
+# library records them as DT_NEEDED, so a consumer of libdccl does not link them itself.
 if(enable_cryptography)
-  target_link_libraries(dccl ${Cryptopp_LIBRARIES})
+  target_link_libraries(dccl PRIVATE ${Cryptopp_LIBRARIES})
 endif()
 
 if(enable_lua)
-  target_link_libraries(dccl ${LUA_LIBRARY})
+  target_link_libraries(dccl PRIVATE ${LUA_LIBRARY})
 endif()
 
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")
