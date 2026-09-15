@@ -110,12 +110,12 @@ job-template-deb-amd64: &job-template-deb-amd64
           sed -i "s/^set(DCCL_VERSION_PATCH *\".*\"/set(DCCL_VERSION_PATCH \"${NEWVERSION_PATCH}\"/" CMakeLists.txt
           quilt refresh                  
     - run: &run-dch
-        name: Generate original source tarball and add changelog entry 
+        name: Add the changelog entry shared by every architecture
+        # a per-job dch would stamp each architecture's changelog with a different date, and
+        # Multi-Arch: same packages refuse to co-install when their shared files differ
         command: |
-          export NEWVERSION="$(echo ../*.orig.tar.xz | sed 's/.*_\(.*\)\.orig\.tar\.xz/\1/')"
-          COMMENT="Autobuild for version ${NEWVERSION}" &&
-          cd debian &&
-          dch --newversion=${NEWVERSION}-0+gs+${DISTRO_RELEASE_VERSION}.1 -D ${DISTRO_RELEASE_CODENAME} "${COMMENT}"
+          cp /root/src/changelog debian/changelog &&
+          sed -i "s/DISTRORELEASEVERSION/${DISTRO_RELEASE_VERSION}/;s/DISTRORELEASECODENAME/${DISTRO_RELEASE_CODENAME}/" debian/changelog
     - run: &run-build-pkg
         name: Build the Debian package 
         command: |
@@ -373,12 +373,21 @@ jobs:
             git config tar.tar.xz.command "xz -c" &&
             mkdir -p /root/src &&
             git archive --prefix=dccl5-${NEWVERSION}/ -o /root/src/dccl5_${NEWVERSION}.orig.tar.xz HEAD;
+      - run: *run-update-deb
+      - run:
+          name: Add changelog entry
+          command: |
+            export NEWVERSION="$(echo /root/src/*.orig.tar.xz | sed 's/.*_\(.*\)\.orig\.tar\.xz/\1/')"
+            COMMENT="Autobuild for version ${NEWVERSION}" &&
+            dch -c /root/debian/changelog --newversion=${NEWVERSION}-0+gs+DISTRORELEASEVERSION.1 -D DISTRORELEASECODENAME "${COMMENT}" &&
+            cp /root/debian/changelog /root/src
       - store_artifacts:
           path: /root/src
       - persist_to_workspace:
           root: /root/src
           paths:
             - '*.tar.xz'
+            - 'changelog'
 
   osx-build:
     macos:
