@@ -16,7 +16,7 @@ To install release packages on Ubuntu or Debian, install the appropriate apt sou
 export COMPONENT=release
 export GOBYSOFT_SIGNING_KEY=A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE
 install -d -m 0755 /etc/apt/keyrings
-gpg --keyserver keyserver.ubuntu.com --recv-keys ${GOBYSOFT_SIGNING_KEY} && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
+curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${GOBYSOFT_SIGNING_KEY}" | gpg --import && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
 echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] https://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
 ```
 
