@@ -40,6 +40,16 @@ message Foo
     required int32 body_field = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
 }
 
+message BarV3
+{
+    option (dccl.msg).id = 11018;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 3;
+
+    required Foo foo = 1;
+    required int32 bar_body = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
+}
+
 message BarV4
 {
     option (dccl.msg).id = 11013;

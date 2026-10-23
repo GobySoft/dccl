@@ -296,8 +296,8 @@ int main(int argc, char* argv[])
         assert(decode_malformed(codec, msg_in, "02", &msg_out));
         assert(msg_out.value() == ENUM_C);
 
-        // negative enum indices (-1, INT_MIN) must not index the enum descriptor
-        for (const std::string& body_hex : {"ffffffff0f", "8080808008"})
+        // out-of-range enum indices (-1, INT_MIN, 5) must not index the enum descriptor
+        for (const std::string& body_hex : {"ffffffff0f", "8080808008", "05"})
         {
             msg_out.Clear();
             if (decode_malformed(codec, msg_in, body_hex, &msg_out))
