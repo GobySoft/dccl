@@ -108,6 +108,7 @@ message DCCLFieldOptions
         optional string only_if = 3;
         optional string min = 10;
         optional string max = 11;
+        optional string max_repeat = 12;
     }
 
     optional Conditions dynamic_conditions = 40;

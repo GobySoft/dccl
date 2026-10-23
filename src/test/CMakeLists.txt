@@ -87,6 +87,7 @@ endif()
 if(enable_lua)
   add_subdirectory(dccl_dynamic_conditions)
   add_subdirectory(dccl_dynamic_conditions_max_bytes)
+  add_subdirectory(dccl_dynamic_conditions_max_repeat)
 endif()
 
 add_subdirectory(python)
