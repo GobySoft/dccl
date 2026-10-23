@@ -59,3 +59,34 @@ message BarV5
     required Foo foo = 1;
     required int32 bar_body = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
 }
+
+// Foo has nested in_head fields, but a non-default codec for it cannot split
+// them from the body, so these must fail to load.
+message BarCustomCodecV3
+{
+    option (dccl.msg).id = 11015;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 3;
+
+    required Foo foo = 1 [(dccl.field).codec = "test.whole_foo"];
+}
+
+message BarCustomCodecV4
+{
+    option (dccl.msg).id = 11016;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required Foo foo = 1 [(dccl.field).codec = "test.whole_foo"];
+}
+
+// An explicit in_head = false puts the whole of foo in the body
+message BarCustomCodecBody
+{
+    option (dccl.msg).id = 11017;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 4;
+
+    required Foo foo = 1
+        [(dccl.field).codec = "test.whole_foo", (dccl.field).in_head = false];
+}

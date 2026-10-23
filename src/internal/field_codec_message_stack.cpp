@@ -22,6 +22,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 #include "field_codec_message_stack.h"
+#include "../codecs2/field_codec_default_message.h"
+#include "../codecs3/field_codec_default_message.h"
+#include "../codecs4/field_codec_default_message.h"
 #include "../field_codec.h"
 
 // has_head_field
@@ -43,6 +46,13 @@ bool dccl::internal::has_head_field(const google::protobuf::Descriptor* desc)
         }
     }
     return false;
+}
+
+bool dccl::internal::is_default_message_codec(const FieldCodecBase* codec)
+{
+    return dynamic_cast<const v2::DefaultMessageCodec*>(codec) ||
+           dynamic_cast<const v3::DefaultMessageCodec*>(codec) ||
+           dynamic_cast<const v4::DefaultMessageCodec*>(codec);
 }
 
 // MessageStack

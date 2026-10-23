@@ -23,6 +23,9 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests usage of Legacy CCL
 
+#include <cassert>
+
+#include "../../binary.h"
 #include "../../codec.h"
 #include "../../native_protobuf/dccl_native_protobuf.h"
 #include "test.pb.h"
@@ -221,6 +224,27 @@ void run_test(dccl::Codec& codec, NativeProtobufTest& msg_in)
     assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
 }
 
+// Decodes the ID of a valid encoding of msg_in followed by body_hex
+template <typename Msg>
+bool decode_malformed(dccl::Codec& codec, const Msg& msg_in, const std::string& body_hex,
+                      Msg* msg_out)
+{
+    std::string bytes;
+    codec.encode(&bytes, msg_in);
+    bytes = bytes.substr(0, 1) + dccl::hex_decode(body_hex);
+    try
+    {
+        codec.decode(bytes, msg_out);
+        return true;
+    }
+    catch (const dccl::Exception& e)
+    {
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception: " << e.what()
+                                                        << std::endl;
+        return false;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     bool verbose = false;
@@ -258,6 +282,66 @@ int main(int argc, char* argv[])
         NativeProtobufTest msg_in;
         fill_message_max(msg_in);
         run_test(codec, msg_in);
+    }
+
+    codec.load<NativeProtobufEnum>();
+    codec.load<NativeProtobufBool>();
+    codec.load<NativeProtobufInt32>();
+
+    {
+        NativeProtobufEnum msg_in;
+        msg_in.set_value(ENUM_C);
+        NativeProtobufEnum msg_out;
+        // confirms the body is the bare varint, so the cases below are well formed
+        assert(decode_malformed(codec, msg_in, "02", &msg_out));
+        assert(msg_out.value() == ENUM_C);
+
+        // negative enum indices (-1, INT_MIN) must not index the enum descriptor
+        for (const std::string& body_hex : {"ffffffff0f", "8080808008"})
+        {
+            msg_out.Clear();
+            if (decode_malformed(codec, msg_in, body_hex, &msg_out))
+                assert(!msg_out.has_value());
+        }
+    }
+
+    {
+        NativeProtobufBool msg_in;
+        msg_in.set_value(true);
+        NativeProtobufBool msg_out;
+        // not a valid one-byte varint
+        assert(!decode_malformed(codec, msg_in, "80", &msg_out));
+    }
+
+    {
+        NativeProtobufInt32 msg_in;
+        msg_in.set_value(1);
+        NativeProtobufInt32 msg_out;
+        // longer than protobuf's 10-byte varint limit
+        std::string body_hex;
+        for (int i = 0; i < 11; ++i) body_hex += "80";
+        body_hex += "00";
+        assert(!decode_malformed(codec, msg_in, body_hex, &msg_out));
+    }
+
+    {
+        // this group registers the default message codec under its own name, which must
+        // still split the nested head field from the body
+        codec.load<NativeProtobufNestedHead>();
+        NativeProtobufNestedHead msg_in;
+        msg_in.mutable_inner()->set_head_field(7);
+        msg_in.mutable_inner()->set_body_field(9);
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+
+        NativeProtobufNestedHead msg_out;
+        codec.decode(bytes, &msg_out);
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+
+        NativeProtobufNestedHead head_out;
+        codec.decode(bytes, &head_out, true);
+        assert(head_out.inner().head_field() == 7);
+        assert(!head_out.inner().has_body_field());
     }
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;

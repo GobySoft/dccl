@@ -74,3 +74,49 @@ message NativeProtobufTest
     repeated double double_default_repeat = 101 [(dccl.field).max_repeat = 4];
     repeated int32 int32_default_repeat = 103 [(dccl.field).max_repeat = 4];
 }
+
+message NativeProtobufEnum
+{
+    option (dccl.msg).id = 2;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+    option (dccl.msg).codec_group = "dccl.native_protobuf";
+
+    required Enum1 value = 1;
+}
+
+message NativeProtobufBool
+{
+    option (dccl.msg).id = 3;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+    option (dccl.msg).codec_group = "dccl.native_protobuf";
+
+    required bool value = 1;
+}
+
+message NativeProtobufInt32
+{
+    option (dccl.msg).id = 4;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+    option (dccl.msg).codec_group = "dccl.native_protobuf";
+
+    required int32 value = 1;
+}
+
+message NativeProtobufInner
+{
+    required fixed32 head_field = 1 [(dccl.field).in_head = true];
+    required int32 body_field = 2;
+}
+
+message NativeProtobufNestedHead
+{
+    option (dccl.msg).id = 5;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+    option (dccl.msg).codec_group = "dccl.native_protobuf";
+
+    required NativeProtobufInner inner = 1;
+}

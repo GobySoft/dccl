@@ -35,6 +35,54 @@
 
 using namespace dccl::test;
 
+// Encodes the whole of Foo whichever part it is called for
+class WholeFooCodec : public dccl::TypedFixedFieldCodec<Foo>
+{
+  private:
+    unsigned size() override { return FIELD_SIZE + BODY_FIELD_SIZE; }
+    dccl::Bitset encode() override { return dccl::Bitset(size()); }
+    dccl::Bitset encode(const Foo& foo) override
+    {
+        dccl::Bitset bits(FIELD_SIZE, static_cast<unsigned long>(foo.header().field()));
+        bits.append(dccl::Bitset(BODY_FIELD_SIZE, static_cast<unsigned long>(foo.body_field())));
+        return bits;
+    }
+    Foo decode(dccl::Bitset* bits) override
+    {
+        Foo foo;
+        dccl::Bitset field = *bits;
+        field.resize(FIELD_SIZE);
+        dccl::Bitset body_field = *bits;
+        body_field >>= FIELD_SIZE;
+        body_field.resize(BODY_FIELD_SIZE);
+        foo.mutable_header()->set_field(field.to_ulong());
+        foo.set_body_field(body_field.to_ulong());
+        return foo;
+    }
+    void validate() override {}
+
+    static constexpr unsigned FIELD_SIZE = 7;
+    static constexpr unsigned BODY_FIELD_SIZE = 8;
+};
+
+template <typename BarMsg> void expect_load_failure()
+{
+    dccl::Codec codec;
+    codec.manager().add<WholeFooCodec>("test.whole_foo");
+    bool threw = false;
+    try
+    {
+        codec.load<BarMsg>();
+    }
+    catch (const dccl::Exception& e)
+    {
+        dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception: " << e.what()
+                                                        << std::endl;
+        threw = true;
+    }
+    assert(threw);
+}
+
 template <typename BarMsg> void run_test(const std::string& label)
 {
     dccl::Codec codec;
@@ -83,6 +131,25 @@ int main(int argc, char* argv[])
 
     run_test<BarV4>("BarV4 (codec_version=4)");
     run_test<BarV5>("BarV5 (codec_version=5)");
+
+    expect_load_failure<BarCustomCodecV3>();
+    expect_load_failure<BarCustomCodecV4>();
+
+    {
+        dccl::Codec codec;
+        codec.manager().add<WholeFooCodec>("test.whole_foo");
+        codec.load<BarCustomCodecBody>();
+
+        BarCustomCodecBody msg_in;
+        msg_in.mutable_foo()->mutable_header()->set_field(42);
+        msg_in.mutable_foo()->set_body_field(99);
+        std::string bytes;
+        codec.encode(&bytes, msg_in);
+
+        BarCustomCodecBody msg_out;
+        codec.decode(bytes, &msg_out);
+        assert(msg_in.SerializeAsString() == msg_out.SerializeAsString());
+    }
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
     return 0;

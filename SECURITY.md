@@ -6,9 +6,8 @@ Security updates are provided for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 4.y.z   | :white_check_mark: |
-| 3.y.z   | :white_check_mark: |
-| < 3.0   | :x:                |
+| 5.y.z   | :white_check_mark: |
+| < 5.0   | :x:                |
 
 ## Reporting a Vulnerability
 

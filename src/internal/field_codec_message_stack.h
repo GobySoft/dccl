@@ -74,6 +74,10 @@ struct MessageStackData
 /// since an explicit in_head=false forces all children to BODY.
 bool has_head_field(const google::protobuf::Descriptor* desc);
 
+/// \brief Returns true if \p codec is one of the default message codecs, which are the only
+/// message codecs that split an embedded message between the head and body.
+bool is_default_message_codec(const FieldCodecBase* codec);
+
 //RAII handler for the current Message recursion stack
 class MessageStack
 {

@@ -47,9 +47,10 @@ struct PrimitiveTypeHelperBase
 {
     WireType decode(google::protobuf::io::CodedInputStream* input_stream)
     {
-        WireType value;
-        google::protobuf::internal::WireFormatLite::ReadPrimitive<WireType, DeclaredType>(
-            input_stream, &value);
+        WireType value{};
+        if (!google::protobuf::internal::WireFormatLite::ReadPrimitive<WireType, DeclaredType>(
+                input_stream, &value))
+            throw(Exception("Malformed native Protobuf value"));
         return value;
     }
 };
@@ -376,7 +377,13 @@ class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
         if (helper_.is_varint())
         {
             // most significant bit indicates if more bytes are needed
-            while (bits->test(bits->size() - 1)) bits->get_more_bits(BITS_IN_BYTE);
+            while (bits->test(bits->size() - 1))
+            {
+                if (bits->size() >= max_varint_bytes * BITS_IN_BYTE)
+                    throw(Exception("Native Protobuf varint exceeds " +
+                                    std::to_string(max_varint_bytes) + " bytes"));
+                bits->get_more_bits(BITS_IN_BYTE);
+            }
         }
 
         std::string bytes = bits->to_byte_string();
@@ -387,6 +394,8 @@ class PrimitiveTypeFieldCodec : public TypedFieldCodec<WireType, FieldType>
     }
 
   private:
+    // Protobuf's limit for a 64-bit varint
+    static constexpr unsigned max_varint_bytes = 10;
     PrimitiveTypeHelper<WireType, DeclaredType> helper_;
 };
 

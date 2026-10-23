@@ -62,6 +62,15 @@ An example of encoding the DCCL "CommandMessage" for a set of representative val
 
 Decoding is the reverse of encoding, with the requirement that each field codec consumes (reads) only the exact number of bits that the encoder produced. This allows the fields to be concatenated, and allows entire DCCL messages to be concatenated without any delimiters or other header data.
 
+## Encryption
+
+When a passphrase is set with `dccl::Codec::set_crypto_passphrase`, the body is encrypted with AES-256 in CTR mode. The header (the DCCL ID and any `in_head` fields) is sent in cleartext. Know these limits before relying on it:
+
+- The key is the SHA-256 hash of the passphrase, with no salt. Use a randomly generated passphrase of at least 128 bits (for example, 32 hex characters), not a memorable phrase.
+- The IV is derived only from the header bytes, so two messages with identical headers are encrypted with the same keystream. A captured pair can reveal both plaintexts. Give each encrypted message type an `in_head` field that never repeats, such as a sequence number.
+- Nothing authenticates the header or the ciphertext, so an attacker on the link can modify or replay messages without the passphrase. The CRC codecs do not detect this.
+- Legacy CCL messages have no header fields, so every CCL message of a type shares one keystream. Do not use encryption with CCL.
+
 
 ## Default Field Codec Reference
 
@@ -273,6 +282,8 @@ message NavigationReport {
 **Important:** The CRC field must be the **last field** in the message body to cover all other fields, and it must be a field of the message being encoded, not of an embedded message (messages with a CRC field in an embedded message fail validation).
 
 The CRC is computed over the encoded bits of all body fields that precede the CRC field. The value of this field (if set) on encoding is ignored and overwritten with the computed CRC. On decoding, the CRC is recomputed over the same bits and an exception is thrown if it does not match the received value, indicating that the message data may be corrupted.
+
+A CRC detects transmission errors, not tampering. It uses no secret, and it is linear, so an attacker can change a message and its CRC together, even when the body is encrypted (see Encryption above).
 
 The `min` and `max` bounds are hardcoded by the codec (0 and 65535 for CRC-16; 0 and 4294967295 for CRC-32) and do not need to be specified in the field options.
 
