@@ -27,6 +27,7 @@
 #ifndef DCCL20091211H
 #define DCCL20091211H
 
+#include <iterator>
 #include <map>
 #include <ostream>
 #include <set>
@@ -587,6 +588,12 @@ CharIterator dccl::Codec::decode(CharIterator begin, CharIterator end, ProtobufM
                 dlog << "Head bytes (bits): " << head_size_bytes << "(" << head_size_bits
                      << "), max body bytes (bits): " << body_size_bytes << "(" << body_size_bits
                      << ")" << std::endl;
+
+            if (std::distance(begin, end) < static_cast<std::ptrdiff_t>(head_size_bytes))
+                throw(Exception("Message is " + std::to_string(std::distance(begin, end)) +
+                                    " bytes, shorter than its " + std::to_string(head_size_bytes) +
+                                    " byte header",
+                                desc));
 
             CharIterator head_bytes_end = begin + head_size_bytes;
             dlog.is(logger::DEBUG3, logger::DECODE) &&

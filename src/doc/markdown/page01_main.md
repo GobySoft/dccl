@@ -15,10 +15,10 @@ In addition to the built-in codecs, further field codecs can be defined as exten
 1. Grab dependencies:
    ```shell
    export COMPONENT=release
-   export GOBYSOFT_SIGNING_KEY=19478082E2F8D3FE
+   export GOBYSOFT_SIGNING_KEY=A8E48CFF6650A07F6EF2B9AD19478082E2F8D3FE
    install -d -m 0755 /etc/apt/keyrings
-   gpg --keyserver keyserver.ubuntu.com --recv-keys ${GOBYSOFT_SIGNING_KEY} && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
-   echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] http://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
+   curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${GOBYSOFT_SIGNING_KEY}" | gpg --import && gpg --export ${GOBYSOFT_SIGNING_KEY} >/etc/apt/keyrings/gobysoft.gpg
+   echo "deb [signed-by=/etc/apt/keyrings/gobysoft.gpg] https://packages.gobysoft.org/$(. /etc/os-release; echo "$ID")/${COMPONENT}/ $(. /etc/os-release; echo "$VERSION_CODENAME")/" >/etc/apt/sources.list.d/gobysoft_${COMPONENT}.list
    sudo apt update
    sudo apt install libdccl5-dev
    ```
@@ -205,21 +205,17 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
   ```
 
 - Compiled release binary packages for Ubuntu LTS and Debian stable/oldstable: [https://packages.gobysoft.org/ubuntu/release/](https://packages.gobysoft.org/ubuntu/release/)
+  Add the repository and signing key as in step 1 of the Quick Start, then
   ```bash
-  echo "deb http://packages.gobysoft.org/ubuntu/release/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-  sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
-  sudo apt update
-  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-apps dccl5-compiler
+  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-compiler
   # optionally
   sudo apt install python3-dccl5
   ```
 
 - Compiled continuous (latest HEAD of the 5.0 branch) binary packages for Ubuntu / Debian: [https://packages.gobysoft.org/ubuntu/continuous/](https://packages.gobysoft.org/ubuntu/continuous/)
+  Add the repository and signing key as in step 1 of the Quick Start with `COMPONENT=continuous`, then
   ```bash
-  echo "deb http://packages.gobysoft.org/ubuntu/continuous/ `lsb_release -c -s`/" | sudo tee /etc/apt/sources.list.d/gobysoft_release.list
-  sudo apt-key adv --recv-key --keyserver hkp://keyserver.ubuntu.com:80 19478082E2F8D3FE
-  sudo apt update
-  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-apps dccl5-compiler
+  sudo apt install libdccl5-dev dccl5-apps dccl5-doc dccl5-compiler
   # optionally
   sudo apt install python3-dccl5
   ```
