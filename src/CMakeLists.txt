@@ -46,7 +46,10 @@ add_library(dccl
 target_link_libraries(dccl PUBLIC protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 
-if(enable_units)
+# protoc-gen-dccl generates code for DCCL's own protos, so it is built even without build_apps
+# (cross-compiles use the host's plugin instead, see dccl_EXEC_DIR)
+if(build_apps OR NOT CMAKE_CROSSCOMPILING)
+  add_subdirectory(apps/pb_plugin)
   add_dependencies(dccl protoc-gen-dccl)
 endif()
 

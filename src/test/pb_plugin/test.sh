@@ -23,10 +23,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-# Tests protoc-gen-dccl, the protoc plugin that adds boost::units accessors to
-# generated protobuf classes and (optionally) writes a loader .cpp.
+# Tests protoc-gen-dccl, the protoc plugin that adds DCCL_ID enums and boost::units
+# accessors to generated protobuf classes and (optionally) writes a loader .cpp.
 #
 # Usage: test.sh <protoc> <protoc-gen-dccl> <proto source dir> <dccl include dir> <work dir>
+#                <boost units: ON|OFF>
 
 set -u
 
@@ -35,6 +36,7 @@ PLUGIN="$2"
 PROTO_DIR="$3"
 INC_DIR="$4"
 WORK_DIR="$5"
+BOOST_UNITS="$6"
 
 rm -rf "${WORK_DIR}"
 mkdir -p "${WORK_DIR}"
@@ -53,17 +55,22 @@ pass()
     echo "ok: $1"
 }
 
-# generate <output subdir> <extra --dccl_out prefix> <proto file>
+# generate <output subdir> <extra --dccl_out prefix> <proto file>...
 generate()
 {
-    local outdir="${WORK_DIR}/$1" prefix="$2" proto="$3"
+    local outdir="${WORK_DIR}/$1" prefix="$2"
+    shift 2
+    local protos=()
+    for proto in "$@"; do
+        protos+=("${PROTO_DIR}/${proto}")
+    done
     mkdir -p "${outdir}"
     "${PROTOC}" \
         --cpp_out="${outdir}" \
         --dccl_out="${prefix}${outdir}" \
         --plugin=protoc-gen-dccl="${PLUGIN}" \
         -I "${PROTO_DIR}" -I "${INC_DIR}" -I /usr/include \
-        "${PROTO_DIR}/${proto}" 2>&1
+        "${protos[@]}" 2>&1
 }
 
 contains()
@@ -73,6 +80,16 @@ contains()
         pass "$1"
     else
         fail "$1 (expected '$3' in $2)"
+    fi
+}
+
+lacks()
+{
+    checks=$((checks + 1))
+    if grep -qF -- "$3" "$2"; then
+        fail "$1 (did not expect '$3' in $2)"
+    else
+        pass "$1"
     fi
 }
 
@@ -97,6 +114,29 @@ else
     echo "${checks} checks run, ${failures} failure(s)"
     exit 1
 fi
+
+contains "the DCCL ID is generated" "${HDR}" "DCCL_ID = 230"
+contains "the DCCL max bytes is generated" "${HDR}" "DCCL_MAX_BYTES = 64"
+
+##
+## files without units get no units headers, even when generated alongside one that has them
+##
+checks=$((checks + 1))
+OUT="$(generate mixed "" units.proto no_units.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units.proto and no_units.proto together succeeds"
+else
+    fail "generating units.proto and no_units.proto together succeeds (${OUT})"
+fi
+NO_UNITS_HDR="${WORK_DIR}/mixed/no_units.pb.h"
+contains "a file without units still gets its DCCL ID" "${NO_UNITS_HDR}" "DCCL_ID = 232"
+lacks "a file without units includes no boost units headers" "${NO_UNITS_HDR}" "boost/units"
+
+if [ "${BOOST_UNITS}" != "ON" ]; then
+    # without Boost Units support the units options are ignored
+    lacks "no boost units headers are included" "${HDR}" "boost/units"
+    lacks "no with_units accessors are generated" "${HDR}" "_with_units"
+else
 
 contains "boost units headers are included" "${HDR}" "#include <boost/units/quantity.hpp>"
 contains "absolute.hpp is included for temperatures" "${HDR}" "#include <boost/units/absolute.hpp>"
@@ -173,6 +213,8 @@ contains "an unrecognised system is used verbatim" "${SYS_HDR}" "my::own::system
 contains "an absolute temperature is wrapped" "${SYS_HDR}" "boost::units::absolute"
 contains "dimensionless is special-cased" "${SYS_HDR}" "dimensionless_type"
 
+fi # BOOST_UNITS
+
 ##
 ## the loader file
 ##
@@ -219,6 +261,7 @@ check_rejected()
     esac
 }
 
+if [ "${BOOST_UNITS}" = "ON" ]; then
 check_rejected "units on a non-numeric field" badunits bad_units.proto \
                "on numeric fields"
 check_rejected "an unknown SI prefix" badprefix bad_prefix.proto "Invalid SI prefix"
@@ -236,6 +279,7 @@ check_rejected "an unparseable base_dimensions string" badparse \
                bad_unparseable_dims.proto "Failed to parse base_dimensions"
 check_rejected "base_dimensions with no system anywhere" badnosystem \
                bad_missing_system.proto "must have 'system' defined"
+fi
 
 checks=$((checks + 1))
 OUT="$(generate badparam "not_a_real_parameter=1:" units.proto)"

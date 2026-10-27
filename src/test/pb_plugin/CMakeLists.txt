@@ -5,4 +5,5 @@ add_test(NAME dccl_test_pb_plugin
           $<TARGET_FILE:protoc-gen-dccl>
           ${CMAKE_CURRENT_SOURCE_DIR}
           ${dccl_INC_DIR}
-          ${CMAKE_CURRENT_BINARY_DIR}/generated)
+          ${CMAKE_CURRENT_BINARY_DIR}/generated
+          $<IF:$<BOOL:${enable_units}>,ON,OFF>)

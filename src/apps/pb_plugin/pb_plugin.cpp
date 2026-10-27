@@ -38,6 +38,14 @@
 #include <sstream>
 #include <filesystem>
 
+#ifdef DCCL_PLUGIN_BOOST_UNITS
+constexpr bool boost_units_enabled = true;
+#else
+constexpr bool boost_units_enabled = false;
+#endif
+
+// per-file state, reset at the start of each Generate() call
+bool file_uses_units_{false};
 std::set<std::string> systems_to_include_;
 std::set<std::string> base_units_to_include_;
 std::set<std::string> custom_unit_headers_to_include_;
@@ -152,6 +160,11 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
         }
     }
 
+    file_uses_units_ = false;
+    systems_to_include_.clear();
+    base_units_to_include_.clear();
+    custom_unit_headers_to_include_.clear();
+
     try
     {
         const std::string filename(file->name());
@@ -175,22 +188,26 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
             }
         }
 
-        std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
-            generator_context->OpenForInsert(filename_h_, "includes"));
-        google::protobuf::io::Printer include_printer(include_output.get(), '$');
-        std::stringstream includes_ss;
+        if (file_uses_units_)
+        {
+            std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
+                generator_context->OpenForInsert(filename_h_, "includes"));
+            google::protobuf::io::Printer include_printer(include_output.get(), '$');
+            std::stringstream includes_ss;
 
-        includes_ss << "#include <boost/units/quantity.hpp>" << std::endl;
-        includes_ss << "#include <boost/units/absolute.hpp>" << std::endl;
-        includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
-        includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
+            includes_ss << "#include <boost/units/quantity.hpp>" << std::endl;
+            includes_ss << "#include <boost/units/absolute.hpp>" << std::endl;
+            includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
+            includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
 
-        for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
-        for (const auto& it : base_units_to_include_) include_base_unit_headers(it, includes_ss);
-        for (const auto& it : custom_unit_headers_to_include_)
-            include_custom_unit_headers(it, includes_ss);
+            for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
+            for (const auto& it : base_units_to_include_)
+                include_base_unit_headers(it, includes_ss);
+            for (const auto& it : custom_unit_headers_to_include_)
+                include_custom_unit_headers(it, includes_ss);
 
-        include_printer.Print(includes_ss.str().c_str());
+            include_printer.Print(includes_ss.str().c_str());
+        }
 
         return true;
     }
@@ -232,10 +249,7 @@ void DCCLGenerator::generate_message(
                 const dccl::DCCLMessageOptions& dccl_msg_options =
                     desc->options().GetExtension(dccl::msg);
                 if (dccl_msg_options.has_unit_system())
-                {
                     message_unit_system.reset(new std::string(dccl_msg_options.unit_system()));
-                    systems_to_include_.insert(dccl_msg_options.unit_system());
-                }
             }
 
             for (int field_i = 0, field_n = desc->field_count(); field_i < field_n; ++field_i)
@@ -264,7 +278,9 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         const dccl::DCCLFieldOptions& dccl_field_options =
             field->options().GetExtension(dccl::field);
 
-        if (!dccl_field_options.has_units())
+        // without Boost Units support, units are ignored, as they were when this plugin was only
+        // built alongside Boost
+        if (!dccl_field_options.has_units() || !boost_units_enabled)
         {
             return;
         }
@@ -272,6 +288,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
         // units are generated as boost::units quantities over the field's own
         // type, so the field has to be numeric
         check_field_type(field);
+        file_uses_units_ = true;
 
         if ((dccl_field_options.units().has_base_dimensions() &&
              dccl_field_options.units().has_derived_dimensions()) ||
