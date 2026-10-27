@@ -373,7 +373,7 @@ class FieldCodecBase
         if (manager_)
             return *manager_;
         else
-            throw(Exception("FieldCodecManagerLocal is not set"), this->this_descriptor());
+            throw(Exception("FieldCodecManagerLocal is not set", this->this_descriptor()));
     }
 
     const FieldCodecManagerLocal& manager() const
@@ -381,7 +381,7 @@ class FieldCodecBase
         if (manager_)
             return *manager_;
         else
-            throw(Exception("FieldCodecManagerLocal is not set"), this->this_descriptor());
+            throw(Exception("FieldCodecManagerLocal is not set", this->this_descriptor()));
     }
 
     virtual void set_manager(FieldCodecManagerLocal* manager) { manager_ = manager; }

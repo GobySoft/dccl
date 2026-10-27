@@ -259,7 +259,17 @@ bool dccl::v4::DefaultMessageCodec::check_field(const google::protobuf::FieldDes
                 if (part() == HEAD && !dccl_field_options.has_in_head() &&
                     field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE &&
                     dccl::internal::has_head_field(field->message_type()))
+                {
+                    // Any other codec would put the whole embedded message in the
+                    // unencrypted head, including fields meant for the body.
+                    if (!dccl::internal::is_default_message_codec(find(field).get()))
+                        throw(Exception("Embedded message field '" + std::string(field->name()) +
+                                            "' uses a non-default codec and its type contains "
+                                            "in_head fields. Set (dccl.field).in_head "
+                                            "explicitly on this field.",
+                                        this_descriptor()));
                     return true;
+                }
                 return false;
             }
             else

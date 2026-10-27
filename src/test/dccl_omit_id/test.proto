@@ -75,3 +75,17 @@ message TestMsgNormalId3
         (dccl.field).precision = 1
     ];
 }
+
+message TestMsgOmitHead
+{
+    option (dccl.msg).omit_id = true;
+    option (dccl.msg).max_bytes = 32;
+    option (dccl.msg).codec_version = 5;
+
+    required uint32 h = 1 [
+        (dccl.field).min = 0,
+        (dccl.field).max = 65535,
+        (dccl.field).in_head = true
+    ];
+    required uint32 b = 2 [(dccl.field).min = 0, (dccl.field).max = 255];
+}

@@ -22,8 +22,9 @@
 // along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 // tests all protobuf types with _default codecs, repeat and non repeat
 
+#include <cassert>
 #include <fstream>
-
+#include <vector>
 
 #include "../../binary.h"
 #include "../../codec.h"
@@ -109,6 +110,34 @@ int main(int argc, char* argv[])
         catch (const dccl::Exception& e)
         {
             dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "Caught expected exception: " << e.what() << std::endl;
+        }
+    }
+
+    // input shorter than the header must be rejected, not read past its end
+    {
+        codec.load<TestMsgOmitHead>();
+        TestMsgOmitHead msg_in;
+        msg_in.set_h(1000);
+        msg_in.set_b(10);
+        decode_check(msg_in);
+
+        for (std::size_t length : {0, 1})
+        {
+            std::vector<char> truncated(length, '\0');
+            for (bool header_only : {false, true})
+            {
+                TestMsgOmitHead msg_out;
+                bool threw = false;
+                try
+                {
+                    codec.decode(truncated.begin(), truncated.end(), &msg_out, header_only);
+                }
+                catch (const dccl::Exception&)
+                {
+                    threw = true;
+                }
+                assert(threw);
+            }
         }
     }
 

@@ -26,6 +26,9 @@
 #include "../../codec.h"
 #include "test.pb.h"
 
+#include <cassert>
+#include <vector>
+
 #include <sys/time.h>
 
 #include "../../binary.h"
@@ -91,6 +94,25 @@ int main(int argc, char* argv[])
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "... got Message out:\n" << msg_out1->DebugString() << std::endl;
     assert(msg_in1.SerializeAsString() == msg_out1->SerializeAsString());
     delete msg_out1;
+
+    // input shorter than the header must be rejected, not read past its end
+    {
+        std::vector<char> truncated(bytes1.begin(), bytes1.begin() + 1);
+        for (bool header_only : {false, true})
+        {
+            GobyMessage msg_out;
+            bool threw = false;
+            try
+            {
+                codec.decode(truncated.begin(), truncated.end(), &msg_out, header_only);
+            }
+            catch (const dccl::Exception&)
+            {
+                threw = true;
+            }
+            assert(threw);
+        }
+    }
 
     dccl::dlog.is(dccl::logger::INFO) && dccl::dlog << "all tests passed" << std::endl;
 }

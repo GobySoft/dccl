@@ -158,7 +158,7 @@ dccl::native_protobuf::EnumFieldCodec::post_decode(const int& wire_value)
 {
     const google::protobuf::EnumDescriptor* e = this_field()->enum_type();
 
-    if (wire_value < e->value_count())
+    if (wire_value >= 0 && wire_value < e->value_count())
     {
         const google::protobuf::EnumValueDescriptor* return_value = e->value(wire_value);
         return return_value;
