@@ -25,7 +25,9 @@ import "dccl/option_extensions.proto";
 
 package dccl.test.plugin;
 
-// Covers the spellings that base_dimensions and derived_dimensions accept.
+// Covers the spellings that base_dimensions and derived_dimensions accept,
+// including those used in jaiabot's messages. units_syntax_test.cpp checks that
+// the generated accessors compile and convert correctly.
 message UnitsSyntaxMsg
 {
     option (dccl.msg).id = 233;
@@ -55,10 +57,85 @@ message UnitsSyntaxMsg
         (dccl.field).min = 0,
         (dccl.field).max = 10
     ];
-    // names separated only by a space are multiplied, and "_dimension" is optional
+    // names separated only by a space are multiplied, and "_dimension" is
+    // optional
     optional double juxtaposed = 5 [
         (dccl.field).units.derived_dimensions = "mass_dimension length",
         (dccl.field).min = 0,
         (dccl.field).max = 10
     ];
+
+    // abbreviated base dimensions
+    optional uint64 time_us = 6
+        [(dccl.field) = { units { prefix: "micro" base_dimensions: "T" } }];
+    optional double distance = 7
+        [(dccl.field) = { units { base_dimensions: "L" } }];
+    optional double speed = 8
+        [(dccl.field) = { units { base_dimensions: "LT^-1" } }];
+    optional double acceleration = 9
+        [(dccl.field) = { units { base_dimensions: "LT^-2" } }];
+    optional double frequency = 10
+        [(dccl.field) = { units { base_dimensions: "T^-1" } }];
+    optional double force = 11
+        [(dccl.field) = { units { base_dimensions: "MLT^-2" } }];
+    optional double density = 12
+        [(dccl.field) = { units { base_dimensions: "ML^-3" } }];
+    optional double area = 13
+        [(dccl.field) = { units { base_dimensions: "L^2" } }];
+    optional double charge = 14
+        [(dccl.field) = { units { base_dimensions: "IT" } }];
+    optional double amount = 15
+        [(dccl.field) = { units { base_dimensions: "N" } }];
+    optional double luminous_intensity = 16
+        [(dccl.field) = { units { base_dimensions: "J" } }];
+    optional double solid_angle = 17
+        [(dccl.field) = { units { base_dimensions: "S" } }];
+    optional double ratio = 18
+        [(dccl.field) = { units { base_dimensions: "-" } }];
+    optional double heading = 19 [(dccl.field) = {
+        units { base_dimensions: "A" system: "angle::degree" }
+    }];
+    optional double turn_rate = 20
+        [(dccl.field) = { units { base_dimensions: "AT^-1" } }];
+    optional double water_temperature = 21
+        [(dccl.field) = { units { base_dimensions: "K" system: "celsius" } }];
+    // abbreviated and named base dimensions together
+    optional double mixed = 22
+        [(dccl.field) = { units { base_dimensions: "L time^-1" } }];
+
+    // derived dimensions as jaiabot uses them
+    optional uint64 timestamp_us = 23 [
+        (dccl.field) = { units { prefix: "micro" derived_dimensions: "time" } }
+    ];
+    optional int32 duration_ms = 24 [
+        (dccl.field) = { units { prefix: "milli" derived_dimensions: "time" } }
+    ];
+    optional double vertical_speed = 25
+        [(dccl.field) = { units { derived_dimensions: "length/time" } }];
+    optional double linear_acceleration = 26
+        [(dccl.field) = { units { derived_dimensions: "acceleration" } }];
+    optional double sample_rate = 27
+        [(dccl.field) = { units { derived_dimensions: "frequency" } }];
+    optional double angular_velocity = 28 [(dccl.field) = {
+        units { derived_dimensions: "angular_velocity" system: "si" }
+    }];
+    optional double salinity = 29
+        [(dccl.field) = { units { derived_dimensions: "dimensionless" } }];
+    optional double conductivity = 30 [(dccl.field) = {
+        units { derived_dimensions: "conductivity" system: "si" }
+    }];
+    optional double course = 31 [(dccl.field) = {
+        units { derived_dimensions: "plane_angle" system: "angle::degree" }
+    }];
+    optional double temperature = 32 [(dccl.field) = {
+        units { derived_dimensions: "temperature" system: "celsius" }
+    }];
+
+    // base units as jaiabot uses them
+    optional double pressure_dbar = 33
+        [(dccl.field) = { units { prefix: "deci" unit: "metric::bar" } }];
+    optional int32 duration_min = 34
+        [(dccl.field) = { units { unit: "metric::minute" } }];
+    optional uint64 storage_kb = 35
+        [(dccl.field) = { units { prefix: "kilo" unit: "information::byte" } }];
 }

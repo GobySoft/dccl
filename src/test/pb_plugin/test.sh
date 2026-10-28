@@ -235,6 +235,18 @@ contains "a multiplied derived dimension is parsed" "${SYN_HDR}" \
          "boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type multiplied_dimension"
 contains "juxtaposed derived dimensions are multiplied" "${SYN_HDR}" \
          "boost::mpl::times<boost::units::mass_dimension,boost::units::length_dimension>::type juxtaposed_dimension"
+contains "several abbreviated base dimensions are parsed" "${SYN_HDR}" \
+         "boost::units::mass_base_dimension,1, boost::units::length_base_dimension,1, boost::units::time_base_dimension,-2 >::type force_dimension"
+contains "an abbreviated base dimension with a negative power is parsed" "${SYN_HDR}" \
+         "boost::units::time_base_dimension,-1 >::type frequency_dimension"
+contains "abbreviated and named base dimensions mix" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,1, boost::units::time_base_dimension,-1 >::type mixed_dimension"
+contains "the abbreviated dimensionless is special-cased" "${SYN_HDR}" \
+         "boost::units::dimensionless_type ratio_dimension"
+contains "an abbreviated base dimension takes a system" "${SYN_HDR}" \
+         "boost::units::unit<heading_dimension,boost::units::degree::system>"
+contains "an abbreviated base dimension takes a prefix" "${SYN_HDR}" \
+         "boost::units::static_rational<-6> > >::type time_us_unit"
 
 fi # BOOST_UNITS
 
