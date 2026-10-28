@@ -132,7 +132,7 @@ quantity<degree::plane_angle> heading = status.heading_with_units<quantity<degre
 
 In this combination UDUNITS-2 is only needed by _protoc-gen-dccl_ when it runs: the generated code needs only the (header-only) Boost Units library, and libdccl does not need UDUNITS-2 at all. When building DCCL from source, install both (`sudo apt install libboost-dev libudunits2-dev`) and leave `enable_udunits_runtime` off.
 
-The original Boost Units interface, `(dccl.field).units`, is still fully supported. See [DCCL Units](page03_units.md) for the details: the UDUNITS-2 strings that DCCL accepts, the generated code, `(dccl.field).units`, optional run-time conversion with UDUNITS-2, and the build options.
+The original Boost Units interface, `(dccl.field).units`, is still fully supported. See [DCCL Units](page04_units.md) for the details: the UDUNITS-2 strings that DCCL accepts, the generated code, `(dccl.field).units`, optional run-time conversion with UDUNITS-2, and the build options.
 
 ## DCCL Dynamic Conditions (DCCL4+)
 
