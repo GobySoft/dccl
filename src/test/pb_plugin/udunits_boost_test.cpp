@@ -116,7 +116,9 @@ int main()
     msg.set_latitude_with_units(pi / 4 * si::radians);
     check("degree_north", msg.latitude(), 45);
     msg.set_longitude_with_units(pi / 4 * si::radians);
-    check("degree_west is negative", msg.longitude(), -45);
+    check("degree_east", msg.longitude(), 45);
+    msg.set_west_longitude_with_units(pi / 4 * si::radians);
+    check("degree_west stores east as negative", msg.west_longitude(), -45);
     msg.set_beam_width_with_units(2 * si::steradians);
     check("sr", msg.beam_width(), 2);
     msg.set_luminous_flux_with_units(3 * si::lumens);

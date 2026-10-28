@@ -50,7 +50,10 @@ message UdunitsBoostMsg
     optional double bearing_error = 13 [(dccl.field).udunits = "'"];
     optional double pitch = 14 [(dccl.field).udunits = "mrad"];
     optional double latitude = 15 [(dccl.field).udunits = "degree_north"];
-    optional double longitude = 16 [(dccl.field).udunits = "degree_west"];
+    optional double longitude = 16 [(dccl.field).udunits = "degree_east"];
+    // degree_west is -1 degree_east, so a longitude east of 0 is stored as
+    // negative
+    optional double west_longitude = 23 [(dccl.field).udunits = "degree_west"];
     optional double beam_width = 17 [(dccl.field).udunits = "sr"];
     optional double luminous_flux = 18 [(dccl.field).udunits = "lm"];
     optional double illuminance = 19 [(dccl.field).udunits = "lux"];
