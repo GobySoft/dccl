@@ -130,6 +130,11 @@ int main()
     msg.set_temperature_with_units(283.15 * absolute<si::temperature>());
     check("temperature in celsius", msg.temperature(), 10);
 
+    msg.set_diffusivity_with_units(2 * si::square_meters / seconds);
+    check("three derived dimensions", msg.diffusivity(), 2);
+    msg.set_power_with_units(3 * si::watts);
+    check("three spaced derived dimensions", msg.power(), 3);
+
     msg.set_pressure_dbar_with_units(101325 * si::pascals);
     check("metric::bar with a deci prefix", msg.pressure_dbar(), 10.1325);
     msg.set_duration_min_with_units(120 * seconds);

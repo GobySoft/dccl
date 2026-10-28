@@ -235,6 +235,8 @@ contains "a multiplied derived dimension is parsed" "${SYN_HDR}" \
          "boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type multiplied_dimension"
 contains "juxtaposed derived dimensions are multiplied" "${SYN_HDR}" \
          "boost::mpl::times<boost::units::mass_dimension,boost::units::length_dimension>::type juxtaposed_dimension"
+contains "three derived dimensions combine left to right" "${SYN_HDR}" \
+         "boost::mpl::divides<boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type,boost::units::time_dimension>::type diffusivity_dimension"
 contains "several abbreviated base dimensions are parsed" "${SYN_HDR}" \
          "boost::units::mass_base_dimension,1, boost::units::length_base_dimension,1, boost::units::time_base_dimension,-2 >::type force_dimension"
 contains "an abbreviated base dimension with a negative power is parsed" "${SYN_HDR}" \

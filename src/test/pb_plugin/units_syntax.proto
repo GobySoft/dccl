@@ -131,6 +131,13 @@ message UnitsSyntaxMsg
         units { derived_dimensions: "temperature" system: "celsius" }
     }];
 
+    // more than two derived dimensions are combined left to right
+    optional double diffusivity = 36
+        [(dccl.field) = { units { derived_dimensions: "length*length/time" } }];
+    optional double power = 37 [
+        (dccl.field) = { units { derived_dimensions: "force * length / time" } }
+    ];
+
     // base units as jaiabot uses them
     optional double pressure_dbar = 33
         [(dccl.field) = { units { prefix: "deci" unit: "metric::bar" } }];

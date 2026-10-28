@@ -523,15 +523,15 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
         //see example here:
         //http://www.boost.org/doc/libs/1_57_0/doc/html/boost_units/Examples.html#boost_units.Examples.DimensionExample
         os << "typedef ";
-        std::string result = dim_vec[0];
+        std::string result = "boost::units::" + dim_vec[0] + "_dimension";
         for (std::size_t i = 0, n = operator_vec.size(); i < n; i++)
         {
             if (operator_vec[i] == "/")
-                result = "boost::mpl::divides<boost::units::" + result +
-                         "_dimension,boost::units::" + dim_vec[i + 1] + "_dimension>::type";
+                result = "boost::mpl::divides<" + result + ",boost::units::" + dim_vec[i + 1] +
+                         "_dimension>::type";
             else if (operator_vec[i] == "*")
-                result = "boost::mpl::times<boost::units::" + result +
-                         "_dimension,boost::units::" + dim_vec[i + 1] + "_dimension>::type";
+                result = "boost::mpl::times<" + result + ",boost::units::" + dim_vec[i + 1] +
+                         "_dimension>::type";
         }
         os << result << " " << fieldname << "_dimension;" << std::endl;
     }
