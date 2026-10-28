@@ -213,6 +213,29 @@ contains "an unrecognised system is used verbatim" "${SYS_HDR}" "my::own::system
 contains "an absolute temperature is wrapped" "${SYS_HDR}" "boost::units::absolute"
 contains "dimensionless is special-cased" "${SYS_HDR}" "dimensionless_type"
 
+##
+## the spellings base_dimensions and derived_dimensions accept
+##
+checks=$((checks + 1))
+OUT="$(generate syntax "" units_syntax.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units_syntax.proto succeeds"
+else
+    fail "generating units_syntax.proto succeeds (${OUT})"
+fi
+
+SYN_HDR="${WORK_DIR}/syntax/units_syntax.pb.h"
+contains "named base dimensions are parsed" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,1, boost::units::time_base_dimension,-1 >::type named_base_dimension"
+contains "the _base_dimension suffix and a spaced power are parsed" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,2 >::type suffixed_base_dimension"
+contains "a divided derived dimension is parsed" "${SYN_HDR}" \
+         "boost::mpl::divides<boost::units::force_dimension,boost::units::area_dimension>::type divided_dimension"
+contains "a multiplied derived dimension is parsed" "${SYN_HDR}" \
+         "boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type multiplied_dimension"
+contains "juxtaposed derived dimensions are multiplied" "${SYN_HDR}" \
+         "boost::mpl::times<boost::units::mass_dimension,boost::units::length_dimension>::type juxtaposed_dimension"
+
 fi # BOOST_UNITS
 
 ##
@@ -279,6 +302,10 @@ check_rejected "an unparseable base_dimensions string" badparse \
                bad_unparseable_dims.proto "Failed to parse base_dimensions"
 check_rejected "base_dimensions with no system anywhere" badnosystem \
                bad_missing_system.proto "must have 'system' defined"
+check_rejected "a power missing after ^" badpower bad_missing_power.proto \
+               "Failed to parse base_dimensions"
+check_rejected "an unparseable derived_dimensions string" badderived bad_derived_dims.proto \
+               "Failed to parse derived_dimensions"
 fi
 
 checks=$((checks + 1))
