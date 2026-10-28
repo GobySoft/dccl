@@ -27,7 +27,7 @@
 # accessors to generated protobuf classes and (optionally) writes a loader .cpp.
 #
 # Usage: test.sh <protoc> <protoc-gen-dccl> <proto source dir> <dccl include dir> <work dir>
-#                <boost units: ON|OFF> <udunits: ON|OFF>
+#                <boost units: ON|OFF> <udunits: ON|OFF> <udunits runtime: ON|OFF>
 
 set -u
 
@@ -38,6 +38,7 @@ INC_DIR="$4"
 WORK_DIR="$5"
 BOOST_UNITS="$6"
 UDUNITS="$7"
+UDUNITS_RUNTIME="$8"
 
 rm -rf "${WORK_DIR}"
 mkdir -p "${WORK_DIR}"
@@ -343,6 +344,22 @@ else
     else
         lacks "without Boost Units support, udunits get no Boost Units accessors" "${UD_HDR}" \
               "_with_units"
+    fi
+
+    if [ "${UDUNITS_RUNTIME}" = "ON" ]; then
+        contains "a run-time getter is generated" "${UD_HDR}" \
+                 "double speed_with_udunits(const std::string& unit) const"
+        contains "a run-time setter is generated" "${UD_HDR}" \
+                 "void set_speed_with_udunits(double value, const std::string& unit)"
+        contains "an integer field's run-time setter rounds" "${UD_HDR}" \
+                 "set_depth_cm(static_cast<google::protobuf::int32>(std::llround("
+        contains "a repeated field gets a run-time adder" "${UD_HDR}" \
+                 "void add_depths_with_udunits(double value, const std::string& unit)"
+        contains "the run-time header is included" "${UD_HDR}" '#include "dccl/units/udunits.h"'
+        check_rejected "a run-time accessor that clashes with a field" badudunitsruntimeclash \
+                       bad_udunits_runtime_clash.proto "would clash with the field of that name"
+    else
+        lacks "without the run-time option, no run-time accessors" "${UD_HDR}" "_with_udunits"
     fi
 
     check_rejected "ppt" badudunitsppt bad_udunits_ppt.proto "parts per trillion"

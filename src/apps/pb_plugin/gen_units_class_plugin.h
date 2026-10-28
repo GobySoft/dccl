@@ -743,6 +743,39 @@ inline void construct_converting_field_class_plugin(const std::string& fieldname
     os << std::endl;
 }
 
+// Generate accessors that convert a field with (dccl.field).udunits to and from any unit at run
+// time, through libdccl's UDUNITS-2 wrapper
+inline void construct_udunits_runtime_accessors(const std::string& fieldname, std::ostream& os,
+                                                const std::string& field_type, bool is_integer,
+                                                bool is_repeated)
+{
+    const std::string index_param = is_repeated ? "int index, " : "";
+    const std::string index_arg = is_repeated ? "index" : "";
+    auto to_field = [&](const std::string& value)
+    {
+        const std::string converted =
+            "dccl::units::udunits::convert(" + value + ", unit, " + fieldname + "_udunits())";
+        return is_integer ? "static_cast<" + field_type + ">(std::llround(" + converted + "))"
+                          : "static_cast<" + field_type + ">(" + converted + ")";
+    };
+
+    os << "double " << fieldname << "_with_udunits(" << index_param
+       << "const std::string& unit) const" << std::endl;
+    os << "  { return dccl::units::udunits::convert(" << fieldname << "(" << index_arg << "), "
+       << fieldname << "_udunits(), unit); }" << std::endl;
+    os << "void set_" << fieldname << "_with_udunits(" << index_param
+       << "double value, const std::string& unit)" << std::endl;
+    os << "  { set_" << fieldname << "(" << (is_repeated ? "index, " : "") << to_field("value")
+       << "); }" << std::endl;
+    if (is_repeated)
+    {
+        os << "void add_" << fieldname << "_with_udunits(double value, const std::string& unit)"
+           << std::endl;
+        os << "  { add_" << fieldname << "(" << to_field("value") << "); }" << std::endl;
+    }
+    os << std::endl;
+}
+
 //=============^^^^
 
 #endif
