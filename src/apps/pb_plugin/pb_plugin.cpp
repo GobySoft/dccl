@@ -60,6 +60,8 @@ bool udunits_active_{udunits_enabled};
 
 // per-file state, reset at the start of each Generate() call
 bool file_uses_units_{false};
+// accessors convert with std::llround
+bool file_converts_units_{false};
 std::set<std::string> systems_to_include_;
 std::set<std::string> base_units_to_include_;
 std::set<std::string> custom_unit_headers_to_include_;
@@ -231,6 +233,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
     }
 
     file_uses_units_ = false;
+    file_converts_units_ = false;
     systems_to_include_.clear();
     base_units_to_include_.clear();
     custom_unit_headers_to_include_.clear();
@@ -269,6 +272,8 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
             includes_ss << "#include <boost/units/absolute.hpp>" << std::endl;
             includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
             includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
+            if (file_converts_units_)
+                includes_ss << "#include <cmath>" << std::endl;
 
             for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
             for (const auto& it : base_units_to_include_)
@@ -357,7 +362,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
 
         if (dccl_field_options.has_udunits())
         {
-            check_field_type(field, "udunits");
+            [[maybe_unused]] const bool is_integer = check_field_type(field, "udunits");
             if (!udunits_active_)
                 throw std::runtime_error(missing_backend_message("udunits", "UDUNITS-2",
                                                                  udunits_enabled, "enable_udunits",
@@ -372,6 +377,46 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                          "() would clash with the field of that name.");
             printer->Print("static const char* $name$() { return \"$unit$\"; }\n", "name",
                            unit_accessor, "unit", cpp_escape(unit));
+
+            // the equivalent Boost Units accessors, converting with constants found here so the
+            // generated code doesn't need UDUNITS-2
+            if (boost_units_active_)
+            {
+                const auto boost_units = dccl::units::udunits::to_boost_units(unit);
+                const bool has_information =
+                    std::find(boost_units.dimensions.begin(), boost_units.dimensions.end(),
+                              "information") != boost_units.dimensions.end();
+                // si::system has no unit of information
+                const std::string system =
+                    has_information
+                        ? "boost::units::make_system<boost::units::si::meter_base_unit, "
+                          "boost::units::si::kilogram_base_unit, "
+                          "boost::units::si::second_base_unit, "
+                          "boost::units::si::ampere_base_unit, "
+                          "boost::units::si::kelvin_base_unit, "
+                          "boost::units::si::mole_base_unit, "
+                          "boost::units::si::candela_base_unit, "
+                          "boost::units::angle::radian_base_unit, "
+                          "boost::units::angle::steradian_base_unit, "
+                          "boost::units::information::bit_base_unit>::type"
+                        : "si";
+
+                std::stringstream new_methods;
+                construct_base_dims_typedef(boost_units.dimensions, boost_units.powers,
+                                            std::string(field->name()), system,
+                                            boost_units.offset == 0, "", new_methods);
+                construct_converting_field_class_plugin(
+                    std::string(field->name()), new_methods,
+                    dccl::units::get_field_type_name(field->cpp_type()), is_integer,
+                    field->is_repeated(), boost_units.scale, boost_units.offset);
+                printer->Print(new_methods.str().c_str());
+
+                file_uses_units_ = true;
+                file_converts_units_ = true;
+                systems_to_include_.insert("si");
+                if (has_information)
+                    base_units_to_include_.insert("information::bit");
+            }
 #endif
             return;
         }

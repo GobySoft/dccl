@@ -673,6 +673,76 @@ inline void construct_field_class_plugin(const std::string& fieldname, std::ostr
     os << std::endl;
 }
 
+// Generate the body of the units plugin for a field whose stored value v is the quantity
+// (v * scale + offset) in its unit typedef, e.g. a field in knots with an SI unit typedef
+inline void construct_converting_field_class_plugin(const std::string& fieldname, std::ostream& os,
+                                                    const std::string& field_type, bool is_integer,
+                                                    bool is_repeated, double scale, double offset)
+{
+    if (scale == 1 && offset == 0)
+    {
+        construct_field_class_plugin(fieldname, os, field_type, is_repeated);
+        return;
+    }
+
+    std::ostringstream constants;
+    constants.precision(17);
+    if (scale != 1)
+        constants << "static constexpr double " << fieldname << "_si_scale = " << scale << ";"
+                  << std::endl;
+    if (offset != 0)
+        constants << "static constexpr double " << fieldname << "_si_offset = " << offset << ";"
+                  << std::endl;
+    os << constants.str() << std::endl;
+
+    const std::string quantity = "boost::units::quantity< " + fieldname + "_unit,double >";
+    const std::string index_param = is_repeated ? "int index" : "";
+    const std::string index_arg = is_repeated ? "index" : "";
+
+    std::string to_field =
+        "boost::units::quantity<" + fieldname + "_unit,double >(value_w_units).value()";
+    if (offset != 0)
+        to_field = "(" + to_field + " - " + fieldname + "_si_offset)";
+    if (scale != 1)
+        to_field += " / " + fieldname + "_si_scale";
+    to_field = is_integer ? "static_cast<" + field_type + ">(std::llround(" + to_field + "))"
+                          : "static_cast<" + field_type + ">(" + to_field + ")";
+
+    std::string from_field = fieldname + "(" + index_arg + ")";
+    if (scale != 1)
+        from_field += " * " + fieldname + "_si_scale";
+    if (offset != 0)
+        from_field += " + " + fieldname + "_si_offset";
+    from_field = "(" + from_field + ")";
+
+    os << "template<typename Quantity >" << std::endl;
+    os << "  void set_" << fieldname << "_with_units(" << (is_repeated ? "int index, " : "")
+       << "Quantity value_w_units)" << std::endl;
+    os << "  { set_" << fieldname << "(" << (is_repeated ? "index, " : "") << to_field << "); };"
+       << std::endl;
+    os << std::endl;
+
+    if (is_repeated)
+    {
+        os << "template<typename Quantity >" << std::endl;
+        os << "  void add_" << fieldname << "_with_units(Quantity value_w_units)" << std::endl;
+        os << "  { add_" << fieldname << "(" << to_field << "); };" << std::endl;
+        os << std::endl;
+    }
+
+    //returns whatever units are requested
+    os << "template<typename Quantity >" << std::endl;
+    os << "  Quantity " << fieldname << "_with_units(" << index_param << ") const" << std::endl;
+    os << "  { return Quantity(" << from_field << " * " << fieldname << "_unit()); };" << std::endl;
+    os << std::endl;
+
+    //returns same units only
+    os << quantity << " " << fieldname << "_with_units(" << index_param << ") const" << std::endl;
+    os << "  { return " << fieldname << "_with_units<" << quantity << " >(" << index_arg << "); };"
+       << std::endl;
+    os << std::endl;
+}
+
 //=============^^^^
 
 #endif

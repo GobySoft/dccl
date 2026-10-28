@@ -23,3 +23,12 @@ if(enable_udunits)
   target_link_libraries(dccl_test_udunits dccl)
   add_test(dccl_test_udunits ${dccl_BIN_DIR}/dccl_test_udunits)
 endif()
+
+# (dccl.field).udunits translated to Boost Units accessors
+if(enable_units AND enable_udunits)
+  protobuf_generate_cpp_dccl(UDUNITS_BOOST_PROTO_SRCS UDUNITS_BOOST_PROTO_HDRS udunits_boost.proto)
+  add_executable(dccl_test_udunits_boost udunits_boost_test.cpp ${UDUNITS_BOOST_PROTO_SRCS}
+    ${UDUNITS_BOOST_PROTO_HDRS})
+  target_link_libraries(dccl_test_udunits_boost dccl)
+  add_test(dccl_test_udunits_boost ${dccl_BIN_DIR}/dccl_test_udunits_boost)
+endif()

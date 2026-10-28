@@ -321,6 +321,31 @@ else
     contains "a repeated field gets the unit string" "${UD_HDR}" \
              'static const char* depths_udunits() { return "m"; }'
 
+    if [ "${BOOST_UNITS}" = "ON" ]; then
+        contains "udunits get Boost Units accessors" "${UD_HDR}" \
+                 "set_speed_with_units"
+        contains "a unit that isn't coherent SI gets a scale" "${UD_HDR}" \
+                 "static constexpr double speed_si_scale = 0.51444444444444448;"
+        contains "a coherent SI unit gets no scale" "${UD_HDR}" \
+                 "{ return Quantity(velocity() * velocity_unit()); };"
+        contains "an offset temperature is absolute" "${UD_HDR}" \
+                 "typedef boost::units::absolute<boost::units::unit<temperature_dimension,boost::units::si::system> > temperature_unit;"
+        contains "an angle is a plane angle" "${UD_HDR}" \
+                 "boost::units::plane_angle_base_dimension,1 >::type bearing_dimension;"
+
+        check_generates "generating udunits.proto with units=udunits succeeds" udunitsonly \
+                        "units=udunits:" udunits.proto
+        lacks "units=udunits generates no Boost Units accessors" \
+              "${WORK_DIR}/udunitsonly/udunits.pb.h" "_with_units"
+
+        check_rejected "a timestamp unit" badudunitstimestamp bad_udunits_timestamp.proto \
+                       "is a timestamp unit, which has no Boost Units equivalent"
+    else
+        lacks "without Boost Units support, udunits get no Boost Units accessors" "${UD_HDR}" \
+              "_with_units"
+    fi
+
+    check_rejected "ppt" badudunitsppt bad_udunits_ppt.proto "parts per trillion"
     check_rejected "udunits with units=none" udunitsoff udunits.proto \
                    "which the units= plugin parameter turned off" "units=none:"
     check_rejected "a unit UDUNITS-2 can't parse" badudunits bad_udunits.proto \

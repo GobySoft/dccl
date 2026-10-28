@@ -1,0 +1,68 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test.plugin;
+
+// (dccl.field).udunits translated to Boost Units accessors.
+// udunits_boost_test.cpp checks the conversions.
+message UdunitsBoostMsg
+{
+    option (dccl.msg).id = 235;
+    option (dccl.msg).max_bytes = 64;
+    option (dccl.msg).codec_version = 4;
+
+    optional double speed = 1 [(dccl.field).udunits = "knot"];
+    optional int32 distance = 2 [(dccl.field).udunits = "km"];
+    optional double water_temperature = 3 [(dccl.field).udunits = "degC"];
+    optional double air_temperature = 4 [(dccl.field).udunits = "degF"];
+    // no offset, so a temperature difference
+    optional double temperature_change = 5 [(dccl.field).udunits = "K"];
+    optional double acceleration = 6 [(dccl.field).udunits = "m s-2"];
+    repeated float depths = 7 [(dccl.field).udunits = "ft"];
+    optional float pressure = 8 [(dccl.field).udunits = "dbar"];
+
+    // angles
+    optional double heading = 10 [(dccl.field).udunits = "degree"];
+    optional double turn_rate = 11 [(dccl.field).udunits = "degree/s"];
+    optional double propeller_speed = 12 [(dccl.field).udunits = "rpm"];
+    optional double bearing_error = 13 [(dccl.field).udunits = "'"];
+    optional double pitch = 14 [(dccl.field).udunits = "mrad"];
+    optional double latitude = 15 [(dccl.field).udunits = "degree_north"];
+    optional double longitude = 16 [(dccl.field).udunits = "degree_west"];
+    optional double beam_width = 17 [(dccl.field).udunits = "sr"];
+    optional double luminous_flux = 18 [(dccl.field).udunits = "lm"];
+    optional double illuminance = 19 [(dccl.field).udunits = "lux"];
+
+    // information
+    optional double data_rate = 20 [(dccl.field).udunits = "byte/s"];
+    optional uint64 storage = 21 [(dccl.field).udunits = "kilobyte"];
+    optional double bits = 22 [(dccl.field).udunits = "bit"];
+
+    // dimensionless
+    optional double fraction = 30 [(dccl.field).udunits = "percent"];
+    optional double concentration = 31 [(dccl.field).udunits = "ppm"];
+    optional double salinity = 32 [(dccl.field).udunits = "g/kg"];
+    optional double ratio = 33 [(dccl.field).udunits = "1"];
+}
