@@ -463,8 +463,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install UDUNITS-2
-          command: apt-get update && apt-get install -y libudunits2-dev
+          name: Install UDUNITS-2 (and python3-protobuf for the Python bindings' test)
+          command: apt-get update && apt-get install -y libudunits2-dev python3-protobuf
       - run:
           name: Build
           command: mkdir -p build && cd build && cmake -Denable_testing=ON -Denable_udunits=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
