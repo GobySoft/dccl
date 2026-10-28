@@ -46,6 +46,10 @@ if(enable_udunits)
   add_subdirectory(dccl_udunits_special_units)
 endif()
 
+if(enable_units AND enable_udunits)
+  add_subdirectory(dccl_udunits_boost)
+endif()
+
 add_subdirectory(dccl_load_file)
 
 if(UNIX AND TARGET protoc-gen-dccl)

@@ -1,0 +1,89 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test.udunits;
+
+// An AUV status message whose units are given as UDUNITS-2 strings. Each
+// field's DCCL bounds are in its own units, as for (dccl.field).units.
+message AUVStatus
+{
+    option (dccl.msg) = {
+        id: 123
+        max_bytes: 64
+        codec_version: 4
+    };
+
+    // Header
+    required double timestamp = 1
+        [(dccl.field) = { codec: "_time" in_head: true }];
+    required int32 source = 2 [(dccl.field) = { min: 0 max: 31 in_head: true }];
+    required int32 destination = 3
+        [(dccl.field) = { min: 0 max: 31 in_head: true }];
+
+    // Body
+    optional double x = 4
+        [(dccl.field) = { udunits: "m" min: -10000 max: 10000 resolution: 1 }];
+    optional double y = 5
+        [(dccl.field) = { udunits: "m" min: -10000 max: 10000 resolution: 1 }];
+    optional double speed = 6
+        [(dccl.field) = { udunits: "knot" min: 0 max: 20 resolution: 0.1 }];
+    optional double heading = 7
+        [(dccl.field) = { udunits: "degree" min: 0 max: 360 resolution: 0.1 }];
+    optional int32 depth = 8
+        [(dccl.field) = { udunits: "ft" min: 0 max: 20000 }];
+    optional double pitch = 9
+        [(dccl.field) = { udunits: "mrad" min: -1571 max: 1571 resolution: 1 }];
+    optional double turn_rate = 10 [(dccl.field) = {
+        udunits: "degree/s"
+        min: -100
+        max: 100
+        resolution: 0.1
+    }];
+    optional double water_temperature = 11
+        [(dccl.field) = { udunits: "degC" min: -5 max: 40 resolution: 0.01 }];
+    optional double salinity = 12
+        [(dccl.field) = { udunits: "g/kg" min: 0 max: 45 resolution: 0.01 }];
+    optional double latitude = 13 [(dccl.field) = {
+        udunits: "degree_north"
+        min: -90
+        max: 90
+        resolution: 0.000001
+    }];
+    optional double longitude = 14 [(dccl.field) = {
+        udunits: "degree_east"
+        min: -180
+        max: 180
+        resolution: 0.000001
+    }];
+    optional double modem_rate = 15
+        [(dccl.field) = { udunits: "bit/s" min: 0 max: 10000 resolution: 1 }];
+    repeated double sonar_ranges = 16 [(dccl.field) = {
+        udunits: "m"
+        min: 0
+        max: 100
+        resolution: 0.1
+        max_repeat: 3
+    }];
+}
