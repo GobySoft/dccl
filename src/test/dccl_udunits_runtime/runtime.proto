@@ -54,3 +54,20 @@ message RuntimeMsg
     optional double plain = 7 [(dccl.field) = { min: 0 max: 10 }];
     optional string name = 8 [(dccl.field).max_length = 10];
 }
+
+// One field of each numeric type, to exercise every reflection path.
+message AllTypesMsg
+{
+    optional int32 i32 = 1 [(dccl.field).udunits = "cm"];
+    optional int64 i64 = 2 [(dccl.field).udunits = "cm"];
+    optional uint32 u32 = 3 [(dccl.field).udunits = "cm"];
+    optional uint64 u64 = 4 [(dccl.field).udunits = "cm"];
+    optional float f = 5 [(dccl.field).udunits = "cm"];
+    optional double d = 6 [(dccl.field).udunits = "cm"];
+    repeated int32 r_i32 = 11 [(dccl.field).udunits = "cm"];
+    repeated int64 r_i64 = 12 [(dccl.field).udunits = "cm"];
+    repeated uint32 r_u32 = 13 [(dccl.field).udunits = "cm"];
+    repeated uint64 r_u64 = 14 [(dccl.field).udunits = "cm"];
+    repeated float r_f = 15 [(dccl.field).udunits = "cm"];
+    repeated double r_d = 16 [(dccl.field).udunits = "cm"];
+}

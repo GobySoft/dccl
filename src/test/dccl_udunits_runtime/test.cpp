@@ -141,6 +141,39 @@ int main()
         "has no (dccl.field).udunits");
     check_throws(
         "an index out of range", [&] { udunits::get(msg, sonar_ranges, "m", 3); }, "out of range");
+    check_throws(
+        "get with index -1", [&] { udunits::get(msg, sonar_ranges, "m"); }, "out of range");
+    check_throws(
+        "set an index out of range", [&] { udunits::set(&msg, sonar_ranges, 1, "m", 3); },
+        "out of range");
+    check_throws(
+        "convertible with an unparseable unit", [] { udunits::convertible("m", "deg"); },
+        "\"deg\" is not a unit that UDUNITS-2 can parse");
+
+    // every numeric type, scalar and repeated: integers store 123 cm, floats 123.4 cm
+    dccl::test::udunits::AllTypesMsg all;
+    const auto* all_desc = all.GetDescriptor();
+    for (int i = 0, n = all_desc->field_count(); i < n; ++i)
+    {
+        const auto* field = all_desc->field(i);
+        const bool is_float =
+            field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_FLOAT ||
+            field->cpp_type() == google::protobuf::FieldDescriptor::CPPTYPE_DOUBLE;
+        const double expected = is_float ? 1.234 : 1.23;
+        if (field->is_repeated())
+        {
+            udunits::set(&all, field, 0, "m");
+            udunits::set(&all, field, 1.234, "m", 0);
+            check_close(std::string(field->name()) + " set and get at an index",
+                        udunits::get(all, field, "m", 0), expected);
+        }
+        else
+        {
+            udunits::set(&all, field, 1.234, "m");
+            check_close(std::string(field->name()) + " set and get", udunits::get(all, field, "m"),
+                        expected);
+        }
+    }
 
     // DCCL encodes the stored values, so converted values survive a round trip
     dccl::Codec codec;
