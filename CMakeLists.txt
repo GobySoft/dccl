@@ -16,12 +16,6 @@ cmake_policy(SET CMP0042 NEW)
 
 project(dccl)
 
-# boost for units (optional)
-find_package(Boost 1.62.0 QUIET)
-if(Boost_FOUND)
-  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-endif()
-
 message("Build host architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 message("Build target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
@@ -33,6 +27,31 @@ endif()
 
 ## allows us to write custom modules or modifying existing ones
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
+
+## units (both optional): protoc-gen-dccl generates accessors for (dccl.field).units using Boost
+## Units, and for (dccl.field).udunits using UDUNITS-2
+find_package(Boost 1.62.0 QUIET)
+if(Boost_FOUND)
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+endif()
+set(UNITS_DOC_STRING "Enable static unit-safety functionality (requires Boost)")
+if(Boost_FOUND)
+  option(enable_units ${UNITS_DOC_STRING} ON)
+else()
+  option(enable_units ${UNITS_DOC_STRING} OFF)
+endif()
+
+find_package(UDUNITS2 QUIET)
+set(UDUNITS_DOC_STRING "Enable (dccl.field).udunits in protoc-gen-dccl (requires libudunits2-dev)")
+if(UDUNITS2_FOUND)
+  option(enable_udunits ${UDUNITS_DOC_STRING} ON)
+else()
+  option(enable_udunits ${UDUNITS_DOC_STRING} OFF)
+  message(">> setting enable_udunits to OFF ... if you need this functionality: 1) install libudunits2-dev; 2) run cmake -Denable_udunits=ON")
+endif()
+if(enable_udunits)
+  find_package(UDUNITS2 REQUIRED)
+endif()
 
 # enable sanitizers (e.g., Address Sanitizer)
 find_package(Sanitizers)
@@ -271,14 +290,6 @@ if(enable_thread_safety)
   find_package(Threads)
 else()
   set(DCCL_HAS_THREAD_SUPPORT "0")
-endif()
-
-## boost for units
-set(UNITS_DOC_STRING "Enable static unit-safety functionality (requires Boost)")
-if(Boost_FOUND)
-  option(enable_units ${UNITS_DOC_STRING} ON) 
-else()
-  option(enable_units ${UNITS_DOC_STRING} OFF)
 endif()
 
 ## clang-tidy

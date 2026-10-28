@@ -27,7 +27,7 @@
 # accessors to generated protobuf classes and (optionally) writes a loader .cpp.
 #
 # Usage: test.sh <protoc> <protoc-gen-dccl> <proto source dir> <dccl include dir> <work dir>
-#                <boost units: ON|OFF>
+#                <boost units: ON|OFF> <udunits: ON|OFF>
 
 set -u
 
@@ -37,6 +37,7 @@ PROTO_DIR="$3"
 INC_DIR="$4"
 WORK_DIR="$5"
 BOOST_UNITS="$6"
+UDUNITS="$7"
 
 rm -rf "${WORK_DIR}"
 mkdir -p "${WORK_DIR}"
@@ -93,50 +94,98 @@ lacks()
     fi
 }
 
-##
-## the happy path: units accessors are added to the generated header
-##
-checks=$((checks + 1))
-OUT="$(generate units "" units.proto)"
-if [ $? -eq 0 ]; then
-    pass "generating units.proto succeeds"
-else
-    fail "generating units.proto succeeds (${OUT})"
-fi
+# check_rejected <description> <output subdir> <proto file> <expected error> [--dccl_out prefix]
+# generate() returns protoc's status, so a zero exit means the bad input was accepted.
+check_rejected()
+{
+    local desc="$1" subdir="$2" proto="$3" expect="$4" prefix="${5:-}"
+    checks=$((checks + 1))
+    local out
+    out="$(generate "${subdir}" "${prefix}" "${proto}")"
+    if [ $? -ne 0 ]; then
+        pass "${desc} is rejected"
+    else
+        fail "${desc} is rejected (generation succeeded)"
+        return
+    fi
+    checks=$((checks + 1))
+    case "${out}" in
+        *"${expect}"*) pass "${desc} explains itself" ;;
+        *) fail "${desc} explains itself (wanted '${expect}', got: ${out})" ;;
+    esac
+}
 
-HDR="${WORK_DIR}/units/units.pb.h"
+# check_generates <description> <output subdir> <--dccl_out prefix> <proto file>...
+check_generates()
+{
+    local desc="$1" subdir="$2" prefix="$3"
+    shift 3
+    checks=$((checks + 1))
+    local out
+    out="$(generate "${subdir}" "${prefix}" "$@")"
+    if [ $? -eq 0 ]; then
+        pass "${desc}"
+    else
+        fail "${desc} (${out})"
+    fi
+}
 
+##
+## DCCL_ID and DCCL_MAX_BYTES are generated whatever units support the plugin has
+##
+check_generates "generating no_units.proto succeeds" base "" no_units.proto
+BASE_HDR="${WORK_DIR}/base/no_units.pb.h"
 checks=$((checks + 1))
-if [ -f "${HDR}" ]; then
+if [ -f "${BASE_HDR}" ]; then
     pass "the generated header exists"
 else
     fail "the generated header exists"
     echo "${checks} checks run, ${failures} failure(s)"
     exit 1
 fi
+contains "the DCCL ID is generated" "${BASE_HDR}" "DCCL_ID = 232"
+contains "the DCCL max bytes is generated" "${BASE_HDR}" "DCCL_MAX_BYTES = 16"
+lacks "a file without units includes no boost units headers" "${BASE_HDR}" "boost/units"
 
-contains "the DCCL ID is generated" "${HDR}" "DCCL_ID = 230"
-contains "the DCCL max bytes is generated" "${HDR}" "DCCL_MAX_BYTES = 64"
+check_generates "units=none still generates the DCCL ID" unitsnone "units=none:" no_units.proto
+contains "units=none still generates the DCCL ID" "${WORK_DIR}/unitsnone/no_units.pb.h" \
+         "DCCL_ID = 232"
+check_rejected "an unknown units= value" unitsbogus no_units.proto "Unknown value for units" \
+               "units=bogus:"
 
 ##
-## files without units get no units headers, even when generated alongside one that has them
+## options that can't be used whatever the backend
 ##
-checks=$((checks + 1))
-OUT="$(generate mixed "" units.proto no_units.proto)"
-if [ $? -eq 0 ]; then
-    pass "generating units.proto and no_units.proto together succeeds"
+check_rejected "units and udunits on one field" badboth bad_units_and_udunits.proto \
+               "but not both"
+check_rejected "udunits on a non-numeric field" badudunitsstring bad_udunits_string.proto \
+               "(dccl.field).udunits on numeric fields"
+
+##
+## (dccl.field).units: Boost Units accessors
+##
+if [ "${BOOST_UNITS}" != "ON" ]; then
+    check_rejected "units without Boost Units support" noboost units.proto \
+                   "needs Boost Units support, which this protoc-gen-dccl was built without"
+    check_rejected "units=boost without Boost Units support" noboostparam no_units.proto \
+                   "built without" "units=boost:"
 else
-    fail "generating units.proto and no_units.proto together succeeds (${OUT})"
-fi
+
+check_generates "generating units.proto succeeds" units "" units.proto
+HDR="${WORK_DIR}/units/units.pb.h"
+contains "the DCCL ID is generated alongside units" "${HDR}" "DCCL_ID = 230"
+
+# files without units get no units headers, even when generated alongside one that has them
+check_generates "generating units.proto and no_units.proto together succeeds" mixed "" \
+                units.proto no_units.proto
 NO_UNITS_HDR="${WORK_DIR}/mixed/no_units.pb.h"
 contains "a file without units still gets its DCCL ID" "${NO_UNITS_HDR}" "DCCL_ID = 232"
-lacks "a file without units includes no boost units headers" "${NO_UNITS_HDR}" "boost/units"
+lacks "a file generated with one that has units includes no boost units headers" \
+      "${NO_UNITS_HDR}" "boost/units"
 
-if [ "${BOOST_UNITS}" != "ON" ]; then
-    # without Boost Units support the units options are ignored
-    lacks "no boost units headers are included" "${HDR}" "boost/units"
-    lacks "no with_units accessors are generated" "${HDR}" "_with_units"
-else
+check_rejected "units with units=none" boostoff units.proto \
+               "which the units= plugin parameter turned off" "units=none:"
+
 
 contains "boost units headers are included" "${HDR}" "#include <boost/units/quantity.hpp>"
 contains "absolute.hpp is included for temperatures" "${HDR}" "#include <boost/units/absolute.hpp>"
@@ -253,13 +302,43 @@ contains "an abbreviated base dimension takes a prefix" "${SYN_HDR}" \
 fi # BOOST_UNITS
 
 ##
+## (dccl.field).udunits
+##
+if [ "${UDUNITS}" != "ON" ]; then
+    check_rejected "udunits without UDUNITS-2 support" noudunits udunits.proto \
+                   "needs UDUNITS-2 support, which this protoc-gen-dccl was built without"
+    check_rejected "units=udunits without UDUNITS-2 support" noudunitsparam no_units.proto \
+                   "built without" "units=udunits:"
+else
+    check_generates "generating udunits.proto succeeds" udunits "" udunits.proto
+    UD_HDR="${WORK_DIR}/udunits/udunits.pb.h"
+    contains "the unit string is generated" "${UD_HDR}" \
+             'static const char* speed_udunits() { return "knot"; }'
+    contains "a UTF-8 unit string is kept" "${UD_HDR}" \
+             'static const char* bearing_udunits() { return "°"; }'
+    contains "quotes in the unit string are escaped" "${UD_HDR}" \
+             'static const char* bearing_error_udunits() { return "\""; }'
+    contains "a repeated field gets the unit string" "${UD_HDR}" \
+             'static const char* depths_udunits() { return "m"; }'
+
+    check_rejected "udunits with units=none" udunitsoff udunits.proto \
+                   "which the units= plugin parameter turned off" "units=none:"
+    check_rejected "a unit UDUNITS-2 can't parse" badudunits bad_udunits.proto \
+                   "\"deg/s\" is not a unit that UDUNITS-2 can parse"
+    check_rejected "an empty udunits string" badudunitsempty bad_udunits_empty.proto \
+                   "\"\" is not a unit that UDUNITS-2 can parse"
+    check_rejected "a unit string accessor that clashes with a field" badudunitsclash \
+                   bad_udunits_clash.proto "would clash with the field of that name"
+fi
+
+##
 ## the loader file
 ##
 LOAD_CPP="${WORK_DIR}/dccl_load.cpp"
 : > "${LOAD_CPP}"
 
 checks=$((checks + 1))
-OUT="$(generate loadfile "dccl3_load_file=${LOAD_CPP}:" units.proto)"
+OUT="$(generate loadfile "dccl3_load_file=${LOAD_CPP}:" no_units.proto)"
 if [ $? -eq 0 ]; then
     pass "generating with dccl3_load_file succeeds"
 else
@@ -268,36 +347,16 @@ fi
 
 contains "the loader defines dccl3_load" "${LOAD_CPP}" "void dccl3_load(dccl::Codec* dccl)"
 contains "the loader defines dccl3_unload" "${LOAD_CPP}" "void dccl3_unload(dccl::Codec* dccl)"
-contains "the loader includes the generated header" "${LOAD_CPP}" "units.pb.h"
+contains "the loader includes the generated header" "${LOAD_CPP}" "no_units.pb.h"
 contains "the loader registers a DCCL message" "${LOAD_CPP}" "DCCLLoader"
-contains "the loader registers UnitsMsg" "${LOAD_CPP}" "UnitsMsg"
+contains "the loader registers NoUnitsMsg" "${LOAD_CPP}" "NoUnitsMsg"
 
 ##
 ## error handling
 ##
 
-# Each of these is rejected by the generator, and each exercises a different
-# error path. generate() returns protoc's status, so a zero exit means the
-# bad input was accepted.
-check_rejected()
-{
-    local desc="$1" subdir="$2" proto="$3" expect="$4"
-    checks=$((checks + 1))
-    local out
-    out="$(generate "${subdir}" "" "${proto}")"
-    if [ $? -ne 0 ]; then
-        pass "${desc} is rejected"
-    else
-        fail "${desc} is rejected (generation succeeded)"
-        return
-    fi
-    checks=$((checks + 1))
-    case "${out}" in
-        *"${expect}"*) pass "${desc} explains itself" ;;
-        *) fail "${desc} explains itself (wanted '${expect}', got: ${out})" ;;
-    esac
-}
-
+# Each of the inputs passed to check_rejected is rejected by the generator, and each exercises a
+# different error path.
 if [ "${BOOST_UNITS}" = "ON" ]; then
 check_rejected "units on a non-numeric field" badunits bad_units.proto \
                "on numeric fields"
@@ -327,7 +386,7 @@ check_rejected "an unparseable derived_dimensions string" badderived bad_derived
 fi
 
 checks=$((checks + 1))
-OUT="$(generate badparam "not_a_real_parameter=1:" units.proto)"
+OUT="$(generate badparam "not_a_real_parameter=1:" no_units.proto)"
 if [ $? -ne 0 ]; then
     pass "an unknown plugin parameter is rejected"
 else
@@ -340,7 +399,7 @@ case "${OUT}" in
 esac
 
 checks=$((checks + 1))
-OUT="$(generate badload "dccl3_load_file=/nonexistent/dir/load.cpp:" units.proto)"
+OUT="$(generate badload "dccl3_load_file=/nonexistent/dir/load.cpp:" no_units.proto)"
 if [ $? -ne 0 ]; then
     pass "an unopenable load file is rejected"
 else
