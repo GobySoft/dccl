@@ -316,6 +316,10 @@ check_rejected "an unparseable base_dimensions string" badparse \
                bad_unparseable_dims.proto "Failed to parse base_dimensions"
 check_rejected "base_dimensions with no system anywhere" badnosystem \
                bad_missing_system.proto "must have 'system' defined"
+check_rejected "units with neither a dimension nor a unit" badnodims bad_no_dimensions.proto \
+               "must define one of base_dimensions"
+check_rejected "the information dimension in the si system" badinformation \
+               bad_information.proto "has no unit in system 'si'"
 check_rejected "a power missing after ^" badpower bad_missing_power.proto \
                "Failed to parse base_dimensions"
 check_rejected "an unparseable derived_dimensions string" badderived bad_derived_dims.proto \

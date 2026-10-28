@@ -412,6 +412,11 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                     std::string(dccl_field_options.units().derived_dimensions()) + "\""));
             }
         }
+        else
+        {
+            throw(std::runtime_error("(dccl.field).units must define one of base_dimensions, "
+                                     "derived_dimensions, unit or custom."));
+        }
     }
     catch (std::exception& e)
     {

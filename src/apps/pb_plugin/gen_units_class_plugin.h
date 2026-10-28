@@ -102,7 +102,22 @@ inline void validate_dimensions_for_system(const std::vector<std::string>& dim_n
 {
     const auto supported = get_system_supported_base_dimensions(sysname);
     if (supported.empty())
-        return; // General system — all dimensions are supported
+    {
+        // General system — all dimensions are supported, except that Boost Units' own general
+        // systems have no unit of information
+        const bool boost_general_system = sysname == "si" || sysname == "boost::units::si" ||
+                                          sysname == "angle::radian" || sysname == "cgs" ||
+                                          sysname == "boost::units::cgs";
+        for (const auto& dim : dim_names)
+        {
+            if (boost_general_system && dim == "information")
+                throw std::runtime_error("Dimension 'information' has no unit in system '" +
+                                         sysname +
+                                         "'. Use (dccl.field).units.unit = \"information::bit\" or "
+                                         "\"information::byte\" instead.");
+        }
+        return;
+    }
 
     for (const auto& dim : dim_names)
     {
