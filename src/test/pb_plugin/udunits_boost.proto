@@ -66,6 +66,6 @@ message UdunitsBoostMsg
     // dimensionless
     optional double fraction = 30 [(dccl.field).udunits = "percent"];
     optional double concentration = 31 [(dccl.field).udunits = "ppm"];
-    optional double salinity = 32 [(dccl.field).udunits = "g/kg"];
+    optional double absolute_salinity = 32 [(dccl.field).udunits = "g/kg"];
     optional double ratio = 33 [(dccl.field).udunits = "1"];
 }

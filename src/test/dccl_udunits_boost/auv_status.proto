@@ -63,8 +63,10 @@ message AUVStatus
     }];
     optional double water_temperature = 11
         [(dccl.field) = { udunits: "degC" min: -5 max: 40 resolution: 0.01 }];
+    // practical salinity (PSS-78) is dimensionless, written "1" as in the CF
+    // conventions
     optional double salinity = 12
-        [(dccl.field) = { udunits: "g/kg" min: 0 max: 45 resolution: 0.01 }];
+        [(dccl.field) = { udunits: "1" min: 0 max: 45 resolution: 0.01 }];
     optional double latitude = 13 [(dccl.field) = {
         udunits: "degree_north"
         min: -90

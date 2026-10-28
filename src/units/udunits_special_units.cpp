@@ -191,7 +191,15 @@ std::string dccl::units::udunits::UnitSystem::rewrite(const std::string& unit) c
                 "\"" + token +
                 "\" is ambiguous: UDUNITS-2 reads it as parts per trillion (1e-12), but it is "
                 "often used for parts per thousand. Write \"1e-3\" for parts per thousand or "
-                "\"1e-12\" for parts per trillion.");
+                "\"1e-12\" for parts per trillion. For practical salinity (PSS-78), write "
+                "\"1\".");
+
+        // not UDUNITS-2 units, but common enough to deserve a better error than a parse failure
+        if (token == "PSU" || token == "psu" || token == "PSS" || token == "pss")
+            throw std::runtime_error(
+                "\"" + unit +
+                "\" is not a UDUNITS-2 unit. Practical salinity (PSS-78) is dimensionless: write "
+                "\"1\", as the CF conventions do for sea_water_practical_salinity.");
 
         const auto special = std::find_if(special_units().begin(), special_units().end(),
                                           [&](const SpecialUnit& s) { return matches(s, token); });

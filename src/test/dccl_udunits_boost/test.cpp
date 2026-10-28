@@ -84,7 +84,7 @@ int main()
     status.set_pitch_with_units(-10 * degree::degrees);
     status.set_turn_rate_with_units(0.2 * si::radians_per_second);
     status.set_water_temperature_with_units(50 * absolute<fahrenheit::temperature>());
-    status.set_salinity_with_units(0.035 * si::dimensionless());
+    status.set_salinity_with_units(35.2 * si::dimensionless());
     status.set_latitude_with_units(41.5 * degree::degrees);
     status.set_longitude_with_units(-70.67 * degree::degrees);
     status.set_modem_rate_with_units(640 * information::bytes / seconds);
@@ -131,7 +131,7 @@ int main()
         quantity<absolute<fahrenheit::temperature>>(decoded.water_temperature_with_units()).value(),
         50, 0.005 * 1.8);
     check("water temperature in K", decoded.water_temperature_with_units().value(), 283.15, 0.005);
-    check("salinity as a fraction", decoded.salinity_with_units().value(), 0.035, 0.005e-3);
+    check("practical salinity", decoded.salinity_with_units().value(), 35.2, 0.005);
     check("latitude in degrees",
           decoded.latitude_with_units<quantity<degree::plane_angle>>().value(), 41.5, 0.5e-6);
     check("longitude in degrees",

@@ -129,6 +129,10 @@ int main()
     check_rejected(system, "ppt", "parts per trillion");
     check_rejected(system, "pptv", "parts per trillion");
     check_rejected(system, "ppt/s", "parts per trillion");
+    check_rejected(system, "ppt", "For practical salinity (PSS-78), write \"1\"");
+    check_rejected(system, "PSU", "Practical salinity (PSS-78) is dimensionless");
+    check_rejected(system, "psu", "Practical salinity (PSS-78) is dimensionless");
+    check_rejected(system, "PSS-78", "Practical salinity (PSS-78) is dimensionless");
     check_rejected(system, "deg/s", "not a unit that UDUNITS-2 can parse");
     check_rejected(system, "", "not a unit that UDUNITS-2 can parse");
 

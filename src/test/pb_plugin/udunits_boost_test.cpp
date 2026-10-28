@@ -137,8 +137,8 @@ int main()
     check("percent", msg.fraction(), 25);
     msg.set_concentration_with_units(1e-6 * si::dimensionless());
     check("ppm", msg.concentration(), 1);
-    msg.set_salinity_with_units(0.035 * si::dimensionless());
-    check("g/kg", msg.salinity(), 35);
+    msg.set_absolute_salinity_with_units(0.035 * si::dimensionless());
+    check("g/kg", msg.absolute_salinity(), 35);
     msg.set_ratio_with_units(0.5 * si::dimensionless());
     check("1", msg.ratio(), 0.5);
 
