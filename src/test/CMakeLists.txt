@@ -40,13 +40,24 @@ endif()
   
 if(enable_units)
   add_subdirectory(dccl_units)
+endif()
 
-  # requires DCCL protoc plugin, which requires units
-  add_subdirectory(dccl_load_file)
+if(enable_udunits)
+  add_subdirectory(dccl_udunits_special_units)
+endif()
 
-  if(UNIX)
-    add_subdirectory(pb_plugin)
-  endif()
+if(enable_units AND enable_udunits)
+  add_subdirectory(dccl_udunits_boost)
+endif()
+
+if(enable_udunits_runtime)
+  add_subdirectory(dccl_udunits_runtime)
+endif()
+
+add_subdirectory(dccl_load_file)
+
+if(UNIX AND TARGET protoc-gen-dccl)
+  add_subdirectory(pb_plugin)
 endif()
 
 if(build_ccl)

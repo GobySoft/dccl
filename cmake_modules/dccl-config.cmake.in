@@ -2,6 +2,13 @@
 
 include(CMakeFindDependencyMacro)
 
+# what the installed protoc-gen-dccl generates code for: (dccl.field).units (Boost Units) and
+# (dccl.field).udunits (UDUNITS-2)
+set(DCCL_HAS_BOOST_UNITS @enable_units@)
+set(DCCL_PLUGIN_HAS_UDUNITS @enable_udunits@)
+# whether libdccl has run-time UDUNITS-2 conversion (dccl/units/udunits.h)
+set(DCCL_HAS_UDUNITS_RUNTIME @enable_udunits_runtime@)
+
 # Seems to fail when using in downstream project
 #  -- Could NOT find Protobuf (missing: Protobuf_INCLUDE_DIR) (found version "3.21.12")
 # find_dependency(Protobuf MODULE)

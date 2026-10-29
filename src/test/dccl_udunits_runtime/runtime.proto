@@ -1,0 +1,73 @@
+// Copyright 2026:
+//   GobySoft, LLC (2013-)
+//   Community contributors (see AUTHORS file)
+// File authors:
+//   Toby Schneider <toby@gobysoft.org>
+//
+//
+// This file is part of the Dynamic Compact Control Language Library
+// ("DCCL").
+//
+// DCCL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 2.1 of the License, or
+// (at your option) any later version.
+//
+// DCCL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
+syntax = "proto2";
+import "dccl/option_extensions.proto";
+
+package dccl.test.udunits;
+
+// Fields with (dccl.field).udunits, converted at run time.
+message RuntimeMsg
+{
+    option (dccl.msg) = {
+        id: 124
+        max_bytes: 64
+        codec_version: 4
+    };
+
+    optional double speed = 1
+        [(dccl.field) = { udunits: "knot" min: 0 max: 20 resolution: 0.1 }];
+    optional int32 depth = 2
+        [(dccl.field) = { udunits: "ft" min: 0 max: 20000 }];
+    optional float heading = 3
+        [(dccl.field) = { udunits: "degree" min: 0 max: 360 resolution: 0.1 }];
+    optional double water_temperature = 4
+        [(dccl.field) = { udunits: "degC" min: -5 max: 40 resolution: 0.01 }];
+    repeated double sonar_ranges = 5 [(dccl.field) = {
+        udunits: "m"
+        min: 0
+        max: 100
+        resolution: 0.1
+        max_repeat: 3
+    }];
+    optional uint64 storage = 6
+        [(dccl.field) = { udunits: "kilobyte" min: 0 max: 1000000 }];
+    optional double plain = 7 [(dccl.field) = { min: 0 max: 10 }];
+    optional string name = 8 [(dccl.field).max_length = 10];
+}
+
+// One field of each numeric type, to exercise every reflection path.
+message AllTypesMsg
+{
+    optional int32 i32 = 1 [(dccl.field).udunits = "cm"];
+    optional int64 i64 = 2 [(dccl.field).udunits = "cm"];
+    optional uint32 u32 = 3 [(dccl.field).udunits = "cm"];
+    optional uint64 u64 = 4 [(dccl.field).udunits = "cm"];
+    optional float f = 5 [(dccl.field).udunits = "cm"];
+    optional double d = 6 [(dccl.field).udunits = "cm"];
+    repeated int32 r_i32 = 11 [(dccl.field).udunits = "cm"];
+    repeated int64 r_i64 = 12 [(dccl.field).udunits = "cm"];
+    repeated uint32 r_u32 = 13 [(dccl.field).udunits = "cm"];
+    repeated uint64 r_u64 = 14 [(dccl.field).udunits = "cm"];
+    repeated float r_f = 15 [(dccl.field).udunits = "cm"];
+    repeated double r_d = 16 [(dccl.field).udunits = "cm"];
+}

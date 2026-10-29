@@ -8,11 +8,7 @@
 
 
 function(PROTOBUF_GENERATE_CPP_DCCL SRCS HDRS)
-  if(enable_units)
-    protobuf_generate_cpp_internal("True" "" PROTO_SRCS PROTO_HDRS ${ARGN})
-  else()
-    protobuf_generate_cpp_internal("False" "" PROTO_SRCS PROTO_HDRS ${ARGN})
-  endif()
+  protobuf_generate_cpp_internal("True" "" PROTO_SRCS PROTO_HDRS ${ARGN})
   set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
   set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
 endfunction()
@@ -24,11 +20,7 @@ function(PROTOBUF_GENERATE_CPP_NO_DCCL SRCS HDRS)
 endfunction()
 
 function(PROTOBUF_GENERATE_CPP_LOAD_FILE LOAD_FILE SRCS HDRS)
-  if(enable_units)
-    protobuf_generate_cpp_internal("True" ${LOAD_FILE} PROTO_SRCS PROTO_HDRS ${ARGN})
-  else()
-    protobuf_generate_cpp_internal("False" "" PROTO_SRCS PROTO_HDRS ${ARGN})
-  endif()
+  protobuf_generate_cpp_internal("True" ${LOAD_FILE} PROTO_SRCS PROTO_HDRS ${ARGN})
   set(${SRCS} ${PROTO_SRCS} PARENT_SCOPE)
   set(${HDRS} ${PROTO_HDRS} PARENT_SCOPE)
 endfunction()
@@ -42,6 +34,8 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL LOAD_FILE SRCS HDRS)
 
   set(${SRCS})
   set(${HDRS})
+  # protoc runs that share a load file append to it, so they mustn't run in parallel
+  set(PREVIOUS_LOAD_FILE_OUTPUT)
   foreach(FIL ${ARGN})
     # /home/toby/dccl/src/core/proto/foo.proto
     get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
@@ -87,9 +81,13 @@ function(PROTOBUF_GENERATE_CPP_INTERNAL USE_DCCL LOAD_FILE SRCS HDRS)
       # add guards for Clang static analyzer (scan-build)
       COMMAND /bin/bash
       ARGS -c "FILE=${FIL_PATH}/${FIL_WE}.pb.cc && TMPFILE=\${FILE}.\${RANDOM} && cat <(echo '#ifndef __clang_analyzer__') \${FILE} <(echo -e '\\n#endif // __clang_analyzer__') > \${TMPFILE} && mv \${TMPFILE} \${FILE}"
-      DEPENDS ${ABS_FIL}
+      DEPENDS ${ABS_FIL} ${PREVIOUS_LOAD_FILE_OUTPUT}
       COMMENT ${DCCL_PROTOC_COMMENT}
       VERBATIM )
+
+    if(LOAD_FILE)
+      set(PREVIOUS_LOAD_FILE_OUTPUT "${FIL_PATH}/${FIL_WE}.pb.cc")
+    endif()
 
   endforeach()
 

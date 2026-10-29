@@ -28,6 +28,14 @@ set(SRC
   ) 
 
 
+if(enable_udunits_runtime)
+  set(SRC
+    ${SRC}
+    units/udunits.cpp
+    units/udunits_special_units.cpp
+    )
+endif()
+
 # embed lua-protobuf directly into libdccl.so to avoid require path headaches
 if(enable_lua)
   set(SRC
@@ -46,7 +54,10 @@ add_library(dccl
 target_link_libraries(dccl PUBLIC protobuf::libprotobuf ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 
-if(enable_units)
+# protoc-gen-dccl generates code for DCCL's own protos, so it is built even without build_apps
+# (cross-compiles use the host's plugin instead, see dccl_EXEC_DIR)
+if(build_apps OR NOT CMAKE_CROSSCOMPILING)
+  add_subdirectory(apps/pb_plugin)
   add_dependencies(dccl protoc-gen-dccl)
 endif()
 
@@ -58,6 +69,11 @@ endif()
 
 if(enable_lua)
   target_link_libraries(dccl PRIVATE ${LUA_LIBRARY})
+endif()
+
+if(enable_udunits_runtime)
+  target_include_directories(dccl PRIVATE ${UDUNITS2_INCLUDE_DIRS})
+  target_link_libraries(dccl PRIVATE ${UDUNITS2_LIBRARIES})
 endif()
 
 set_target_properties(dccl PROPERTIES VERSION "${DCCL_VERSION}" SOVERSION "${DCCL_SOVERSION}")

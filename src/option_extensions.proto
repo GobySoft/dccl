@@ -99,6 +99,8 @@ message DCCLFieldOptions
         optional CustomUnit custom = 7;
     }
     optional Units units = 30;
+    // units as a UDUNITS-2 string (e.g. "m/s", "knot", "degC"); used instead of units
+    optional string udunits = 31;
 
     // runtime contents-based conditionals
     message Conditions
