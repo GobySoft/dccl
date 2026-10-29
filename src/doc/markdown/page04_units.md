@@ -36,7 +36,7 @@ UDUNITS-2 treats angles as dimensionless, which would allow (for example) a head
 |----------------|-------|
 | Plane angle    | `radian` (`rad`), `degree` (`arcdeg`, `°`), `arcminute`, `arcsecond`, `grade`, `revolution` (`circle`, `cycle`, `turn`, `rotation`), `degree_north`, `degree_east`, `degree_true`, `degree_west` (and the CF spellings of these, such as `degrees_north` and `degreeN`). Rotation rates (`rpm`, `rps`, `cps`) are plane angle per time. |
 | Solid angle    | `steradian` (`sr`). This makes `lumen`, `lux`, `phot` and `footcandle` luminous intensity times solid angle (per area), as in Boost Units. |
-| Information    | `bit`, `byte` and `octet`, with SI prefixes (e.g., `kilobyte` is 1000 bytes). UDUNITS-2 has no symbols for these: `B` is the bel and `b` is the barn. A data rate such as `bit/s` does not convert to `Hz`. |
+| Information    | `bit`, `byte` and `octet`, with SI prefixes (e.g., `kilobyte` is 1000 bytes). UDUNITS-2 has no symbols for these: `B` is the bel and `b` is the barn. A data rate such as `bit/s` does not convert to `Hz`; `bps`, `Bd` and `baud`, which stock UDUNITS-2 defines as hertz, are bits per second here. |
 
 Some UDUNITS-2 units are rejected by the plugin since they are rarely what was intended:
 
@@ -221,7 +221,7 @@ double foo_with_udunits(const std::string& unit) const;
 void set_foo_with_udunits(double value, const std::string& unit);
 ```
 
-Repeated fields get `foo_with_udunits(int index, unit)`, `set_foo_with_udunits(int index, value, unit)` and `add_foo_with_udunits(value, unit)`. As with the Boost Units methods, integer fields are rounded to the nearest integer when set.
+Repeated fields get `foo_with_udunits(int index, unit)`, `set_foo_with_udunits(int index, value, unit)` and `add_foo_with_udunits(value, unit)`. As with the Boost Units methods, integer fields are rounded to the nearest integer when set; a value that is not finite or does not fit the field's type throws `dccl::Exception` instead of wrapping.
 
 The same conversions are available directly, and for any message through reflection, in `dccl/units/udunits.h` (available when `DCCL_HAS_UDUNITS_RUNTIME` in `dccl/def.h` is 1):
 
@@ -243,7 +243,7 @@ void set(google::protobuf::Message* msg, const google::protobuf::FieldDescriptor
 }
 ```
 
-These parse units with the same [differences from the stock UDUNITS-2 database](#differences-from-the-stock-udunits-2-database) as the plugin, so (for example) `degree` does not convert to `percent`. Errors (unparseable units, units that cannot be converted, or a field without `(dccl.field).udunits`) throw `dccl::Exception`. Parsed conversions are cached, and the functions are thread-safe when DCCL is built with thread support. See `test/dccl_udunits_runtime/test.cpp` for examples.
+These parse units with the same [differences from the stock UDUNITS-2 database](#differences-from-the-stock-udunits-2-database) as the plugin, so (for example) `degree` does not convert to `percent`. Errors (unparseable units, units that cannot be converted, a field without `(dccl.field).udunits`, an index that is out of range or given for a non-repeated field, or a value that does not fit an integer field) throw `dccl::Exception`. Parsed conversions are cached, and the functions are thread-safe when DCCL is built with thread support. See `test/dccl_udunits_runtime/test.cpp` for examples.
 
 ## Building with units support {#building-with-units-support}
 
