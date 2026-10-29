@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <locale>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -59,7 +60,9 @@ const std::vector<SpecialUnit>& special_units()
         {{"steradian", "sr"}, "sr", "dccl_solid_angle"},
         {{"lumen", "lm"}, "lm", "cd dccl_solid_angle"},
         {{"lux", "lx", "footcandle", "phot", "ph"}, "lm/m^2", "cd dccl_solid_angle/m^2"},
-        {{"bit", "byte", "octet"}, "bit", "dccl_information"}};
+        {{"bit", "byte", "octet"}, "bit", "dccl_information"},
+        // stock UDUNITS-2 makes these synonyms for hertz
+        {{"bps", "Bd", "baud"}, "Hz", "dccl_information/s"}};
     return units;
 }
 
@@ -122,11 +125,19 @@ std::size_t superscript_at(const std::string& s, std::size_t pos, char& ascii)
     return 0;
 }
 
+// The UTF-8 multiplication sign "·" (U+00B7), which UDUNITS-2 accepts between units
+bool is_middle_dot(const std::string& s, std::size_t pos)
+{
+    return s.compare(pos, 2, "\xC2\xB7") == 0 ||
+           (pos > 0 && s.compare(pos - 1, 2, "\xC2\xB7") == 0);
+}
+
 bool is_identifier_byte(const std::string& s, std::size_t pos)
 {
     const auto c = static_cast<unsigned char>(s[pos]);
     char ascii;
-    return std::isalpha(c) || c == '_' || (c >= 0x80 && superscript_at(s, pos, ascii) == 0);
+    return std::isalpha(c) || c == '_' ||
+           (c >= 0x80 && superscript_at(s, pos, ascii) == 0 && !is_middle_dot(s, pos));
 }
 
 dccl::units::udunits::UnitPtr parse_stock(ut_system* system, const std::string& unit)
@@ -203,8 +214,13 @@ std::string dccl::units::udunits::UnitSystem::rewrite(const std::string& unit) c
 
         const auto special = std::find_if(special_units().begin(), special_units().end(),
                                           [&](const SpecialUnit& s) { return matches(s, token); });
+        if (special == special_units().end())
+        {
+            rewritten += token;
+            continue;
+        }
         UnitPtr from = parse_stock(system_, token);
-        if (special == special_units().end() || !from)
+        if (!from)
         {
             rewritten += token;
             continue;
@@ -216,6 +232,8 @@ std::string dccl::units::udunits::UnitSystem::rewrite(const std::string& unit) c
             throw std::runtime_error("Failed to convert \"" + token + "\" to \"" +
                                      special->reference + "\"");
         std::ostringstream factor;
+        // ut_parse() wants "0.5" whatever the global locale says
+        factor.imbue(std::locale::classic());
         factor.precision(17);
         factor << cv_convert_double(converter, 1.0);
         cv_free(converter);

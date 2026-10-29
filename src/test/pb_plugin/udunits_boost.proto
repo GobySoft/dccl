@@ -35,6 +35,8 @@ message UdunitsBoostMsg
 
     optional double speed = 1 [(dccl.field).udunits = "knot"];
     optional int32 distance = 2 [(dccl.field).udunits = "km"];
+    // coherent SI, so no scale, but must still round
+    optional int32 whole_meters = 34 [(dccl.field).udunits = "m"];
     optional double water_temperature = 3 [(dccl.field).udunits = "degC"];
     optional double air_temperature = 4 [(dccl.field).udunits = "degF"];
     // no offset, so a temperature difference

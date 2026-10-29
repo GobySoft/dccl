@@ -329,6 +329,8 @@ else
                  "static constexpr double speed_si_scale = 0.51444444444444448;"
         contains "a coherent SI unit gets no scale" "${UD_HDR}" \
                  "{ return Quantity(velocity() * velocity_unit()); };"
+        contains "an integer field in a coherent SI unit still rounds" "${UD_HDR}" \
+                 "set_altitude_m(static_cast<google::protobuf::int32>(std::llround(boost::units::quantity<altitude_m_unit,double >(value_w_units).value())))"
         contains "an offset temperature is absolute" "${UD_HDR}" \
                  "typedef boost::units::absolute<boost::units::unit<temperature_dimension,boost::units::si::system> > temperature_unit;"
         contains "an angle is a plane angle" "${UD_HDR}" \

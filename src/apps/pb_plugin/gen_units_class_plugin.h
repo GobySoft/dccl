@@ -29,6 +29,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <set>
 #include <sstream>
@@ -679,13 +680,16 @@ inline void construct_converting_field_class_plugin(const std::string& fieldname
                                                     const std::string& field_type, bool is_integer,
                                                     bool is_repeated, double scale, double offset)
 {
-    if (scale == 1 && offset == 0)
+    // integer fields always take this path, so that they round rather than truncate
+    if (scale == 1 && offset == 0 && !is_integer)
     {
         construct_field_class_plugin(fieldname, os, field_type, is_repeated);
         return;
     }
 
     std::ostringstream constants;
+    // the generated code must not depend on the global locale (e.g. "0,5")
+    constants.imbue(std::locale::classic());
     constants.precision(17);
     if (scale != 1)
         constants << "static constexpr double " << fieldname << "_si_scale = " << scale << ";"
