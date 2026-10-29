@@ -52,7 +52,8 @@ The available DCCL options is given in the following Table 1:
 | `(dccl.field).min_repeat`| uint32         | Minimum number of repeated values.                                                 | all _repeated_    | \f$r_m\f$  | -            |
 | `(dccl.field).max_repeat`| uint32         | Maximum number of repeated values.                                                 | all _repeated_    | \f$r_M\f$  | -            |
 | `(dccl.field).codec`     | string         | Codec to use for this field (if omitted, the default is used). | all | - | - |
-| `(dccl.field).units`     | Units     | Physical dimensions and units system information                                   | (u)intN, double, float | - | - |
+| `(dccl.field).udunits`   | string    | Units of the field as a UDUNITS-2 string (suggested; see [DCCL Static Units](#dccl-static-units)) | (u)intN, double, float | - | - |
+| `(dccl.field).units`     | Units     | Physical dimensions and units system information, using Boost Units                | (u)intN, double, float | - | - |
 | `(dccl.field).dynamic_conditions`     | Conditions     | Runtime defined field inclusion or bounds using Lua scripts                                  | all | - | - |
 | **Field Extensions (special purpose)** *[b]*   |           |                                         |                   |        |             |
 | `(dccl.field).omit`      | bool           | Do not include field in encoded message                          | all               | -      | False        |
@@ -87,138 +88,51 @@ Now DCCL also provides a more generalized and intuitive option *resolution* that
 
 Use whichever definition you prefer, and keep in mind that when using precision this is exactly equivalent to setting resolution as \f$10^{-precision}\f$ (e.g., *precision* of 2 is a *resolution* of 0.01).
 
-## DCCL Static Units
+## DCCL Static Units {#dccl-static-units}
 
-Since the DCCL field bounds (min, max, and precision) are often based off the physical origins of the data, it is important to define the units of measure of those fields. The DCCL IDL has support for defining the units of a numeric field's quantity. When using the DCCL C++ library, this support is directly connected to the Boost Units C++ library: [Boost Units](http://www.boost.org/doc/html/boost_units.html). The units of a given field are given by two parameters: the physical dimension (e.g., length, force, mass, etc.), and the unit system which defaults to the International System of Units (SI). The units of the field can also be specified directly, outside of a canonical system (e.g., nautical mile, fathom, yard, knot, etc.).
-
-The fields defined with units generate additional C++ methods using the DCCL plugin (_protoc-gen-dccl_) to the GPB compiler (_protoc_). The Debian package for the plugin is 
+Since the DCCL field bounds (min, max, and precision) are often based off the physical origins of the data, it is important to define the units of measure of those fields. The DCCL IDL has support for defining the units of a numeric field's quantity. The units are interpreted by the DCCL plugin (_protoc-gen-dccl_) to the GPB compiler (_protoc_), which generates additional C++ methods for each field with units. The Debian package for the plugin is
 ```bash
 sudo apt-get install dccl5-compiler
 ```
 
-These additional methods provide accessors and mutators for the dimensioned Boost Units quantities, with full static "unit safety", and correct conversions between different units of the same dimensions (e.g., feet to meters). Unit safety is defined as static (compiler-checked) dimensional analysis. The term is a blending of the (computer science) notion of type safety with (physical) dimensional analysis. For example, in a unit-safe system, the compiler will not allow the user to set a field with dimensions of length to a quantity of hours.
+There are two halves to DCCL units: the *interface*, which is how the units are written in the `.proto` file, and the *runtime*, which is how C++ code reads and writes the field in units of its choosing. The suggested combination is:
 
-![Base Dimensions](base-dimensions.png)
+- **Interface: [UDUNITS-2](https://docs.unidata.ucar.edu/udunits/current/) strings**, given with `(dccl.field).udunits`. These are the same unit strings used by netCDF and the CF conventions, they are readable by people and by tools in any language, and the plugin checks them when it runs, so a misspelled unit fails the build.
+- **Runtime: [Boost Units](http://www.boost.org/doc/html/boost_units.html)**, through the `_with_units()` accessors and mutators that the plugin generates from the UDUNITS-2 string. These give full static (compiler-checked) "unit safety", and correct conversions between different units of the same dimensions (e.g., feet to meters).
 
-The Units field extension has the following options:
+For example, given
 
-- `base_dimensions` (string): Specifies the dimensions of the field as a combination of powers of the base dimensions given in Table 3. For example, acceleration would be defined as `"LT^-2"`.
-- `derived_dimensions` (string): As a convenience alternative to the `base_dimensions` specification, any of the Boost Units "derived dimensions" can be used. For example, instead of `base_dimensions: "L^-1 M T^-2"` for pressure, one can use `derived_dimensions: "pressure"`. Multiplication and division of derived dimensions are also supported using the "*" and "/" operators. The available derived dimensions are those listed here: [Dimensions Reference](http://www.boost.org/doc/html/boost_units/Reference.html#dimensions_reference). The string to use here is the name of the dimension as given in Boost Units, minus the "_dimension". For example, to use boost::units::acceleration_dimension, specify "acceleration" in this field.
-- `system` (string, defaults to "si"): A boost::units or user-defined system of units to use for this field. Defaults to the SI system with base units of kelvin (temperature), second (time), meter (length), kilogram (mass), candela (luminous intensity), mole (amount of substance) and ampere (electric current). The available Boost Units systems include:
-  - "si": [SI System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#si_system_reference)
-  - "cgs": [CGS System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#cgs_system_reference)
-  - "temperature::celsius": [Temperature System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#temperature_system_reference)
-  - "temperature::fahrenheit": [Temperature System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#temperature_system_reference)
-  - "angle::degree": [Trigonometry and Angle System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#trigonometry_and_angle_system_reference)
-  - "angle::gradian": [Trigonometry and Angle System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#trigonometry_and_angle_system_reference)
-  - "angle::revolution": [Trigonometry and Angle System Reference](http://www.boost.org/doc/html/boost_units/Reference.html#trigonometry_and_angle_system_reference)
-
-  You can also create your own system and use it in DCCL. To do this, make the namespace the same as the include file path, where "::" is replaced by "/". For example, if you define a system "foo::barsystem", you need to provide the definition of this system to the C++ compiler in "foo/barsystem.hpp".
-- `relative_temperature` (bool, defaults to false): A special extension only used for temperature fields. Setting this to true means that the temperature is relative (i.e., a difference of absolute temperatures) instead of an absolute temperature. This matters to support correct unit conversions between different temperature systems. For example, relative degrees Kelvin are the same as relative degrees Celsius, but the absolute scales differ by 273.15 degrees.
-- `unit` (string): As an alternative to the `dimensions` and `system` specification, the field can be set to use particular (typically non-SI) units. A few examples of such units that are still often encountered in the marine domain are `unit: "metric::nautical_mile"`, `unit: "metric::bar"`, and `unit: "us::yard"`. Here you can use any of the Boost Units Base Unit types, given here: [Base Units by Category](http://www.boost.org/doc/html/boost_units/Reference.html#boost_units.Reference.base_units_by_category). The string to specify here is the Base Unit to use, minus the "boost::units::" prefix and the "_base_unit" suffix. For example, `boost::units::metric::nautical_mile_base_unit` should be specified as "metric::nautical_mile" in this field.
-- `custom`: Use custom units defined in your code.
-	+ `unit` (string): Fully qualified name for the unit (including namespaces). For example, "dccl::units::microsiemens_per_cm_unit". This is a [`boost::units::unit` type](https://www.boost.org/doc/libs/latest/doc/html/doxygen/units_reference/classboost_1_1units_1_1unit.html).
-	+ `header` (string): Relative path to header defining this custom unit. For example, "dccl/units/conductivity.h"
-
-### DCCL Units Generated Code
-
-The DCCL Units C++ generated accessors and mutators mirror those provided by the standard Google Protocol Buffers compiler for numeric fields, with the method name appended by the string "_with_units". For the standard Protobuf generated code see [Google Protocol Buffers Reference](https://developers.google.com/protocol-buffers/docs/reference/cpp-generated). DCCL Units are only valid on numeric fields (either singular or repeated). Two accessors are provided for convenience: a non-template accessor that returns the value as the Quantity (i.e., `boost::units::quantity`) defined in the DCCL field, and a template accessor that can take any valid Boost Units Quantity (i.e., a type with the same dimensions as the DCCL field) and return the value in that type, accounting for all conversion factors.
-
-#### Singular Numeric Fields
-
-For a singular (optional or required) field "foo" with the following parameters:
-
-- Type: "[foo type]", the original unit-less field type (e.g. `google::protobuf::int32`, `double`)
-- Unit dimension: "[foo dimension]" (e.g. `boost::units::length_dimension`, `boost::units::derived_dimension<boost::units::length_base_dimension,1, boost::units::time_base_dimension,-1>::type`)
-- Unit system: "[foo system]" (e.g. `boost::units::si::system`, `boost::units::degree::system`)
-
-the following additional methods are defined for unit safe access to the DCCL message:
-
-```cpp
-typedef [foo dimension] foo_dimension;  
-typedef boost::units::unit<foo_dimension, [foo system]> foo_unit;
-  
-// set the field's value using the given Quantity (which must have the same dimensions as foo_dimension), performing all necessary conversions (e.g. from yards to meters).
-template<typename Quantity >
-  void set_foo_with_units(Quantity value_w_units)
-  { set_foo(boost::units::quantity<foo_unit,google::protobuf::int32 >(value_w_units).value() ); };
-  
-// get the field's value using the given Quantity (which must have the same dimensions as foo_dimension), performing all necessary conversions.
-template<typename Quantity >
-  Quantity foo_with_units() const
-  { return Quantity(foo() * foo_unit()); };
-  
-// get the field's value as a Quantity of foo_unit, as defined in the DCCL message.
-boost::units::quantity< foo_unit > foo_with_units() const
-  { return foo_with_units<boost::units::quantity< foo_unit, [foo type] > >(); };
+```
+optional double x = 4
+    [(dccl.field) = { udunits: "m" min: -10000 max: 10000 resolution: 1 }];
+optional double speed = 6
+    [(dccl.field) = { udunits: "knot" min: 0 max: 20 resolution: 0.1 }];
+optional double heading = 7
+    [(dccl.field) = { udunits: "degree" min: 0 max: 360 resolution: 0.1 }];
+optional double water_temperature = 11
+    [(dccl.field) = { udunits: "degC" min: -5 max: 40 resolution: 0.01 }];
 ```
 
-#### Repeated Numeric Fields
-
-For a repeated field "foo" with the following parameters:
-
-- Type: "[foo type]"
-- Unit dimension: "[foo dimension]"
-- Unit system: "[foo system]"
-
-the following additional methods are defined for unit safe access to the DCCL message:
-
-```cpp
-typedef [foo dimension] foo_dimension; 
-typedef boost::units::unit<foo_dimension, [foo system]> foo_unit;
-
-// set a given index of the repeated field using the given Quantity.
-template<typename Quantity >
-  void set_foo_with_units(int index, Quantity value_w_units)
-  { set_foo(index, boost::units::quantity<foo_unit, [foo type]>(value_w_units).value() ); };
-  
-// add a new value to the end of the repeated field using the given Quantity.
-template<typename Quantity >
-  void add_foo_with_units(Quantity value_w_units)
-  { add_foo(boost::units::quantity<foo_unit,google::protobuf::int32 >(value_w_units).value() ); };
-  
-// get the field's value using the given Quantity at the given index
-template<typename Quantity >
-  Quantity foo_with_units(int index) const
-  { return Quantity(foo(index) * foo_unit()); };
-  
-// get the field's value as a Quantity of foo_unit at a given index
-boost::units::quantity< foo_unit > foo_with_units(int index) const
-  { return foo_with_units<boost::units::quantity< foo_unit,google::protobuf::int32 > >(index); };
-```
-
-### DCCL Units examples
-
-Here are a few example DCCL messages which include unit specification:
-
-#### AUVStatus
-
-See `test/dccl_units/auv_status.proto`
-
-For example, to set an AUVStatus message's `x` and `y` fields to meters (the default for the base dimension of length, since the default system is SI), and then later access them as nautical miles, one can use this C++ example:
+the fields can be set and read in any units of the right dimension, while DCCL encodes the values in the units given in the `.proto` file:
 
 ```cpp
 using namespace boost::units;
-typedef metric::nautical_mile_base_unit::unit_type 
-   NauticalMile;
+using Knot = metric::knot_base_unit::unit_type;
+using NauticalMile = metric::nautical_mile_base_unit::unit_type;
 
 AUVStatus status;
-status.set_x_with_units(1000*si::meters);
-status.set_y_with_units(500*si::meters);
+status.set_x_with_units(0.5 * NauticalMile());  // stored in m
+status.set_speed_with_units(1.5 * si::meters_per_second);  // stored in knots
+status.set_heading_with_units(pi / 2 * si::radians);  // stored in degrees
+status.set_water_temperature_with_units(50 * absolute<fahrenheit::temperature>());  // stored in degC
 
-quantity<NauticalMile> x_nm(status.x_with_units());
-quantity<NauticalMile> y_nm(status.y_with_units());
+quantity<Knot> speed_knots = status.speed_with_units<quantity<Knot>>();
+quantity<degree::plane_angle> heading = status.heading_with_units<quantity<degree::plane_angle>>();
 ```
 
-The value of `x_nm` is 0.54 nautical miles and `y_nm` is 0.27 nautical miles.
+In this combination UDUNITS-2 is only needed by _protoc-gen-dccl_ when it runs: the generated code needs only the (header-only) Boost Units library, and libdccl does not need UDUNITS-2 at all. When building DCCL from source, install both (`sudo apt install libboost-dev libudunits2-dev`) and leave `enable_udunits_runtime` off.
 
-#### CTDMessage
-
-See `test/dccl_units/ctd_message_units.proto`
-
-#### CommandMessage 
-
-See `test/dccl_units/command_message.proto`
+The original Boost Units interface, `(dccl.field).units`, is still fully supported. See [DCCL Units](page04_units.md) for the details: the UDUNITS-2 strings that DCCL accepts, the generated code, `(dccl.field).units`, optional run-time conversion with UDUNITS-2, and the build options.
 
 ## DCCL Dynamic Conditions (DCCL4+)
 

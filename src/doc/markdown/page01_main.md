@@ -197,9 +197,9 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
   ```bash
   git clone https://github.com/GobySoft/dccl.git
   ```
-  To compile you will need to have CMake, Google Protocol Buffers, and the header-only Boost libraries. (Boost is  optional, but provides the Units functionality and supports non-C++17 compliant compilers). On Debian/Ubuntu systems, this would be
+  To compile you will need to have CMake, Google Protocol Buffers, the header-only Boost libraries, and UDUNITS-2. (Boost and UDUNITS-2 are optional: together they provide the [Static Units](page02_idl.md) functionality, and Boost also supports non-C++17 compliant compilers). On Debian/Ubuntu systems, this would be
   ```bash
-  sudo apt install cmake libboost-dev libprotobuf-dev libprotoc-dev protobuf-compiler
+  sudo apt install cmake libboost-dev libudunits2-dev libprotobuf-dev libprotoc-dev protobuf-compiler
   cd dccl
   ./build.sh
   ```
@@ -231,6 +231,7 @@ DCCL is written in C++ and is available under the terms of the Lesser GNU Public
 
 - [DCCL Interface Descriptor Language (IDL) ](page02_idl.md) - documents the extensions to the Google Protocol Buffers language that encompass the DCCL interface descriptor language.
 - [DCCL Encoders/Decoders (codecs)](page03_codecs.md) - gives the default codecs and describes the DCCL encoding and decoding process.
+- [DCCL Units](page04_units.md) - details of the units of numeric fields: UDUNITS-2 and Boost Units metadata, the generated code, and run-time conversion.
 - [OCEANS 2015 Conference Paper](http://gobysoft.org/dl/oceans2015_dccl.pdf) on *The Dynamic Compact Control Language Version 3* presented in Genova, Italy in May 2015.
 
 ## History
