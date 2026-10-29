@@ -6,7 +6,8 @@ add_test(NAME dccl_test_pb_plugin
           ${CMAKE_CURRENT_SOURCE_DIR}
           ${dccl_INC_DIR}
           ${CMAKE_CURRENT_BINARY_DIR}/generated
-          $<IF:$<BOOL:${enable_units}>,ON,OFF>)
+          $<IF:$<BOOL:${enable_units}>,ON,OFF>
+          $<IF:$<BOOL:${enable_udunits}>,ON,OFF>)
 
 # the generated units accessors must also compile and convert correctly
 if(enable_units)
@@ -14,4 +15,11 @@ if(enable_units)
   add_executable(dccl_test_units_syntax units_syntax_test.cpp ${PROTO_SRCS} ${PROTO_HDRS})
   target_link_libraries(dccl_test_units_syntax dccl)
   add_test(dccl_test_units_syntax ${dccl_BIN_DIR}/dccl_test_units_syntax)
+endif()
+
+if(enable_udunits)
+  protobuf_generate_cpp_dccl(UDUNITS_PROTO_SRCS UDUNITS_PROTO_HDRS udunits.proto)
+  add_executable(dccl_test_udunits udunits_test.cpp ${UDUNITS_PROTO_SRCS} ${UDUNITS_PROTO_HDRS})
+  target_link_libraries(dccl_test_udunits dccl)
+  add_test(dccl_test_udunits ${dccl_BIN_DIR}/dccl_test_udunits)
 endif()

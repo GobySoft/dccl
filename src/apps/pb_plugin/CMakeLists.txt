@@ -10,6 +10,11 @@ target_link_libraries(protoc-gen-dccl protobuf::libprotobuf protobuf::libprotoc 
 if(enable_units)
   target_compile_definitions(protoc-gen-dccl PRIVATE DCCL_PLUGIN_BOOST_UNITS)
 endif()
+if(enable_udunits)
+  target_sources(protoc-gen-dccl PRIVATE udunits_gen.cpp)
+  target_compile_definitions(protoc-gen-dccl PRIVATE DCCL_PLUGIN_UDUNITS)
+  target_link_libraries(protoc-gen-dccl UDUNITS2::UDUNITS2)
+endif()
 install(TARGETS protoc-gen-dccl DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(PROGRAMS protoc-gen-dccl_cpp DESTINATION ${CMAKE_INSTALL_BINDIR})

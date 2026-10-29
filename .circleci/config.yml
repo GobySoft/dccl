@@ -221,6 +221,10 @@ workflows:
 
       - amd64-resolute-minimal-build:
           <<: *filter-template-non-master
+      - amd64-resolute-minimal-udunits-build:
+          <<: *filter-template-non-master
+      - amd64-resolute-udunits-build:
+          <<: *filter-template-non-master
           
       - get-orig-source:
           <<: *filter-template-master-only
@@ -428,6 +432,42 @@ jobs:
       - run: 
           name: Build
           command: mkdir -p build && cd build && cmake -Denable_testing=ON .. && cmake --build . -- -j4
+      - run: *run-tests
+
+  # UDUNITS-2 without Boost
+  amd64-resolute-minimal-udunits-build:
+    docker:
+      - image: ubuntu:resolute
+    working_directory: /root/goby3
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+      DEBIAN_PRIORITY: "critical"
+    steps:
+      - run:
+          name: Install apt packages
+          command: |
+            apt-get update &&
+            apt-get -y install git build-essential cmake libprotobuf-dev libprotoc-dev protobuf-compiler libudunits2-dev
+      - checkout
+      - run:
+          name: Build
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -Denable_udunits=ON .. && cmake --build . -- -j4
+      - run: *run-tests
+
+  # UDUNITS-2 with Boost
+  amd64-resolute-udunits-build:
+    <<: *job-template-amd64
+    docker: *docker-base-resolute
+    environment:
+      <<: *environment-template-common
+    steps:
+      - checkout
+      - run:
+          name: Install UDUNITS-2 (and python3-protobuf for the Python bindings' test)
+          command: apt-get update && apt-get install -y libudunits2-dev python3-protobuf
+      - run:
+          name: Build
+          command: mkdir -p build && cd build && cmake -Denable_testing=ON -Denable_udunits=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -- -j4
       - run: *run-tests
 
 
@@ -651,7 +691,7 @@ jobs:
       - checkout
       - run:
           name: Update apt packages and install coverage dependencies
-          command: apt-get update && apt-get dist-upgrade -y && apt-get install -y liblua5.3-dev python3-dev python3-setuptools python3-protobuf gcovr python3-lxml curl gnupg
+          command: apt-get update && apt-get dist-upgrade -y && apt-get install -y liblua5.3-dev python3-dev python3-setuptools python3-protobuf gcovr python3-lxml curl gnupg libudunits2-dev
       - run:
           name: Build and test with coverage instrumentation
           command: ./scripts/coverage.sh --xml
