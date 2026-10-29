@@ -24,6 +24,7 @@
 // Tests DCCL's special cases on top of the stock UDUNITS-2 unit database.
 
 #include <iostream>
+#include <locale>
 #include <stdexcept>
 #include <string>
 
@@ -97,6 +98,11 @@ int main()
     check_rewrite(system, "sr", "(1 (dccl_solid_angle))");
     check_rewrite(system, "bytes/s", "(8 (dccl_information))/s");
     check_rewrite(system, "lux", "(1 (cd dccl_solid_angle/m^2))");
+    check_rewrite(system, "bps", "(1 (dccl_information/s))");
+    check_rewrite(system, "kbps", "(1000 (dccl_information/s))");
+    // "·" is UDUNITS-2's multiplication sign, not part of a name
+    check_rewrite(system, "rad·s", "(1 (dccl_plane_angle))·s");
+    check_rewrite(system, "s·rad", "s·(1 (dccl_plane_angle))");
     // with SI prefix names and symbols
     check_rewrite(system, "mrad", "(0.001 (dccl_plane_angle))");
     check_rewrite(system, "kilobyte", "(8000 (dccl_information))");
@@ -112,6 +118,10 @@ int main()
     check_convertible(system, "byte/s", "Hz", false);
     check_convertible(system, "sr", "rad2", false);
     check_convertible(system, "lux", "cd/m2", false);
+    check_convertible(system, "bps", "Hz", false);
+    check_convertible(system, "rad·s", "s", false);
+    check_convertible(system, "cd·sr", "cd", false);
+    check_convertible(system, "bit·s-1", "Hz", false);
     // but convert among themselves
     check_convertible(system, "degree", "rad", true);
     check_convertible(system, "°", "arcdeg", true);
@@ -121,6 +131,11 @@ int main()
     check_convertible(system, "lux", "lm/m2", true);
     check_convertible(system, "byte/s", "bit/s", true);
     check_convertible(system, "kbyte", "bits", true);
+    check_convertible(system, "bps", "bit/s", true);
+    check_convertible(system, "kbps", "kilobyte/s", true);
+    check_convertible(system, "baud", "Bd", true);
+    check_convertible(system, "rad·s", "rad s", true);
+    check_convertible(system, "bit·s-1", "bit/s", true);
     // other units are as in stock UDUNITS-2
     check_convertible(system, "knot", "m/s", true);
     check_convertible(system, "degC", "K", true);
@@ -135,6 +150,16 @@ int main()
     check_rejected(system, "PSS-78", "Practical salinity (PSS-78) is dimensionless");
     check_rejected(system, "deg/s", "not a unit that UDUNITS-2 can parse");
     check_rejected(system, "", "not a unit that UDUNITS-2 can parse");
+
+    // the rewritten factor must not follow a global locale that writes "0,5"
+    struct CommaDecimal : std::numpunct<char>
+    {
+        char do_decimal_point() const override { return ','; }
+    };
+    const std::locale previous = std::locale::global(std::locale(std::locale(), new CommaDecimal));
+    check_rewrite(system, "degree/s", "(0.017453292519943295 (dccl_plane_angle))/s");
+    check_convertible(system, "degree", "rad", true);
+    std::locale::global(previous);
 
     if (failures)
     {

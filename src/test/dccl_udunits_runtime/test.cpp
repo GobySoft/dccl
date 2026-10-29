@@ -25,8 +25,10 @@
 // <field>_with_udunits() accessors.
 
 #include <cmath>
+#include <cstdint>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <thread>
 #include <vector>
@@ -145,6 +147,43 @@ int main()
         "get with index -1", [&] { udunits::get(msg, sonar_ranges, "m"); }, "out of range");
     check_throws(
         "set an index out of range", [&] { udunits::set(&msg, sonar_ranges, 1, "m", 3); },
+        "out of range");
+    check_throws(
+        "set with a negative index other than -1",
+        [&] { udunits::set(&msg, sonar_ranges, 1, "m", -7); }, "out of range");
+    check_throws(
+        "get with an index on a non-repeated field", [&] { udunits::get(msg, speed, "m/s", 0); },
+        "given for non-repeated field");
+    check_throws(
+        "set with an index on a non-repeated field",
+        [&] { udunits::set(&msg, speed, 1, "m/s", 0); }, "given for non-repeated field");
+
+    // values that don't fit an integer field throw instead of wrapping
+    const auto* depth = desc->FindFieldByName("depth");
+    const auto* storage = desc->FindFieldByName("storage");
+    check_throws(
+        "a value too large for int32", [&] { udunits::set(&msg, depth, 1e12, "m"); },
+        "out of range for integer field dccl.test.udunits.RuntimeMsg.depth");
+    check_throws(
+        "a negative value for uint64", [&] { udunits::set(&msg, storage, -1, "kilobyte"); },
+        "out of range for integer field");
+    check_throws(
+        "a value too large for uint64", [&] { udunits::set(&msg, storage, 2e19, "kilobyte"); },
+        "out of range for integer field");
+    check_throws(
+        "NaN for an integer field",
+        [&] { udunits::set(&msg, depth, std::numeric_limits<double>::quiet_NaN(), "m"); },
+        "out of range for integer field");
+    check_throws(
+        "the generated setter checks the range too", [&] { msg.set_depth_with_udunits(1e12, "m"); },
+        "out of range for integer field dccl.test.udunits.RuntimeMsg.depth");
+    // the largest double below 2^64
+    udunits::set(&msg, storage, 18446744073709549568.0, "kilobyte");
+    check("a value just inside uint64", msg.storage() == 18446744073709549568ull);
+    msg.set_depth_with_udunits(-2147483648.0, "ft");
+    check("the int32 minimum fits", msg.depth() == std::numeric_limits<std::int32_t>::min());
+    check_throws(
+        "one past the int32 maximum", [&] { msg.set_depth_with_udunits(2147483648.0, "ft"); },
         "out of range");
     check_throws(
         "convertible with an unparseable unit", [] { udunits::convertible("m", "deg"); },

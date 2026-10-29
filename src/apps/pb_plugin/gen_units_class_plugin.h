@@ -29,6 +29,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <set>
 #include <sstream>
@@ -679,13 +680,16 @@ inline void construct_converting_field_class_plugin(const std::string& fieldname
                                                     const std::string& field_type, bool is_integer,
                                                     bool is_repeated, double scale, double offset)
 {
-    if (scale == 1 && offset == 0)
+    // integer fields always take this path, so that they round rather than truncate
+    if (scale == 1 && offset == 0 && !is_integer)
     {
         construct_field_class_plugin(fieldname, os, field_type, is_repeated);
         return;
     }
 
     std::ostringstream constants;
+    // the generated code must not depend on the global locale (e.g. "0,5")
+    constants.imbue(std::locale::classic());
     constants.precision(17);
     if (scale != 1)
         constants << "static constexpr double " << fieldname << "_si_scale = " << scale << ";"
@@ -745,9 +749,10 @@ inline void construct_converting_field_class_plugin(const std::string& fieldname
 
 // Generate accessors that convert a field with (dccl.field).udunits to and from any unit at run
 // time, through libdccl's UDUNITS-2 wrapper
-inline void construct_udunits_runtime_accessors(const std::string& fieldname, std::ostream& os,
-                                                const std::string& field_type, bool is_integer,
-                                                bool is_repeated)
+inline void construct_udunits_runtime_accessors(const std::string& fieldname,
+                                                const std::string& field_full_name,
+                                                std::ostream& os, const std::string& field_type,
+                                                bool is_integer, bool is_repeated)
 {
     const std::string index_param = is_repeated ? "int index, " : "";
     const std::string index_arg = is_repeated ? "index" : "";
@@ -755,7 +760,9 @@ inline void construct_udunits_runtime_accessors(const std::string& fieldname, st
     {
         const std::string converted =
             "dccl::units::udunits::convert(" + value + ", unit, " + fieldname + "_udunits())";
-        return is_integer ? "static_cast<" + field_type + ">(std::llround(" + converted + "))"
+        // round_to() throws for a value that doesn't fit the field
+        return is_integer ? "dccl::units::udunits::round_to<" + field_type + ">(" + converted +
+                                ", \"" + field_full_name + "\")"
                           : "static_cast<" + field_type + ">(" + converted + ")";
     };
 

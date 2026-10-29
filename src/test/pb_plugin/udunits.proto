@@ -39,6 +39,7 @@ message UdunitsMsg
     optional double bearing_error = 4 [(dccl.field).udunits = "\""];
     optional double temperature = 5 [(dccl.field).udunits = "degC"];
     optional int32 depth_cm = 6 [(dccl.field).udunits = "cm"];
+    optional int32 altitude_m = 9 [(dccl.field).udunits = "m"];
     repeated float depths = 7 [(dccl.field).udunits = "m"];
     // a field without units gets no unit string
     optional double plain = 8;
