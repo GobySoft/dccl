@@ -80,6 +80,11 @@ int main()
     msg.set_distance_with_units(1499 * meters);
     check("km on an integer field rounds down", msg.distance(), 1);
     check("km read back in m", msg.distance_with_units().value(), 1000);
+    msg.set_whole_meters_with_units(2.7 * meters);
+    check("m on an integer field rounds", msg.whole_meters(), 3);
+    msg.set_whole_meters_with_units(-2.7 * meters);
+    check("m on an integer field rounds a negative value", msg.whole_meters(), -3);
+    check("m read back", msg.whole_meters_with_units().value(), -3);
 
     msg.set_water_temperature_with_units(300 * absolute<si::temperature>());
     check("degC", msg.water_temperature(), 300 - 273.15);
