@@ -54,6 +54,12 @@ constexpr bool udunits_enabled = true;
 constexpr bool udunits_enabled = false;
 #endif
 
+#ifdef DCCL_PLUGIN_UDUNITS_RUNTIME
+constexpr bool udunits_runtime_enabled = true;
+#else
+constexpr bool udunits_runtime_enabled = false;
+#endif
+
 // which of the compiled-in backends to use, from the units= parameter
 bool boost_units_active_{boost_units_enabled};
 bool udunits_active_{udunits_enabled};
@@ -62,6 +68,8 @@ bool udunits_active_{udunits_enabled};
 bool file_uses_units_{false};
 // accessors convert with std::llround
 bool file_converts_units_{false};
+// accessors convert through dccl/units/udunits.h
+bool file_uses_udunits_runtime_{false};
 std::set<std::string> systems_to_include_;
 std::set<std::string> base_units_to_include_;
 std::set<std::string> custom_unit_headers_to_include_;
@@ -234,6 +242,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
 
     file_uses_units_ = false;
     file_converts_units_ = false;
+    file_uses_udunits_runtime_ = false;
     systems_to_include_.clear();
     base_units_to_include_.clear();
     custom_unit_headers_to_include_.clear();
@@ -261,25 +270,34 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
             }
         }
 
-        if (file_uses_units_)
+        if (file_uses_units_ || file_uses_udunits_runtime_)
         {
             std::shared_ptr<google::protobuf::io::ZeroCopyOutputStream> include_output(
                 generator_context->OpenForInsert(filename_h_, "includes"));
             google::protobuf::io::Printer include_printer(include_output.get(), '$');
             std::stringstream includes_ss;
 
-            includes_ss << "#include <boost/units/quantity.hpp>" << std::endl;
-            includes_ss << "#include <boost/units/absolute.hpp>" << std::endl;
-            includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
-            includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
             if (file_converts_units_)
                 includes_ss << "#include <cmath>" << std::endl;
+            if (file_uses_udunits_runtime_)
+            {
+                includes_ss << "#include <string>" << std::endl;
+                includes_ss << "#include \"dccl/units/udunits.h\"" << std::endl;
+            }
 
-            for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
-            for (const auto& it : base_units_to_include_)
-                include_base_unit_headers(it, includes_ss);
-            for (const auto& it : custom_unit_headers_to_include_)
-                include_custom_unit_headers(it, includes_ss);
+            if (file_uses_units_)
+            {
+                includes_ss << "#include <boost/units/quantity.hpp>" << std::endl;
+                includes_ss << "#include <boost/units/absolute.hpp>" << std::endl;
+                includes_ss << "#include <boost/units/dimensionless_type.hpp>" << std::endl;
+                includes_ss << "#include <boost/units/make_scaled_unit.hpp>" << std::endl;
+
+                for (const auto& it : systems_to_include_) include_units_headers(it, includes_ss);
+                for (const auto& it : base_units_to_include_)
+                    include_base_unit_headers(it, includes_ss);
+                for (const auto& it : custom_unit_headers_to_include_)
+                    include_custom_unit_headers(it, includes_ss);
+            }
 
             include_printer.Print(includes_ss.str().c_str());
         }
@@ -377,6 +395,22 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                          "() would clash with the field of that name.");
             printer->Print("static const char* $name$() { return \"$unit$\"; }\n", "name",
                            unit_accessor, "unit", cpp_escape(unit));
+
+            // accessors that convert to and from any unit at run time, through libdccl
+            if (udunits_runtime_enabled)
+            {
+                const std::string runtime_accessor = std::string(field->name()) + "_with_udunits";
+                if (field->containing_type()->FindFieldByName(runtime_accessor))
+                    throw std::runtime_error("The generated " + runtime_accessor +
+                                             "() would clash with the field of that name.");
+                std::stringstream new_methods;
+                construct_udunits_runtime_accessors(
+                    std::string(field->name()), std::string(field->full_name()), new_methods,
+                    dccl::units::get_field_type_name(field->cpp_type()), is_integer,
+                    field->is_repeated());
+                printer->Print(new_methods.str().c_str());
+                file_uses_udunits_runtime_ = true;
+            }
 
             // the equivalent Boost Units accessors, converting with constants found here so the
             // generated code doesn't need UDUNITS-2

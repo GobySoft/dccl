@@ -7,7 +7,8 @@ add_test(NAME dccl_test_pb_plugin
           ${dccl_INC_DIR}
           ${CMAKE_CURRENT_BINARY_DIR}/generated
           $<IF:$<BOOL:${enable_units}>,ON,OFF>
-          $<IF:$<BOOL:${enable_udunits}>,ON,OFF>)
+          $<IF:$<BOOL:${enable_udunits}>,ON,OFF>
+          $<IF:$<BOOL:${enable_udunits_runtime}>,ON,OFF>)
 
 # the generated units accessors must also compile and convert correctly
 if(enable_units)
