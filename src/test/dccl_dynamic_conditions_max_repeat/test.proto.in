@@ -1,0 +1,94 @@
+syntax = "proto2";
+
+import "dccl/option_extensions.proto";
+
+package dccl.test;
+
+enum Channel
+{
+    WIFI = 1;
+    ACOUSTIC = 2;
+    IRIDIUM = 3;
+}
+
+message Behaviour
+{
+    message Transit
+    {
+        required int32 x = 1 [(dccl.field) = { min: -10000 max: 10000 }];
+        required int32 y = 2 [(dccl.field) = { min: -10000 max: 10000 }];
+    }
+    message Loiter
+    {
+        required uint32 duration = 1 [(dccl.field) = { min: 0 max: 3600 }];
+    }
+
+    oneof behaviour
+    {
+        Transit transit = 1;
+        Loiter loiter = 2;
+    }
+}
+
+message TestMsg
+{
+    option (dccl.msg) = { id: 2, max_bytes: 4096, codec_version: @DCCL_CODEC_VERSION@ };
+
+    // must be declared before the fields whose conditions read it
+    required Channel channel = 1;
+
+    // static max_repeat is the worst case (checked against max_bytes); the
+    // dynamic value may only reduce it
+    repeated Behaviour behaviours = 2 [(dccl.field) = {
+        max_repeat: 500
+        dynamic_conditions {
+            max_repeat: "if this.channel == 'ACOUSTIC' then return 3 "
+                        "elseif this.channel == 'IRIDIUM' then return 10 "
+                        "else return 5000 end"
+        }
+    }];
+
+    repeated uint32 values = 3 [(dccl.field) = {
+        min: 0 max: 255 max_repeat: 20
+        dynamic_conditions { max_repeat: "this.channel == 'ACOUSTIC' and 0 or 20" }
+    }];
+
+    // checks the decoder stays aligned after the dynamically sized fields
+    required uint32 trailer = 4 [(dccl.field) = { min: 0 max: 255 }];
+
+    message Nested
+    {
+        // within an embedded message the channel is reached through 'root'
+        repeated uint32 values = 1 [(dccl.field) = {
+            min: 0 max: 255 max_repeat: 8
+            dynamic_conditions { max_repeat: "root.channel == 'ACOUSTIC' and 2 or 8" }
+        }];
+        required uint32 trailer = 2 [(dccl.field) = { min: 0 max: 255 }];
+    }
+    optional Nested nested = 5;
+
+    // the condition reads a field of the embedded message itself, which is not yet decoded
+    // when the parent computes the embedded message's minimum size (required, so that this
+    // is the sum of its fields' minimum sizes rather than just a presence bit)
+    message LocalChannel
+    {
+        required Channel channel = 1;
+        repeated uint32 values = 2 [(dccl.field) = {
+            min: 0 max: 255 max_repeat: 8
+            dynamic_conditions { max_repeat: "this.channel == 'ACOUSTIC' and 2 or 8" }
+        }];
+    }
+    required LocalChannel local_channel = 6;
+    required uint32 last = 7 [(dccl.field) = { min: 0 max: 255 }];
+}
+
+message TestMsgV2
+{
+    option (dccl.msg) = { id: 3, max_bytes: 512, codec_version: 2 };
+
+    required Channel channel = 1;
+    repeated uint32 values = 2 [(dccl.field) = {
+        min: 0 max: 255 max_repeat: 20
+        dynamic_conditions { max_repeat: "this.channel == 'ACOUSTIC' and 2 or 20" }
+    }];
+}

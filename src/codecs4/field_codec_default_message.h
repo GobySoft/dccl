@@ -185,7 +185,7 @@ class DefaultMessageCodec : public FieldCodecBase
             // this may provide an incorrect min_size() value for reporting but allows
             // use of index based lua scripts in dynamic conditions
             DynamicConditions& dc = codec->dynamic_conditions(field_desc);
-            if (dc.has_omit_if() || dc.has_required_if())
+            if (dc.has_omit_if() || dc.has_required_if() || dc.has_max_repeat())
                 *return_value = 0;
             // Minimum size of a field belonging to oneof is zero
             else if (!is_part_of_oneof(field_desc))

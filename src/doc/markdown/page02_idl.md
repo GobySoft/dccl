@@ -136,7 +136,7 @@ The original Boost Units interface, `(dccl.field).units`, is still fully support
 
 ## DCCL Dynamic Conditions (DCCL4+)
 
-Dynamic Conditions is a new feature in DCCL4 that allows for conditional encoding of the fields based on runtime conditions (values of other parts of the message). This feature allows you to omit a field, mark a field "required", or change the values of the min/max bounds based on the value of one or more fields in the message.
+Dynamic Conditions is a new feature in DCCL4 that allows for conditional encoding of the fields based on runtime conditions (values of other parts of the message). This feature allows you to omit a field, mark a field "required", or change the values of the min/max bounds (or the maximum number of repeated values) based on the value of one or more fields in the message.
 
 ### Field Level Dynamic Conditions
 
@@ -149,6 +149,7 @@ The available field level dynamic_conditions are:
 - **only_if**: A commonly used combination of required_if and omit_if. If true, this is the same as required_if returning true. If false, this is the same as omit_if returning true.
 - **min**: The Lua script must return a numeric value setting the new minimum value. Note that this cannot be less than the hardcoded (dccl.field).min value (if it is, (dccl.field).min is used instead).
 - **max**: The Lua script must return a numeric value setting the new maximum value. Note that this cannot be greater than the hardcoded (dccl.field).max value (if it is, (dccl.field).max is used instead).
+- **max_repeat**: For repeated fields, the Lua script must return a numeric value setting the new maximum number of repeated values. Note that this cannot be greater than the hardcoded (dccl.field).max_repeat value or less than (dccl.field).min_repeat (if it is, that bound is used instead). Requires codec_version 3 or newer. See [Example: repeated field length per channel](#example-repeated-field-length-per-channel).
 
 ### Special variables
 
@@ -335,6 +336,46 @@ Two size errors are worth distinguishing:
 So the static `max_bytes` must cover the largest possible message, while the dynamic limits are free to be much smaller.
 
 For more details, see the `dccl_dynamic_conditions_max_bytes` unit test.
+
+### Example: repeated field length per channel
+
+A repeated field can also be sized per channel with the field-level `max_repeat` condition:
+
+```proto
+message BehaviourList
+{
+    option (dccl.msg) = { id: 3, max_bytes: 4096, codec_version: 5 };
+
+    enum Channel { WIFI = 1; ACOUSTIC = 2; IRIDIUM = 3; }
+    required Channel channel = 1;
+
+    message Behaviour
+    {
+        oneof behaviour
+        {
+            // Transit and Loiter are messages defined elsewhere
+            Transit transit = 1;
+            Loiter loiter = 2;
+        }
+    }
+
+    repeated Behaviour behaviours = 2 [(dccl.field) = {
+        // worst case, checked against max_bytes at load() time
+        max_repeat: 500
+        dynamic_conditions {
+            max_repeat: "if this.channel == 'ACOUSTIC' then return 3 "
+                        "elseif this.channel == 'IRIDIUM' then return 10 "
+                        "else return 500 end"
+        }
+    }];
+}
+```
+
+The dynamic value affects the encoding in two ways: an acoustic message can hold at most three behaviours (more is an exception in strict mode, otherwise the extras are dropped), and the size prefix DCCL puts in front of the repeated values only spans the dynamic range, so it is ceil(log2(3+1)) = 2 bits on the acoustic channel rather than ceil(log2(500+1)) = 9 bits.
+
+As with the other conditions, the channel is not inferred: it must be sent in the message (declared before the repeated field) so that the decoder can evaluate the same condition and know how many values to read.
+
+For more details, see the `dccl_dynamic_conditions_max_repeat` unit test.
 
 ## Using DCCL with Proto3
 
