@@ -277,7 +277,7 @@ bool DCCLGenerator::Generate(const google::protobuf::FileDescriptor* file,
             google::protobuf::io::Printer include_printer(include_output.get(), '$');
             std::stringstream includes_ss;
 
-            if (file_converts_units_ || file_uses_udunits_runtime_)
+            if (file_converts_units_)
                 includes_ss << "#include <cmath>" << std::endl;
             if (file_uses_udunits_runtime_)
             {
@@ -405,7 +405,7 @@ void DCCLGenerator::generate_field(const google::protobuf::FieldDescriptor* fiel
                                              "() would clash with the field of that name.");
                 std::stringstream new_methods;
                 construct_udunits_runtime_accessors(
-                    std::string(field->name()), new_methods,
+                    std::string(field->name()), std::string(field->full_name()), new_methods,
                     dccl::units::get_field_type_name(field->cpp_type()), is_integer,
                     field->is_repeated());
                 printer->Print(new_methods.str().c_str());

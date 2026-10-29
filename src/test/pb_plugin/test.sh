@@ -353,8 +353,8 @@ else
                  "double speed_with_udunits(const std::string& unit) const"
         contains "a run-time setter is generated" "${UD_HDR}" \
                  "void set_speed_with_udunits(double value, const std::string& unit)"
-        contains "an integer field's run-time setter rounds" "${UD_HDR}" \
-                 "set_depth_cm(static_cast<google::protobuf::int32>(std::llround("
+        contains "an integer field's run-time setter rounds with a range check" "${UD_HDR}" \
+                 "set_depth_cm(dccl::units::udunits::round_to<google::protobuf::int32>("
         contains "a repeated field gets a run-time adder" "${UD_HDR}" \
                  "void add_depths_with_udunits(double value, const std::string& unit)"
         contains "the run-time header is included" "${UD_HDR}" '#include "dccl/units/udunits.h"'

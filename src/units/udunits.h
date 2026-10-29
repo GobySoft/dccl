@@ -40,8 +40,10 @@
 // special cases: plane angle, solid angle and information are dimensions of their own, so "degree"
 // doesn't convert to "percent", and "ppt" is rejected as ambiguous.
 //
-// All functions are thread safe. They throw dccl::Exception for a unit that can't be parsed or a
-// conversion between incompatible units.
+// All functions throw dccl::Exception for a unit that can't be parsed, a conversion between
+// incompatible units, or a value that doesn't fit an integer field. They are thread safe when DCCL
+// is built with thread support (DCCL_THREAD_SUPPORT); without it, ut_parse() isn't reentrant, so
+// calls must not overlap.
 
 namespace dccl
 {
@@ -68,6 +70,10 @@ double get(const google::protobuf::Message& msg, const google::protobuf::FieldDe
 // rounded to the nearest value.
 void set(google::protobuf::Message* msg, const google::protobuf::FieldDescriptor* field,
          double value, const std::string& unit, int index = -1);
+
+// Rounds value to the nearest Int, throwing dccl::Exception (naming field) if it isn't finite or
+// doesn't fit. Used by the generated set_<field>_with_udunits() of integer fields.
+template <typename Int> Int round_to(double value, const std::string& field);
 } // namespace udunits
 } // namespace units
 } // namespace dccl
