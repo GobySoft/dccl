@@ -7,6 +7,9 @@ protobuf_generate_cpp_no_dccl(PROTO_SRCS PROTO_HDRS ${PROTOS})
 
 add_executable(protoc-gen-dccl pb_plugin.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_link_libraries(protoc-gen-dccl protobuf::libprotobuf protobuf::libprotoc ${CMAKE_THREAD_LIBS_INIT})
+if(enable_units)
+  target_compile_definitions(protoc-gen-dccl PRIVATE DCCL_PLUGIN_BOOST_UNITS)
+endif()
 install(TARGETS protoc-gen-dccl DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(PROGRAMS protoc-gen-dccl_cpp DESTINATION ${CMAKE_INSTALL_BINDIR})

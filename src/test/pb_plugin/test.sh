@@ -23,10 +23,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with DCCL.  If not, see <http://www.gnu.org/licenses/>.
 
-# Tests protoc-gen-dccl, the protoc plugin that adds boost::units accessors to
-# generated protobuf classes and (optionally) writes a loader .cpp.
+# Tests protoc-gen-dccl, the protoc plugin that adds DCCL_ID enums and boost::units
+# accessors to generated protobuf classes and (optionally) writes a loader .cpp.
 #
 # Usage: test.sh <protoc> <protoc-gen-dccl> <proto source dir> <dccl include dir> <work dir>
+#                <boost units: ON|OFF>
 
 set -u
 
@@ -35,6 +36,7 @@ PLUGIN="$2"
 PROTO_DIR="$3"
 INC_DIR="$4"
 WORK_DIR="$5"
+BOOST_UNITS="$6"
 
 rm -rf "${WORK_DIR}"
 mkdir -p "${WORK_DIR}"
@@ -53,17 +55,22 @@ pass()
     echo "ok: $1"
 }
 
-# generate <output subdir> <extra --dccl_out prefix> <proto file>
+# generate <output subdir> <extra --dccl_out prefix> <proto file>...
 generate()
 {
-    local outdir="${WORK_DIR}/$1" prefix="$2" proto="$3"
+    local outdir="${WORK_DIR}/$1" prefix="$2"
+    shift 2
+    local protos=()
+    for proto in "$@"; do
+        protos+=("${PROTO_DIR}/${proto}")
+    done
     mkdir -p "${outdir}"
     "${PROTOC}" \
         --cpp_out="${outdir}" \
         --dccl_out="${prefix}${outdir}" \
         --plugin=protoc-gen-dccl="${PLUGIN}" \
         -I "${PROTO_DIR}" -I "${INC_DIR}" -I /usr/include \
-        "${PROTO_DIR}/${proto}" 2>&1
+        "${protos[@]}" 2>&1
 }
 
 contains()
@@ -73,6 +80,16 @@ contains()
         pass "$1"
     else
         fail "$1 (expected '$3' in $2)"
+    fi
+}
+
+lacks()
+{
+    checks=$((checks + 1))
+    if grep -qF -- "$3" "$2"; then
+        fail "$1 (did not expect '$3' in $2)"
+    else
+        pass "$1"
     fi
 }
 
@@ -97,6 +114,29 @@ else
     echo "${checks} checks run, ${failures} failure(s)"
     exit 1
 fi
+
+contains "the DCCL ID is generated" "${HDR}" "DCCL_ID = 230"
+contains "the DCCL max bytes is generated" "${HDR}" "DCCL_MAX_BYTES = 64"
+
+##
+## files without units get no units headers, even when generated alongside one that has them
+##
+checks=$((checks + 1))
+OUT="$(generate mixed "" units.proto no_units.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units.proto and no_units.proto together succeeds"
+else
+    fail "generating units.proto and no_units.proto together succeeds (${OUT})"
+fi
+NO_UNITS_HDR="${WORK_DIR}/mixed/no_units.pb.h"
+contains "a file without units still gets its DCCL ID" "${NO_UNITS_HDR}" "DCCL_ID = 232"
+lacks "a file without units includes no boost units headers" "${NO_UNITS_HDR}" "boost/units"
+
+if [ "${BOOST_UNITS}" != "ON" ]; then
+    # without Boost Units support the units options are ignored
+    lacks "no boost units headers are included" "${HDR}" "boost/units"
+    lacks "no with_units accessors are generated" "${HDR}" "_with_units"
+else
 
 contains "boost units headers are included" "${HDR}" "#include <boost/units/quantity.hpp>"
 contains "absolute.hpp is included for temperatures" "${HDR}" "#include <boost/units/absolute.hpp>"
@@ -174,6 +214,45 @@ contains "an absolute temperature is wrapped" "${SYS_HDR}" "boost::units::absolu
 contains "dimensionless is special-cased" "${SYS_HDR}" "dimensionless_type"
 
 ##
+## the spellings base_dimensions and derived_dimensions accept
+##
+checks=$((checks + 1))
+OUT="$(generate syntax "" units_syntax.proto)"
+if [ $? -eq 0 ]; then
+    pass "generating units_syntax.proto succeeds"
+else
+    fail "generating units_syntax.proto succeeds (${OUT})"
+fi
+
+SYN_HDR="${WORK_DIR}/syntax/units_syntax.pb.h"
+contains "named base dimensions are parsed" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,1, boost::units::time_base_dimension,-1 >::type named_base_dimension"
+contains "the _base_dimension suffix and a spaced power are parsed" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,2 >::type suffixed_base_dimension"
+contains "a divided derived dimension is parsed" "${SYN_HDR}" \
+         "boost::mpl::divides<boost::units::force_dimension,boost::units::area_dimension>::type divided_dimension"
+contains "a multiplied derived dimension is parsed" "${SYN_HDR}" \
+         "boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type multiplied_dimension"
+contains "juxtaposed derived dimensions are multiplied" "${SYN_HDR}" \
+         "boost::mpl::times<boost::units::mass_dimension,boost::units::length_dimension>::type juxtaposed_dimension"
+contains "three derived dimensions combine left to right" "${SYN_HDR}" \
+         "boost::mpl::divides<boost::mpl::times<boost::units::length_dimension,boost::units::length_dimension>::type,boost::units::time_dimension>::type diffusivity_dimension"
+contains "several abbreviated base dimensions are parsed" "${SYN_HDR}" \
+         "boost::units::mass_base_dimension,1, boost::units::length_base_dimension,1, boost::units::time_base_dimension,-2 >::type force_dimension"
+contains "an abbreviated base dimension with a negative power is parsed" "${SYN_HDR}" \
+         "boost::units::time_base_dimension,-1 >::type frequency_dimension"
+contains "abbreviated and named base dimensions mix" "${SYN_HDR}" \
+         "boost::units::length_base_dimension,1, boost::units::time_base_dimension,-1 >::type mixed_dimension"
+contains "the abbreviated dimensionless is special-cased" "${SYN_HDR}" \
+         "boost::units::dimensionless_type ratio_dimension"
+contains "an abbreviated base dimension takes a system" "${SYN_HDR}" \
+         "boost::units::unit<heading_dimension,boost::units::degree::system>"
+contains "an abbreviated base dimension takes a prefix" "${SYN_HDR}" \
+         "boost::units::static_rational<-6> > >::type time_us_unit"
+
+fi # BOOST_UNITS
+
+##
 ## the loader file
 ##
 LOAD_CPP="${WORK_DIR}/dccl_load.cpp"
@@ -219,6 +298,7 @@ check_rejected()
     esac
 }
 
+if [ "${BOOST_UNITS}" = "ON" ]; then
 check_rejected "units on a non-numeric field" badunits bad_units.proto \
                "on numeric fields"
 check_rejected "an unknown SI prefix" badprefix bad_prefix.proto "Invalid SI prefix"
@@ -236,6 +316,15 @@ check_rejected "an unparseable base_dimensions string" badparse \
                bad_unparseable_dims.proto "Failed to parse base_dimensions"
 check_rejected "base_dimensions with no system anywhere" badnosystem \
                bad_missing_system.proto "must have 'system' defined"
+check_rejected "units with neither a dimension nor a unit" badnodims bad_no_dimensions.proto \
+               "must define one of base_dimensions"
+check_rejected "the information dimension in the si system" badinformation \
+               bad_information.proto "has no unit in system 'si'"
+check_rejected "a power missing after ^" badpower bad_missing_power.proto \
+               "Failed to parse base_dimensions"
+check_rejected "an unparseable derived_dimensions string" badderived bad_derived_dims.proto \
+               "Failed to parse derived_dimensions"
+fi
 
 checks=$((checks + 1))
 OUT="$(generate badparam "not_a_real_parameter=1:" units.proto)"

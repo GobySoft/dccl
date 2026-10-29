@@ -26,27 +26,15 @@
 
 #include <google/protobuf/descriptor.h>
 
-#include <boost/config/warning_disable.hpp>
-#include <boost/lambda/lambda.hpp>
-
-#include <boost/phoenix/bind.hpp>
-#include <boost/phoenix/core.hpp>
-#include <boost/phoenix/operator.hpp>
-#include <boost/phoenix/stl.hpp>
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_expect.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-
-#include <boost/algorithm/string/replace.hpp>
-
+#include <cctype>
+#include <cstdlib>
 #include <iostream>
+#include <map>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/bimap.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Parsing methods for protobuf messages' units fields:
@@ -57,67 +45,32 @@ namespace dccl
 {
 namespace units
 {
-namespace qi = boost::spirit::qi;
-namespace ascii = boost::spirit::ascii;
-namespace phoenix = boost::phoenix;
-
-// Create a bimap of the available base dimensions
-inline boost::bimap<std::string, char> make_dim_bimap()
+// The available base dimensions and their single character abbreviations
+inline const std::map<std::string, char>& base_dimension_abbreviations()
 {
-    typedef boost::bimap<std::string, char> dim_bimap;
-    using dimension = dim_bimap::value_type;
-
-    dim_bimap dims;
-    dims.insert(dimension("length", 'L'));
-    dims.insert(dimension("time", 'T'));
-    dims.insert(dimension("mass", 'M'));
-    dims.insert(dimension("plane_angle", 'A'));
-    dims.insert(dimension("solid_angle", 'S'));
-    dims.insert(dimension("current", 'I'));
-    dims.insert(dimension("temperature", 'K'));
-    dims.insert(dimension("amount", 'N'));
-    dims.insert(dimension("luminous_intensity", 'J'));
-    dims.insert(dimension("information", 'B'));
-    dims.insert(dimension("dimensionless", '-'));
-
+    static const std::map<std::string, char> dims{
+        {"length", 'L'},      {"time", 'T'},        {"mass", 'M'},
+        {"plane_angle", 'A'}, {"solid_angle", 'S'}, {"current", 'I'},
+        {"temperature", 'K'}, {"amount", 'N'},      {"luminous_intensity", 'J'},
+        {"information", 'B'}, {"dimensionless", '-'}};
     return dims;
 }
 
-// Create vectors of base dimension long and short strings from short (char) inputs
-inline void push_char_base(std::vector<std::string>& vc, std::vector<std::string>& vs,
-                           const char& c)
+// Returns the base dimension name for an abbreviation, or an empty string if there is none
+inline std::string base_dimension_name(char abbreviation)
 {
-    vc.emplace_back(1, c);
-
-    using bimap_type = boost::bimap<std::string, char>;
-    bimap_type dim_bimap = make_dim_bimap();
-
-    bimap_type::right_const_iterator it_right = dim_bimap.right.find(c);
-
-    vs.push_back(it_right->second);
+    for (const auto& dim : base_dimension_abbreviations())
+        if (dim.second == abbreviation)
+            return dim.first;
+    return std::string();
 }
 
-// Create vectors of base dimension long and short strings from long (string) inputs
-inline void push_string_base(std::vector<std::string>& vc, std::vector<std::string>& vs,
-                             const std::string& s)
+inline std::string replace_all_copy(std::string s, const std::string& from, const std::string& to)
 {
-    vs.push_back(s);
-
-    using bimap_type = boost::bimap<std::string, char>;
-    bimap_type dim_bimap = make_dim_bimap();
-
-    bimap_type::left_const_iterator it_left = dim_bimap.left.find(s);
-
-    vc.emplace_back(1, it_left->second);
-}
-
-// Make a vector of strings from char inputs (for creating the derived_dimensions operator vector)
-inline void push_char(std::vector<std::string>& vc, const char& c) { vc.emplace_back(1, c); }
-
-// Make a vector of strings from vector<char> inputs (for creating the derived_dimensions vector of strings)
-inline void push_char_vec(std::vector<std::string>& vc, const std::vector<char>& c)
-{
-    vc.emplace_back(c.begin(), c.end());
+    for (std::string::size_type pos = s.find(from); pos != std::string::npos;
+         pos = s.find(from, pos + to.size()))
+        s.replace(pos, from.size(), to);
+    return s;
 }
 
 // Returns the set of base dimension names that the given unit system supports.
@@ -149,13 +102,26 @@ inline void validate_dimensions_for_system(const std::vector<std::string>& dim_n
 {
     const auto supported = get_system_supported_base_dimensions(sysname);
     if (supported.empty())
-        return; // General system — all dimensions are supported
-
-    const auto bimap = make_dim_bimap();
+    {
+        // General system — all dimensions are supported, except that Boost Units' own general
+        // systems have no unit of information
+        const bool boost_general_system = sysname == "si" || sysname == "boost::units::si" ||
+                                          sysname == "angle::radian" || sysname == "cgs" ||
+                                          sysname == "boost::units::cgs";
+        for (const auto& dim : dim_names)
+        {
+            if (boost_general_system && dim == "information")
+                throw std::runtime_error("Dimension 'information' has no unit in system '" +
+                                         sysname +
+                                         "'. Use (dccl.field).units.unit = \"information::bit\" or "
+                                         "\"information::byte\" instead.");
+        }
+        return;
+    }
 
     for (const auto& dim : dim_names)
     {
-        const bool is_base_dim = bimap.left.find(dim) != bimap.left.end();
+        const bool is_base_dim = base_dimension_abbreviations().count(dim) > 0;
         if (!is_base_dim)
         {
             // Compound Boost Units dimension (e.g. "angular_velocity", "pressure").
@@ -185,99 +151,130 @@ inline void validate_dimensions_for_system(const std::vector<std::string>& dim_n
     }
 }
 
-// Parser for base_dimensions input
+// Parser for base_dimensions input, e.g. "LT^-1" or "length time^-1": a sequence of base
+// dimensions (abbreviated or named, optionally suffixed "_base_dimension"), each with an optional
+// "^power". Whitespace is allowed between tokens.
 template <typename Iterator>
 bool parse_base_dimensions(Iterator first, Iterator last, std::vector<double>& base_dim_powers,
                            std::vector<std::string>& base_dim_chars,
                            std::vector<std::string>& base_dim_strings)
 {
-    //base_dim_chars = vc;
-    //base_dim_strings = vs;
-    //base_dim_powers = v;
+    const std::string input(first, last);
+    std::string::size_type pos = 0;
 
-    using ascii::space;
-    using phoenix::push_back;
-    using qi::_1;
-    using qi::char_;
-    using qi::double_;
-    using qi::eps;
-    using qi::phrase_parse;
-
-    try
+    auto skip_space = [&]()
     {
-        bool r = phrase_parse(
-            first, /* start iterator */
-            last,  /* end iterator */
-            +((char_("LTMASIKNJB-")[phoenix::bind(&push_char_base, phoenix::ref(base_dim_chars),
-                                                  phoenix::ref(base_dim_strings), _1)] |
-               ((ascii::string("length") | ascii::string("time") | ascii::string("mass") |
-                 ascii::string("plane_angle") | ascii::string("solid_angle") |
-                 ascii::string("current") | ascii::string("temperature") | ascii::string("amount") |
-                 ascii::string("luminous_intensity") | ascii::string("information") |
-                 ascii::string("dimensionless"))[phoenix::bind(
-                   &push_string_base, phoenix::ref(base_dim_chars), phoenix::ref(base_dim_strings),
-                   _1)])) >>
-              -(ascii::string("_base_dimension")) >>
-              (('^' > double_[push_back(phoenix::ref(base_dim_powers), _1)]) |
-               eps[push_back(phoenix::ref(base_dim_powers), 1)])),
-            space /* the skip-parser */
-        );
-
-        if (first != last) // fail if we did not get a full match
+        while (pos < input.size() && std::isspace(static_cast<unsigned char>(input[pos])))
+            ++pos;
+    };
+    auto consume = [&](const std::string& token)
+    {
+        if (input.compare(pos, token.size(), token) != 0)
             return false;
-        return r;
-    }
-    catch (const std::runtime_error& e)
+        pos += token.size();
+        return true;
+    };
+
+    bool parsed_dimension = false;
+    while (true)
     {
-        return false;
+        skip_space();
+        if (pos == input.size())
+            break;
+
+        const std::string abbreviated_name = base_dimension_name(input[pos]);
+        if (!abbreviated_name.empty())
+        {
+            base_dim_chars.emplace_back(1, input[pos]);
+            base_dim_strings.push_back(abbreviated_name);
+            ++pos;
+        }
+        else
+        {
+            bool found = false;
+            for (const auto& dim : base_dimension_abbreviations())
+            {
+                if (consume(dim.first))
+                {
+                    base_dim_chars.emplace_back(1, dim.second);
+                    base_dim_strings.push_back(dim.first);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                break;
+        }
+        parsed_dimension = true;
+
+        skip_space();
+        consume("_base_dimension");
+
+        skip_space();
+        if (consume("^"))
+        {
+            const char* power_begin = input.c_str() + pos;
+            char* power_end = nullptr;
+            const double power = std::strtod(power_begin, &power_end);
+            if (power_end == power_begin)
+                return false;
+            pos += power_end - power_begin;
+            base_dim_powers.push_back(power);
+        }
+        else
+        {
+            base_dim_powers.push_back(1);
+        }
     }
+
+    skip_space();
+    return parsed_dimension && pos == input.size();
 }
 
-// Parser for derived_dimensions input
+// Parser for derived_dimensions input, e.g. "force/area": Boost Units dimension names (optionally
+// suffixed "_dimension") joined by "*" or "/". Names separated only by spaces are multiplied.
 template <typename Iterator>
 bool parse_derived_dimensions(Iterator first, Iterator last,
                               std::vector<std::string>& derived_dim_operators,
                               std::vector<std::string>& derived_dim_strings)
 {
-    using ascii::space;
-    using phoenix::push_back;
-    using qi::_1;
-    using qi::char_;
-    using qi::double_;
-    using qi::eps;
-    using qi::phrase_parse;
+    const std::string input(first, last);
+    std::string::size_type pos = 0;
 
-    try
+    auto is_name_char = [](char c) { return (c >= 'a' && c <= 'z') || c == '1' || c == '_'; };
+    auto skip_space = [&]()
     {
-        std::vector<std::string> params;
-        bool r = boost::spirit::qi::parse(
-            first, last,
-            +((+char_("a-z1_"))[phoenix::bind(&push_char_vec, boost::phoenix::ref(params), _1)] >>
-              -(*char_(" ") >>
-                (char_("*/")[phoenix::bind(&push_char, phoenix::ref(derived_dim_operators), _1)] |
-                 eps[push_back(phoenix::ref(derived_dim_operators), std::string("*"))]) >>
-                *char_(" "))));
+        while (pos < input.size() && input[pos] == ' ') ++pos;
+    };
 
-        if (derived_dim_operators.size())
-            derived_dim_operators.pop_back();
-
-        for (auto& param : params)
-        {
-            std::string::size_type dim_pos = param.find("_dimension");
-            if (dim_pos != std::string::npos)
-                param = param.substr(0, dim_pos);
-            //std::cout << *it << std::endl;
-            derived_dim_strings.push_back(param);
-        }
-
-        if (first != last) // fail if we did not get a full match
-            return false;
-        return r;
-    }
-    catch (const std::runtime_error& e)
+    std::vector<std::string> params;
+    while (pos < input.size() && is_name_char(input[pos]))
     {
-        return false;
+        const std::string::size_type name_begin = pos;
+        while (pos < input.size() && is_name_char(input[pos])) ++pos;
+        params.push_back(input.substr(name_begin, pos - name_begin));
+
+        skip_space();
+        if (pos < input.size() && (input[pos] == '*' || input[pos] == '/'))
+            derived_dim_operators.emplace_back(1, input[pos++]);
+        else
+            derived_dim_operators.emplace_back("*");
+        skip_space();
     }
+
+    // every name is followed by an operator, so the last one joins nothing
+    if (!derived_dim_operators.empty())
+        derived_dim_operators.pop_back();
+
+    for (auto& param : params)
+    {
+        std::string::size_type dim_pos = param.find("_dimension");
+        if (dim_pos != std::string::npos)
+            param = param.substr(0, dim_pos);
+        derived_dim_strings.push_back(param);
+    }
+
+    return !params.empty() && pos == input.size();
 }
 
 // Extract field type name as string
@@ -357,7 +354,7 @@ inline void include_units_headers(const std::string& sysname, std::ostream& os)
     else
     {
         //include necessary non-boost-units system headers
-        std::string sysname_sub = boost::replace_all_copy(sysname, "::", "/");
+        std::string sysname_sub = dccl::units::replace_all_copy(sysname, "::", "/");
         os << "#include \"" << sysname_sub << ".hpp\"" << std::endl;
     }
 }
@@ -369,7 +366,7 @@ inline void include_base_unit_headers(const std::string& base_unit_category_and_
                                       std::ostream& os)
 {
     os << std::endl;
-    std::string cat_name_sub = boost::replace_all_copy(base_unit_category_and_name, "::", "/");
+    std::string cat_name_sub = dccl::units::replace_all_copy(base_unit_category_and_name, "::", "/");
     os << "#include <boost/units/base_units/" << cat_name_sub << ".hpp>" << std::endl;
 }
 
@@ -452,10 +449,10 @@ inline void construct_units_typedef_from_dimension(const std::string& fieldname,
     else if (sysname == "boost::units::si" || sysname == "boost::units::cgs")
         sysname_ns = sysname + "::system";
     else if (sysname == "temperature::celsius" || sysname == "temperature::fahrenheit")
-        sysname_ns = boost::replace_all_copy(sysname, "temperature::", "boost::units::");
+        sysname_ns = dccl::units::replace_all_copy(sysname, "temperature::", "boost::units::");
     else if (sysname == "angle::degree" || sysname == "angle::gradian" ||
              sysname == "angle::revolution")
-        sysname_ns = boost::replace_all_copy(sysname, "angle::", "boost::units::") + "::system";
+        sysname_ns = dccl::units::replace_all_copy(sysname, "angle::", "boost::units::") + "::system";
     else if (sysname == "angle::radian")
         sysname_ns = "boost::units::si::system";
     else
@@ -541,15 +538,15 @@ inline void construct_derived_dims_typedef(const std::vector<std::string>& dim_v
         //see example here:
         //http://www.boost.org/doc/libs/1_57_0/doc/html/boost_units/Examples.html#boost_units.Examples.DimensionExample
         os << "typedef ";
-        std::string result = dim_vec[0];
+        std::string result = "boost::units::" + dim_vec[0] + "_dimension";
         for (std::size_t i = 0, n = operator_vec.size(); i < n; i++)
         {
             if (operator_vec[i] == "/")
-                result = "boost::mpl::divides<boost::units::" + result +
-                         "_dimension,boost::units::" + dim_vec[i + 1] + "_dimension>::type";
+                result = "boost::mpl::divides<" + result + ",boost::units::" + dim_vec[i + 1] +
+                         "_dimension>::type";
             else if (operator_vec[i] == "*")
-                result = "boost::mpl::times<boost::units::" + result +
-                         "_dimension,boost::units::" + dim_vec[i + 1] + "_dimension>::type";
+                result = "boost::mpl::times<" + result + ",boost::units::" + dim_vec[i + 1] +
+                         "_dimension>::type";
         }
         os << result << " " << fieldname << "_dimension;" << std::endl;
     }
