@@ -80,6 +80,9 @@ job-template-deb-amd64: &job-template-deb-amd64
     - run: &run-update-apt
         name: Update apt packages (and install python3-protobuf for unit test)
         command: apt-get update && apt-get dist-upgrade -y && apt-get install -y python3-protobuf
+    - run: &run-install-new-build-deps
+        name: Install build dependencies added since the build image was made
+        command: apt-get install -y libudunits2-dev:${TARGET_ARCH}
     - run: &run-import-gpg
         name: Import GPG key
         command: echo -e "$GPG_KEY" | gpg --import
@@ -154,10 +157,15 @@ job-template-deb-cross: &job-template-deb-cross
   steps: &steps-cross-compile
     - attach_workspace: &attach-deb-workspace
         at: /root/deb
+    - run: *run-update-apt
+    - run: *run-install-new-build-deps
     - run: &install-amd64-dccl-compiler
         name: Install amd64 dccl5-compiler so that we can execute it in this cross-build container
-        command: dpkg -i /root/deb/dccl5-compiler_*amd64.deb
-    - run: *run-update-apt
+        # libudunits2-0 isn't Multi-Arch: same, so the amd64 copy the compiler needs can't be
+        # installed next to the ${TARGET_ARCH} one: unpack it without registering it with dpkg
+        command: |
+          cd /tmp && apt-get download libudunits2-0:amd64 && dpkg -x libudunits2-0_*amd64.deb / && cd - &&
+          dpkg -i --force-depends /root/deb/dccl5-compiler_*amd64.deb
     - run: *run-import-gpg
     - attach_workspace: *attach-src-workspace
     - run: *run-extract-src
