@@ -224,6 +224,24 @@ double dccl::DynamicConditions::max()
 #endif
 }
 
+double dccl::DynamicConditions::max_repeat()
+{
+#if DCCL_HAS_LUA
+    if (is_initialized())
+    {
+        auto condition_script = return_prefix(conditions().max_repeat());
+        double v = lua_->script(condition_script);
+        return v;
+    }
+    else
+    {
+        return std::numeric_limits<double>::infinity();
+    }
+#else
+    throw(Exception("DCCL built without Lua support: cannot use dynamic_conditions"));
+#endif
+}
+
 uint32_t dccl::DynamicConditions::max_bytes()
 {
 #if DCCL_HAS_LUA

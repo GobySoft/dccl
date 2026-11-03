@@ -61,6 +61,7 @@ class DynamicConditions
     bool has_only_if() { return conditions().has_only_if(); }
     bool has_min() { return conditions().has_min(); }
     bool has_max() { return conditions().has_max(); }
+    bool has_max_repeat() { return conditions().has_max_repeat(); }
 
     // message-level dynamic conditions
     bool has_max_bytes();
@@ -72,6 +73,7 @@ class DynamicConditions
     bool only();
     double min();
     double max();
+    double max_repeat();
 
     // message-level: returns the dynamic max_bytes limit
     uint32_t max_bytes();

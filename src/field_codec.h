@@ -489,6 +489,9 @@ class FieldCodecBase
     virtual unsigned min_size_repeated();
     void check_repeat_settings() const;
 
+    /// \brief Maximum number of repeated values for the current field: (dccl.field).max_repeat, or the (smaller) value given by (dccl.field).dynamic_conditions.max_repeat
+    unsigned max_repeat();
+
     friend class FieldCodecManagerLocal;
 
   private:

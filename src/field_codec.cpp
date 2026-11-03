@@ -504,7 +504,8 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
 {
     // out_bits = [field_values[2]][field_values[1]][field_values[0]]
 
-    unsigned wire_vector_size = dccl_field_options().max_repeat();
+    const unsigned max_repeat_size = max_repeat();
+    unsigned wire_vector_size = max_repeat_size;
 
     if (wire_values.size() > wire_vector_size && strict())
         throw(
@@ -521,15 +522,15 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
     // for DCCL3 and beyond, add a prefix numeric field giving the vector size (rather than always going to max_repeat)
     if (codec_version() > 2)
     {
-        wire_vector_size = std::min(static_cast<int>(dccl_field_options().max_repeat()),
-                                    static_cast<int>(wire_values.size()));
+        wire_vector_size =
+            std::min(static_cast<int>(max_repeat_size), static_cast<int>(wire_values.size()));
 
         wire_vector_size = std::max(static_cast<int>(dccl_field_options().min_repeat()),
                                     static_cast<int>(wire_vector_size));
 
-        Bitset size_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
-                                                    dccl_field_options().max_repeat()),
-                         wire_vector_size - dccl_field_options().min_repeat());
+        Bitset size_bits(
+            repeated_vector_field_size(dccl_field_options().min_repeat(), max_repeat_size),
+            wire_vector_size - dccl_field_options().min_repeat());
         bits->append(size_bits);
 
         dlog.is(DEBUG2, ENCODE) && dlog << "repeated size field ... produced these "
@@ -562,12 +563,13 @@ void dccl::FieldCodecBase::any_encode_repeated(dccl::Bitset* bits,
 void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
                                                std::vector<dccl::any>* wire_values)
 {
-    unsigned wire_vector_size = dccl_field_options().max_repeat();
+    const unsigned max_repeat_size = max_repeat();
+    unsigned wire_vector_size = max_repeat_size;
     if (codec_version() > 2)
     {
         Bitset size_bits(repeated_bits);
-        size_bits.get_more_bits(repeated_vector_field_size(dccl_field_options().min_repeat(),
-                                                           dccl_field_options().max_repeat()));
+        size_bits.get_more_bits(
+            repeated_vector_field_size(dccl_field_options().min_repeat(), max_repeat_size));
 
         wire_vector_size = size_bits.to_ulong() + dccl_field_options().min_repeat();
     }
@@ -597,14 +599,14 @@ void dccl::FieldCodecBase::any_decode_repeated(Bitset* repeated_bits,
 unsigned dccl::FieldCodecBase::any_size_repeated(const std::vector<dccl::any>& wire_values)
 {
     unsigned out = 0;
-    unsigned wire_vector_size = dccl_field_options().max_repeat();
+    const unsigned max_repeat_size = max_repeat();
+    unsigned wire_vector_size = max_repeat_size;
 
     if (codec_version() > 2)
     {
-        wire_vector_size = std::min(static_cast<int>(dccl_field_options().max_repeat()),
-                                    static_cast<int>(wire_values.size()));
-        out += repeated_vector_field_size(dccl_field_options().min_repeat(),
-                                          dccl_field_options().max_repeat());
+        wire_vector_size =
+            std::min(static_cast<int>(max_repeat_size), static_cast<int>(wire_values.size()));
+        out += repeated_vector_field_size(dccl_field_options().min_repeat(), max_repeat_size);
     }
 
     internal::MessageStack msg_handler(root_message(), message_data(), this->this_field());
@@ -644,10 +646,37 @@ void dccl::FieldCodecBase::check_repeat_settings() const
                         this->this_descriptor()));
 }
 
+unsigned dccl::FieldCodecBase::max_repeat()
+{
+    const unsigned static_max = dccl_field_options().max_repeat();
+    DynamicConditions& dc = dynamic_conditions(this_field());
+    if (dc.has_max_repeat())
+    {
+        dc.regenerate(this_message(), root_message());
+        // don't let dynamic conditions breach static bounds
+        double v = std::min(dc.max_repeat(), static_cast<double>(static_max));
+        v = std::max(v, static_cast<double>(dccl_field_options().min_repeat()));
+        return static_cast<unsigned>(v);
+    }
+    else
+    {
+        return static_max;
+    }
+}
+
 unsigned dccl::FieldCodecBase::max_size_repeated()
 {
     check_repeat_settings();
 
+    // the v2 message codec doesn't defer min_size() for dynamic conditions, so the decoder
+    // would read the size of the repeated field before it can evaluate the condition
+    if (codec_version() < 3 && dynamic_conditions(this_field()).has_max_repeat())
+        throw(Exception("(dccl.field).dynamic_conditions.max_repeat requires codec_version 3 or "
+                        "newer: " +
+                            this_field()->DebugString(),
+                        this->this_descriptor()));
+
+    // static max_repeat, not max_repeat(): this is the worst case checked against max_bytes
     if (codec_version() > 2)
         return repeated_vector_field_size(dccl_field_options().min_repeat(),
                                           dccl_field_options().max_repeat()) +
@@ -661,8 +690,7 @@ unsigned dccl::FieldCodecBase::min_size_repeated()
     check_repeat_settings();
 
     if (codec_version() > 2)
-        return repeated_vector_field_size(dccl_field_options().min_repeat(),
-                                          dccl_field_options().max_repeat()) +
+        return repeated_vector_field_size(dccl_field_options().min_repeat(), max_repeat()) +
                min_size() * dccl_field_options().min_repeat();
 
     else
